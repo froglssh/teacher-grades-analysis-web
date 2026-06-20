@@ -924,6 +924,27 @@
             </div>
           </div>
 
+          <div class="grid two" style="margin-bottom: 18px;">
+            <article class="overview-card">
+              <div class="overview-file"><strong>PPTX</strong></div>
+              <div class="overview-card-body">
+                <span class="tag violet">講師演示簡報</span>
+                <h3>學生成績AI分析研習簡報.pptx</h3>
+                <p>研習講師教學演示用簡報，可用於現場授課、修改或延伸補充。</p>
+                <a class="btn outline" href="https://drive.google.com/file/d/1iH3dHbpGsosTkdZuR4liidg-JJ6YqGwQ/view?usp=sharing" target="_blank">開啟 PPTX</a>
+              </div>
+            </article>
+            <article class="overview-card">
+              <div class="overview-file"><strong>PDF</strong></div>
+              <div class="overview-card-body">
+                <span class="tag violet">講師演示簡報</span>
+                <h3>學生成績AI分析研習簡報.pdf</h3>
+                <p>研習講師教學演示簡報 PDF 版，適合投影、瀏覽與分享。</p>
+                <a class="btn outline" href="https://drive.google.com/file/d/1Jpcdqb1gEKy43ldk8oNdii_dMkt-ckf3/view?usp=sharing" target="_blank">開啟 PDF</a>
+              </div>
+            </article>
+          </div>
+
           <div class="timeline">
             <article class="step">
               <div>
@@ -1152,6 +1173,7 @@
             <button class="tab" data-filter="pdf" type="button">PDF</button>
             <button class="tab" data-filter="html" type="button">HTML 工具</button>
             <button class="tab" data-filter="online" type="button">線上</button>
+            <button class="tab" data-filter="ppt" type="button">簡報</button>
             <button class="tab" data-filter="sheet" type="button">成績檔</button>
             <button class="tab" data-filter="image" type="button">圖片</button>
             <button class="tab" data-filter="doc" type="button">文件</button>
@@ -1271,6 +1293,8 @@
       { title: "模擬成績2.pdf", path: "https://drive.google.com/file/d/1jp84J97oV5Xk0cPLR3NJf7Q4tOOWFMnf/view?usp=sharing", type: "pdf", desc: "NotebookLM 多次成績比較示範 PDF。" },
       { title: "運用 AI 技術深化班級成績分析與教學洞察.pdf", path: "https://drive.google.com/file/d/1b5S5AnkXI1DKWB86k9pPlcrUGGgZ237O/view?usp=sharing", type: "pdf", desc: "研習理念、資料格式、Claude/NotebookLM 應用與學生賦能說明。" },
       { title: "運用 AI 技術深化班級成績分析與教學洞察.docx", path: "https://drive.google.com/file/d/1ukET1ZcajYkYRK-k15x2-BXC3g4bCz4M/view?usp=sharing", type: "doc", desc: "可編輯版教學說明文件。" },
+      { title: "學生成績AI分析研習簡報.pptx", path: "https://drive.google.com/file/d/1iH3dHbpGsosTkdZuR4liidg-JJ6YqGwQ/view?usp=sharing", type: "ppt", desc: "研習講師教學演示用簡報，可用於現場授課、修改或延伸補充。" },
+      { title: "學生成績AI分析研習簡報.pdf", path: "https://drive.google.com/file/d/1Jpcdqb1gEKy43ldk8oNdii_dMkt-ckf3/view?usp=sharing", type: "pdf", desc: "研習講師教學演示簡報 PDF 版，適合投影、瀏覽與分享。" },
       { title: "班級學生成績AI分析_LM簡報1.pdf", path: "https://drive.google.com/file/d/1mQr9jvM9k_PQZnlTJx0zLHBLevo7L1OH/view?usp=sharing", type: "pdf", desc: "NotebookLM 產出或研習展示簡報 1。" },
       { title: "班級學生成績AI分析_LM簡報2.pdf", path: "https://drive.google.com/file/d/1LCYwQjF6ilbKzhIX4IoByBu10YEWLhZY/view?usp=sharing", type: "pdf", desc: "NotebookLM 產出或研習展示簡報 2。" },
       { title: "班級成績分析研習資訊1.png", path: "https://drive.google.com/file/d/11ZR2sktUHyDQZCXRBCti1VcCXtBA8_yG/view?usp=sharing", type: "image", desc: "研習資訊圖卡 1。" },
@@ -1283,7 +1307,8 @@
       online: ["線上", "blue"],
       sheet: ["XLSX", "green"],
       image: ["圖片", "violet"],
-      doc: ["DOCX", "amber"]
+      doc: ["DOCX", "amber"],
+      ppt: ["PPTX", "violet"]
     };
 
     const grid = document.getElementById("resourceGrid");
