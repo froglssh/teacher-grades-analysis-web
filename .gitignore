@@ -1,0 +1,24 @@
+# System files
+.DS_Store
+Thumbs.db
+
+# Office document formats (handled by Google Drive links)
+*.docx
+*.doc
+*.xlsx
+*.xls
+*.pptx
+*.ppt
+*.pdf
+
+# Audio & Video
+*.mp4
+*.m4a
+*.mp3
+
+# Temporary Office files
+~$*
+
+# Scratch or configuration files
+.agents/
+.gemini/
