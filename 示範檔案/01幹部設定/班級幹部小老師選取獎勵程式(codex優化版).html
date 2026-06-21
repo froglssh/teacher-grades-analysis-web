@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>班級幹部與小老師 分配小工具｜臺北市麗山高中林獻升老師製作</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Noto Sans TC', 'ui-sans-serif', 'system-ui']
+          },
+          colors: {
+            brand: {
+              50: '#ecfeff',
+              100: '#cffafe',
+              200: '#a5f3fc',
+              300: '#67e8f9',
+              400: '#22d3ee',
+              500: '#06b6d4',
+              600: '#0891b2',
+              700: '#0e7490',
+              800: '#155e75',
+              900: '#164e63'
+            },
+            accent: {
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d'
+            }
+          },
+          boxShadow: {
+            glow: '0 10px 30px rgba(6, 182, 212, 0.25)'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* 柔和捲軸 */
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.4); border-radius: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-brand-800 via-brand-700 to-fuchsia-700 text-white font-sans selection:bg-amber-300 selection:text-brand-900">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <!-- Header -->
+    <header class="relative overflow-hidden rounded-2xl bg-white/10 backdrop-blur shadow-glow border border-white/20">
+      <div class="absolute inset-0 opacity-20" aria-hidden="true">
+        <svg class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1200 400">
+          <defs>
+            <linearGradient id="g1" x1="0" x2="1" y1="0" y2="1">
+              <stop offset="0%" stop-color="#22d3ee"/>
+              <stop offset="100%" stop-color="#f472b6"/>
+            </linearGradient>
+          </defs>
+          <circle cx="150" cy="200" r="180" fill="url(#g1)"/>
+          <circle cx="1050" cy="120" r="140" fill="url(#g1)"/>
+        </svg>
+      </div>
+      <div class="relative p-6 sm:p-10">
+        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div>
+            <h1 class="text-2xl sm:text-4xl font-extrabold leading-tight">班級幹部與小老師 分配小工具</h1>
+            <p class="text-amber-200 font-semibold mt-2">臺北市麗山高中林獻升老師製作</p>
+            <p class="text-white/80 mt-2">輸入或批次貼上名單，檢視與管理任務，並可隨機或手動指派。資料可下載保存。</p>
+          </div>
+          <div class="flex gap-3">
+            <button id="btnSaveLocal" class="px-4 py-2 rounded-xl bg-emerald-500/90 hover:bg-emerald-500 text-white font-semibold shadow-md transition">儲存到本機</button>
+            <button id="btnLoadLocal" class="px-4 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white font-semibold shadow-md transition">讀取本機</button>
+            <button id="btnReset" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold shadow-md transition">重設全部</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Tabs -->
+    <nav class="mt-6 sm:mt-8 grid grid-cols-2 sm:flex gap-2 sm:gap-3">
+      <button data-tab="students" class="tab-btn px-4 py-2.5 rounded-xl bg-white text-brand-800 font-semibold shadow hover:shadow-lg transition">學生名單</button>
+      <button data-tab="tasks" class="tab-btn px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 font-semibold transition">任務清單</button>
+      <button data-tab="assign" class="tab-btn px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 font-semibold transition">分配與檢視</button>
+      <button data-tab="export" class="tab-btn px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 font-semibold transition">匯出 / 匯入</button>
+    </nav>
+
+    <!-- Content Panels -->
+    <section id="panel-students" class="panel mt-6">
+      <div class="rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-6 sm:p-8">
+        <h2 class="text-xl font-bold mb-4">學生名單</h2>
+        <div class="grid lg:grid-cols-3 gap-6">
+          <!-- 單筆新增 -->
+          <div class="bg-white/5 rounded-xl p-5 border border-white/10">
+            <h3 class="font-semibold mb-3">單筆新增</h3>
+            <div class="grid gap-3">
+              <label class="block">
+                <span class="text-sm text-white/80">姓名</span>
+                <input id="stuName" type="text" class="mt-1 w-full rounded-lg bg-white/90 text-brand-900 px-3 py-2 outline-none ring-2 ring-transparent focus:ring-emerald-300" placeholder="例：王小明">
+              </label>
+              <label class="block">
+                <span class="text-sm text-white/80">學號（可選）</span>
+                <input id="stuNo" type="text" class="mt-1 w-full rounded-lg bg-white/90 text-brand-900 px-3 py-2 outline-none ring-2 ring-transparent focus:ring-emerald-300" placeholder="例：301">
+              </label>
+              <button id="btnAddStudent" class="mt-2 w-full sm:w-auto px-4 py-2 rounded-xl bg-accent-500 hover:bg-accent-600 text-white font-semibold shadow">加入</button>
+            </div>
+          </div>
+          <!-- 批次新增 -->
+          <div class="bg-white/5 rounded-xl p-5 border border-white/10">
+            <h3 class="font-semibold mb-3">批次新增</h3>
+            <p class="text-sm text-white/80 mb-2">每行一位，可用「學號,姓名」或僅姓名</p>
+            <textarea id="stuBulk" rows="6" class="w-full rounded-lg bg-white/90 text-brand-900 px-3 py-2 outline-none ring-2 ring-transparent focus:ring-emerald-300" placeholder="301,王小明
+302,李小華
+陳同學"></textarea>
+            <div class="mt-3 flex gap-3">
+              <button id="btnBulkAddStudents" class="px-4 py-2 rounded-xl bg-accent-500 hover:bg-accent-600 text-white font-semibold shadow">批次加入</button>
+              <button id="btnClearStudents" class="px-4 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white font-semibold">清空名單</button>
+            </div>
+          </div>
+
+          <!-- Excel 匯入 -->
+          <div class="bg-white/5 rounded-xl p-5 border border-white/10">
+            <h3 class="font-semibold mb-3">Excel 匯入</h3>
+            <p class="text-sm text-white/80 mb-2">支援 .xlsx、.xls、.csv。若檔案內有多個班級，會先產生班級選單，老師選定班級後再匯入。</p>
+            <input id="studentExcelFile" type="file" accept=".xlsx,.xls,.csv" class="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:font-semibold file:bg-amber-300 file:text-brand-900 hover:file:bg-amber-200 file:cursor-pointer cursor-pointer bg-white/90 text-brand-900 rounded-lg">
+            <div class="mt-3 grid gap-3">
+              <button id="btnScanStudentClasses" class="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-white font-extrabold shadow">讀取班級清單</button>
+              <label class="block">
+                <span class="text-sm text-white/80">選擇班級</span>
+                <select id="studentClassSelect" class="mt-1 w-full rounded-lg bg-white text-brand-900 px-3 py-2 outline-none ring-2 ring-transparent focus:ring-emerald-300" disabled>
+                  <option value="">請先讀取班級清單</option>
+                </select>
+              </label>
+              <label class="flex items-center gap-2 text-sm text-white/80">
+                <input id="replaceStudentsOnImport" type="checkbox" class="w-4 h-4 rounded" checked>
+                匯入時先清空目前學生名單
+              </label>
+              <div id="classImportStatus" class="text-sm text-white/80">尚未讀取檔案</div>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-3">
+              <button id="btnImportStudentsExcel" class="px-4 py-2 rounded-xl bg-accent-500 hover:bg-accent-600 text-white font-semibold shadow">匯入所選班級</button>
+              <button id="btnDownloadStudentTemplate" class="px-4 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white font-semibold">下載範本 CSV</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 名單表格 -->
+        <div class="mt-6 overflow-x-auto rounded-xl border border-white/10">
+          <table class="min-w-full bg-white/10 backdrop-blur">
+            <thead class="bg-white/10">
+              <tr class="text-left">
+                <th class="px-4 py-3">#</th>
+                <th class="px-4 py-3">學號</th>
+                <th class="px-4 py-3">姓名</th>
+                <th class="px-4 py-3">動作</th>
+              </tr>
+            </thead>
+            <tbody id="studentsTable" class="divide-y divide-white/10"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-tasks" class="panel mt-6 hidden">
+      <div class="rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-6 sm:p-8">
+        <h2 class="text-xl font-bold mb-4">任務清單</h2>
+
+        <!-- 類型切換 -->
+        <div class="flex flex-wrap gap-3 mb-5">
+          <button data-role="officer" class="role-btn px-4 py-2 rounded-xl bg-white text-brand-800 font-semibold shadow">幹部任務</button>
+          <button data-role="tutor" class="role-btn px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 font-semibold">小老師任務</button>
+        </div>
+
+        <div class="mb-6 bg-white/5 rounded-xl p-5 border border-white/10">
+          <h3 class="font-semibold mb-3">常用職務選單</h3>
+          <p class="text-sm text-white/80 mb-3">已依資料夾內「幹部與小老師表單」預設常用名稱，可一鍵生成，也可在下方自行新增或批次貼上。</p>
+          <div class="flex flex-wrap gap-3">
+            <button id="btnGenerateOfficerTasks" class="px-4 py-2 rounded-xl bg-white text-brand-800 font-semibold shadow">生成常用幹部</button>
+            <button id="btnGenerateTutorTasks" class="px-4 py-2 rounded-xl bg-white/90 hover:bg-white text-brand-800 font-semibold shadow">生成常用小老師</button>
+            <button id="btnGenerateAllTasks" class="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-white font-extrabold shadow">生成全部職務</button>
+          </div>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-6">
+          <!-- 單筆新增 -->
+          <div class="bg-white/5 rounded-xl p-5 border border-white/10">
+            <h3 class="font-semibold mb-3"><span id="roleLabel1">幹部</span>職務－單筆新增</h3>
+            <label class="block">
+              <span class="text-sm text-white/80">職務名稱</span>
+              <input id="taskName" type="text" class="mt-1 w-full rounded-lg bg-white/90 text-brand-900 px-3 py-2 outline-none ring-2 ring-transparent focus:ring-emerald-300" placeholder="例：班長 / 風紀 / 美宣">
+            </label>
+            <button id="btnAddTask" class="mt-3 px-4 py-2 rounded-xl bg-accent-500 hover:bg-accent-600 text-white font-semibold shadow">加入職務</button>
+          </div>
+
+          <!-- 批次新增 -->
+          <div class="bg-white/5 rounded-xl p-5 border border-white/10">
+            <h3 class="font-semibold mb-3"><span id="roleLabel2">幹部</span>職務－批次新增</h3>
+            <p class="text-sm text-white/80 mb-2">每行一個職務名稱</p>
+            <textarea id="taskBulk" rows="6" class="w-full rounded-lg bg-white/90 text-brand-900 px-3 py-2 outline-none ring-2 ring-transparent focus:ring-emerald-300" placeholder="班長
+副班長
+衛生
+風紀"></textarea>
+            <div class="mt-3 flex gap-3">
+              <button id="btnBulkAddTasks" class="px-4 py-2 rounded-xl bg-accent-500 hover:bg-accent-600 text-white font-semibold shadow">批次加入</button>
+              <button id="btnClearTasks" class="px-4 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white font-semibold">清空職務</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 任務表格 -->
+        <div class="mt-6 overflow-x-auto rounded-xl border border-white/10">
+          <table class="min-w-full bg-white/10 backdrop-blur">
+            <thead class="bg-white/10">
+              <tr class="text-left">
+                <th class="px-4 py-3">#</th>
+                <th class="px-4 py-3">職務名稱</th>
+                <th class="px-4 py-3">目前指派</th>
+                <th class="px-4 py-3">動作</th>
+              </tr>
+            </thead>
+            <tbody id="tasksTable" class="divide-y divide-white/10"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-assign" class="panel mt-6 hidden">
+      <div class="rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-6 sm:p-8">
+        <h2 class="text-xl font-bold mb-4">分配與檢視</h2>
+
+        <!-- 設定區 -->
+        <div class="flex flex-col lg:flex-row gap-4 lg:items-end">
+          <div>
+            <label class="block text-sm text-white/80 mb-1">分配類型</label>
+            <select id="assignRole" class="rounded-lg bg-white text-brand-800 px-3 py-2 font-semibold">
+              <option value="officer">幹部</option>
+              <option value="tutor">小老師</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-2">
+            <input id="avoidDuplicate" type="checkbox" class="w-4 h-4 rounded" checked>
+            <label for="avoidDuplicate" class="text-sm">同一類型避免重複指派同一人</label>
+          </div>
+          <div class="flex gap-3">
+            <button id="btnRandomAssign" class="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-white font-extrabold shadow">隨機分配未指派</button>
+            <button id="btnClearAssign" class="px-4 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white font-semibold">清除此類全部指派</button>
+          </div>
+        </div>
+
+        <!-- 概況 -->
+        <div class="mt-5 grid sm:grid-cols-3 gap-4">
+          <div class="rounded-xl bg-white/10 p-4 border border-white/10">
+            <div class="text-sm text-white/70">學生總數</div>
+            <div id="statStudents" class="text-2xl font-extrabold mt-1">0</div>
+          </div>
+          <div class="rounded-xl bg-white/10 p-4 border border-white/10">
+            <div class="text-sm text-white/70">任務數量</div>
+            <div id="statTasks" class="text-2xl font-extrabold mt-1">0</div>
+          </div>
+          <div class="rounded-xl bg-white/10 p-4 border border-white/10">
+            <div class="text-sm text-white/70">已指派</div>
+            <div id="statAssigned" class="text-2xl font-extrabold mt-1">0</div>
+          </div>
+        </div>
+
+        <!-- 分配表格 -->
+        <div class="mt-6 overflow-x-auto rounded-xl border border-white/10">
+          <table class="min-w-full bg-white/10 backdrop-blur">
+            <thead class="bg-white/10">
+              <tr class="text-left">
+                <th class="px-4 py-3">#</th>
+                <th class="px-4 py-3">任務</th>
+                <th class="px-4 py-3">指派給</th>
+                <th class="px-4 py-3">快速指定</th>
+                <th class="px-4 py-3">隨機分配</th>
+              </tr>
+            </thead>
+            <tbody id="assignTable" class="divide-y divide-white/10"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-export" class="panel mt-6 hidden">
+      <div class="rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-6 sm:p-8">
+        <h2 class="text-xl font-bold mb-4">匯出 / 匯入</h2>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <!-- 匯出 -->
+          <div class="bg-white/5 rounded-xl p-5 border border-white/10">
+            <h3 class="font-semibold mb-3">匯出資料</h3>
+            <p class="text-sm text-white/80 mb-3">下載目前的學生、任務與分配結果</p>
+            <div class="flex flex-wrap gap-3">
+              <button id="btnDownloadExcel" class="px-4 py-2 rounded-xl bg-white text-brand-800 font-semibold shadow">下載 Excel</button>
+              <button id="btnDownloadPDF" class="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-white font-extrabold shadow">下載 PDF</button>
+              <button id="btnDownloadJSON" class="px-4 py-2 rounded-xl bg-white/90 hover:bg-white text-brand-800 font-semibold shadow">下載 JSON</button>
+            </div>
+          </div>
+
+          <!-- 匯入 -->
+          <div class="bg-white/5 rounded-xl p-5 border border-white/10">
+            <h3 class="font-semibold mb-3">匯入資料（JSON）</h3>
+            <p class="text-sm text-white/80 mb-3">可載入先前從本工具匯出的 JSON 檔</p>
+            <input id="fileImport" type="file" accept="application/json" class="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:font-semibold file:bg-emerald-400 file:text-brand-900 hover:file:bg-emerald-300 file:cursor-pointer cursor-pointer bg-white/90 text-brand-900 rounded-lg">
+            <button id="btnImportJSON" class="mt-3 px-4 py-2 rounded-xl bg-accent-500 hover:bg-accent-600 text-white font-semibold shadow">開始匯入</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 小提示 -->
+    <p class="mt-6 text-center text-white/80">小提醒：資料只在您的裝置上運作；如需分享請下載後自行保存。</p>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 hidden">
+    <div class="px-4 py-2 rounded-xl bg-black/70 text-white text-sm shadow-lg"></div>
+  </div>
+
+  <script>
+    // 初始狀態
+    const state = {
+      students: [], // {id, name, no}
+      tasks: {
+        officer: [], // {id, name, studentId|null}
+        tutor: []
+      },
+      ui: {
+        tab: 'students',
+        role: 'officer'
+      }
+    };
+
+    const defaultTasks = {
+      officer: [
+        '班長', '副班長', '風紀股長', '副風紀股長', '學藝股長', '副學藝股長',
+        '衛生股長', '副衛生股長', '總務股長', '副總務股長', '康樂股長', '副康樂股長',
+        '圖資股長', '副圖資股長', '輔導股長', '保健股長'
+      ],
+      tutor: [
+        '國文小老師', '英文小老師', '數學小老師', '物理小老師',
+        '化學小老師', '生物小老師', '地科小老師', '地理小老師',
+        '歷史小老師', '公民小老師', '音樂小老師', '美術小老師',
+        '資訊小老師', '生科小老師', '體育小老師', '藝能小老師'
+      ]
+    };
+
+    // 工具
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => document.querySelectorAll(sel);
+    const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+
+    function toast(msg) {
+      const box = $('#toast');
+      const inner = box.firstElementChild;
+      inner.textContent = msg;
+      box.classList.remove('hidden');
+      inner.classList.add('animate-[fadeIn_.3s_ease]');
+      setTimeout(()=> {
+        inner.classList.remove('animate-[fadeIn_.3s_ease]');
+        box.classList.add('hidden');
+      }, 1600);
+    }
+
+    // 進入時載入本機
+    loadLocal();
+
+    // 切換分頁
+    $$('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        $$('.tab-btn').forEach(b => b.classList.remove('bg-white','text-brand-800','shadow'));
+        btn.classList.add('bg-white','text-brand-800','shadow');
+        const tab = btn.dataset.tab;
+        state.ui.tab = tab;
+        $$('.panel').forEach(p => p.classList.add('hidden'));
+        $('#panel-' + tab).classList.remove('hidden');
+        if (tab === 'tasks') refreshTasksUI();
+        if (tab === 'assign') refreshAssignUI();
+      });
+    });
+
+    // 學生：單筆
+    $('#btnAddStudent').addEventListener('click', () => {
+      const name = $('#stuName').value.trim();
+      const no = $('#stuNo').value.trim();
+      if (!name) return toast('請輸入姓名');
+      addStudent(name, no);
+      $('#stuName').value = '';
+      $('#stuNo').value = '';
+      renderStudents();
+      toast('已新增學生');
+      saveLocal();
+    });
+
+    // 學生：批次
+    $('#btnBulkAddStudents').addEventListener('click', () => {
+      const text = $('#stuBulk').value.trim();
+      if (!text) return toast('沒有內容可加入');
+      const rows = text.split('\n').map(s => s.trim()).filter(Boolean);
+      let count = 0;
+      rows.forEach(row => {
+        const parts = row.split(',').map(s => s.trim()).filter(Boolean);
+        if (parts.length === 1) {
+          count += addStudent(parts[0], '');
+        } else {
+          count += addStudent(parts[1], parts[0]);
+        }
+      });
+      $('#stuBulk').value = '';
+      renderStudents();
+      toast(`批次加入 ${count} 位學生`);
+      saveLocal();
+    });
+
+    let studentExcelFile = null;
+    let detectedClassGroups = [];
+    $('#studentExcelFile').addEventListener('change', (e) => {
+      studentExcelFile = e.target.files[0] || null;
+      detectedClassGroups = [];
+      renderClassOptions();
+      $('#classImportStatus').textContent = studentExcelFile ? '已選擇檔案，請讀取班級清單' : '尚未讀取檔案';
+    });
+
+    $('#btnScanStudentClasses').addEventListener('click', () => {
+      if (!studentExcelFile) return toast('請先選擇學生名單 Excel 或 CSV 檔');
+      scanStudentClasses(studentExcelFile);
+    });
+
+    $('#btnImportStudentsExcel').addEventListener('click', () => {
+      if (!studentExcelFile) return toast('請先選擇學生名單 Excel 或 CSV 檔');
+      if (detectedClassGroups.length === 0) return scanStudentClasses(studentExcelFile, true);
+      importSelectedClass();
+    });
+
+    $('#btnDownloadStudentTemplate').addEventListener('click', () => {
+      const csv = '\uFEFF座號,姓名\n1,王小明\n2,李小華\n';
+      download('學生名單匯入範本.csv', csv, 'text/csv;charset=utf-8;');
+    });
+
+    $('#btnClearStudents').addEventListener('click', () => {
+      if (!confirm('確定清空所有學生名單？此動作無法復原')) return;
+      state.students = [];
+      // 同步清空已指派
+      state.tasks.officer.forEach(t => t.studentId = null);
+      state.tasks.tutor.forEach(t => t.studentId = null);
+      renderStudents();
+      refreshTasksUI();
+      refreshAssignUI();
+      saveLocal();
+      toast('已清空學生名單');
+    });
+
+    function addStudent(name, no) {
+      // 避免重複（同名同學號）
+      const exists = state.students.some(s => s.name === name && (s.no || '') === (no || ''));
+      if (exists) return 0;
+      state.students.push({ id: uid(), name, no: no || '' });
+      return 1;
+    }
+
+    function scanStudentClasses(file, importAfterScan = false) {
+      const isCSV = /\.csv$/i.test(file.name);
+      const reader = new FileReader();
+      reader.onerror = () => toast('讀取檔案失敗');
+      reader.onload = () => {
+        try {
+          let groups = [];
+          if (isCSV) {
+            const rows = parseCSVRows(String(reader.result || ''));
+            const students = rowsToStudents(rows);
+            groups = students.length ? [{ label: 'CSV學生名單', sheet: file.name, students }] : [];
+          } else {
+            if (!window.XLSX) {
+              toast('Excel 解析套件尚未載入，請確認網路連線或改用 CSV');
+              return;
+            }
+            const workbook = XLSX.read(reader.result, { type: 'array' });
+            groups = workbookToClassGroups(workbook);
+          }
+          detectedClassGroups = groups.filter(group => group.students.length > 0);
+          renderClassOptions();
+          if (detectedClassGroups.length === 0) return toast('找不到可匯入的學生資料');
+          const total = detectedClassGroups.reduce((sum, group) => sum + group.students.length, 0);
+          $('#classImportStatus').textContent = `已偵測 ${detectedClassGroups.length} 個班級 / 區塊，共 ${total} 筆學生資料`;
+          toast(`已讀取 ${detectedClassGroups.length} 個班級選項`);
+          if (importAfterScan) importSelectedClass();
+        } catch (error) {
+          toast('讀取失敗，請確認檔案格式');
+        }
+      };
+      if (isCSV) {
+        reader.readAsText(file, 'utf-8');
+      } else {
+        reader.readAsArrayBuffer(file);
+      }
+    }
+
+    function renderClassOptions() {
+      const select = $('#studentClassSelect');
+      select.innerHTML = '';
+      if (detectedClassGroups.length === 0) {
+        select.disabled = true;
+        select.innerHTML = '<option value="">請先讀取班級清單</option>';
+        return;
+      }
+      select.disabled = false;
+      detectedClassGroups.forEach((group, index) => {
+        const option = document.createElement('option');
+        option.value = String(index);
+        option.textContent = `${group.label}（${group.students.length}人）`;
+        select.appendChild(option);
+      });
+    }
+
+    function importSelectedClass() {
+      const index = Number($('#studentClassSelect').value || 0);
+      const group = detectedClassGroups[index];
+      if (!group) return toast('請先選擇要匯入的班級');
+      if ($('#replaceStudentsOnImport').checked) {
+        state.students = [];
+        state.tasks.officer.forEach(t => t.studentId = null);
+        state.tasks.tutor.forEach(t => t.studentId = null);
+      }
+      let count = 0;
+      group.students.forEach(s => count += addStudent(s.name, s.no));
+      renderStudents();
+      refreshTasksUI();
+      refreshAssignUI();
+      saveLocal();
+      $('#classImportStatus').textContent = `已匯入 ${group.label}，新增 ${count} 位學生`;
+      toast(`已匯入 ${group.label}：${count} 位學生`);
+    }
+
+    function workbookToClassGroups(workbook) {
+      const groups = [];
+      workbook.SheetNames.forEach(sheetName => {
+        const sheet = workbook.Sheets[sheetName];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+        let sheetGroups = detectClassColumnGroups(rows, sheetName);
+        if (sheetGroups.length === 0) sheetGroups = detectHorizontalClassBlocks(rows, sheetName);
+        if (sheetGroups.length === 0) sheetGroups = detectVerticalClassBlocks(rows, sheetName);
+        if (sheetGroups.length === 0) {
+          const students = rowsToStudents(rows);
+          if (students.length) sheetGroups.push({ label: sheetName, sheet: sheetName, students });
+        }
+        groups.push(...sheetGroups);
+      });
+      return mergeClassGroups(groups);
+    }
+
+    function detectClassColumnGroups(rows, sheetName) {
+      const groups = new Map();
+      const cleanRows = normalizeRows(rows);
+      cleanRows.forEach((row, rowIndex) => {
+        const indexes = findHeaderIndexes(row);
+        if (indexes.name < 0 || indexes.class < 0) return;
+        for (let i = rowIndex + 1; i < cleanRows.length; i++) {
+          const dataRow = cleanRows[i];
+          if (findHeaderIndexes(dataRow).name >= 0) break;
+          const label = normalizeClassLabel(dataRow[indexes.class]);
+          const name = normalizeName(dataRow[indexes.name]);
+          if (!label || !name) continue;
+          const no = indexes.no >= 0 ? normalizeNo(dataRow[indexes.no]) : '';
+          if (!groups.has(label)) groups.set(label, []);
+          groups.get(label).push({ no, name });
+        }
+      });
+      return [...groups.entries()].map(([label, students]) => ({
+        label,
+        sheet: sheetName,
+        students: uniqueStudents(students)
+      }));
+    }
+
+    function detectHorizontalClassBlocks(rows, sheetName) {
+      const cleanRows = normalizeRows(rows);
+      const groups = [];
+      cleanRows.forEach((row, rowIndex) => {
+        const nameCols = row
+          .map((cell, index) => isNameHeader(cell) ? index : -1)
+          .filter(index => index >= 0);
+        if (nameCols.length === 0) return;
+        nameCols.forEach((nameCol, blockIndex) => {
+          const noCol = findNearbyNoColumn(row, nameCol);
+          const label = findNearbyClassLabel(cleanRows, rowIndex, nameCol, sheetName, blockIndex);
+          const students = [];
+          for (let r = rowIndex + 1; r < cleanRows.length; r++) {
+            const current = cleanRows[r];
+            if (r > rowIndex + 1 && current.some(isNameHeader)) break;
+            const name = normalizeName(current[nameCol]);
+            if (!name) continue;
+            const no = noCol >= 0 ? normalizeNo(current[noCol]) : '';
+            students.push({ no, name });
+          }
+          if (students.length) groups.push({ label, sheet: sheetName, students: uniqueStudents(students) });
+        });
+      });
+      return groups;
+    }
+
+    function detectVerticalClassBlocks(rows, sheetName) {
+      const cleanRows = normalizeRows(rows);
+      const groups = [];
+      for (let r = 0; r < cleanRows.length; r++) {
+        const classCells = cleanRows[r]
+          .map((cell, index) => ({ label: normalizeClassLabel(cell), index }))
+          .filter(item => item.label);
+        classCells.forEach(item => {
+          for (let h = r + 1; h < Math.min(cleanRows.length, r + 6); h++) {
+            const indexes = findHeaderIndexes(cleanRows[h]);
+            if (indexes.name < 0) continue;
+            const students = [];
+            for (let i = h + 1; i < cleanRows.length; i++) {
+              if (i > h + 1 && cleanRows[i].some(cell => normalizeClassLabel(cell))) break;
+              if (i > h + 1 && findHeaderIndexes(cleanRows[i]).name >= 0) break;
+              const name = normalizeName(cleanRows[i][indexes.name]);
+              if (!name) continue;
+              const no = indexes.no >= 0 ? normalizeNo(cleanRows[i][indexes.no]) : '';
+              students.push({ no, name });
+            }
+            if (students.length) groups.push({ label: item.label, sheet: sheetName, students: uniqueStudents(students) });
+            break;
+          }
+        });
+      }
+      return groups;
+    }
+
+    function mergeClassGroups(groups) {
+      const map = new Map();
+      groups.forEach(group => {
+        const label = normalizeClassLabel(group.label) || group.label;
+        const students = uniqueStudents(group.students);
+        if (students.length === 0) return;
+        const key = `${group.sheet}::${label}`;
+        const existing = map.get(key);
+        if (!existing || students.length > existing.students.length) {
+          map.set(key, { label, sheet: group.sheet, students });
+        }
+      });
+      return [...map.values()].sort((a, b) => naturalClassSort(a.label, b.label));
+    }
+
+    function parseCSVRows(text) {
+      const rows = [];
+      let row = [];
+      let cell = '';
+      let quoted = false;
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const next = text[i + 1];
+        if (char === '"' && quoted && next === '"') {
+          cell += '"';
+          i++;
+        } else if (char === '"') {
+          quoted = !quoted;
+        } else if (char === ',' && !quoted) {
+          row.push(cell.trim());
+          cell = '';
+        } else if ((char === '\n' || char === '\r') && !quoted) {
+          if (char === '\r' && next === '\n') i++;
+          row.push(cell.trim());
+          if (row.some(Boolean)) rows.push(row);
+          row = [];
+          cell = '';
+        } else {
+          cell += char;
+        }
+      }
+      row.push(cell.trim());
+      if (row.some(Boolean)) rows.push(row);
+      return rows;
+    }
+
+    function normalizeRows(rows) {
+      return rows
+        .map(row => row.map(cell => String(cell ?? '').trim()))
+        .filter(row => row.some(Boolean));
+    }
+
+    function findHeaderIndexes(row) {
+      const compact = row.map(cell => String(cell ?? '').replace(/\s/g, ''));
+      return {
+        class: compact.findIndex(cell => /^(班級|班別|班級名稱|班)$/i.test(cell)),
+        no: compact.findIndex(cell => /^(座號|學號|號碼|編號|序號|no\.?|number)$/i.test(cell)),
+        name: compact.findIndex(cell => /^(姓名|學生姓名|名字|name)$/i.test(cell))
+      };
+    }
+
+    function isNameHeader(value) {
+      return /^(姓名|學生姓名|名字|name)$/i.test(String(value ?? '').replace(/\s/g, ''));
+    }
+
+    function isNoHeader(value) {
+      return /^(座號|學號|號碼|編號|序號|no\.?|number)$/i.test(String(value ?? '').replace(/\s/g, ''));
+    }
+
+    function findNearbyNoColumn(row, nameCol) {
+      for (let offset = -3; offset <= 1; offset++) {
+        const index = nameCol + offset;
+        if (index >= 0 && isNoHeader(row[index])) return index;
+      }
+      return -1;
+    }
+
+    function normalizeClassLabel(value) {
+      const text = String(value ?? '').replace(/\s+/g, '').replace(/[：:]+$/, '');
+      if (!text || /^(班級|班別|姓名|座號|學號|號碼|序號)$/.test(text)) return '';
+      const match = text.match(/(?:高?[一二三123][年]?[孝仁愛信義和平忠勇]班|高?[一二三123][年]?\d{1,2}班|[一二三123][年]\d{1,2}班|\d{3}班?)/);
+      if (match) return match[0].endsWith('班') ? match[0] : `${match[0]}班`;
+      if (/班$/.test(text) && text.length <= 8) return text;
+      return '';
+    }
+
+    function findNearbyClassLabel(rows, headerRow, nameCol, sheetName, blockIndex) {
+      for (let r = headerRow; r >= Math.max(0, headerRow - 5); r--) {
+        for (let c = Math.max(0, nameCol - 2); c <= nameCol + 2; c++) {
+          const label = normalizeClassLabel(rows[r]?.[c]);
+          if (label) return label;
+        }
+      }
+      const sheetLabel = normalizeClassLabel(sheetName);
+      if (sheetLabel) return sheetLabel;
+      return `${sheetName} 第${blockIndex + 1}組`;
+    }
+
+    function normalizeName(value) {
+      const text = String(value ?? '').trim().replace(/\s+/g, '');
+      if (!text || /^(姓名|學生姓名|名字|name|座號|學號|班級|班別)$/i.test(text)) return '';
+      if (/^\d+$/.test(text)) return '';
+      if (normalizeClassLabel(text)) return '';
+      return text;
+    }
+
+    function normalizeNo(value) {
+      const text = String(value ?? '').trim();
+      if (!text || /^(座號|學號|號碼|編號|序號)$/i.test(text)) return '';
+      return text.replace(/\.0$/, '');
+    }
+
+    function uniqueStudents(students) {
+      const seen = new Set();
+      const result = [];
+      students.forEach(student => {
+        const name = normalizeName(student.name);
+        if (!name) return;
+        const no = normalizeNo(student.no);
+        const key = `${no}::${name}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        result.push({ no, name });
+      });
+      return result;
+    }
+
+    function naturalClassSort(a, b) {
+      return String(a).localeCompare(String(b), 'zh-Hant', { numeric: true, sensitivity: 'base' });
+    }
+
+    function rowsToStudents(rows) {
+      const cleanRows = rows
+        .map(row => row.map(cell => String(cell ?? '').trim()))
+        .filter(row => row.some(Boolean));
+      if (cleanRows.length === 0) return [];
+
+      const headerRowIndex = cleanRows.findIndex(row => findHeaderIndexes(row).name >= 0);
+      const indexes = headerRowIndex >= 0 ? findHeaderIndexes(cleanRows[headerRowIndex]) : { no: -1, name: -1 };
+      const hasHeader = headerRowIndex >= 0 && indexes.name >= 0;
+      const dataRows = hasHeader ? cleanRows.slice(headerRowIndex + 1) : cleanRows;
+
+      return dataRows.map(row => {
+        if (hasHeader) {
+          return {
+            no: indexes.no >= 0 ? normalizeNo(row[indexes.no]) : '',
+            name: normalizeName(row[indexes.name])
+          };
+        }
+        const cells = row.filter(Boolean);
+        if (cells.length >= 2 && looksLikeStudentNo(cells[0])) {
+          return { no: normalizeNo(cells[0]), name: normalizeName(cells[1]) };
+        }
+        if (cells.length >= 2 && looksLikeStudentNo(cells[1])) {
+          return { no: normalizeNo(cells[1]), name: normalizeName(cells[0]) };
+        }
+        return { no: '', name: normalizeName(cells[0]) };
+      }).filter(s => s.name && !/姓名|學生姓名|名字|name/i.test(s.name));
+    }
+
+    function looksLikeStudentNo(value) {
+      return /^[A-Za-z]?\d{1,4}$/.test(String(value).trim());
+    }
+
+    function deleteStudent(id) {
+      // 若學生被指派，移除其指派
+      ['officer', 'tutor'].forEach(role => {
+        state.tasks[role].forEach(t => {
+          if (t.studentId === id) t.studentId = null;
+        });
+      });
+      state.students = state.students.filter(s => s.id !== id);
+      renderStudents();
+      refreshTasksUI();
+      refreshAssignUI();
+      saveLocal();
+    }
+
+    function renderStudents() {
+      const tbody = $('#studentsTable');
+      tbody.innerHTML = '';
+      state.students.forEach((s, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="px-4 py-3">${idx + 1}</td>
+          <td class="px-4 py-3">${s.no || '-'}</td>
+          <td class="px-4 py-3 font-semibold">${s.name}</td>
+          <td class="px-4 py-3">
+            <button data-id="${s.id}" class="btn-del-stu px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30">刪除</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      $$('.btn-del-stu').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.id;
+          if (confirm('確定刪除此學生？')) deleteStudent(id);
+        });
+      });
+      // 更新統計
+      $('#statStudents').textContent = state.students.length;
+    }
+
+    // 任務：切換類型
+    $$('.role-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        $$('.role-btn').forEach(b => b.classList.remove('bg-white','text-brand-800','shadow'));
+        btn.classList.add('bg-white','text-brand-800','shadow');
+        state.ui.role = btn.dataset.role;
+        refreshTasksUI();
+      });
+    });
+
+    function refreshTasksUI() {
+      const role = state.ui.role;
+      $('#roleLabel1').textContent = role === 'officer' ? '幹部' : '小老師';
+      $('#roleLabel2').textContent = role === 'officer' ? '幹部' : '小老師';
+      renderTasksTable();
+    }
+
+    // 任務：新增單筆
+    $('#btnAddTask').addEventListener('click', () => {
+      const role = state.ui.role;
+      const name = $('#taskName').value.trim();
+      if (!name) return toast('請輸入任務名稱');
+      addTask(role, name);
+      $('#taskName').value = '';
+      renderTasksTable();
+      refreshAssignUI();
+      saveLocal();
+      toast('已新增任務');
+    });
+
+    // 任務：批次
+    $('#btnBulkAddTasks').addEventListener('click', () => {
+      const role = state.ui.role;
+      const text = $('#taskBulk').value.trim();
+      if (!text) return toast('沒有內容可加入');
+      const rows = text.split('\n').map(s => s.trim()).filter(Boolean);
+      let count = 0;
+      rows.forEach(r => count += addTask(role, r));
+      $('#taskBulk').value = '';
+      renderTasksTable();
+      refreshAssignUI();
+      saveLocal();
+      toast(`批次加入 ${count} 個任務`);
+    });
+
+    $('#btnClearTasks').addEventListener('click', () => {
+      const role = state.ui.role;
+      if (!confirm(`確定清空「${role === 'officer' ? '幹部' : '小老師'}」任務？`)) return;
+      state.tasks[role] = [];
+      renderTasksTable();
+      refreshAssignUI();
+      saveLocal();
+      toast('已清空任務');
+    });
+
+    $('#btnGenerateOfficerTasks').addEventListener('click', () => {
+      const count = addDefaultTasks('officer');
+      state.ui.role = 'officer';
+      refreshRoleButtons();
+      refreshTasksUI();
+      refreshAssignUI();
+      saveLocal();
+      toast(`已生成 ${count} 個常用幹部職務`);
+    });
+
+    $('#btnGenerateTutorTasks').addEventListener('click', () => {
+      const count = addDefaultTasks('tutor');
+      state.ui.role = 'tutor';
+      refreshRoleButtons();
+      refreshTasksUI();
+      refreshAssignUI();
+      saveLocal();
+      toast(`已生成 ${count} 個常用小老師職務`);
+    });
+
+    $('#btnGenerateAllTasks').addEventListener('click', () => {
+      const count = addDefaultTasks('officer') + addDefaultTasks('tutor');
+      refreshTasksUI();
+      refreshAssignUI();
+      saveLocal();
+      toast(`已生成 ${count} 個常用職務`);
+    });
+
+    function addTask(role, name) {
+      // 同名也允許，但可做簡單去重
+      const exists = state.tasks[role].some(t => t.name === name);
+      if (exists) return 0;
+      state.tasks[role].push({ id: uid(), name, studentId: null });
+      return 1;
+    }
+
+    function addDefaultTasks(role) {
+      return defaultTasks[role].reduce((sum, name) => sum + addTask(role, name), 0);
+    }
+
+    function refreshRoleButtons() {
+      $$('.role-btn').forEach(btn => {
+        btn.classList.toggle('bg-white', btn.dataset.role === state.ui.role);
+        btn.classList.toggle('text-brand-800', btn.dataset.role === state.ui.role);
+        btn.classList.toggle('shadow', btn.dataset.role === state.ui.role);
+      });
+    }
+
+    function deleteTask(role, id) {
+      state.tasks[role] = state.tasks[role].filter(t => t.id !== id);
+      renderTasksTable();
+      refreshAssignUI();
+      saveLocal();
+    }
+
+    function renderTasksTable() {
+      const role = state.ui.role;
+      const tbody = $('#tasksTable');
+      tbody.innerHTML = '';
+      const tasks = state.tasks[role];
+      tasks.forEach((t, idx) => {
+        const assigned = state.students.find(s => s.id === t.studentId);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="px-4 py-3">${idx + 1}</td>
+          <td class="px-4 py-3 font-semibold">${t.name}</td>
+          <td class="px-4 py-3">${assigned ? `${assigned.no ? assigned.no + ' - ' : ''}${assigned.name}` : '<span class="text-white/60">未指派</span>'}</td>
+          <td class="px-4 py-3">
+            <button data-id="${t.id}" class="btn-del-task px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30">刪除</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      $$('.btn-del-task').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.id;
+          if (confirm('確定刪除此任務？')) deleteTask(state.ui.role, id);
+        });
+      });
+      // 更新統計
+      const tasksCount = state.tasks.officer.length + state.tasks.tutor.length;
+      $('#statTasks').textContent = state.ui.tab === 'assign'
+        ? state.tasks[$('#assignRole').value].length
+        : tasksCount;
+      const assignedCount = [...state.tasks.officer, ...state.tasks.tutor].filter(t => t.studentId).length;
+      $('#statAssigned').textContent = assignedCount;
+    }
+
+    // 分配與檢視
+    $('#assignRole').addEventListener('change', refreshAssignUI);
+    $('#btnRandomAssign').addEventListener('click', () => randomAssign($('#assignRole').value));
+    $('#btnClearAssign').addEventListener('click', () => {
+      const role = $('#assignRole').value;
+      if (!confirm(`清除「${role === 'officer' ? '幹部' : '小老師'}」所有指派？`)) return;
+      state.tasks[role].forEach(t => t.studentId = null);
+      refreshAssignUI();
+      saveLocal();
+      toast('已清除指派');
+    });
+
+    function refreshAssignUI() {
+      const role = $('#assignRole').value;
+      const tbody = $('#assignTable');
+      tbody.innerHTML = '';
+      const tasks = state.tasks[role];
+      // 統計
+      $('#statStudents').textContent = state.students.length;
+      $('#statTasks').textContent = tasks.length;
+      $('#statAssigned').textContent = tasks.filter(t => t.studentId).length;
+
+      tasks.forEach((t, idx) => {
+        const tr = document.createElement('tr');
+        const assigned = state.students.find(s => s.id === t.studentId);
+        const options = [
+          `<option value="">未指派</option>`,
+          ...state.students.map(s => `<option value="${s.id}" ${s.id===t.studentId?'selected':''}>${s.no ? s.no + ' - ' : ''}${s.name}</option>`)
+        ].join('');
+        tr.innerHTML = `
+          <td class="px-4 py-3">${idx + 1}</td>
+          <td class="px-4 py-3 font-semibold">${t.name}</td>
+          <td class="px-4 py-3">${assigned ? `${assigned.no ? assigned.no + ' - ' : ''}${assigned.name}` : '<span class="text-white/60">未指派</span>'}</td>
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-2">
+              <select data-id="${t.id}" class="assign-select rounded-lg bg-white text-brand-800 px-3 py-1.5">${options}</select>
+              <button data-id="${t.id}" class="btn-clear-one px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30">清除</button>
+            </div>
+          </td>
+          <td class="px-4 py-3">
+            <button data-id="${t.id}" class="btn-random-one px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-500 text-white font-extrabold shadow">隨機</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // 快速指定
+      $$('.assign-select').forEach(sel => {
+        sel.addEventListener('change', () => {
+          const id = sel.dataset.id;
+          const val = sel.value;
+          const task = state.tasks[role].find(x => x.id === id);
+          if (!task) return;
+          // 避免同類重複
+          if ($('#avoidDuplicate').checked && val) {
+            const existsTask = state.tasks[role].find(x => x.studentId === val && x.id !== id);
+            if (existsTask) {
+              sel.value = task.studentId || '';
+              return toast('同一類型已被其他任務使用，請先清除或關閉「避免重複」');
+            }
+          }
+          task.studentId = val || null;
+          refreshAssignUI();
+          saveLocal();
+        });
+      });
+
+      // 清除單筆
+      $$('.btn-clear-one').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.id;
+          const task = state.tasks[role].find(x => x.id === id);
+          if (task) {
+            task.studentId = null;
+            refreshAssignUI();
+            saveLocal();
+          }
+        });
+      });
+
+      // 單筆隨機分配
+      $$('.btn-random-one').forEach(btn => {
+        btn.addEventListener('click', () => randomAssignOne(role, btn.dataset.id));
+      });
+    }
+
+    function randomAssignOne(role, taskId) {
+      if (state.students.length === 0) return toast('請先加入學生名單');
+
+      const tasks = state.tasks[role];
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      const avoidDup = $('#avoidDuplicate').checked;
+      let pool = state.students.map(s => s.id);
+
+      if (avoidDup) {
+        const usedByOtherTasks = new Set(
+          tasks
+            .filter(t => t.id !== taskId && t.studentId)
+            .map(t => t.studentId)
+        );
+        pool = pool.filter(id => !usedByOtherTasks.has(id));
+      }
+
+      if (task.studentId && pool.length > 1) {
+        pool = pool.filter(id => id !== task.studentId);
+      }
+
+      if (pool.length === 0) return toast('目前沒有可隨機分配的學生');
+
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+      task.studentId = pick;
+      refreshAssignUI();
+      saveLocal();
+      toast('已重新隨機分配此項任務');
+    }
+
+    function randomAssign(role) {
+      const tasks = state.tasks[role];
+      const need = tasks.filter(t => !t.studentId);
+      if (need.length === 0) return toast('沒有未指派的任務');
+      if (state.students.length === 0) return toast('請先加入學生名單');
+
+      const avoidDup = $('#avoidDuplicate').checked;
+
+      // 目前已使用的人（同類型）
+      const used = new Set(tasks.filter(t => t.studentId).map(t => t.studentId));
+      const poolBase = [...state.students];
+
+      // 隨機分配每個未指派任務
+      for (let t of need) {
+        let pool = poolBase.map(s => s.id);
+        if (avoidDup) {
+          pool = pool.filter(id => !used.has(id));
+        }
+        if (pool.length === 0) {
+          // 若不夠分，跳過或提示
+          toast('可用人數不足，部分任務未分配');
+          break;
+        }
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+        t.studentId = pick;
+        used.add(pick);
+      }
+      refreshAssignUI();
+      saveLocal();
+      toast('已完成隨機分配');
+    }
+
+    // 匯出
+    function exportRows() {
+      const rows = [['類型','任務','學號','姓名']];
+      const map = [['officer','幹部'], ['tutor','小老師']];
+      map.forEach(([key, label]) => {
+        state.tasks[key].forEach(t => {
+          const s = state.students.find(x => x.id === t.studentId);
+          rows.push([label, t.name, s?.no || '', s?.name || '']);
+        });
+      });
+      return rows;
+    }
+
+    function download(filename, content, type='text/plain') {
+      const blob = new Blob([content], {type});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(url);
+      a.remove();
+    }
+
+    function downloadExcel() {
+      if (!window.XLSX) return toast('Excel 匯出套件尚未載入，請確認網路連線後再試');
+      const workbook = XLSX.utils.book_new();
+      const assignmentSheet = XLSX.utils.aoa_to_sheet(exportRows());
+      const studentsSheet = XLSX.utils.aoa_to_sheet([
+        ['序號', '學號/座號', '姓名'],
+        ...state.students.map((student, index) => [index + 1, student.no || '', student.name])
+      ]);
+      assignmentSheet['!cols'] = [{ wch: 12 }, { wch: 18 }, { wch: 12 }, { wch: 16 }];
+      studentsSheet['!cols'] = [{ wch: 8 }, { wch: 12 }, { wch: 16 }];
+      XLSX.utils.book_append_sheet(workbook, assignmentSheet, '分配結果');
+      XLSX.utils.book_append_sheet(workbook, studentsSheet, '學生名單');
+      XLSX.writeFile(workbook, '班級幹部_小老師_分配.xlsx');
+      toast('已下載 Excel 檔');
+    }
+
+    function escapeHTML(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function downloadPDF() {
+      const rows = exportRows();
+      const bodyRows = rows.slice(1).map(row => `
+        <tr>${row.map(cell => `<td>${escapeHTML(cell || '-')}</td>`).join('')}</tr>
+      `).join('');
+      const html = `<!DOCTYPE html>
+        <html lang="zh-Hant">
+        <head>
+          <meta charset="UTF-8">
+          <title>班級幹部與小老師分配結果</title>
+          <style>
+            @page { size: A4; margin: 16mm; }
+            body { font-family: "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif; color: #111827; }
+            h1 { font-size: 22px; margin: 0 0 12px; }
+            .meta { margin: 0 0 16px; color: #4b5563; font-size: 13px; }
+            table { width: 100%; border-collapse: collapse; font-size: 13px; }
+            th, td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; }
+            th { background: #e0f2fe; font-weight: 700; }
+            tr:nth-child(even) td { background: #f8fafc; }
+          </style>
+        </head>
+        <body>
+          <h1>班級幹部與小老師分配結果</h1>
+          <p class="meta">匯出時間：${escapeHTML(new Date().toLocaleString('zh-TW'))}</p>
+          <table>
+            <thead><tr>${rows[0].map(cell => `<th>${escapeHTML(cell)}</th>`).join('')}</tr></thead>
+            <tbody>${bodyRows}</tbody>
+          </table>
+          <script>
+            window.addEventListener('load', () => {
+              window.print();
+            });
+          <\/script>
+        </body>
+        </html>`;
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) return toast('瀏覽器封鎖了 PDF 視窗，請允許彈出視窗後再試');
+      printWindow.document.open();
+      printWindow.document.write(html);
+      printWindow.document.close();
+      toast('已開啟 PDF 列印視窗');
+    }
+
+    $('#btnDownloadExcel').addEventListener('click', () => {
+      downloadExcel();
+    });
+
+    $('#btnDownloadPDF').addEventListener('click', () => {
+      downloadPDF();
+    });
+
+    $('#btnDownloadJSON').addEventListener('click', () => {
+      const data = JSON.stringify(state, null, 2);
+      download('分配資料.json', data, 'application/json');
+    });
+
+    // 匯入
+    let importFile = null;
+    $('#fileImport').addEventListener('change', (e) => {
+      importFile = e.target.files[0] || null;
+    });
+
+    $('#btnImportJSON').addEventListener('click', () => {
+      if (!importFile) return toast('請先選擇 JSON 檔');
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const obj = JSON.parse(reader.result);
+          if (!obj || !obj.students || !obj.tasks) throw new Error();
+          state.students = Array.isArray(obj.students) ? obj.students : [];
+          state.tasks = obj.tasks && obj.tasks.officer && obj.tasks.tutor ? obj.tasks : {officer:[], tutor:[]};
+          // UI保持
+          renderStudents();
+          refreshTasksUI();
+          refreshAssignUI();
+          saveLocal();
+          toast('匯入成功');
+        } catch (e) {
+          toast('檔案內容格式不正確');
+        }
+      };
+      reader.readAsText(importFile, 'utf-8');
+    });
+
+    // 本機儲存/讀取
+    function saveLocal() {
+      try {
+        localStorage.setItem('cc-class-assign', JSON.stringify(state));
+      } catch {}
+    }
+    function loadLocal() {
+      try {
+        const raw = localStorage.getItem('cc-class-assign');
+        if (!raw) {
+          addDefaultTasks('officer');
+          addDefaultTasks('tutor');
+          return;
+        }
+        const obj = JSON.parse(raw);
+        if (obj?.students) state.students = obj.students;
+        if (obj?.tasks?.officer && obj?.tasks?.tutor) state.tasks = obj.tasks;
+        if (obj?.ui?.role) state.ui.role = obj.ui.role;
+      } catch {}
+      // 初次渲染
+      renderStudents();
+      refreshTasksUI();
+      refreshAssignUI();
+    }
+
+    $('#btnSaveLocal').addEventListener('click', () => { saveLocal(); toast('已儲存到本機'); });
+    $('#btnLoadLocal').addEventListener('click', () => { loadLocal(); toast('已自本機讀取'); });
+    $('#btnReset').addEventListener('click', () => {
+      if (!confirm('確定重設全部資料？（包含學生/任務/指派/本機儲存）')) return;
+      localStorage.removeItem('cc-class-assign');
+      state.students = [];
+      state.tasks = { officer: [], tutor: [] };
+      addDefaultTasks('officer');
+      addDefaultTasks('tutor');
+      state.ui.role = 'officer';
+      refreshRoleButtons();
+      renderStudents();
+      refreshTasksUI();
+      refreshAssignUI();
+      toast('已重設');
+    });
+
+    // 初始顯示
+    renderStudents();
+    refreshTasksUI();
+    refreshAssignUI();
+  </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96bfcc7a02764a48',t:'MTc1NDY2NDM0MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

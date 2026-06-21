@@ -1,0 +1,1765 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>多功能翻譯工具 · 優化版</title>
+<style>
+  :root{
+    --bg:#f4f6fb;
+    --bg-grad: radial-gradient(1200px 600px at 10% -10%, #e8edff 0%, transparent 55%),
+               radial-gradient(1000px 500px at 110% 10%, #e6fbff 0%, transparent 50%),
+               var(--bg);
+    --card:#ffffff;
+    --card-2:#fbfcfe;
+    --ink:#1b2030;
+    --ink-soft:#5b6479;
+    --ink-faint:#9aa3b8;
+    --line:#e7eaf3;
+    --line-strong:#d6dbe9;
+    --brand:#4f6bff;
+    --brand-ink:#3a52e0;
+    --brand-soft:#eef1ff;
+    --ok:#16a34a;
+    --warn:#d97706;
+    --err:#e23b53;
+    --radius:18px;
+    --radius-sm:12px;
+    --shadow:0 1px 2px rgba(20,30,60,.05), 0 12px 30px rgba(20,30,60,.07);
+    --shadow-lg:0 2px 6px rgba(20,30,60,.08), 0 24px 50px rgba(20,30,60,.12);
+    --mono:'SF Mono',ui-monospace,'Menlo',monospace;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans TC',Roboto,'Helvetica Neue',Arial,sans-serif;
+    --tap:0;
+  }
+  html[data-theme="dark"]{
+    --bg:#0e1118;
+    --bg-grad: radial-gradient(1200px 600px at 10% -10%, #1a2138 0%, transparent 55%),
+               radial-gradient(1000px 500px at 110% 10%, #112630 0%, transparent 50%),
+               var(--bg);
+    --card:#171b26;
+    --card-2:#1c212e;
+    --ink:#eaedf6;
+    --ink-soft:#aab2c7;
+    --ink-faint:#727b91;
+    --line:#262c3a;
+    --line-strong:#333a4c;
+    --brand:#6f86ff;
+    --brand-ink:#8499ff;
+    --brand-soft:#1e2542;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 14px 34px rgba(0,0,0,.45);
+    --shadow-lg:0 2px 6px rgba(0,0,0,.5), 0 26px 56px rgba(0,0,0,.55);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    font-family:var(--sans);
+    background:var(--bg-grad);
+    background-attachment:fixed;
+    color:var(--ink);
+    line-height:1.6;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    transition:background-color .35s ease,color .25s ease;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 64px}
+
+  /* Header */
+  .top{
+    display:flex;align-items:center;gap:14px;margin-bottom:22px;flex-wrap:wrap;
+  }
+  .logo{
+    width:46px;height:46px;border-radius:14px;flex:none;
+    background:linear-gradient(135deg,var(--brand),#7a5bff);
+    display:grid;place-items:center;color:#fff;font-size:24px;
+    box-shadow:0 8px 20px rgba(79,107,255,.35);
+  }
+  .titles h1{font-size:1.45rem;font-weight:750;letter-spacing:-.01em;line-height:1.2}
+  .titles p{color:var(--ink-soft);font-size:.86rem;margin-top:1px}
+  .titles .credit{color:var(--ink-faint);font-size:.78rem;margin-top:2px}
+  .titles .credit b{color:var(--ink-soft);font-weight:600}
+  .top-actions{margin-left:auto;display:flex;gap:8px}
+  .icon-btn{
+    width:44px;height:44px;border:1px solid var(--line);border-radius:12px;
+    background:var(--card);color:var(--ink-soft);cursor:pointer;font-size:1.15rem;
+    display:grid;place-items:center;transition:.2s;box-shadow:var(--shadow);
+  }
+  .icon-btn:hover{color:var(--brand-ink);border-color:var(--line-strong);transform:translateY(-1px)}
+  .icon-btn:active{transform:translateY(0)}
+
+  /* Tabs */
+  .tabs{
+    display:flex;gap:4px;background:var(--card);border:1px solid var(--line);
+    padding:6px;border-radius:16px;box-shadow:var(--shadow);margin-bottom:18px;
+    overflow-x:auto;scrollbar-width:none;
+  }
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{
+    flex:1;min-width:max-content;padding:11px 16px;border:none;background:transparent;
+    border-radius:11px;cursor:pointer;font-size:.94rem;font-weight:600;color:var(--ink-soft);
+    transition:.22s;white-space:nowrap;font-family:inherit;
+  }
+  .tab:hover{color:var(--ink)}
+  .tab.active{background:var(--brand);color:#fff;box-shadow:0 6px 16px rgba(79,107,255,.32)}
+
+  /* Card */
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:22px;
+  }
+  .engine-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 12px;margin-bottom:16px;background:var(--card-2);border:1px solid var(--line);border-radius:14px}
+  .eb-label{font-size:.82rem;font-weight:700;color:var(--ink-soft)}
+  .eb-gem{display:flex;gap:6px;align-items:center;flex:1;min-width:200px}
+  .eb-gem input,.eb-gem select{padding:8px 11px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font-size:.84rem;font-family:inherit;cursor:pointer}
+  .eb-gem #eb-key{flex:1;min-width:120px;cursor:text}
+  .eb-gem #eb-model{width:170px}
+  .eb-gem input:focus,.eb-gem select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+  .eb-status{font-size:.78rem;font-weight:600;margin-left:auto;white-space:nowrap}
+  .eb-status:empty{display:none}
+  .eb-hint{font-size:.78rem;color:var(--ink-faint)}
+  .eb-status + .eb-hint{margin-left:0}
+  .eb-status:empty + .eb-hint{margin-left:auto}
+
+  .pane{display:none;animation:fade .35s ease}
+  .pane.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .pane-head{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+  .pane-head h2{font-size:1.05rem;font-weight:700}
+  .pane-head .hint{color:var(--ink-faint);font-size:.82rem}
+  .seg{margin-left:auto;display:flex;gap:4px;background:var(--brand-soft);border-radius:10px;padding:3px}
+  .seg button{
+    border:none;background:transparent;color:var(--brand-ink);font-weight:600;font-size:.82rem;
+    padding:6px 12px;border-radius:8px;cursor:pointer;font-family:inherit;transition:.18s;
+  }
+  .seg button.on{background:var(--card);box-shadow:var(--shadow)}
+
+  /* Translation grid */
+  .grid{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:stretch}
+  .col{display:flex;flex-direction:column;gap:10px;min-width:0}
+  .lang-row{display:flex;gap:8px}
+  select.lang{
+    flex:1;width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:var(--radius-sm);
+    font-size:.92rem;font-weight:600;background:var(--card-2);color:var(--ink);cursor:pointer;
+    font-family:inherit;transition:.18s;-webkit-appearance:none;appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239aa3b8' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 12px center;padding-right:34px;
+  }
+  select.lang:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+
+  .box{position:relative;flex:1;display:flex}
+  textarea.ta{
+    width:100%;min-height:230px;padding:16px 16px 40px;border:1px solid var(--line);
+    border-radius:var(--radius-sm);font-size:1.06rem;line-height:1.65;resize:vertical;
+    background:var(--card-2);color:var(--ink);font-family:inherit;transition:.18s;
+  }
+  textarea.ta::placeholder{color:var(--ink-faint)}
+  textarea.ta:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft);background:var(--card)}
+  textarea.ta.ro{background:var(--card-2);cursor:default}
+  textarea.ta.listening{border-color:var(--ok);box-shadow:0 0 0 3px rgba(22,163,74,.15)}
+  .count{
+    position:absolute;left:14px;bottom:11px;font-size:.72rem;color:var(--ink-faint);
+    font-variant-numeric:tabular-nums;pointer-events:none;
+  }
+  .dot{
+    position:absolute;top:12px;right:14px;width:9px;height:9px;border-radius:50%;
+    background:transparent;transition:.25s;
+  }
+  .dot.work{background:var(--warn);box-shadow:0 0 0 4px rgba(217,119,6,.18);animation:bp 1s infinite}
+  .dot.done{background:var(--ok);box-shadow:0 0 0 4px rgba(22,163,74,.15)}
+  .dot.bad{background:var(--err);box-shadow:0 0 0 4px rgba(226,59,83,.18)}
+  @keyframes bp{50%{opacity:.45}}
+
+  .tools{display:flex;gap:7px;flex-wrap:wrap}
+  .tool{
+    width:40px;height:40px;border:1px solid var(--line);border-radius:11px;background:var(--card);
+    color:var(--ink-soft);cursor:pointer;font-size:1.05rem;display:grid;place-items:center;
+    transition:.18s;font-family:inherit;
+  }
+  .tool:hover{color:var(--brand-ink);border-color:var(--line-strong);background:var(--card-2)}
+  .tool:active{transform:scale(.93)}
+  .tool:disabled{opacity:.4;cursor:not-allowed}
+  .tool.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .tool.rec{background:var(--err);color:#fff;border-color:var(--err);animation:bp 1.3s infinite}
+  .tool.wide{width:auto;padding:0 14px;gap:7px;font-size:.88rem;font-weight:600}
+  .tool.ai-link{border-color:var(--brand);color:var(--brand-ink);background:var(--brand-soft)}
+  .tool.ai-link:hover{background:var(--brand);color:#fff}
+
+  .swap{display:flex;align-items:center;justify-content:center}
+  .swap button{
+    width:46px;height:46px;border:1px solid var(--line);border-radius:50%;background:var(--card);
+    color:var(--brand-ink);cursor:pointer;font-size:1.2rem;display:grid;place-items:center;
+    transition:.3s;box-shadow:var(--shadow);
+  }
+  .swap button:hover{transform:rotate(180deg) scale(1.06);border-color:var(--brand);color:var(--brand)}
+
+  /* 多語言同時翻譯 */
+  .seg-add{margin-left:auto;padding:9px 16px;border:1px solid var(--brand);border-radius:11px;background:var(--brand-soft);color:var(--brand-ink);font-weight:700;font-size:.85rem;cursor:pointer;font-family:inherit;transition:.18s}
+  .seg-add:hover{background:var(--brand);color:#fff}
+  .seg-add:disabled{opacity:.45;cursor:not-allowed}
+  .multi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+  .mcard{display:flex;flex-direction:column;gap:10px;background:var(--card-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px}
+  .mcard.src{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+  .mcard-top{display:flex;gap:8px;align-items:center}
+  .mcard-top .lang{flex:1}
+  .mremove{width:36px;height:36px;flex:none;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink-faint);cursor:pointer;font-size:1rem;transition:.18s}
+  .mremove:hover{color:var(--err);border-color:var(--err)}
+  .mcard textarea.ta{min-height:128px;font-size:1.02rem}
+
+  /* footer links */
+  .ext{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:22px 0 8px}
+  .ext a,.ext button{
+    padding:9px 16px;border:1px solid var(--line);border-radius:12px;background:var(--card);
+    color:var(--ink-soft);text-decoration:none;font-weight:600;font-size:.85rem;cursor:pointer;
+    transition:.18s;display:inline-flex;align-items:center;gap:7px;font-family:inherit;box-shadow:var(--shadow);
+  }
+  .ext a:hover,.ext button:hover{color:var(--brand-ink);border-color:var(--line-strong);transform:translateY(-1px)}
+  .foot{text-align:center;color:var(--ink-faint);font-size:.8rem;margin-top:22px;line-height:1.8}
+  .foot b{color:var(--ink-soft);font-weight:600}
+
+  /* toast */
+  #toasts{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center}
+  .toast{
+    background:var(--ink);color:var(--card);padding:10px 18px;border-radius:11px;font-size:.86rem;font-weight:600;
+    box-shadow:var(--shadow-lg);animation:tin .3s ease;max-width:90vw;
+  }
+  .toast.err{background:var(--err);color:#fff}
+  @keyframes tin{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+
+  .spin{width:15px;height:15px;border:2px solid var(--line-strong);border-top-color:var(--brand);border-radius:50%;display:inline-block;animation:sp .7s linear infinite;vertical-align:-2px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:8px}
+  ::-webkit-scrollbar-thumb:hover{background:var(--ink-faint)}
+
+  /* Gemini Live */
+  .gem-config{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px}
+  .gem-field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:150px}
+  .gem-field label{font-size:.76rem;font-weight:700;color:var(--ink-soft);letter-spacing:.02em}
+  .gem-field .lbl-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .getkey{font-size:.74rem;font-weight:700;color:var(--brand-ink);text-decoration:none;white-space:nowrap}
+  .getkey:hover{text-decoration:underline}
+  .gem-field input,.gem-field select{
+    padding:11px 13px;border:1px solid var(--line);border-radius:var(--radius-sm);
+    background:var(--card-2);color:var(--ink);font-size:.92rem;font-family:inherit;width:100%;
+  }
+  .gem-field input:focus,.gem-field select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+  .gem-start{
+    padding:11px 22px;border:none;border-radius:var(--radius-sm);background:var(--brand);color:#fff;
+    font-weight:700;font-size:.95rem;cursor:pointer;font-family:inherit;white-space:nowrap;transition:.18s;
+    box-shadow:0 6px 16px rgba(79,107,255,.3);
+  }
+  .gem-start:hover{filter:brightness(1.05);transform:translateY(-1px)}
+  .gem-start.live{background:var(--err);box-shadow:0 6px 16px rgba(226,59,83,.32)}
+  .gem-opts{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:14px}
+  .chk{display:inline-flex;align-items:center;gap:7px;font-size:.86rem;font-weight:600;color:var(--ink-soft);cursor:pointer}
+  .chk input{width:16px;height:16px;accent-color:var(--brand)}
+  .gem-state{margin-left:auto;display:inline-flex;align-items:center;gap:8px;font-size:.84rem;font-weight:600;color:var(--ink-soft)}
+  .gem-state .dot{position:static}
+  .subs{display:flex;flex-direction:column;gap:12px;margin-bottom:14px}
+  .sub-block{background:var(--card-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px 16px;min-height:84px}
+  .sub-block.accent{background:var(--brand-soft);border-color:transparent}
+  .sub-label{font-size:.74rem;font-weight:700;color:var(--ink-faint);margin-bottom:6px;letter-spacing:.03em}
+  .sub-text{font-size:1.18rem;line-height:1.6;color:var(--ink);min-height:1.6em;word-break:break-word}
+  .sub-block.accent .sub-text{color:var(--brand-ink);font-weight:600}
+  .sub-actions{display:flex;gap:6px;margin-top:10px}
+  .sub-actions .tool{width:38px;height:38px;font-size:1rem}
+  .gem-log-wrap{margin-bottom:12px}
+  .gem-log-wrap summary{cursor:pointer;font-size:.82rem;color:var(--ink-soft);font-weight:600;user-select:none}
+  .gem-log{margin-top:8px;max-height:160px;overflow:auto;background:var(--card-2);border:1px solid var(--line);border-radius:10px;padding:10px;font-family:var(--mono);font-size:.74rem;color:var(--ink-soft);white-space:pre-wrap;line-height:1.5}
+  .gem-note{font-size:.78rem;color:var(--ink-faint);line-height:1.7;background:var(--card-2);border:1px solid var(--line);border-radius:10px;padding:11px 14px}
+  .gem-note a{color:var(--brand-ink)}
+
+  /* 放大顯示 */
+  .zoom-btn{
+    position:absolute;top:7px;right:9px;z-index:2;width:28px;height:28px;
+    border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink-faint);
+    cursor:pointer;font-size:.9rem;display:grid;place-items:center;opacity:.6;transition:.15s;line-height:1;
+  }
+  .zoom-btn:hover{opacity:1;color:var(--brand-ink);border-color:var(--line-strong)}
+  .box .dot{right:46px}
+  .sub-block{position:relative}
+  .sub-block .zoom-btn{top:10px;right:10px}
+  .zoom-overlay{position:fixed;inset:0;z-index:5000;background:var(--card);display:flex;flex-direction:column}
+  .zoom-bar{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .zoom-title{font-weight:700;font-size:1rem;color:var(--ink-soft)}
+  .zoom-actions{margin-left:auto;display:flex;gap:8px}
+  .zoom-actions button{border:1px solid var(--line);background:var(--card-2);color:var(--ink);border-radius:10px;padding:8px 14px;font-weight:700;cursor:pointer;font-family:inherit;font-size:.9rem}
+  .zoom-actions button:hover{border-color:var(--brand);color:var(--brand-ink)}
+  .zoom-body{flex:1;overflow:auto;padding:5vh 7vw;font-size:48px;line-height:1.5;font-weight:600;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+
+  @media (max-width:760px){
+    .wrap{padding:18px 12px 48px}
+    .zoom-body{padding:4vh 6vw;font-size:34px}
+    .grid{grid-template-columns:1fr}
+    .swap{margin:2px 0}
+    .swap button{transform:rotate(90deg)}
+    .swap button:hover{transform:rotate(270deg) scale(1.06)}
+    .flip{order:-1}
+    textarea.ta{min-height:150px}
+    .titles h1{font-size:1.2rem}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div id="toasts"></div>
+
+<div id="zoom-overlay" class="zoom-overlay" style="display:none">
+  <div class="zoom-bar">
+    <span class="zoom-title" id="zoom-title">放大顯示</span>
+    <div class="zoom-actions">
+      <button onclick="zoomFont(-1)" title="縮小字級">A−</button>
+      <button onclick="zoomFont(1)" title="放大字級">A＋</button>
+      <button onclick="closeZoom()" title="關閉（Esc）">✕ 關閉</button>
+    </div>
+  </div>
+  <div class="zoom-body" id="zoom-body"></div>
+</div>
+
+<div class="wrap">
+  <header class="top">
+    <div class="logo">🌐</div>
+    <div class="titles">
+      <h1>多功能翻譯工具</h1>
+      <p>即時翻譯 · 語音輸入 · 雙向對話 · 逐字稿</p>
+      <p class="credit">製作者：<b>臺北市立麗山高中 林獻升老師</b>（frog@lssh.tp.edu.tw）</p>
+    </div>
+    <div class="top-actions">
+      <button class="icon-btn" id="theme-btn" onclick="toggleTheme()" title="切換深色模式">🌙</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-pane="sentence" onclick="switchTab('sentence')">✨ 句子翻譯</button>
+    <button class="tab" data-pane="multi" onclick="switchTab('multi')">🌍 多語言翻譯</button>
+    <button class="tab" data-pane="continuous" onclick="switchTab('continuous')">🔄 連續翻譯</button>
+    <button class="tab" data-pane="transcription" onclick="switchTab('transcription')">🎤 語音轉錄</button>
+    <button class="tab" data-pane="gemini" onclick="switchTab('gemini')">🤖 Gemini Live</button>
+  </nav>
+
+  <div class="card">
+    <!-- 句子翻譯 -->
+    <section id="sentence" class="pane active">
+      <div class="pane-head">
+        <h2>句子翻譯</h2>
+        <span class="hint">輸入即自動翻譯 · Ctrl/⌘+Enter 立即翻譯</span>
+        <div class="seg" id="auto-seg">
+          <button class="on" data-auto="1" onclick="setAutoMode(true)">自動</button>
+          <button data-auto="0" onclick="setAutoMode(false)">手動</button>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="col">
+          <div class="lang-row">
+            <select class="lang" id="from-lang"></select>
+          </div>
+          <div class="box">
+            <textarea class="ta" id="from-text" placeholder="請輸入要翻譯的文字…"></textarea>
+            <span class="dot" id="from-dot"></span>
+            <span class="count" id="from-count">0 字</span>
+          </div>
+          <div class="tools">
+            <button class="tool" id="from-mic" onclick="micToggle('from-text','from-lang','from-mic')" title="語音輸入（單次）">🎤</button>
+            <button class="tool wide" id="bi-btn" onclick="biToggle()" title="雙向對話：自動偵測兩種語言互譯，循環收音">🎙️ 雙向</button>
+            <button class="tool wide" id="loop-btn" onclick="loopToggle()" title="循環口譯：說話→翻譯→播報→自動再收音，不斷循環">🔁 循環</button>
+            <button class="tool" onclick="speak('from-text','from-lang')" title="朗讀原文">🔊</button>
+            <button class="tool" onclick="clearBox('from-text')" title="清除">🗑️</button>
+            <button class="tool" onclick="copyBox('from-text')" title="複製">📋</button>
+            <button class="tool wide" onclick="doTranslate(true)" title="翻譯">🔄 翻譯</button>
+          </div>
+        </div>
+
+        <div class="swap"><button onclick="swap()" title="交換語言與文字">⇄</button></div>
+
+        <div class="col">
+          <div class="lang-row">
+            <select class="lang" id="to-lang"></select>
+          </div>
+          <div class="box">
+            <textarea class="ta ro" id="to-text" placeholder="翻譯結果將顯示在這裡…" readonly></textarea>
+            <span class="dot" id="to-dot"></span>
+            <span class="count" id="to-count">0 字</span>
+          </div>
+          <div class="tools">
+            <button class="tool" onclick="speak('to-text','to-lang')" title="朗讀譯文">🔊</button>
+            <button class="tool" onclick="stopSpeak()" title="停止朗讀">🔇</button>
+            <button class="tool" onclick="copyBox('to-text')" title="複製">📋</button>
+            <button class="tool" id="autospeak-btn" onclick="toggleAutoSpeak()" title="翻譯後自動朗讀">🎵</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 多語言同時翻譯 -->
+    <section id="multi" class="pane">
+      <div class="pane-head">
+        <h2>多語言翻譯</h2>
+        <span class="hint">在任一語言框輸入或語音，其餘語言同步翻譯</span>
+        <button class="seg-add" id="multi-add" onclick="multiAdd()">➕ 新增語言</button>
+      </div>
+      <div class="multi-grid" id="multi-cards"></div>
+    </section>
+
+    <!-- 連續翻譯 -->
+    <section id="continuous" class="pane">
+      <div class="pane-head">
+        <h2>連續翻譯</h2>
+        <span class="hint">持續聆聽並即時翻譯，適合演講或長對話</span>
+      </div>
+      <div class="grid">
+        <div class="col">
+          <div class="lang-row"><select class="lang" id="cont-from-lang"></select></div>
+          <div class="box">
+            <textarea class="ta ro" id="cont-input" placeholder="按下麥克風開始聆聽…" readonly></textarea>
+            <span class="dot" id="cont-in-dot"></span>
+          </div>
+          <div class="tools">
+            <button class="tool" id="cont-mic" onclick="contToggle()" title="開始/停止連續聆聽（不播音）">🎤</button>
+            <button class="tool wide" id="cont-loop-btn" onclick="contLoopToggle()" title="循環口譯：說話→翻譯→播報語音→自動再收音">🔁 循環</button>
+            <button class="tool" onclick="clearBox('cont-input');clearBox('cont-output')" title="清除">🗑️</button>
+            <button class="tool" onclick="copyBox('cont-input')" title="複製原文">📋</button>
+          </div>
+        </div>
+        <div class="swap"><button onclick="swapCont()" title="交換語言">⇄</button></div>
+        <div class="col">
+          <div class="lang-row"><select class="lang" id="cont-to-lang"></select></div>
+          <div class="box">
+            <textarea class="ta ro" id="cont-output" placeholder="即時翻譯…" readonly></textarea>
+            <span class="dot" id="cont-out-dot"></span>
+          </div>
+          <div class="tools">
+            <button class="tool" onclick="speak('cont-output','cont-to-lang')" title="朗讀">🔊</button>
+            <button class="tool" onclick="stopSpeak()" title="停止">🔇</button>
+            <button class="tool" onclick="copyBox('cont-output')" title="複製譯文">📋</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 語音轉錄 -->
+    <section id="transcription" class="pane">
+      <div class="pane-head">
+        <h2>語音轉錄</h2>
+        <span class="hint">將語音轉成文字稿，可匯出或複製給 AI 校對</span>
+      </div>
+      <div class="grid">
+        <div class="col">
+          <div class="lang-row"><select class="lang" id="tr-lang"></select></div>
+          <div class="box">
+            <textarea class="ta ro" id="tr-interim" placeholder="即時辨識中…" readonly></textarea>
+            <span class="dot" id="tr-dot"></span>
+          </div>
+          <div class="tools">
+            <button class="tool" id="tr-mic" onclick="trToggle()" title="開始/停止轉錄">🎤</button>
+            <button class="tool" onclick="clearBox('tr-interim');clearBox('tr-output')" title="清除全部">🗑️</button>
+          </div>
+        </div>
+        <div class="swap"></div>
+        <div class="col">
+          <div class="lang-row"><div style="flex:1;display:grid;place-items:center;color:var(--ink-faint);font-size:.85rem;font-weight:600">完整文字稿</div></div>
+          <div class="box">
+            <textarea class="ta" id="tr-output" placeholder="完整轉錄結果（可手動編輯）…"></textarea>
+            <span class="count" id="tr-count">0 字</span>
+          </div>
+          <div class="tools">
+            <button class="tool wide" onclick="copyForProofread()" title="複製並附校對提示">📋 複製給 AI 校對</button>
+            <button class="tool wide ai-link" onclick="openAIProofread('chatgpt')" title="複製校對提示並開啟 ChatGPT">💬 ChatGPT ↗</button>
+            <button class="tool wide ai-link" onclick="openAIProofread('gemini')" title="複製校對提示並開啟 Gemini">✨ Gemini ↗</button>
+            <button class="tool" onclick="exportTr()" title="匯出 .txt">💾</button>
+            <button class="tool" onclick="clearBox('tr-output')" title="清除">🗑️</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gemini Live 即時口譯 -->
+    <section id="gemini" class="pane">
+      <div class="pane-head">
+        <h2>Gemini Live 即時口譯</h2>
+        <span class="hint">即時翻譯 · 字幕 + 翻譯語音播報（需 Google Gemini API Key）</span>
+      </div>
+
+      <div class="gem-config">
+        <div class="gem-field" style="flex:2;min-width:260px">
+          <label class="lbl-row">Gemini API Key
+            <a class="getkey" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">🔑 免費取得 API Key ↗</a>
+          </label>
+          <div style="display:flex;gap:6px">
+            <input type="password" id="gem-key" placeholder="貼上你的 API Key（僅存於本機瀏覽器）" autocomplete="off">
+            <button class="tool" type="button" onclick="toggleKeyView()" id="gem-key-eye" title="顯示/隱藏">👁️</button>
+          </div>
+        </div>
+        <div class="gem-field">
+          <label>音訊來源（輸入）</label>
+          <select class="lang" id="gem-source">
+            <option value="mic">🎤 麥克風</option>
+            <option value="display">🖥️ 分頁／系統音訊</option>
+          </select>
+        </div>
+        <div class="gem-field">
+          <label class="lbl-row">聲音輸出裝置
+            <a class="getkey" href="#" onclick="refreshOutputDevices(true);return false;" title="重新整理裝置清單">↻ 更新</a>
+          </label>
+          <select class="lang" id="gem-output"><option value="">🔊 系統預設輸出</option></select>
+        </div>
+        <div class="gem-field">
+          <label>目標語言</label>
+          <select class="lang" id="gem-to-lang"></select>
+        </div>
+        <div class="gem-field">
+          <label>模型</label>
+          <input type="text" id="gem-model" value="gemini-3.5-live-translate-preview">
+        </div>
+        <div class="gem-field" style="flex:none;align-self:flex-end">
+          <label style="visibility:hidden">.</label>
+          <button class="gem-start" id="gem-btn" onclick="geminiToggle()">▶ 開始口譯</button>
+        </div>
+      </div>
+
+      <div class="gem-opts">
+        <label class="chk"><input type="checkbox" id="gem-play" checked> 🔊 播放翻譯語音</label>
+        <span class="gem-state" id="gem-state"><span class="dot" id="gem-dot"></span><span id="gem-state-txt">尚未連線</span></span>
+      </div>
+
+      <div class="subs">
+        <div class="sub-block">
+          <div class="sub-label">🎙️ 原文（即時辨識）</div>
+          <div class="sub-text" id="gem-src">—</div>
+          <div class="sub-actions">
+            <button class="tool" onclick="copyContent('gem-src')" title="複製文字">📋</button>
+            <button class="tool" onclick="downloadText('gem-src','原文辨識')" title="下載純文字檔">💾</button>
+            <button class="tool" onclick="downloadPDF('gem-src','原文（即時辨識）')" title="下載 PDF">📄</button>
+          </div>
+        </div>
+        <div class="sub-block accent">
+          <div class="sub-label">🌐 翻譯</div>
+          <div class="sub-text" id="gem-dst">—</div>
+          <div class="sub-actions">
+            <button class="tool" onclick="copyContent('gem-dst')" title="複製文字">📋</button>
+            <button class="tool" onclick="downloadText('gem-dst','翻譯')" title="下載純文字檔">💾</button>
+            <button class="tool" onclick="downloadPDF('gem-dst','翻譯')" title="下載 PDF">📄</button>
+          </div>
+        </div>
+      </div>
+
+      <details class="gem-log-wrap">
+        <summary>連線日誌（除錯用）</summary>
+        <pre class="gem-log" id="gem-log"></pre>
+      </details>
+
+      <p class="gem-note">
+        音訊來源：<b>麥克風</b>＝收你說的話；<b>分頁／系統音訊</b>＝翻譯網頁或電腦播放的聲音（如 YouTube、線上會議）。選「分頁／系統音訊」按開始後，會跳出分享視窗，請選擇要翻譯的分頁並務必勾選「<b>分享分頁音訊</b>」（分享整個螢幕時則為「分享系統音訊」）。<br>
+        ⚠️ 用分頁／系統音訊又開啟翻譯語音播報時，建議戴耳機，避免播出的翻譯聲被重新收音造成循環。<br>
+        需使用支援 <b>gemini-3.5-live-translate-preview</b> 預覽模型的 API Key（<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio 取得</a>）。連線被關閉時看日誌 CloseCode：1008＝模型不支援、1007＝設定格式錯誤、金鑰錯誤＝無權限。建議用 Chrome 或 Edge；分頁音訊擷取僅 Chrome／Edge 支援。
+      </p>
+    </section>
+  </div>
+
+  <div class="ext">
+    <a href="https://translate.google.com" target="_blank" rel="noopener">🔗 Google 翻譯</a>
+    <a href="https://www.deepl.com/translator" target="_blank" rel="noopener">🔗 DeepL</a>
+    <a href="https://www.bing.com/translator" target="_blank" rel="noopener">🔗 Microsoft 翻譯</a>
+    <button onclick="addLang()">➕ 新增語言</button>
+  </div>
+
+  <div class="foot">
+    <div>Claude 優化版 v3.1 · 免費引擎自動備援 · Gemini Live 即時口譯 · 全新簡約介面</div>
+  </div>
+</div>
+
+<script>
+/* ============ 語言設定 ============ */
+const LANGS = [
+  ['auto','🌐 自動偵測'],['zh-TW','🇹🇼 繁體中文'],['zh-CN','🇨🇳 简体中文（簡體中文）'],
+  ['en','🇺🇸 English（英文）'],['ja','🇯🇵 日本語（日文）'],['ko','🇰🇷 한국어（韓文）'],
+  ['fr','🇫🇷 Français（法文）'],['de','🇩🇪 Deutsch（德文）'],['es','🇪🇸 Español（西班牙文）'],
+  ['vi','🇻🇳 Tiếng Việt（越南文）'],['th','🇹🇭 ไทย（泰文）'],['id','🇮🇩 Indonesia（印尼文）'],
+  ['ru','🇷🇺 Русский（俄文）'],['it','🇮🇹 Italiano（義大利文）'],['pt','🇵🇹 Português（葡萄牙文）'],
+  ['ar','🇸🇦 العربية（阿拉伯文）'],['hi','🇮🇳 हिन्दी（印地文）'],['ms','🇲🇾 Melayu（馬來文）'],['nl','🇳🇱 Nederlands（荷蘭文）']
+];
+// Gemini 文字翻譯用的語言英文名
+const LANG_EN={
+  'zh-TW':'Traditional Chinese','zh-CN':'Simplified Chinese','en':'English','ja':'Japanese',
+  'ko':'Korean','fr':'French','de':'German','es':'Spanish','vi':'Vietnamese','th':'Thai',
+  'id':'Indonesian','ru':'Russian','it':'Italian','pt':'Portuguese','ar':'Arabic','hi':'Hindi',
+  'ms':'Malay','nl':'Dutch'
+};
+// 語音辨識用的 BCP-47 對應
+const SPEECH_LOCALE = {
+  'zh-TW':'zh-TW','zh-CN':'zh-CN','en':'en-US','ja':'ja-JP','ko':'ko-KR',
+  'fr':'fr-FR','de':'de-DE','es':'es-ES','vi':'vi-VN','th':'th-TH','id':'id-ID',
+  'ru':'ru-RU','it':'it-IT','pt':'pt-PT','ar':'ar-SA','hi':'hi-IN','ms':'ms-MY','nl':'nl-NL'
+};
+
+const $ = id => document.getElementById(id);
+
+function fillLangs(){
+  const targets = {
+    'from-lang':'auto','to-lang':'en',
+    'cont-from-lang':'auto','cont-to-lang':'en',
+    'tr-lang':'auto','gem-to-lang':'zh-TW'
+  };
+  for(const [id,def] of Object.entries(targets)){
+    const sel=$(id); if(!sel) continue;
+    sel.innerHTML = LANGS
+      .filter(l=> l[0]!=='auto' || id.includes('from')||id==='tr-lang')
+      .map(l=>`<option value="${l[0]}">${l[1]}</option>`).join('');
+    sel.value = def;
+  }
+}
+
+/* ============ 狀態 ============ */
+let autoMode = true;          // 句子翻譯：輸入即翻譯
+let autoSpeak = false;
+let recog = null;             // 共用辨識器
+let recogMode = null;         // 'single' | 'cont' | 'tr' | 'bi' | 'multi'
+let speaking = false, curUtter=null;
+const cache = new Map();
+let ctrl = null;              // AbortController 取消過時請求
+let debounceT = null;
+
+/* ============ 初始化 ============ */
+document.addEventListener('DOMContentLoaded', ()=>{
+  fillLangs();
+  // 主題
+  const saved = localStorage.getItem('tt_theme');
+  if(saved==='dark' || (!saved && matchMedia('(prefers-color-scheme:dark)').matches)) applyTheme('dark');
+  // 偏好
+  autoSpeak = localStorage.getItem('tt_autospeak')==='1';
+  $('autospeak-btn').classList.toggle('on',autoSpeak);
+  autoMode = localStorage.getItem('tt_automode')!=='0';
+  syncAutoSeg();
+  multiInit();   // 建立多語言同時翻譯卡片
+  zoomFontPx = parseInt(localStorage.getItem('tt_zoomfont')||'48',10) || 48;
+  injectZoomButtons();   // 為每個視窗加上放大鈕
+
+  // 事件
+  $('from-text').addEventListener('input', onFromInput);
+  ['from-lang','to-lang'].forEach(id=>$(id).addEventListener('change',()=>{ if($('from-text').value.trim()) doTranslate(false); }));
+  bindCounter('from-text','from-count');
+  bindCounter('tr-output','tr-count');
+  bindCounter('to-text','to-count');
+
+  if(speechSynthesis) speechSynthesis.getVoices();
+
+  // Gemini Live 設定還原（獨立分頁）
+  const gk=localStorage.getItem('tt_gemkey'); if(gk) $('gem-key').value=gk;
+  const gm=localStorage.getItem('tt_gemmodel'); if(gm) $('gem-model').value=gm;
+  const gl=localStorage.getItem('tt_gemlang'); if(gl) $('gem-to-lang').value=gl;
+  const gsrc=localStorage.getItem('tt_gemsource'); if(gsrc) $('gem-source').value=gsrc;
+  $('gem-source').addEventListener('change',e=>localStorage.setItem('tt_gemsource',e.target.value));
+  // 聲音輸出裝置
+  refreshOutputDevices();
+  $('gem-output').addEventListener('change', applyGemSink);
+  if(navigator.mediaDevices) navigator.mediaDevices.addEventListener?.('devicechange', ()=>refreshOutputDevices());
+  $('gem-key').addEventListener('input',e=>localStorage.setItem('tt_gemkey',e.target.value.trim()));
+  $('gem-model').addEventListener('change',e=>localStorage.setItem('tt_gemmodel',e.target.value.trim()));
+  $('gem-to-lang').addEventListener('change',e=>localStorage.setItem('tt_gemlang',e.target.value));
+});
+
+function bindCounter(taId,cId){
+  const ta=$(taId), c=$(cId); if(!ta||!c) return;
+  const upd=()=>{ const n=ta.value.length; c.textContent = n? n+' 字':'0 字'; };
+  ta.addEventListener('input',upd); upd();
+}
+
+/* ============ 主題 ============ */
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  $('theme-btn').textContent = t==='dark'?'☀️':'🌙';
+  localStorage.setItem('tt_theme',t);
+}
+function toggleTheme(){
+  applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
+}
+
+/* ============ 分頁 ============ */
+function switchTab(name){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('active',p.id===name));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.pane===name));
+  stopAllVoice(); stopSpeak();
+  if(name!=='gemini' && gemLive) geminiStop();
+}
+
+/* ============ 翻譯引擎（免費 Google + MyMemory 備援 + 取消） ============ */
+function getGemKey(){ return ($('gem-key')?.value.trim()) || localStorage.getItem('tt_gemkey') || ''; }
+async function translateAPI(text, from, to, signal){
+  if(!text.trim()) return '';
+  if(from===to && from!=='auto') return text;
+  const key = `${from}|${to}|${text}`;
+  if(cache.has(key)) return cache.get(key);
+
+  let result = null, lastErr=null;
+  // 1) Google 免費端點（最快）
+  try{ result = await viaGoogle(text, from, to, signal); }
+  catch(e){ lastErr=e; if(e.name==='AbortError') throw e; }
+  // 2) 備援 MyMemory
+  if(result==null){
+    try{ result = await viaMyMemory(text, from, to, signal); }
+    catch(e){ lastErr=e; if(e.name==='AbortError') throw e; }
+  }
+
+  if(result==null) throw lastErr || new Error('翻譯服務暫時無法使用');
+  cache.set(key, result);
+  if(cache.size>400){ cache.delete(cache.keys().next().value); }
+  return result;
+}
+
+async function viaGoogle(text, from, to, signal){
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${from}&tl=${to}&dt=t&q=${encodeURIComponent(text)}`;
+  const r = await fetch(url,{signal});
+  if(!r.ok) throw new Error('google '+r.status);
+  const d = await r.json();
+  if(!d || !d[0]) throw new Error('google empty');
+  return d[0].map(seg=>seg[0]).filter(Boolean).join('');
+}
+
+async function viaMyMemory(text, from, to, signal){
+  const sl = from==='auto' ? 'autodetect' : from;
+  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sl}|${to}`;
+  const r = await fetch(url,{signal});
+  if(!r.ok) throw new Error('mymemory '+r.status);
+  const d = await r.json();
+  const t = d?.responseData?.translatedText;
+  if(!t) throw new Error('mymemory empty');
+  return t;
+}
+
+/* 多行平行翻譯：以換行切段，平行送出，順序合併 */
+async function translateBlock(text, from, to, signal){
+  const lines = text.split('\n');
+  if(lines.length<=1) return translateAPI(text, from, to, signal);
+  const out = await Promise.all(lines.map(l=> l.trim()? translateAPI(l, from, to, signal): Promise.resolve('')));
+  return out.join('\n');
+}
+
+/* ============ 雙向對話模式（自動偵測語言互譯 + 循環收音） ============ */
+let biOn=false, biA='zh-TW', biB='en', biNext='zh-TW';
+let biStream=null;   // 持有麥克風串流，避免每輪重新詢問權限
+const baseLang = x => (x||'').toLowerCase().split('-')[0];
+
+async function detectLang(text){
+  try{
+    const url=`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=t&q=${encodeURIComponent(text.slice(0,200))}`;
+    const r=await fetch(url); if(!r.ok) return null;
+    const d=await r.json();
+    return d[2] || (d[8]&&d[8][0]&&d[8][0][0]) || null;
+  }catch(_){ return null; }
+}
+function matchLang(detected, a, b){
+  if(!detected) return null;
+  const d=baseLang(detected);
+  if(baseLang(a)!==baseLang(b)){
+    if(d===baseLang(a)) return a;
+    if(d===baseLang(b)) return b;
+  }else{
+    if(detected.toLowerCase()===a.toLowerCase()) return a;
+    if(detected.toLowerCase()===b.toLowerCase()) return b;
+  }
+  return null;
+}
+
+function biToggle(){ biOn ? biStop() : biStart(); }
+async function biStart(){
+  let a=$('from-lang').value, b=$('to-lang').value;
+  if(a==='auto'){ a='zh-TW'; $('from-lang').value='zh-TW'; toast('雙向模式需兩個明確語言，來源已設為繁體中文'); }
+  if(baseLang(a)===baseLang(b)){ toast('請設定兩種不同語言','err'); return; }
+  stopAllVoice(); stopSpeak();
+  // 先取得並「持有」麥克風串流：整段對話期間不放開，瀏覽器就不會每輪重問權限
+  try{
+    biStream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
+  }catch(e){ toast('需要麥克風權限才能使用雙向模式','err'); return; }
+  biOn=true; biA=a; biB=b; biNext=a;
+  const btn=$('bi-btn'); btn.classList.add('rec'); btn.innerHTML='■ 停止';
+  $('from-mic').disabled=true;
+  toast('雙向對話已開始，請說話（兩種語言皆可）');
+  biListen();
+}
+function biStop(){
+  biOn=false;
+  if(recog){ try{recog.onend=null;recog.stop();}catch(_){} recog=null; recogMode=null; }
+  if(biStream){ try{biStream.getTracks().forEach(t=>t.stop());}catch(_){} biStream=null; }
+  stopSpeak();
+  const btn=$('bi-btn'); if(btn){ btn.classList.remove('rec'); btn.innerHTML='🎙️ 雙向'; }
+  $('from-mic').disabled=false;
+  $('from-text').classList.remove('listening'); setDot('from-dot',''); setDot('to-dot','');
+}
+function biListen(){
+  if(!biOn) return;
+  const r=getRecog(); if(!r){ biStop(); return; }
+  recog=r; recogMode='bi';
+  r.lang=SPEECH_LOCALE[biNext]||biNext;
+  r.continuous=false; r.interimResults=true; r.maxAlternatives=1;
+  const ta=$('from-text'); let got='';
+  r.onstart=()=>{ ta.classList.add('listening'); setDot('from-dot','work'); };
+  r.onresult=(e)=>{
+    let fin='',interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){ const t=e.results[i][0].transcript; e.results[i].isFinal?fin+=t:interim+=t; }
+    ta.value=fin||interim; $('from-count').textContent=ta.value.length+' 字';
+    if(fin) got=fin;
+  };
+  r.onerror=(e)=>{ if(e.error==='not-allowed'){ toast('請允許麥克風權限','err'); biStop(); } };
+  r.onend=async()=>{
+    ta.classList.remove('listening'); setDot('from-dot','');
+    recog=null; recogMode=null;
+    if(!biOn) return;
+    const text=(got||ta.value).trim();
+    if(!text){ setTimeout(()=>{ if(biOn) biListen(); }, 350); return; }
+    await biProcess(text);
+  };
+  try{ r.start(); }catch(_){ setTimeout(()=>{ if(biOn) biListen(); }, 350); }
+}
+async function biProcess(text){
+  setDot('to-dot','work');
+  const det=await detectLang(text);
+  const source = matchLang(det, biA, biB) || biNext || biA;
+  const target = (baseLang(source)===baseLang(biA)) ? biB : biA;
+  // 反映實際方向到選單與面板
+  $('from-lang').value=source; $('to-lang').value=target;
+  $('from-text').value=text; $('from-count').textContent=text.length+' 字';
+  try{
+    const res=await translateBlock(text, source, target);
+    $('to-text').value=res; $('to-count').textContent=res.length+' 字';
+    setDot('to-dot','done',1400);
+    biNext=target;   // 對話通常輪流，下一句多半是對方語言
+    if(autoSpeak){
+      speak('to-text','to-lang', ()=>{ if(biOn) setTimeout(biListen,150); });
+    }else{
+      if(biOn) setTimeout(biListen,300);
+    }
+  }catch(e){
+    setDot('to-dot','bad',2000); toast('翻譯失敗','err');
+    if(biOn) setTimeout(biListen,500);
+  }
+}
+
+/* ============ 循環口譯（單向：說話→翻譯→播報→自動再收音） ============ */
+let loopOn=false, loopStream=null;
+function loopToggle(){ loopOn ? loopStop() : loopStart(); }
+async function loopStart(){
+  let from=$('from-lang').value, to=$('to-lang').value;
+  if(from==='auto'){ from='zh-TW'; $('from-lang').value='zh-TW'; toast('循環模式請設定來源語言，已預設繁體中文'); }
+  if(baseLang(from)===baseLang(to)){ toast('來源與目標語言相同，請設不同語言','err'); return; }
+  stopAllVoice(); stopSpeak();
+  try{ loopStream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}}); }
+  catch(e){ toast('需要麥克風權限才能使用循環模式','err'); return; }
+  loopOn=true;
+  const btn=$('loop-btn'); btn.classList.add('rec'); btn.innerHTML='■ 停止';
+  $('from-mic').disabled=true; $('bi-btn').disabled=true;
+  toast('循環口譯已開始，請說話');
+  loopListen();
+}
+function loopStop(){
+  loopOn=false;
+  if(recog){ try{recog.onend=null;recog.stop();}catch(_){} recog=null; recogMode=null; }
+  if(loopStream){ try{loopStream.getTracks().forEach(t=>t.stop());}catch(_){} loopStream=null; }
+  stopSpeak();
+  const btn=$('loop-btn'); if(btn){ btn.classList.remove('rec'); btn.innerHTML='🔁 循環'; }
+  $('from-mic').disabled=false; $('bi-btn').disabled=false;
+  $('from-text').classList.remove('listening'); setDot('from-dot',''); setDot('to-dot','');
+}
+function loopListen(){
+  if(!loopOn) return;
+  const r=getRecog(); if(!r){ loopStop(); return; }
+  recog=r; recogMode='loop';
+  const from=$('from-lang').value;
+  r.lang=SPEECH_LOCALE[from]||from; r.continuous=false; r.interimResults=true; r.maxAlternatives=1;
+  const ta=$('from-text'); let got='';
+  r.onstart=()=>{ ta.classList.add('listening'); setDot('from-dot','work'); };
+  r.onresult=(e)=>{
+    let fin='',interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){ const t=e.results[i][0].transcript; e.results[i].isFinal?fin+=t:interim+=t; }
+    ta.value=fin||interim; $('from-count').textContent=ta.value.length+' 字';
+    if(fin) got=fin;
+  };
+  r.onerror=(e)=>{ if(e.error==='not-allowed'){ toast('請允許麥克風權限','err'); loopStop(); } };
+  r.onend=async()=>{
+    ta.classList.remove('listening'); setDot('from-dot','');
+    recog=null; recogMode=null;
+    if(!loopOn) return;
+    const text=(got||ta.value).trim();
+    if(!text){ setTimeout(()=>{ if(loopOn) loopListen(); }, 350); return; }   // 沒講話，繼續聽
+    await loopProcess(text);
+  };
+  try{ r.start(); }catch(_){ setTimeout(()=>{ if(loopOn) loopListen(); }, 350); }
+}
+async function loopProcess(text){
+  const from=$('from-lang').value, to=$('to-lang').value;
+  $('from-text').value=text; $('from-count').textContent=text.length+' 字';
+  setDot('to-dot','work');
+  try{
+    const res=await translateBlock(text, from, to);
+    $('to-text').value=res; $('to-count').textContent=res.length+' 字';
+    setDot('to-dot','done',1400);
+    // 播報翻譯語音，播完自動再開麥克風
+    speak('to-text','to-lang', ()=>{ if(loopOn) setTimeout(loopListen,150); });
+  }catch(e){
+    setDot('to-dot','bad',2000); toast('翻譯失敗','err');
+    if(loopOn) setTimeout(loopListen,500);
+  }
+}
+
+/* ============ 句子翻譯 ============ */
+function onFromInput(){
+  if(!autoMode) return;
+  clearTimeout(debounceT);
+  debounceT = setTimeout(()=>doTranslate(false), 450);
+}
+function setAutoMode(on){
+  autoMode = on; localStorage.setItem('tt_automode', on?'1':'0'); syncAutoSeg();
+  if(on && $('from-text').value.trim()) doTranslate(false);
+}
+function syncAutoSeg(){
+  document.querySelectorAll('#auto-seg button').forEach(b=>b.classList.toggle('on', b.dataset.auto===(autoMode?'1':'0')));
+}
+
+async function doTranslate(manual){
+  const text = $('from-text').value.trim();
+  const out = $('to-text');
+  if(!text){ out.value=''; setDot('to-dot',''); $('to-count').textContent='0 字'; return; }
+  const from = $('from-lang').value, to = $('to-lang').value;
+
+  if(ctrl) ctrl.abort();
+  ctrl = new AbortController();
+  setDot('to-dot','work');
+  try{
+    const res = await translateBlock(text, from, to, ctrl.signal);
+    out.value = res; $('to-count').textContent = res.length+' 字';
+    setDot('to-dot','done', 1600);
+    if(autoSpeak){ speak('to-text','to-lang'); }
+  }catch(e){
+    if(e.name==='AbortError') return;
+    console.error(e); setDot('to-dot','bad', 2600);
+    toast('翻譯失敗，請稍後再試','err');
+  }
+}
+
+function swap(){
+  const fl=$('from-lang'), tl=$('to-lang'), ft=$('from-text'), tt=$('to-text');
+  if(fl.value==='auto') fl.value='zh-TW';
+  [fl.value,tl.value]=[tl.value,fl.value];
+  [ft.value,tt.value]=[tt.value,ft.value];
+  bumpCounts();
+  if(ft.value.trim()) doTranslate(false);
+}
+function bumpCounts(){ ['from-text','to-text','tr-output'].forEach(id=>{const e=$(id); e&&e.dispatchEvent(new Event('input'));}); }
+
+/* ============ 多語言同時翻譯 ============ */
+let multiLangs=['zh-TW','en','ja'];   // 預設三框：中文 + 兩個可選
+let multiSrcCard=null;                // 目前作為來源的卡片
+let multiDebounce=null, multiCtrl=null;
+const MULTI_MAX=6, MULTI_MIN=2;
+
+function multiFillSelect(sel, selected){
+  sel.innerHTML = LANGS.filter(l=>l[0]!=='auto').map(l=>`<option value="${l[0]}">${l[1]}</option>`).join('');
+  sel.value = selected;
+}
+function multiInit(){
+  const wrap=$('multi-cards'); wrap.innerHTML='';
+  multiLangs.forEach(code=>wrap.appendChild(multiBuildCard(code)));
+  multiSrcCard = wrap.querySelector('.mcard');
+  multiUpdateRemovable();
+}
+function multiBuildCard(code){
+  const card=document.createElement('div'); card.className='mcard';
+  card.innerHTML=`
+    <div class="mcard-top">
+      <select class="lang mlang"></select>
+      <button class="mremove" title="移除此語言">✕</button>
+    </div>
+    <div class="box">
+      <textarea class="ta mta" placeholder="輸入或語音…"></textarea>
+      <span class="dot mdot"></span>
+      <span class="count mcount">0 字</span>
+    </div>
+    <div class="tools">
+      <button class="tool mmic" title="語音輸入">🎤</button>
+      <button class="tool mspeak" title="朗讀">🔊</button>
+      <button class="tool mcopy" title="複製">📋</button>
+      <button class="tool mclear" title="清除">🗑️</button>
+    </div>`;
+  const sel=card.querySelector('.mlang'), ta=card.querySelector('.mta');
+  multiFillSelect(sel, code);
+
+  ta.addEventListener('input', ()=>{
+    card.querySelector('.mcount').textContent = ta.value.length+' 字';
+    multiSetSrc(card);
+    clearTimeout(multiDebounce);
+    multiDebounce=setTimeout(()=>multiTranslateFrom(card), 450);
+  });
+  ta.addEventListener('keydown', (ev)=>{ if((ev.ctrlKey||ev.metaKey)&&ev.key==='Enter'){ ev.preventDefault(); multiSetSrc(card); multiTranslateFrom(card); } });
+  sel.addEventListener('change', ()=>{
+    if(card===multiSrcCard){ multiTranslateFrom(card); }
+    else if(multiSrcCard){ multiTranslateOne(multiSrcCard, card); }
+  });
+  card.querySelector('.mremove').addEventListener('click', ()=>multiRemove(card));
+  card.querySelector('.mmic').addEventListener('click', e=>multiMic(card, e.currentTarget));
+  card.querySelector('.mspeak').addEventListener('click', ()=>{ const t=ta.value.trim(); if(t) speakRaw(t, sel.value); });
+  card.querySelector('.mcopy').addEventListener('click', ()=>{ if(ta.value.trim()){ navigator.clipboard.writeText(ta.value).then(()=>toast('已複製到剪貼簿')).catch(()=>{}); } });
+  card.querySelector('.mclear').addEventListener('click', ()=>{ ta.value=''; card.querySelector('.mcount').textContent='0 字'; setDotEl(card.querySelector('.mdot'),''); });
+  addZoomButton(card.querySelector('.box'));   // 放大鈕
+  return card;
+}
+function multiSetSrc(card){
+  multiSrcCard=card;
+  document.querySelectorAll('#multi-cards .mcard').forEach(c=>c.classList.toggle('src', c===card));
+}
+function multiCards(){ return [...document.querySelectorAll('#multi-cards .mcard')]; }
+function multiUpdateRemovable(){
+  const cards=multiCards();
+  cards.forEach(c=>{ c.querySelector('.mremove').style.display = cards.length>MULTI_MIN ? '' : 'none'; });
+  $('multi-add').disabled = cards.length>=MULTI_MAX;
+}
+function multiAdd(){
+  const cards=multiCards();
+  if(cards.length>=MULTI_MAX){ toast('已達語言數上限','err'); return; }
+  const used=cards.map(c=>c.querySelector('.mlang').value);
+  const pick=(LANGS.find(l=>l[0]!=='auto' && !used.includes(l[0]))||['en'])[0];
+  const card=multiBuildCard(pick);
+  $('multi-cards').appendChild(card);
+  multiUpdateRemovable();
+  // 若已有來源內容，立即翻譯新框
+  if(multiSrcCard && multiSrcCard.querySelector('.mta').value.trim()) multiTranslateOne(multiSrcCard, card);
+}
+function multiRemove(card){
+  if(multiCards().length<=MULTI_MIN){ toast('至少需保留兩種語言','err'); return; }
+  const wasSrc = (card===multiSrcCard);
+  card.remove();
+  if(wasSrc){ multiSrcCard=multiCards()[0]; if(multiSrcCard) multiSetSrc(multiSrcCard); }
+  multiUpdateRemovable();
+}
+/* 由來源卡片翻譯到所有其他卡片 */
+async function multiTranslateFrom(srcCard){
+  if(!srcCard) return;
+  const text=srcCard.querySelector('.mta').value.trim();
+  const from=srcCard.querySelector('.mlang').value;
+  const others=multiCards().filter(c=>c!==srcCard);
+  if(!text){ others.forEach(c=>{ c.querySelector('.mta').value=''; c.querySelector('.mcount').textContent='0 字'; setDotEl(c.querySelector('.mdot'),''); }); return; }
+  if(multiCtrl) multiCtrl.abort(); multiCtrl=new AbortController(); const sig=multiCtrl.signal;
+  await Promise.all(others.map(c=>multiTranslateOne(srcCard, c, sig)));
+}
+/* 由來源卡片翻譯到單一目標卡片 */
+async function multiTranslateOne(srcCard, dstCard, sig){
+  const text=srcCard.querySelector('.mta').value.trim();
+  const from=srcCard.querySelector('.mlang').value;
+  const to=dstCard.querySelector('.mlang').value;
+  const ta=dstCard.querySelector('.mta'), dot=dstCard.querySelector('.mdot'), cnt=dstCard.querySelector('.mcount');
+  if(!text){ ta.value=''; cnt.textContent='0 字'; return; }
+  if(from===to){ ta.value=text; cnt.textContent=text.length+' 字'; return; }
+  setDotEl(dot,'work');
+  try{
+    const res=await translateBlock(text, from, to, sig);
+    ta.value=res; cnt.textContent=res.length+' 字'; setDotEl(dot,'done',1300);
+  }catch(e){ if(e.name!=='AbortError'){ setDotEl(dot,'bad',2000); } }
+}
+/* 多語言頁的語音輸入 */
+function multiMic(card, btn){
+  if(recog && recogMode==='multi'){ stopAllVoice(); return; }
+  stopAllVoice();
+  const r=getRecog(); if(!r) return;
+  recog=r; recogMode='multi';
+  const sel=card.querySelector('.mlang'), ta=card.querySelector('.mta');
+  r.lang=SPEECH_LOCALE[sel.value]||sel.value; r.continuous=false; r.interimResults=true; r.maxAlternatives=1;
+  multiSetSrc(card);
+  r.onstart=()=>{ btn.classList.add('rec'); ta.classList.add('listening'); };
+  r.onresult=(e)=>{
+    let fin='',interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){ const t=e.results[i][0].transcript; e.results[i].isFinal?fin+=t:interim+=t; }
+    ta.value=fin||interim; card.querySelector('.mcount').textContent=ta.value.length+' 字';
+    if(fin) multiTranslateFrom(card);
+  };
+  r.onerror=(e)=>{ if(e.error==='not-allowed') toast('請允許麥克風權限','err'); };
+  r.onend=()=>{ btn.classList.remove('rec'); ta.classList.remove('listening'); recog=null; recogMode=null; };
+  r.start();
+}
+
+/* ============ 連續翻譯 ============ */
+function swapCont(){ const a=$('cont-from-lang'),b=$('cont-to-lang'); if(a.value==='auto')a.value='zh-TW'; [a.value,b.value]=[b.value,a.value]; }
+
+/* ============ 語音辨識（共用） ============ */
+function getRecog(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ toast('此瀏覽器不支援語音辨識，請改用 Chrome 或 Edge','err'); return null; }
+  return new SR();
+}
+function localeFor(sel){ const v=$(sel).value; return SPEECH_LOCALE[v]|| (v==='auto'?'zh-TW':v); }
+
+/* 單句語音輸入：句子翻譯 & 對話翻譯 */
+function micToggle(taId, langSel, btnId){
+  if(recog && recogMode==='single'){ stopAllVoice(); return; }
+  stopAllVoice();
+  const r=getRecog(); if(!r) return;
+  recog=r; recogMode='single';
+  r.lang=localeFor(langSel); r.continuous=false; r.interimResults=true; r.maxAlternatives=1;
+  const ta=$(taId);
+  r.onstart=()=>{ $(btnId).classList.add('rec'); ta.classList.add('listening'); };
+  r.onresult=(e)=>{
+    let fin='',interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const t=e.results[i][0].transcript;
+      e.results[i].isFinal? fin+=t : interim+=t;
+    }
+    ta.value = fin || interim;
+    ta.dispatchEvent(new Event('input'));
+    if(fin){
+      if(taId==='from-text') doTranslate(false);
+    }
+  };
+  r.onerror=(e)=>{ if(e.error!=='aborted') toast('語音辨識錯誤：'+e.error,'err'); cleanupRecog(btnId,ta); };
+  r.onend=()=> cleanupRecog(btnId,ta);
+  r.start();
+}
+function cleanupRecog(btnId,ta){
+  if(btnId)$(btnId)?.classList.remove('rec');
+  if(ta)ta.classList.remove('listening');
+  recog=null; recogMode=null;
+}
+
+/* 連續翻譯：串流式即時翻譯（邊講邊翻，不等停頓） */
+let contOn=false;
+let contQueue=[];        // 已定稿、待翻譯的原文片段
+let contSrcFinal='';     // 已定稿原文（顯示用）
+let contInterim='';      // 進行中的句子（尚未定稿）
+let contDstFinal='';     // 已定稿譯文（累積）
+let contPreview='';      // 進行中句子的即時譯文
+let contPreviewSrc='';   // 上次翻過的 interim，避免重複送
+let contBusy=false;
+let contLoopTimer=null;
+
+function contToggle(){
+  if(contOn){ contOn=false; stopAllVoice(); return; }
+  stopAllVoice();
+  const r=getRecog(); if(!r) return;
+  recog=r; recogMode='cont'; contOn=true;
+  contQueue=[]; contSrcFinal=''; contInterim=''; contDstFinal=''; contPreview=''; contPreviewSrc=''; contBusy=false;
+  $('cont-input').value=''; $('cont-output').value='';
+  r.lang=localeFor('cont-from-lang'); r.continuous=true; r.interimResults=true;
+
+  r.onstart=()=>{ $('cont-mic').classList.add('rec'); setDot('cont-in-dot','work'); };
+  r.onresult=(e)=>{
+    let interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const t=e.results[i][0].transcript;
+      if(e.results[i].isFinal){ const ft=t.trim(); if(ft){ contQueue.push(ft); contSrcFinal+=(contSrcFinal?' ':'')+ft; } }
+      else interim+=t;
+    }
+    contInterim=interim;
+    $('cont-input').value=(contSrcFinal+(interim?(' '+interim):'')).trim();
+    scrollEnd('cont-input');
+  };
+  r.onerror=(e)=>{ if(e.error!=='aborted'&&e.error!=='no-speech') toast('辨識錯誤：'+e.error,'err'); };
+  r.onend=()=>{ if(contOn){ try{r.start();}catch(_){}} else { $('cont-mic').classList.remove('rec'); setDot('cont-in-dot',''); } };
+  r.start();
+
+  // 翻譯泵：每 450ms 檢查一次，邊講邊持續翻譯
+  contLoopTimer=setInterval(contPump, 450);
+}
+
+async function contPump(){
+  if(!contOn || contBusy) return;
+  const from=$('cont-from-lang').value, to=$('cont-to-lang').value;
+  // 1) 優先翻譯已定稿片段（只翻一次，累積保留）
+  if(contQueue.length){
+    contBusy=true;
+    const chunk=contQueue.splice(0).join(' ');
+    try{
+      const t=await translateAPI(chunk, from, to);
+      contDstFinal+=(contDstFinal?' ':'')+t;
+      contPreview=''; contPreviewSrc='';
+      renderCont();
+    }catch(_){ contQueue.unshift(chunk); }   // 失敗丟回重試
+    contBusy=false;
+    return;
+  }
+  // 2) 即時翻譯進行中的句子（節流，不取消、不等停頓）
+  if(contInterim && contInterim!==contPreviewSrc){
+    contBusy=true; contPreviewSrc=contInterim;
+    try{
+      const t=await translateAPI(contInterim, from, to);
+      if(contInterim===contPreviewSrc){ contPreview=t; renderCont(); }
+    }catch(_){ contPreviewSrc=''; }
+    contBusy=false;
+  }
+}
+function renderCont(){
+  $('cont-output').value=(contDstFinal+(contPreview?(' '+contPreview):'')).trim();
+  scrollEnd('cont-output');
+}
+
+/* 連續翻譯：循環口譯（說話→翻譯→播報→自動再收音，逐段累積） */
+let contLoopOn=false, contLoopStream=null, contLoopSrc='', contLoopDst='';
+function contLoopToggle(){ contLoopOn ? contLoopStop() : contLoopStart(); }
+async function contLoopStart(){
+  let from=$('cont-from-lang').value, to=$('cont-to-lang').value;
+  if(from==='auto'){ from='zh-TW'; $('cont-from-lang').value='zh-TW'; toast('循環模式請設定來源語言，已預設繁體中文'); }
+  if(baseLang(from)===baseLang(to)){ toast('來源與目標語言相同，請設不同語言','err'); return; }
+  stopAllVoice(); stopSpeak();
+  try{ contLoopStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}}); }
+  catch(e){ toast('需要麥克風權限才能使用循環模式','err'); return; }
+  contLoopOn=true;
+  contLoopSrc=$('cont-input').value.trim(); contLoopDst=$('cont-output').value.trim();
+  const b=$('cont-loop-btn'); b.classList.add('rec'); b.innerHTML='■ 停止';
+  $('cont-mic').disabled=true;
+  toast('連續循環口譯已開始，請說話');
+  contLoopListen();
+}
+function contLoopStop(){
+  contLoopOn=false;
+  if(recog){ try{recog.onend=null;recog.stop();}catch(_){} recog=null; recogMode=null; }
+  if(contLoopStream){ try{contLoopStream.getTracks().forEach(t=>t.stop());}catch(_){} contLoopStream=null; }
+  stopSpeak();
+  const b=$('cont-loop-btn'); if(b){ b.classList.remove('rec'); b.innerHTML='🔁 循環'; }
+  $('cont-mic').disabled=false;
+  setDot('cont-in-dot',''); setDot('cont-out-dot','');
+}
+function contLoopListen(){
+  if(!contLoopOn) return;
+  const r=getRecog(); if(!r){ contLoopStop(); return; }
+  recog=r; recogMode='loop';
+  const from=$('cont-from-lang').value;
+  r.lang=SPEECH_LOCALE[from]||from; r.continuous=false; r.interimResults=true; r.maxAlternatives=1;
+  let got='';
+  r.onstart=()=>{ setDot('cont-in-dot','work'); };
+  r.onresult=(e)=>{
+    let fin='',interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){ const t=e.results[i][0].transcript; e.results[i].isFinal?fin+=t:interim+=t; }
+    $('cont-input').value=(contLoopSrc+(contLoopSrc?'\n':'')+interim).trim(); scrollEnd('cont-input');
+    if(fin) got=fin;
+  };
+  r.onerror=(e)=>{ if(e.error==='not-allowed'){ toast('請允許麥克風權限','err'); contLoopStop(); } };
+  r.onend=async()=>{
+    setDot('cont-in-dot',''); recog=null; recogMode=null;
+    if(!contLoopOn) return;
+    const text=got.trim();
+    if(!text){ setTimeout(()=>{ if(contLoopOn) contLoopListen(); },350); return; }
+    await contLoopProcess(text);
+  };
+  try{ r.start(); }catch(_){ setTimeout(()=>{ if(contLoopOn) contLoopListen(); },350); }
+}
+async function contLoopProcess(text){
+  const from=$('cont-from-lang').value, to=$('cont-to-lang').value;
+  contLoopSrc += (contLoopSrc?'\n':'')+text;
+  $('cont-input').value=contLoopSrc; scrollEnd('cont-input');
+  setDot('cont-out-dot','work');
+  try{
+    const res=await translateBlock(text, from, to);
+    contLoopDst += (contLoopDst?'\n':'')+res;
+    $('cont-output').value=contLoopDst; scrollEnd('cont-output');
+    setDot('cont-out-dot','done',1400);
+    speakRaw(res, $('cont-to-lang').value, ()=>{ if(contLoopOn) setTimeout(contLoopListen,150); });
+  }catch(e){
+    setDot('cont-out-dot','bad',2000); toast('翻譯失敗','err');
+    if(contLoopOn) setTimeout(contLoopListen,500);
+  }
+}
+
+/* 語音轉錄 */
+let trOn=false, trFinal='';
+
+/* 麥克風轉錄：瀏覽器內建辨識（免費） */
+function trToggle(){
+  if(trOn){ stopAllVoice(); return; }
+  stopAllVoice();
+  const r=getRecog(); if(!r) return;
+  recog=r; recogMode='tr'; trOn=true;
+  trFinal=$('tr-output').value? $('tr-output').value.replace(/\s*$/,'')+'\n' : '';
+  r.lang=localeFor('tr-lang'); r.continuous=true; r.interimResults=true;
+  r.onstart=()=>{ $('tr-mic').classList.add('rec'); setDot('tr-dot','work'); };
+  r.onresult=(e)=>{
+    let fin='',interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const t=e.results[i][0].transcript;
+      e.results[i].isFinal? fin+=t : interim+=t;
+    }
+    $('tr-interim').value=interim||'（辨識中…）';
+    if(fin){ trFinal+=cap(fin.trim())+'\n'; $('tr-output').value=trFinal; $('tr-output').dispatchEvent(new Event('input')); scrollEnd('tr-output'); }
+  };
+  r.onerror=(e)=>{ if(e.error!=='aborted'&&e.error!=='no-speech') toast('轉錄錯誤：'+e.error,'err'); };
+  r.onend=()=>{ if(trOn){ try{r.start();}catch(_){}} else { $('tr-mic').classList.remove('rec'); setDot('tr-dot',''); $('tr-interim').value=''; } };
+  r.start();
+}
+function cap(s){ return s? s.charAt(0).toUpperCase()+s.slice(1):s; }
+
+/* 擷取分頁／系統音訊（共用）：回傳只含音訊的串流，失敗時丟出可辨識的錯誤 */
+async function captureDisplayAudio(){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia)
+    throw new Error('此瀏覽器不支援畫面／分頁音訊擷取，請用 Chrome 或 Edge');
+  let stream;
+  try{
+    stream = await navigator.mediaDevices.getDisplayMedia({
+      video:true,
+      audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false },
+      systemAudio:'include', selfBrowserSurface:'include'
+    });
+  }catch(e){
+    // 某些瀏覽器不接受進階 audio 設定，退回最簡單的請求再試一次
+    if(e && (e.name==='TypeError' || e.name==='NotSupportedError')){
+      stream = await navigator.mediaDevices.getDisplayMedia({ video:true, audio:true });
+    } else throw e;
+  }
+  if(!stream.getAudioTracks().length){
+    stream.getTracks().forEach(t=>t.stop());
+    throw new Error('NO_AUDIO');
+  }
+  stream.getVideoTracks().forEach(t=>t.stop());   // 只要聲音
+  return stream;
+}
+function displayAudioErrToast(e){
+  if(e && e.message==='NO_AUDIO')
+    toast('沒有擷取到聲音：請在分享視窗選「Chrome 分頁」並勾選「分享分頁音訊」。（macOS 無法擷取整個螢幕／視窗的系統聲音）','err');
+  else if(e && e.name==='NotAllowedError')
+    toast('已取消分享，或瀏覽器不允許擷取音訊','err');
+  else
+    toast('無法取得分頁音訊：'+((e&&(e.message||e.name))||e),'err');
+}
+
+function stopAllVoice(){
+  contOn=false; trOn=false;
+  if(biOn){ biOn=false; const b=$('bi-btn'); if(b){ b.classList.remove('rec'); b.innerHTML='🎙️ 雙向'; } }
+  if(biStream){ try{biStream.getTracks().forEach(t=>t.stop());}catch(_){} biStream=null; }
+  if(loopOn){ loopOn=false; const lb=$('loop-btn'); if(lb){ lb.classList.remove('rec'); lb.innerHTML='🔁 循環'; } }
+  if(loopStream){ try{loopStream.getTracks().forEach(t=>t.stop());}catch(_){} loopStream=null; }
+  if(contLoopOn){ contLoopOn=false; const cb=$('cont-loop-btn'); if(cb){ cb.classList.remove('rec'); cb.innerHTML='🔁 循環'; } }
+  if(contLoopStream){ try{contLoopStream.getTracks().forEach(t=>t.stop());}catch(_){} contLoopStream=null; }
+  { const fm=$('from-mic'); if(fm)fm.disabled=false; const bb=$('bi-btn'); if(bb)bb.disabled=false; const cm=$('cont-mic'); if(cm)cm.disabled=false; }
+  if(contLoopTimer){ clearInterval(contLoopTimer); contLoopTimer=null; }
+  if(recog){ try{recog.onend=null;recog.stop();}catch(_){}; recog=null; recogMode=null; }
+  document.querySelectorAll('.tool.rec').forEach(b=>b.classList.remove('rec'));
+  document.querySelectorAll('.ta.listening').forEach(t=>t.classList.remove('listening'));
+  ['cont-in-dot','tr-dot'].forEach(d=>setDot(d,''));
+  const ti=$('tr-interim'); if(ti)ti.value='';
+}
+
+/* ============ 朗讀（TTS）：切句排隊，避免停頓重複 ============ */
+let ttsQueue=[];
+// 高品質語音名稱（優先）
+const GOOD_VOICES=/samantha|alex|aaron|allison|ava|susan|nathan|tom|daniel|karen|moira|tessa|serena|fiona|google|natural|neural|enhanced|premium|aria|jenny|guy|ana|michelle|siri|曉|晓|曉臻|曉雨|hyunsu|kyoko|otoya|o-ren/i;
+// 低品質／玩具語音（macOS 內建這些英文語音聽起來怪、機械、卡頓）
+const BAD_VOICES=/albert|bad news|bahh|bells|boing|bubbles|cellos|wobble|trinoids|whisper|zarvox|fred|junior|kathy|organ|deranged|hysterical|good news|jester|superstar|pipe|grandma|grandpa|reed|rocko|sandy|shelley|flo|eddy|rishi|novelty|comic|ralph|princess/i;
+function pickVoice(loc, lang){
+  const voices=speechSynthesis.getVoices(); if(!voices.length) return null;
+  const l=loc.toLowerCase(), base=(lang||'').toLowerCase();
+  const cands=voices.filter(v=>{ const vl=(v.lang||'').toLowerCase(); return vl.startsWith(l)||vl.startsWith(base); });
+  if(!cands.length) return null;
+  const score=v=>{
+    let s=0; const n=v.name||'';
+    if(GOOD_VOICES.test(n)) s+=6;
+    if(BAD_VOICES.test(n)) s-=30;          // 強烈避開玩具語音
+    if((v.lang||'').toLowerCase()===l) s+=2; // 完全符合地區
+    if(v.localService) s+=1;                // 本機略優（穩定）
+    if(v.default) s+=1;
+    return s;
+  };
+  return cands.slice().sort((a,b)=>score(b)-score(a))[0];
+}
+// 依句末標點切句，過長再依長度切，避免單句太長被引擎截斷
+function splitForTTS(text){
+  const parts = text.match(/[^.!?。！？\n]+[.!?。！？]?|\n+/g) || [text];
+  const out=[]; let buf='';
+  for(let p of parts){
+    p=p.replace(/\n+/g,' ');
+    if(!p.trim()) continue;
+    if((buf+p).length>160){ if(buf.trim())out.push(buf.trim()); buf=p; }
+    else buf+=p;
+  }
+  if(buf.trim()) out.push(buf.trim());
+  return out.length?out:[text];
+}
+let ttsOnDone=null;
+function speak(taId, langSel, onDone){ speakRaw($(taId).value.trim(), $(langSel).value, onDone); }
+function speakRaw(text, lang, onDone){
+  if(!text){ if(onDone)onDone(); return; }
+  if(!('speechSynthesis' in window)){ toast('此瀏覽器不支援語音朗讀','err'); if(onDone)onDone(); return; }
+  const loc=SPEECH_LOCALE[lang]||lang;
+  const wasSpeaking = speechSynthesis.speaking || speechSynthesis.pending;
+  stopSpeak();
+  ttsOnDone = onDone || null;
+
+  let started=false;
+  const begin=()=>{
+    if(started) return; started=true;
+    const v=pickVoice(loc, lang);
+    ttsQueue = splitForTTS(text).map(c=>{
+      const u=new SpeechSynthesisUtterance(c);
+      if(v){ u.voice=v; u.lang=v.lang; } else { u.lang=loc; }
+      u.rate=1; u.pitch=1; u.volume=1;
+      return u;
+    });
+    speaking=true;
+    speakNext();
+  };
+  if(speechSynthesis.getVoices().length===0){
+    speechSynthesis.addEventListener('voiceschanged', begin, {once:true});
+    setTimeout(begin, 300);              // 保險：部分瀏覽器不觸發事件
+  } else {
+    setTimeout(begin, wasSpeaking ? 130 : 0);   // 剛 cancel() 後稍等，避免咬掉開頭
+  }
+}
+function speakNext(){
+  if(!speaking || ttsQueue.length===0){
+    speaking=false; curUtter=null;
+    const cb=ttsOnDone; ttsOnDone=null; if(cb) cb();
+    return;
+  }
+  const u=ttsQueue.shift(); curUtter=u;
+  u.onend=()=>{ if(speaking) speakNext(); };
+  u.onerror=(e)=>{ if(e.error!=='canceled'&&e.error!=='interrupted') console.warn('TTS',e.error); if(speaking) speakNext(); };
+  try{ speechSynthesis.speak(u); }catch(_){ if(speaking) speakNext(); }
+}
+function stopSpeak(){ ttsQueue=[]; speaking=false; curUtter=null; ttsOnDone=null; if('speechSynthesis' in window){ try{speechSynthesis.cancel();}catch(_){} } }
+
+/* ============ 共用工具 ============ */
+function setDot(id,cls,clearAfter){ setDotEl($(id),cls,clearAfter); }
+function setDotEl(d,cls,clearAfter){
+  if(!d) return;
+  d.classList.remove('work','done','bad');
+  if(cls) d.classList.add(cls);
+  if(clearAfter && cls) setTimeout(()=>d.classList.remove(cls), clearAfter);
+}
+function clearBox(id){ const e=$(id); if(e){ e.value=''; e.dispatchEvent(new Event('input')); } }
+/* 取得任一視窗（textarea 或文字 div）的內容 */
+function elValue(id){ const e=$(id); if(!e) return ''; return (e.value!==undefined && e.tagName!=='DIV') ? e.value : e.textContent; }
+function tstamp(){ return new Date().toLocaleString('zh-TW',{hour12:false}).replace(/[\/:]/g,'-').replace(/[\s,]+/g,'_'); }
+function copyContent(id){ const t=(elValue(id)||'').trim(); if(!t||t==='—'){ toast('沒有可複製的內容','err'); return; } navigator.clipboard.writeText(t).then(()=>toast('已複製到剪貼簿')).catch(()=>toast('複製失敗','err')); }
+function downloadText(id,name){
+  const t=(elValue(id)||'').trim(); if(!t||t==='—'){ toast('沒有可下載的內容','err'); return; }
+  const blob=new Blob([t],{type:'text/plain;charset=utf-8'}); const u=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=u; a.download=`${name}_${tstamp()}.txt`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(u); toast('已下載純文字檔');
+}
+function escapeHtml(s){ return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function downloadPDF(id,title){
+  const t=(elValue(id)||'').trim(); if(!t||t==='—'){ toast('沒有可下載的內容','err'); return; }
+  const w=window.open('','_blank'); if(!w){ toast('請允許開啟視窗以列印／儲存 PDF','err'); return; }
+  w.document.write(`<!doctype html><html lang="zh-TW"><head><meta charset="utf-8"><title>${escapeHtml(title)}_${tstamp()}</title>`+
+    `<style>body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC','Segoe UI',sans-serif;line-height:1.9;padding:36px;font-size:16px;color:#1b2030}`+
+    `h1{font-size:18px;margin:0 0 6px}.meta{color:#888;font-size:12px;margin-bottom:18px}.body{white-space:pre-wrap;word-break:break-word}</style></head><body>`+
+    `<h1>${escapeHtml(title)}</h1><div class="meta">${new Date().toLocaleString('zh-TW',{hour12:false})}</div><div class="body">${escapeHtml(t)}</div></body></html>`);
+  w.document.close(); w.focus();
+  setTimeout(()=>{ try{ w.print(); }catch(_){} }, 400);
+  toast('已開啟列印視窗，選「另存為 PDF」即可下載');
+}
+async function copyBox(id){
+  const t=$(id).value; if(!t.trim()) return;
+  try{ await navigator.clipboard.writeText(t); toast('已複製到剪貼簿'); }
+  catch(_){ $(id).select(); document.execCommand('copy'); toast('已複製到剪貼簿'); }
+}
+function scrollEnd(id){ const e=$(id); if(e)e.scrollTop=e.scrollHeight; }
+function toggleAutoSpeak(){ autoSpeak=!autoSpeak; localStorage.setItem('tt_autospeak',autoSpeak?'1':'0'); $('autospeak-btn').classList.toggle('on',autoSpeak); toast(autoSpeak?'已開啟翻譯後自動朗讀':'已關閉自動朗讀'); }
+
+const PROOFREAD_PROMPT='請將以下逐字稿進行整理：加上標點符號、校正語詞轉錄錯誤、刪除語助詞或重複的語詞、根據上下文自動校正文字內容，並根據整段文字內容與語詞自動分段落。只輸出整理後的結果，不要附上這段提示。';
+function buildProofread(t){ return PROOFREAD_PROMPT+'\n\n----- 逐字稿 -----\n'+t; }
+function copyForProofread(){
+  const t=$('tr-output').value.trim(); if(!t){ toast('沒有可複製的文字稿','err'); return; }
+  navigator.clipboard.writeText(buildProofread(t)).then(()=>toast('已複製文字稿與校對提示')).catch(()=>toast('複製失敗','err'));
+}
+function openAIProofread(which){
+  const t=$('tr-output').value.trim(); if(!t){ toast('沒有可校對的文字稿','err'); return; }
+  const url = which==='gemini' ? 'https://gemini.google.com/app' : 'https://chatgpt.com/';
+  navigator.clipboard.writeText(buildProofread(t))
+    .then(()=>toast('已複製文字稿與提示，請在開啟的頁面貼上（Ctrl/⌘+V）'))
+    .catch(()=>toast('已開啟頁面，但複製失敗，請手動複製','err'));
+  window.open(url,'_blank','noopener');
+}
+function exportTr(){
+  const t=$('tr-output').value; if(!t.trim()){ toast('沒有可匯出的內容','err'); return; }
+  const blob=new Blob([t],{type:'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=url; a.download=`語音轉錄_${new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')}.txt`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  toast('文字稿已匯出');
+}
+
+function addLang(){
+  const name=prompt('語言名稱（例如：泰語）：'); if(!name) return;
+  const code=prompt('語言代碼（例如：th）：'); if(!code) return;
+  const flag=prompt('旗幟 emoji（可留空）：')||'🌍';
+  translateAPI('Hello','en',code.trim()).then(()=>{
+    const opt=`<option value="${code.trim()}">${flag} ${name}</option>`;
+    document.querySelectorAll('select.lang').forEach(s=>s.insertAdjacentHTML('beforeend',opt));
+    SPEECH_LOCALE[code.trim()] = code.trim();
+    toast(`已新增「${name}」`);
+  }).catch(()=>toast('無效的語言代碼','err'));
+}
+
+/* ============ 放大顯示（單一視窗全螢幕大字） ============ */
+let zoomSrc=null, zoomTimer=null, zoomFontPx=48;
+function elText(el){ return (el.tagName==='TEXTAREA'||el.tagName==='INPUT') ? el.value : el.textContent; }
+function injectZoomButtons(){
+  document.querySelectorAll('.box, .sub-block').forEach(addZoomButton);
+}
+function addZoomButton(container){
+  if(!container || container.querySelector(':scope > .zoom-btn')) return;
+  const src = container.querySelector('textarea') || container.querySelector('.sub-text') || container.querySelector('input');
+  if(!src) return;
+  const b=document.createElement('button');
+  b.className='zoom-btn'; b.type='button'; b.title='放大顯示這個視窗'; b.textContent='⛶';
+  b.addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation(); openZoom(container); });
+  container.appendChild(b);
+}
+function openZoom(container){
+  const src = container.querySelector('textarea') || container.querySelector('.sub-text') || container.querySelector('input');
+  if(!src) return;
+  zoomSrc=src;
+  // 標題：取附近的語言選單或標籤
+  let label='';
+  const scope = container.closest('.mcard') || container.closest('.col') || container.closest('.sub-block');
+  const sel = scope && scope.querySelector('select.lang, select.mlang');
+  if(sel) label = sel.options[sel.selectedIndex]?.text || '';
+  if(!label){ const sl = container.closest('.sub-block')?.querySelector('.sub-label'); if(sl) label=sl.textContent; }
+  $('zoom-title').textContent = label || '放大顯示';
+  $('zoom-overlay').style.display='flex';
+  applyZoomFont(); zoomRender();
+  if(zoomTimer) clearInterval(zoomTimer);
+  zoomTimer=setInterval(zoomRender, 250);
+}
+function zoomRender(){
+  if(!zoomSrc) return;
+  const t=(elText(zoomSrc)||'').trim();
+  const body=$('zoom-body');
+  const atBottom = body.scrollHeight - body.scrollTop - body.clientHeight < 60;
+  body.textContent = t || '（等待文字…）';
+  if(atBottom) body.scrollTop = body.scrollHeight;   // 連續/轉錄時自動跟到最新
+}
+function closeZoom(){ $('zoom-overlay').style.display='none'; if(zoomTimer){clearInterval(zoomTimer);zoomTimer=null;} zoomSrc=null; }
+function zoomFont(d){ zoomFontPx=Math.max(20,Math.min(160, zoomFontPx + d*8)); localStorage.setItem('tt_zoomfont', zoomFontPx); applyZoomFont(); }
+function applyZoomFont(){ $('zoom-body').style.fontSize=zoomFontPx+'px'; }
+
+/* ============ Toast ============ */
+function toast(msg,type){
+  const t=document.createElement('div'); t.className='toast'+(type==='err'?' err':''); t.textContent=msg;
+  $('toasts').appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(-10px)'; t.style.transition='.3s'; setTimeout(()=>t.remove(),300); }, 2600);
+}
+
+/* ============ Gemini Live 即時口譯 ============ */
+let gemLive=false, gemWS=null, gemStream=null, gemInCtx=null, gemNode=null, gemSrcNode=null;
+let gemPlayCtx=null, gemPlayHead=0;
+let gemSrcText='', gemDstText='';
+
+function toggleKeyView(){
+  const i=$('gem-key'); i.type = i.type==='password'?'text':'password';
+}
+function glog(msg){
+  const el=$('gem-log'); if(!el) return;
+  const t=new Date().toLocaleTimeString('zh-TW',{hour12:false});
+  el.textContent += `[${t}] ${msg}\n`; el.scrollTop=el.scrollHeight;
+}
+function gemState(txt, cls){
+  $('gem-state-txt').textContent=txt;
+  const d=$('gem-dot'); d.className='dot'+(cls?' '+cls:'');
+}
+
+function geminiToggle(){ gemLive? geminiStop() : geminiStart(); }
+
+async function geminiStart(){
+  const key=$('gem-key').value.trim();
+  if(!key){ toast('請先輸入 Gemini API Key','err'); return; }
+  if(!('WebSocket' in window)){ toast('瀏覽器不支援 WebSocket','err'); return; }
+  localStorage.setItem('tt_gemkey',key);
+
+  const model=$('gem-model').value.trim()||'gemini-3.5-live-translate-preview';
+  const target=$('gem-to-lang').value;
+  gemSrcText=''; gemDstText=''; $('gem-src').textContent='—'; $('gem-dst').textContent='—';
+
+  // 1) 取得音訊來源（麥克風 或 分頁／系統音訊）
+  const source=$('gem-source').value;
+  try{
+    if(source==='display'){
+      glog('請在分享對話框選「Chrome 分頁」並勾選「分享分頁音訊」（macOS 不支援整個螢幕／視窗的系統音訊）');
+      try{
+        gemStream = await captureDisplayAudio();
+      }catch(e){ displayAudioErrToast(e); glog('取得分頁音訊失敗: '+(e.message||e.name)); return; }
+      gemStream.getAudioTracks()[0].addEventListener('ended', ()=>{ if(gemLive){ glog('分享來源已結束'); geminiStop(); } });
+      glog('已取得分頁／系統音訊');
+    }else{
+      gemStream=await navigator.mediaDevices.getUserMedia({audio:{channelCount:1,echoCancellation:true,noiseSuppression:true}});
+      glog('已取得麥克風');
+    }
+  }catch(e){ toast('無法取得麥克風權限','err'); glog('取得音訊失敗: '+e.message); return; }
+
+  refreshOutputDevices();   // 取得權限後裝置名稱才會顯示
+
+  // 2) 建立 WebSocket
+  const url=`wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${encodeURIComponent(key)}`;
+  gemState('連線中…','work'); glog('連線到 Gemini Live WebSocket…');
+  try{ gemWS=new WebSocket(url); }catch(e){ glog('WebSocket 建立失敗: '+e.message); cleanupGem(); return; }
+
+  gemWS.onopen=()=>{
+    glog('WebSocket 已開啟，送出 setup（model='+model+', target='+target+'）');
+    const setup={ setup:{
+      model:`models/${model}`,
+      inputAudioTranscription:{},
+      outputAudioTranscription:{},
+      generationConfig:{
+        responseModalities:[ $('gem-play').checked ? 'AUDIO' : 'TEXT' ],
+        translationConfig:{ targetLanguageCode:target, echoTargetLanguage:true }
+      }
+    }};
+    gemWS.send(JSON.stringify(setup));
+  };
+
+  gemWS.onmessage=async(ev)=>{
+    let txt;
+    try{ txt = ev.data instanceof Blob ? await ev.data.text() : ev.data; }catch(_){ return; }
+    let msg; try{ msg=JSON.parse(txt); }catch(_){ return; }
+
+    if(msg.setupComplete){
+      glog('✅ setup 完成，開始串流麥克風音訊');
+      gemLive=true;
+      $('gem-btn').textContent='■ 停止'; $('gem-btn').classList.add('live');
+      gemState('口譯中','done');
+      startMicStream();
+      return;
+    }
+    const sc=msg.serverContent;
+    if(sc){
+      if(sc.inputTranscription && sc.inputTranscription.text){
+        gemSrcText += sc.inputTranscription.text;
+        $('gem-src').textContent = gemSrcText.slice(-400);
+      }
+      if(sc.outputTranscription && sc.outputTranscription.text){
+        gemDstText += sc.outputTranscription.text;
+        $('gem-dst').textContent = gemDstText.slice(-400);
+      }
+      // 翻譯語音
+      const parts = sc.modelTurn && sc.modelTurn.parts;
+      if(parts && $('gem-play').checked){
+        for(const p of parts){
+          const d=p.inlineData;
+          if(d && d.data && /audio\/pcm/.test(d.mimeType||'')){
+            const rate=parseInt((d.mimeType.match(/rate=(\d+)/)||[])[1]||'24000',10);
+            playGemPCM(b64ToInt16(d.data), rate);
+          }
+        }
+      }
+      if(sc.turnComplete){ gemSrcText=''; /* 下一輪原文重新累積，譯文保留滾動 */ }
+    }
+  };
+
+  gemWS.onerror=()=>{ glog('⚠️ WebSocket 發生錯誤'); };
+  gemWS.onclose=(e)=>{
+    glog(`連線關閉 CloseCode=${e.code}${e.reason?(' 原因: '+e.reason):''}`);
+    if(e.code===1008) toast('模型不支援，請確認模型名稱','err');
+    else if(e.code===1007) toast('setup 欄位格式錯誤','err');
+    else if(!gemLive) toast('連線失敗，請檢查 API Key 與日誌','err');
+    cleanupGem();
+  };
+}
+
+function startMicStream(){
+  gemInCtx=new (window.AudioContext||window.webkitAudioContext)();
+  const inRate=gemInCtx.sampleRate;
+  gemSrcNode=gemInCtx.createMediaStreamSource(gemStream);
+  // ScriptProcessor：相容性高，足以做 16kHz 上行串流
+  gemNode=gemInCtx.createScriptProcessor(4096,1,1);
+  gemSrcNode.connect(gemNode); gemNode.connect(gemInCtx.destination);
+  gemNode.onaudioprocess=(e)=>{
+    if(!gemLive || !gemWS || gemWS.readyState!==1) return;
+    const input=e.inputBuffer.getChannelData(0);
+    const down=downsampleBuffer(input, inRate, 16000);
+    const pcm=floatTo16(down);
+    const b64=ab2b64(pcm.buffer);
+    gemWS.send(JSON.stringify({ realtimeInput:{ mediaChunks:[{ mimeType:'audio/pcm;rate=16000', data:b64 }] } }));
+  };
+}
+
+function geminiStop(){
+  if(gemWS && gemWS.readyState<=1){ try{gemWS.close();}catch(_){} }
+  glog('已停止口譯');
+  cleanupGem();
+}
+function cleanupGem(){
+  gemLive=false;
+  try{ if(gemNode){gemNode.disconnect();gemNode.onaudioprocess=null;} }catch(_){}
+  try{ if(gemSrcNode)gemSrcNode.disconnect(); }catch(_){}
+  try{ if(gemInCtx)gemInCtx.close(); }catch(_){}
+  try{ if(gemStream)gemStream.getTracks().forEach(t=>t.stop()); }catch(_){}
+  gemNode=gemSrcNode=gemInCtx=gemStream=null; gemWS=null;
+  const b=$('gem-btn'); if(b){ b.textContent='▶ 開始口譯'; b.classList.remove('live'); }
+  gemState('已停止','');
+}
+
+/* PCM 工具 */
+function downsampleBuffer(buf, inRate, outRate){
+  if(outRate>=inRate) return buf;
+  const ratio=inRate/outRate, newLen=Math.round(buf.length/ratio), out=new Float32Array(newLen);
+  for(let i=0;i<newLen;i++){
+    const start=Math.floor(i*ratio), end=Math.min(buf.length, Math.floor((i+1)*ratio));
+    let sum=0,c=0; for(let j=start;j<end;j++){sum+=buf[j];c++;}
+    out[i]=c?sum/c:0;
+  }
+  return out;
+}
+function floatTo16(f32){
+  const out=new Int16Array(f32.length);
+  for(let i=0;i<f32.length;i++){ let s=Math.max(-1,Math.min(1,f32[i])); out[i]=s<0?s*0x8000:s*0x7FFF; }
+  return out;
+}
+function ab2b64(ab){
+  const bytes=new Uint8Array(ab); let bin='';
+  const CH=0x8000;
+  for(let i=0;i<bytes.length;i+=CH){ bin+=String.fromCharCode.apply(null, bytes.subarray(i,i+CH)); }
+  return btoa(bin);
+}
+function b64ToInt16(b64){
+  const bin=atob(b64), len=bin.length, bytes=new Uint8Array(len);
+  for(let i=0;i<len;i++) bytes[i]=bin.charCodeAt(i);
+  return new Int16Array(bytes.buffer);
+}
+/* 聲音輸出裝置選擇（喇叭／耳機等，可與輸入裝置不同） */
+async function refreshOutputDevices(notify){
+  const sel=$('gem-output'); if(!sel) return;
+  let devs=[]; try{ devs=await navigator.mediaDevices.enumerateDevices(); }catch(_){}
+  const outs=devs.filter(d=>d.kind==='audiooutput');
+  const cur=sel.value || localStorage.getItem('tt_gemoutput') || '';
+  sel.innerHTML='<option value="">🔊 系統預設輸出</option>' + outs.map((d,i)=>{
+    const label=d.label || ('輸出裝置 '+(i+1));
+    return `<option value="${d.deviceId}">${label}</option>`;
+  }).join('');
+  if([...sel.options].some(o=>o.value===cur)) sel.value=cur;
+  if(notify) toast(outs.length? '已更新輸出裝置清單' : '尚無可選裝置，請先允許麥克風權限以顯示名稱');
+}
+function applyGemSink(){
+  const sel=$('gem-output'); if(!sel) return;
+  const id=sel.value; localStorage.setItem('tt_gemoutput', id);
+  if(gemPlayCtx && typeof gemPlayCtx.setSinkId==='function'){
+    gemPlayCtx.setSinkId(id).catch(e=>{ console.warn('setSinkId 失敗', e); });
+  }else if(id && gemPlayCtx){
+    toast('此瀏覽器不支援切換輸出裝置（請用較新版 Chrome／Edge）','err');
+  }
+}
+function playGemPCM(int16, rate){
+  if(!gemPlayCtx){ gemPlayCtx=new (window.AudioContext||window.webkitAudioContext)(); applyGemSink(); }
+  const f32=new Float32Array(int16.length);
+  for(let i=0;i<int16.length;i++) f32[i]=int16[i]/32768;
+  const buf=gemPlayCtx.createBuffer(1, f32.length, rate);
+  buf.copyToChannel(f32,0);
+  const src=gemPlayCtx.createBufferSource(); src.buffer=buf; src.connect(gemPlayCtx.destination);
+  const now=gemPlayCtx.currentTime;
+  if(gemPlayHead<now) gemPlayHead=now;
+  src.start(gemPlayHead); gemPlayHead+=buf.duration;
+}
+
+/* ============ 快捷鍵 ============ */
+document.addEventListener('keydown',(e)=>{
+  const active=document.querySelector('.pane.active')?.id;
+  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault();
+    if(active==='sentence')doTranslate(true); else if(active==='multi'&&multiSrcCard)multiTranslateFrom(multiSrcCard);
+  }
+  if((e.ctrlKey||e.metaKey)&&e.shiftKey&&(e.key==='V'||e.key==='v')){ e.preventDefault();
+    if(active==='sentence')micToggle('from-text','from-lang','from-mic');
+    else if(active==='continuous')contToggle();
+    else if(active==='transcription')trToggle();
+  }
+  if(e.key==='Escape'){
+    if($('zoom-overlay').style.display!=='none'){ closeZoom(); return; }
+    stopAllVoice(); stopSpeak();
+  }
+});
+document.addEventListener('visibilitychange',()=>{ if(document.hidden){ stopAllVoice(); stopSpeak(); } });
+</script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>校慶園遊會攤位規劃程式（codex優化版）使用說明</title>
+<style>
+body {
+  font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  color: #2d3748;
+  line-height: 1.8;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 36px 24px 64px;
+  background: #f8fafc;
+}
+h1, h2, h3 {
+  line-height: 1.35;
+  color: #1a202c;
+}
+h1 {
+  font-size: 2rem;
+  border-bottom: 4px solid #667eea;
+  padding-bottom: 12px;
+}
+h2 {
+  font-size: 1.35rem;
+  margin-top: 36px;
+  border-left: 6px solid #764ba2;
+  padding-left: 12px;
+}
+h3 {
+  font-size: 1.08rem;
+  margin-top: 22px;
+  color: #4a5568;
+}
+a { color: #667eea; text-decoration: none; font-weight: bold; }
+a:hover { text-decoration: underline; color: #764ba2; }
+code {
+  background: #edf2f7;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  background: white;
+}
+th, td {
+  border: 1px solid #e2e8f0;
+  padding: 8px 10px;
+  vertical-align: top;
+}
+th {
+  background: #edf2f7;
+  text-align: left;
+}
+.note {
+  background: #ebf8ff;
+  border-left: 5px solid #3182ce;
+  padding: 12px 16px;
+  margin: 14px 0;
+}
+.warning {
+  background: #fffaf0;
+  border-left: 5px solid #dd6b20;
+  padding: 12px 16px;
+  margin: 14px 0;
+}
+.example {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+}
+@media print {
+  body { background: white; padding: 0; }
+  a { color: #2d3748; text-decoration: none; }
+}
+</style>
+</head>
+<body>
+<h1>校慶園遊會攤位規劃程式（codex優化版）使用說明</h1>
+
+<p>本系統專為班級導師與校慶攤位規劃團隊設計，協助快速且有系統地完成「食物主題規劃」、「攤位工作指派」以及「販賣食物輪值排班」。系統提供即時的利潤分析、靈活的人員指派工具、Excel 班級名單匯入與匯出，並結合 AI 搜尋與 ChatGPT 提示詞輔助功能，讓園遊會準備工作更具效率。</p>
+
+<p><strong>程式線上版網址：</strong><br>
+<a href="https://froglssh.github.io/school-fair-booth-planner-online/" target="_blank">https://froglssh.github.io/school-fair-booth-planner-online/</a></p>
+
+<h2>一、開啟程式</h2>
+<ol>
+  <li>使用 Chrome、Edge、Safari 等現代瀏覽器開啟上述線上版網址。</li>
+  <li>本系統採用響應式設計，但由於資料表格與欄位較多，<strong>強烈建議使用電腦或平板操作</strong>，能獲得最佳的版面配置與操作體驗。</li>
+  <li>本系統的所有資料皆會自動儲存在您瀏覽器的本機空間（Local Storage），關閉瀏覽器後下次開啟仍可繼續編輯。</li>
+</ol>
+
+<h2>二、食物主題規劃</h2>
+<p>在第一個分頁中，您可以決定攤位的整體方向、選擇販賣的食物項目，並進行初步的利潤估算。</p>
+<ol>
+  <li><strong>攤位主題設定：</strong> 在「攤位主題名稱」輸入您的主題名稱（如：日式屋台烤串、盛夏芒果冰沙店）。</li>
+  <li><strong>選擇販售食物：</strong> 
+    <ul>
+      <li>系統預設有多種熱食、甜點與飲料。您可使用搜尋框或分類晶片快速搜尋。</li>
+      <li>點擊食物卡片即可選取。若需自訂項目，點選「手動輸入食物」按鈕，輸入食物名稱與介紹後新增。若想移除，可點選「手動刪除食物」。</li>
+      <li>可點擊「選取目前顯示」進行批次選取，或「清除食物選取」重新規劃。</li>
+    </ul>
+  </li>
+  <li><strong>成本與估算分析：</strong> 在右側的統計面板中，會即時顯示已選擇的食物項目數量。</li>
+  <li><strong>AI 輔助規劃：</strong> 
+    <ul>
+      <li><strong>AI搜尋：</strong> 會將已選食物自動整理為搜尋關鍵字並開啟 Google 搜尋，協助尋找食材批發、成本及製作方法。</li>
+      <li><strong>ChatGPT：</strong> 點擊後會<strong>自動複製</strong>已選食物及完整的「園遊會規劃 Prompt（提示詞）」，並自動開啟 ChatGPT。您只需在 ChatGPT 對話框貼上（Ctrl+V 或 Cmd+V），AI 便會為您撰寫極具創意的行銷方案與定價策略。</li>
+    </ul>
+  </li>
+  <li><strong>資料保存與輸出：</strong> 點擊「儲存資料」將規劃儲存於本機。在「已選擇的食物」區可點擊「下載圖片」、「下載 PDF」或「列印」將菜單與介紹輸出。</li>
+</ol>
+
+<h2>三、攤位工作規劃</h2>
+<p>本分頁協助導師將全班同學分配到園遊會的準備組別（如採買、食物準備、現場銷售、財務等工作）。</p>
+<ol>
+  <li><strong>設定工作項目與人數：</strong>
+    <ul>
+      <li>系統預設有「食物採買組」、「器材採買組」、「食物準備組」等基本組別。</li>
+      <li>您可以手動在「新增工作項目」與「工作內容簡介」中填寫後點選「新增項目」；也可以在列表表格中，直接調整每個工作項目的「所需人數」。</li>
+    </ul>
+  </li>
+  <li><strong>建立與匯入人員名單：</strong>
+    <ul>
+      <li>您可以在「人員名單」輸入框中手動輸入姓名（一行一人）。</li>
+      <li><strong>Excel 快速匯入：</strong> 點選「選擇檔案」上傳班級成績冊或名單的 Excel 檔。在彈出的視窗中選取對應班級分頁，即可一鍵匯入名單。系統會自動辨識姓名欄位，並將名單同步到「攤位工作規劃」與「販賣食物輪值」頁面中。</li>
+    </ul>
+  </li>
+  <li><strong>指派與分配工作：</strong>
+    <ul>
+      <li>點選「分配工作」生成分配表。</li>
+      <li><strong>一鍵平均分配：</strong> 點選此按鈕，系統會依各組所需的人力，隨機且平均地將名單內的所有人指派到各組。</li>
+      <li><strong>手動調整或隨機指派：</strong> 點選各工作列右側的「選擇」，可在跳出的勾選視窗中手動選取負責學生，或使用該列的「隨機」只隨機分配此一工作。</li>
+    </ul>
+  </li>
+  <li><strong>儲存與輸出：</strong> 點選「儲存資料」保存分配結果。工作分配表同樣提供「下載圖片」、「下載 PDF」與「列印」功能，輸出時會自動隱藏操作按鈕，畫面乾淨美觀。</li>
+</ol>
+
+<h2>四、販賣食物輪值排班</h2>
+<p>在園遊會當天，學生需要輪流到攤位值勤，此分頁協助規劃當天的排班時間表。</p>
+<ol>
+  <li><strong>名單同步：</strong> 點擊「同步工作名單」可將前一頁的工作規劃名單直接帶入。若有家長或外援加入，也可以在此手動新增。</li>
+  <li><strong>設定營業時間與班次長度：</strong>
+    <ul>
+      <li>設定「營業開始時間」與「營業結束時間」（例如：09:00 至 14:00）。</li>
+      <li>設定「每班次長度」（例如：60 分鐘或 30 分鐘）以及「每班次所需人數」。</li>
+      <li>點擊「設定輪班」生成空白排班表。</li>
+    </ul>
+  </li>
+  <li><strong>輪值人員分派：</strong>
+    <ul>
+      <li><strong>一鍵隨機分配班次表：</strong> 系統會考量每位學生的輪班次數，自動且公平地分配每位同學的值班時段，避免部分同學工作過多。</li>
+      <li><strong>手動調整或隨機指派：</strong> 點擊每個時段右側的「操作」，手動勾選值班人員，或使用「隨機」指派。</li>
+    </ul>
+  </li>
+  <li><strong>儲存與輸出：</strong> 完成排班後，點選「儲存資料」。點選「下載圖片」、「下載 PDF」或「列印」將輪值表輸出張貼於教室。</li>
+</ol>
+
+<div class="note">
+  <strong><i class="fas fa-lightbulb"></i> 實用排班建議：</strong><br>
+  建議排班時「每班次所需人數」可以稍微多留 1~2 人作為預備人力。若班級人數較多，亦可縮短「每班次長度」（例如改為 45 分鐘），讓每位同學都有參與感且不會過於勞累。
+</div>
+
+<h2>五、資料保存與匯入匯出格式</h2>
+<table>
+  <thead>
+    <tr>
+      <th>功能區</th>
+      <th>支援輸入格式</th>
+      <th>支援輸出格式</th>
+      <th>主要儲存方式</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>食物主題規劃</td>
+      <td>手動輸入、預設卡片選取</td>
+      <td>PNG 圖片、PDF 檔案、網頁列印</td>
+      <td>本機瀏覽器 Local Storage 自動存檔</td>
+    </tr>
+    <tr>
+      <td>攤位工作規劃</td>
+      <td>手動輸入、Excel 檔案匯入（.xlsx, .xls, .csv）</td>
+      <td>PNG 圖片、PDF 檔案、網頁列印</td>
+      <td>本機瀏覽器 Local Storage 自動存檔</td>
+    </tr>
+    <tr>
+      <td>販賣食物輪值</td>
+      <td>同步工作名單、手動新增</td>
+      <td>PNG 圖片、PDF 檔案、網頁列印</td>
+      <td>本機瀏覽器 Local Storage 自動存檔</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>六、常見問題</h2>
+<h3>為什麼點擊「AI搜尋」或「ChatGPT」沒有反應？</h3>
+<p>請檢查您的瀏覽器是否阻擋了彈出式視窗（Pop-ups）。通常在網址列右側會出現阻擋圖示，請設定為「允許彈出視窗」後重試。此外，使用 ChatGPT 功能需要您的裝置先登入您的 ChatGPT 帳號。</p>
+
+<h3>匯入 Excel 檔案時出現錯誤？</h3>
+<p>請確保您的 Excel 檔案格式正確，且含有明顯的名單資料工作表。系統支援常見的 `.xlsx` 與 `.xls` 格式，如果檔案中有多個工作分頁（如不同班級），請在匯入彈出視窗中正確選擇欲匯入的班級分頁。</p>
+
+<h3>我換了電腦，原有的資料會不見嗎？</h3>
+<p>是的，因為系統資料是儲存在「本機瀏覽器的 Local Storage」中，不同電腦或不同瀏覽器（例如從 Chrome 換到 Safari）資料無法自動同步。建議規劃完成後，務必使用「下載 PDF」或「下載圖片」進行備份存檔。</p>
+
+<h2>七、資料與隱私提醒</h2>
+<ul>
+  <li>本系統為純前端網頁程式，您所輸入的攤位名稱、學生名單以及排班表，<strong>完全儲存在您的本機瀏覽器中，不會上傳到任何雲端伺服器</strong>，請安心使用。</li>
+  <li>在使用 ChatGPT 規劃功能時，系統僅會將已選食物與提示詞複製到剪貼簿，並開往 OpenAI 官網，資料安全性由 OpenAI 平台保障。</li>
+</ul>
+
+</body>
+</html>

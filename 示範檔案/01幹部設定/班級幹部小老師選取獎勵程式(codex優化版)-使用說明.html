@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>班級幹部小老師選取獎勵程式(codex優化版) 使用說明</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #5f6b7a;
+      --line: #d8e1ec;
+      --paper: #ffffff;
+      --soft: #eef7fb;
+      --brand: #086788;
+      --accent: #f7b32b;
+      --green: #2f9c67;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif;
+      color: var(--ink);
+      background: #f5f7fa;
+      line-height: 1.75;
+    }
+
+    header {
+      background: linear-gradient(135deg, #075e74, #168aad 52%, #f7b32b);
+      color: white;
+      padding: 48px 20px 36px;
+    }
+
+    .wrap {
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(28px, 5vw, 44px);
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 0;
+      max-width: 760px;
+      color: rgba(255, 255, 255, 0.88);
+      font-size: 18px;
+    }
+
+    main {
+      padding: 28px 20px 56px;
+    }
+
+    section {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 24px;
+      margin: 18px 0;
+      box-shadow: 0 8px 24px rgba(23, 32, 51, 0.06);
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      color: var(--brand);
+      font-size: 24px;
+      line-height: 1.35;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 18px 0 8px;
+      font-size: 18px;
+      color: #24364b;
+    }
+
+    p {
+      margin: 8px 0 12px;
+    }
+
+    a {
+      color: #075e74;
+      font-weight: 700;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(7, 94, 116, 0.35);
+    }
+
+    a:hover {
+      border-bottom-color: currentColor;
+    }
+
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      background: var(--brand);
+      color: white;
+      font-weight: 800;
+      border: 0;
+      box-shadow: 0 6px 16px rgba(8, 103, 136, 0.22);
+    }
+
+    .button.secondary {
+      background: var(--green);
+      box-shadow: 0 6px 16px rgba(47, 156, 103, 0.2);
+    }
+
+    .button:hover {
+      border-bottom: 0;
+      filter: brightness(1.04);
+    }
+
+    .note {
+      background: var(--soft);
+      border-left: 5px solid var(--brand);
+      padding: 14px 16px;
+      border-radius: 6px;
+      color: #234;
+    }
+
+    .warning {
+      background: #fff8e6;
+      border-left-color: var(--accent);
+    }
+
+    ol, ul {
+      padding-left: 1.3em;
+      margin: 10px 0;
+    }
+
+    li {
+      margin: 7px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 4px;
+      overflow: hidden;
+      border-radius: 8px;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #e7f3f7;
+      color: #173247;
+    }
+
+    code {
+      background: #eef1f5;
+      border: 1px solid #d9e0e7;
+      padding: 1px 6px;
+      border-radius: 5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.95em;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+    }
+
+    .mini {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      background: #fbfdff;
+    }
+
+    .mini strong {
+      display: block;
+      color: var(--brand);
+      margin-bottom: 6px;
+    }
+
+    footer {
+      color: var(--muted);
+      text-align: center;
+      padding: 8px 20px 36px;
+      font-size: 14px;
+    }
+
+    @media print {
+      body {
+        background: white;
+      }
+
+      header {
+        color: var(--ink);
+        background: white;
+        border-bottom: 2px solid var(--line);
+      }
+
+      main {
+        padding-top: 16px;
+      }
+
+      section {
+        break-inside: avoid;
+        box-shadow: none;
+      }
+
+      .cta-row {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>班級幹部小老師選取獎勵程式(codex優化版) 使用說明</h1>
+      <p class="subtitle">臺北市麗山高中林獻升老師製作。本文協助導師快速完成學生名單匯入、幹部與小老師職務設定、手動或隨機指派，以及結果匯出。</p>
+      <div class="cta-row">
+        <a class="button" href="https://froglssh.github.io/lssh-class-leader-tool/" target="_blank" rel="noopener">開啟線上版程式</a>
+        <a class="button secondary" href="https://github.com/froglssh/lssh-class-leader-tool" target="_blank" rel="noopener">查看 GitHub 專案</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <section>
+        <h2>一、程式用途</h2>
+        <p>本程式用於導師安排班級幹部與各科小老師。老師可以匯入學生名單，使用預設職務清單，或自行新增職務，再透過手動選擇或隨機分配完成安排，最後將結果下載為 Excel 或 PDF。</p>
+        <div class="note">
+          線上版網址：<a href="https://froglssh.github.io/lssh-class-leader-tool/" target="_blank" rel="noopener">https://froglssh.github.io/lssh-class-leader-tool/</a>
+        </div>
+      </section>
+
+      <section>
+        <h2>二、開始使用</h2>
+        <ol>
+          <li>開啟線上版程式，或在電腦中開啟本機 HTML 檔。</li>
+          <li>進入「學生名單」分頁，先建立學生資料。</li>
+          <li>進入「任務清單」分頁，建立幹部與小老師職務。</li>
+          <li>進入「分配與檢視」分頁，進行手動指定或隨機分配。</li>
+          <li>進入「匯出 / 匯入」分頁，下載 Excel、PDF 或 JSON 備份。</li>
+        </ol>
+        <p class="note warning">建議每次正式分配前，先確認學生名單與職務清單是否正確。若使用共用電腦，完成後可按「重設全部」清除本機資料。</p>
+      </section>
+
+      <section>
+        <h2>三、匯入學生名單</h2>
+        <h3>方法 1：Excel 匯入</h3>
+        <ol>
+          <li>在「學生名單」分頁中，點選「Excel 匯入」區塊的檔案選擇按鈕。</li>
+          <li>選擇學生名單 Excel 檔，支援 <code>.xlsx</code>、<code>.xls</code>、<code>.csv</code>。</li>
+          <li>按「讀取班級清單」。如果檔案內有多個班級，程式會產生班級下拉選單。</li>
+          <li>在「選擇班級」中挑選要匯入的班級。</li>
+          <li>確認是否勾選「匯入時先清空目前學生名單」。一般情況建議保持勾選。</li>
+          <li>按「匯入所選班級」。學生名單會出現在下方表格。</li>
+        </ol>
+
+        <h3>方法 2：手動新增或批次貼上</h3>
+        <p>如果沒有 Excel，也可以直接新增單筆學生，或在批次新增欄位中貼上名單。批次新增每行一位，可使用 <code>座號,姓名</code> 格式，例如：</p>
+        <pre><code>1,王小明
+2,李小華
+3,陳大文</code></pre>
+      </section>
+
+      <section>
+        <h2>四、建立幹部與小老師職務</h2>
+        <p>進入「任務清單」分頁後，可以切換「幹部任務」或「小老師任務」。</p>
+        <div class="grid">
+          <div class="mini">
+            <strong>生成常用幹部</strong>
+            使用表單預設的幹部名單，例如班長、副班長、風紀股長、衛生股長、保健股長等。
+          </div>
+          <div class="mini">
+            <strong>生成常用小老師</strong>
+            使用表單預設的小老師名單，例如國文、英文、數學、物理、化學、生物、歷史、公民、藝能小老師等。
+          </div>
+          <div class="mini">
+            <strong>自訂職務</strong>
+            可在單筆新增或批次新增欄位中輸入自訂職務，例如「設備股長」「午餐股長」等。
+          </div>
+        </div>
+        <p>若發現職務多打或不需要，可在任務表格右側按「刪除」。</p>
+      </section>
+
+      <section>
+        <h2>五、分配學生</h2>
+        <h3>手動指定</h3>
+        <ol>
+          <li>進入「分配與檢視」分頁。</li>
+          <li>選擇分配類型：「幹部」或「小老師」。</li>
+          <li>在每個職務右側的下拉選單中選擇學生。</li>
+          <li>如需取消某一職務，按該列的「清除」。</li>
+        </ol>
+
+        <h3>隨機分配</h3>
+        <ol>
+          <li>確認學生名單與職務清單都已建立。</li>
+          <li>選擇分配類型。</li>
+          <li>若不希望同一位學生在同一類型中重複擔任多個職務，請保持「同一類型避免重複指派同一人」勾選。</li>
+          <li>按「隨機分配未指派」。程式只會補上尚未指派的職務。</li>
+        </ol>
+        <p>若只想處理某一個職務，可使用每列右側新增的「隨機」按鈕，直接為該列從目前可用學生中隨機指定一位。已指派的職務也可以再次按下「隨機」重新分配；若勾選避免重複，程式會自動排除同類型中已被其他職務使用的學生。</p>
+      </section>
+
+      <section>
+        <h2>六、儲存、匯出與備份</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>功能</th>
+              <th>用途</th>
+              <th>建議使用情境</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>儲存到本機</td>
+              <td>將目前資料存在瀏覽器本機儲存空間。</td>
+              <td>同一台電腦稍後繼續編輯。</td>
+            </tr>
+            <tr>
+              <td>下載 Excel</td>
+              <td>輸出 <code>.xlsx</code>，包含分配結果與學生名單。</td>
+              <td>交給行政、整理紀錄、後續修改。</td>
+            </tr>
+            <tr>
+              <td>下載 PDF</td>
+              <td>開啟列印視窗，可另存為 PDF。</td>
+              <td>列印、傳閱、存成正式紀錄。</td>
+            </tr>
+            <tr>
+              <td>下載 JSON</td>
+              <td>完整保存程式資料，可再匯入程式。</td>
+              <td>備份未完成的工作，或跨裝置繼續編輯。</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>七、常見問題</h2>
+        <h3>Excel 名單匯入後看不到班級怎麼辦？</h3>
+        <p>請確認 Excel 內有清楚的「班級、座號、姓名」欄位，或每個班級區塊附近有班級名稱。如果檔案格式太特殊，可先另存為 <code>.xlsx</code> 或整理成「班級、座號、姓名」三欄後再匯入。</p>
+
+        <h3>學生名單匯入後有舊資料混在一起怎麼辦？</h3>
+        <p>匯入前請勾選「匯入時先清空目前學生名單」。若已混在一起，可按「清空名單」後重新匯入。</p>
+
+        <h3>下載 CSV 會亂碼嗎？</h3>
+        <p>新版已移除 CSV 匯出，改用 Excel 與 PDF，避免中文在不同軟體中出現亂碼。</p>
+
+        <h3>學生名單會上傳到網路嗎？</h3>
+        <p>不會。程式主要在瀏覽器中執行，學生名單與分配資料不會自動送到伺服器。若按下載，檔案會儲存在使用者自己的電腦。</p>
+      </section>
+
+      <section>
+        <h2>八、建議工作流程</h2>
+        <ol>
+          <li>先匯入該班學生名單。</li>
+          <li>在任務清單中生成常用幹部與小老師。</li>
+          <li>刪除不需要的職務，或新增班上特有職務。</li>
+          <li>先手動指定已確定人選，再用隨機分配補齊剩下職務。</li>
+          <li>檢查分配結果，下載 Excel 與 PDF 保存。</li>
+          <li>若尚未完成，另外下載 JSON 作為下次繼續編輯的備份。</li>
+        </ol>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <p>臺北市麗山高中林獻升老師製作｜使用說明更新日期：2026-06-21</p>
+  </footer>
+</body>
+</html>

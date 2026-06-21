@@ -1,0 +1,3416 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>校慶園遊會販賣食物攤位規劃程式</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --primary-dark: #5a6fd8;
+            --secondary-color: #764ba2;
+            --accent-color: #f093fb;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+            --danger-color: #f44336;
+            --info-color: #2196f3;
+            --light-bg: #f8fafc;
+            --white: #ffffff;
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --gradient-primary: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            --gradient-accent: linear-gradient(135deg, var(--accent-color) 0%, var(--primary-color) 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: var(--light-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="1" fill="white" opacity="0.05"/><circle cx="10" cy="60" r="1" fill="white" opacity="0.05"/><circle cx="90" cy="40" r="1" fill="white" opacity="0.05"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>') repeat;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header .subtitle {
+            margin: 0.5rem 0 0 0;
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .nav-container {
+            background: white;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0;
+        }
+
+        .nav-item {
+            background: none;
+            border: none;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-primary);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+            transition: width 0.3s ease;
+        }
+
+        .nav-item:hover {
+            background: var(--light-bg);
+            color: var(--primary-color);
+        }
+
+        .nav-item:hover::before,
+        .nav-item.active::before {
+            width: 100%;
+        }
+
+        .nav-item.active {
+            color: var(--primary-color);
+            background: var(--light-bg);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--gradient-primary);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .card:hover::before {
+            transform: scaleY(1);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--gradient-primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .student-list-textarea {
+            height: 7.1rem;
+            max-height: 7.1rem;
+            min-height: 7.1rem;
+            overflow-y: auto;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--gradient-accent);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-info {
+            background: var(--info-color);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .btn-row-nowrap {
+            flex-wrap: nowrap;
+            align-items: center;
+        }
+
+        .btn-row-nowrap .btn {
+            white-space: nowrap;
+        }
+
+        .smart-panel {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(33, 150, 243, 0.08));
+            border: 1px solid rgba(102, 126, 234, 0.18);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .smart-panel-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0 0 0.5rem 0;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        .smart-panel-text {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .search-toolbar {
+            display: grid;
+            grid-template-columns: minmax(240px, 1fr) auto;
+            gap: 0.75rem;
+            align-items: center;
+            margin: 1rem 0;
+        }
+
+        .chip-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .chip-btn {
+            border: 1px solid var(--border-color);
+            background: white;
+            color: var(--text-primary);
+            border-radius: 999px;
+            padding: 0.45rem 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .chip-btn:hover,
+        .chip-btn.active {
+            color: white;
+            border-color: transparent;
+            background: var(--gradient-primary);
+        }
+
+        .mini-summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .summary-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.35rem 0.7rem;
+            border-radius: 999px;
+            background: var(--light-bg);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 2rem;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .table th {
+            background: var(--gradient-primary);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .table tr:hover {
+            background: var(--light-bg);
+        }
+
+        .food-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .food-item {
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .food-item:hover {
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .food-item.selected {
+            border-color: var(--primary-color);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        }
+
+        .food-checkbox {
+            margin-right: 0.5rem;
+            transform: scale(1.2);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .student-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 0.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 1rem;
+            background: var(--light-bg);
+            border-radius: 8px;
+        }
+
+        .student-grid-full {
+            max-height: none;
+            overflow-y: visible;
+        }
+
+        .student-item {
+            background: white;
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .student-item:hover {
+            border-color: var(--primary-color);
+            background: var(--light-bg);
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid;
+        }
+
+        .alert-success {
+            background: rgba(76, 175, 80, 0.1);
+            border-color: var(--success-color);
+            color: #2e7d32;
+        }
+
+        .alert-warning {
+            background: rgba(255, 152, 0, 0.1);
+            border-color: var(--warning-color);
+            color: #ef6c00;
+        }
+
+        .alert-error {
+            background: rgba(244, 67, 54, 0.1);
+            border-color: var(--danger-color);
+            color: #c62828;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-primary);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            white-space: nowrap;
+            z-index: 1000;
+        }
+
+        .footer {
+            background: var(--gradient-primary);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        .import-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin: 0.75rem 0 1rem;
+            padding: 0.75rem;
+            background: var(--light-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .import-toolbar span {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-right: 0.25rem;
+        }
+
+        .food-card-detail {
+            display: grid;
+            gap: 0.45rem;
+            margin: 0;
+        }
+
+        .food-card-detail strong {
+            color: var(--text-primary);
+        }
+
+        .import-preview {
+            max-height: 220px;
+            overflow: auto;
+            background: var(--light-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+
+        .export-capture {
+            position: fixed;
+            left: -10000px;
+            top: 0;
+            width: min(1100px, calc(100vw - 2rem));
+            background: #ffffff;
+            opacity: 1 !important;
+            transform: none !important;
+            z-index: -1;
+        }
+
+        .export-capture,
+        .export-capture * {
+            opacity: 1 !important;
+            filter: none !important;
+            text-shadow: none !important;
+            animation: none !important;
+            transition: none !important;
+        }
+
+        .print-only-clone {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .nav {
+                flex-direction: column;
+            }
+            
+            .nav-item {
+                text-align: center;
+                padding: 1rem;
+            }
+            
+            .container {
+                padding: 1rem 0.5rem;
+            }
+            
+            .card {
+                padding: 1rem;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn-row-nowrap {
+                flex-direction: row;
+                overflow-x: auto;
+                padding-bottom: 0.25rem;
+            }
+            
+            .btn-group .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .btn-row-nowrap .btn {
+                width: auto;
+                flex: 0 0 auto;
+            }
+            
+            .food-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .import-toolbar {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .search-toolbar {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 10mm;
+            }
+
+            body.printing-export {
+                background: #ffffff !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            body.printing-export > *:not(.print-only-clone) {
+                display: none !important;
+            }
+
+            body.printing-export .print-only-clone {
+                display: block !important;
+                width: 100% !important;
+                max-width: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                page-break-after: auto;
+                break-after: auto;
+            }
+
+            body.printing-export .print-only-clone .btn,
+            body.printing-export .print-only-clone .no-export {
+                display: none !important;
+            }
+
+            body.printing-export .print-only-clone,
+            body.printing-export .print-only-clone * {
+                opacity: 1 !important;
+                filter: none !important;
+                text-shadow: none !important;
+                animation: none !important;
+                transition: none !important;
+            }
+
+            body.printing-export .print-only-clone .table-container {
+                box-shadow: none !important;
+                margin-bottom: 0 !important;
+                overflow: visible !important;
+            }
+
+            body.printing-export .print-only-clone .card-header {
+                page-break-after: avoid;
+                break-after: avoid;
+            }
+
+            body.printing-export .print-only-clone table {
+                page-break-inside: auto;
+                break-inside: auto;
+            }
+
+            body.printing-export .print-only-clone tr {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+        }
+
+        /* Enhanced animations */
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-store"></i> 校慶園遊會攤位規劃程式</h1>
+        <p class="subtitle">智能化攤位管理 • 高效率活動規劃</p>
+    </div>
+
+    <div class="nav-container">
+        <nav class="nav">
+            <button class="nav-item active" data-section="food-theme">
+                <i class="fas fa-utensils"></i> 食物主題規劃
+            </button>
+            <button class="nav-item" data-section="stall-work">
+                <i class="fas fa-users-cog"></i> 攤位工作規劃
+            </button>
+            <button class="nav-item" data-section="stall-rotation">
+                <i class="fas fa-clock"></i> 販賣食物輪值
+            </button>
+            <button class="nav-item" data-section="program-instructions">
+                <i class="fas fa-question-circle"></i> 使用說明
+            </button>
+        </nav>
+    </div>
+
+    <div class="container">
+        <!-- Food Theme Planning Section -->
+        <section id="food-theme" class="section active">
+            <div class="card fade-in-up">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-palette"></i>
+                    </div>
+                    <h2 class="card-title">攤位主題設定</h2>
+                </div>
+                
+                <div class="form-group">
+                    <label for="theme-name" class="form-label">攤位主題名稱</label>
+                    <input type="text" id="theme-name" class="form-input" placeholder="輸入您的攤位主題名稱">
+                </div>
+
+                <div class="btn-group no-export">
+                    <button id="save-theme" class="btn btn-primary tooltip" data-tooltip="儲存當前主題設定">
+                        <i class="fas fa-save"></i> 儲存資料
+                    </button>
+                    <button id="load-theme" class="btn btn-secondary">
+                        <i class="fas fa-download"></i> 讀取主題
+                    </button>
+                    <button id="delete-theme" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> 刪除資料
+                    </button>
+                </div>
+
+                <div class="form-group">
+                    <label for="theme-select" class="form-label">已儲存的攤位主題</label>
+                    <select id="theme-select" class="form-select">
+                        <option value="">選擇一個主題</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="card fade-in-up">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-hamburger"></i>
+                    </div>
+                    <h2 class="card-title">食物種類選擇</h2>
+                </div>
+
+                <div class="btn-group">
+                    <button id="add-food-btn" class="btn btn-success">
+                        <i class="fas fa-plus"></i> 手動輸入食物
+                    </button>
+                    <button id="delete-food-btn" class="btn btn-warning">
+                        <i class="fas fa-minus"></i> 手動刪除食物
+                    </button>
+                </div>
+
+                <div class="smart-panel">
+                    <p class="smart-panel-title"><i class="fas fa-wand-magic-sparkles"></i> 快速挑選</p>
+                    <p class="smart-panel-text">可用關鍵字搜尋食物，或用分類篩選後批次選取，適合快速比較園遊會菜單組合。</p>
+                </div>
+
+                <div class="search-toolbar">
+                    <input type="text" id="food-search" class="form-input" placeholder="搜尋食物名稱，例如：雞、奶茶、甜點">
+                    <div class="chip-group">
+                        <button class="chip-btn active food-filter-btn" data-filter="all">全部</button>
+                        <button class="chip-btn food-filter-btn" data-filter="hot-food">熱食</button>
+                        <button class="chip-btn food-filter-btn" data-filter="dessert">甜點</button>
+                        <button class="chip-btn food-filter-btn" data-filter="drink">飲料</button>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button id="select-visible-foods" class="btn btn-secondary">
+                        <i class="fas fa-check-double"></i> 選取目前顯示
+                    </button>
+                    <button id="clear-food-selection" class="btn btn-outline">
+                        <i class="fas fa-eraser"></i> 清除食物選取
+                    </button>
+                </div>
+
+                <div id="food-selection">
+                    <div class="food-grid" id="food-checkboxes"></div>
+                </div>
+            </div>
+
+            <div class="card fade-in-up" id="food-export-result">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-list-check"></i>
+                    </div>
+                    <h2 class="card-title">已選擇的食物</h2>
+                </div>
+
+                <div class="btn-group">
+                    <button id="save-selected-foods" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 儲存食物種類
+                    </button>
+                    <button id="copy-selected-foods" class="btn btn-secondary">
+                        <i class="fas fa-copy"></i> 複製食物
+                    </button>
+                    <button id="ai-search-btn" class="btn btn-info">
+                        <i class="fas fa-robot"></i> AI搜尋
+                    </button>
+                    <button id="chatgpt-btn" class="btn btn-info">
+                        <i class="fas fa-comments"></i> ChatGPT
+                    </button>
+                    <button class="btn btn-info export-image-btn" data-section="food-export-result" data-name="食物種類介紹">
+                        <i class="fas fa-image"></i> 下載圖片
+                    </button>
+                    <button class="btn btn-danger export-pdf-btn" data-section="food-export-result" data-name="食物種類介紹">
+                        <i class="fas fa-file-pdf"></i> 下載 PDF
+                    </button>
+                    <button class="btn btn-secondary print-section-btn" data-section="food-export-result">
+                        <i class="fas fa-print"></i> 列印食物介紹
+                    </button>
+                </div>
+
+                <div id="food-details" class="food-details"></div>
+
+                <div class="form-group no-export">
+                    <label for="ai-analysis-input" class="form-label">AI分析結果</label>
+                    <textarea id="ai-analysis-input" class="form-textarea" rows="8" placeholder="在此輸入AI分析結果..."></textarea>
+                    <button id="save-ai-analysis" class="btn btn-info" style="margin-top: 0.5rem;">
+                        <i class="fas fa-save"></i> 儲存分析結果
+                    </button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-foods">0</div>
+                    <div class="stat-label">已選擇食物</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="hot-foods-count">0</div>
+                    <div class="stat-label">熱食類</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="desserts-count">0</div>
+                    <div class="stat-label">甜點類</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="drinks-count">0</div>
+                    <div class="stat-label">飲料類</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stall Work Planning Section -->
+        <section id="stall-work" class="section">
+            <div class="card fade-in-up">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <h2 class="card-title">工作項目管理</h2>
+                </div>
+
+                <div class="form-group">
+                    <label for="task-name" class="form-label">新增工作項目</label>
+                    <input type="text" id="task-name" class="form-input" placeholder="輸入工作項目名稱">
+                </div>
+
+                <div class="form-group">
+                    <label for="task-description" class="form-label">工作內容簡介</label>
+                    <textarea id="task-description" class="form-textarea" rows="4" placeholder="說明這個工作項目要負責的內容、注意事項或完成標準"></textarea>
+                </div>
+
+                <div class="btn-group btn-row-nowrap">
+                    <button id="add-task" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> 新增項目
+                    </button>
+                    <button id="clear-task-form" class="btn btn-outline">
+                        <i class="fas fa-broom"></i> 清空輸入
+                    </button>
+                    <button id="save-assignment-data" class="btn btn-success">
+                        <i class="fas fa-save"></i> 儲存資料
+                    </button>
+                    <button id="clear-assignment-data" class="btn btn-danger">
+                        <i class="fas fa-eraser"></i> 清除資料
+                    </button>
+                </div>
+
+            </div>
+
+            <div class="card fade-in-up">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <h2 class="card-title">工作項目列表</h2>
+                </div>
+
+                <div class="table-container">
+                    <table class="table">
+                        <colgroup>
+                            <col style="width: 16%;">
+                            <col style="width: 58%;">
+                            <col style="width: 12%;">
+                            <col style="width: 14%;">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>工作項目</th>
+                                <th>工作內容簡介</th>
+                                <th>所需人數</th>
+                                <th>工作調整</th>
+                            </tr>
+                        </thead>
+                        <tbody id="task-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card fade-in-up" id="student-list-card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <h2 class="card-title">人員名單</h2>
+                </div>
+
+                <div class="form-group">
+                    <label for="student-names" class="form-label">人員姓名 (一行一位人員)</label>
+                    <textarea id="student-names" class="form-textarea student-list-textarea" rows="6" placeholder="01 小明&#10;02 小華&#10;03 小美"></textarea>
+                </div>
+
+                <div class="import-toolbar">
+                    <span><i class="fas fa-file-excel"></i> Excel 名單匯入</span>
+                    <input type="file" id="student-excel-input" class="form-input" accept=".xlsx,.xls,.csv" style="max-width: 320px;">
+                    <button id="open-excel-import" class="btn btn-success">
+                        <i class="fas fa-upload"></i> 選擇班級分頁匯入
+                    </button>
+                </div>
+
+                <div class="btn-group">
+                    <button id="show-student-list" class="btn btn-secondary">
+                        <i class="fas fa-list"></i> 顯示人員列表
+                    </button>
+                    <button id="assign-tasks" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i> 分配工作
+                    </button>
+                    <button id="auto-assign-all-tasks" class="btn btn-info">
+                        <i class="fas fa-shuffle"></i> 一鍵平均分配
+                    </button>
+                </div>
+
+                <div id="student-list-container" class="hidden">
+                    <h4>人員列表</h4>
+                    <div id="student-list" class="student-grid student-grid-full"></div>
+                </div>
+            </div>
+
+            <div class="card fade-in-up" id="assignment-result" style="display: none;">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <h2 class="card-title">工作分配表</h2>
+                </div>
+
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>工作項目</th>
+                                <th>所需人數</th>
+                                <th>負責人員</th>
+                                <th class="no-export">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="assignment-table-body"></tbody>
+                    </table>
+                </div>
+
+                <div class="btn-group no-export">
+                    <button id="download-assignment" class="btn btn-info">
+                        <i class="fas fa-download"></i> 下載分配表
+                    </button>
+                    <button class="btn btn-danger export-pdf-btn" data-section="assignment-result" data-name="工作分配表">
+                        <i class="fas fa-file-pdf"></i> 下載 PDF
+                    </button>
+                    <button class="btn btn-secondary print-section-btn" data-section="assignment-result">
+                        <i class="fas fa-print"></i> 列印分配表
+                    </button>
+                    <button id="clear-student-assignments" class="btn btn-danger">
+                        <i class="fas fa-user-times"></i> 清除所有人員指派
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stall Rotation Section -->
+        <section id="stall-rotation" class="section">
+            <div class="card fade-in-up">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h2 class="card-title">輪班時間設定</h2>
+                </div>
+
+                <div class="form-group">
+                    <label for="rotation-students" class="form-label">人員姓名 (一行一位人員)</label>
+                    <textarea id="rotation-students" class="form-textarea student-list-textarea" rows="6" placeholder="小明&#10;小華&#10;小美"></textarea>
+                </div>
+
+                <div class="btn-group">
+                    <button id="sync-rotation-students" class="btn btn-secondary">
+                        <i class="fas fa-users"></i> 同步工作名單
+                    </button>
+                    <button id="append-rotation-students" class="btn btn-success">
+                        <i class="fas fa-user-plus"></i> 新增到人員列表
+                    </button>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">營業時間段</label>
+                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                        <select id="start-hour" class="form-select" style="width: auto;"></select>
+                        <span>:</span>
+                        <select id="start-minute" class="form-select" style="width: auto;"></select>
+                        <span>到</span>
+                        <select id="end-hour" class="form-select" style="width: auto;"></select>
+                        <span>:</span>
+                        <select id="end-minute" class="form-select" style="width: auto;"></select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="shift-duration" class="form-label">每班次長度</label>
+                    <select id="shift-duration" class="form-select">
+                        <option value="30">30分鐘</option>
+                        <option value="60" selected>60分鐘</option>
+                        <option value="90">90分鐘</option>
+                        <option value="120">120分鐘</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="shift-people" class="form-label">每班次所需人數</label>
+                    <input type="number" id="shift-people" class="form-input" min="1" value="2">
+                </div>
+
+                <div class="btn-group">
+                    <button id="show-rotation-student-list" class="btn btn-info">
+                        <i class="fas fa-list"></i> 顯示人員列表
+                    </button>
+                    <button id="set-shifts" class="btn btn-primary">
+                        <i class="fas fa-calendar-plus"></i> 設定輪班
+                    </button>
+                    <button id="assign-shifts" class="btn btn-secondary">
+                        <i class="fas fa-random"></i> 隨機分配班次表
+                    </button>
+                    <button id="save-shift-data" class="btn btn-success">
+                        <i class="fas fa-save"></i> 儲存資料
+                    </button>
+                    <button id="clear-shift-data" class="btn btn-danger">
+                        <i class="fas fa-eraser"></i> 清除資料
+                    </button>
+                </div>
+
+                <div id="rotation-student-list-container" class="hidden">
+                    <h4>人員列表</h4>
+                    <div id="rotation-student-list" class="student-grid student-grid-full"></div>
+                </div>
+            </div>
+
+            <div class="card fade-in-up" id="shifts-result" style="display: none;">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-table"></i>
+                    </div>
+                    <h2 class="card-title">輪班安排</h2>
+                </div>
+
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>班次</th>
+                                <th>時間段</th>
+                                <th>所需人數</th>
+                                <th>負責人員</th>
+                                <th class="no-export">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shifts-table-body"></tbody>
+                    </table>
+                </div>
+
+                <div class="btn-group no-export">
+                    <button id="download-shifts" class="btn btn-info">
+                        <i class="fas fa-download"></i> 下載輪值表
+                    </button>
+                    <button class="btn btn-danger export-pdf-btn" data-section="shifts-result" data-name="食物輪值表">
+                        <i class="fas fa-file-pdf"></i> 下載 PDF
+                    </button>
+                    <button class="btn btn-secondary print-section-btn" data-section="shifts-result">
+                        <i class="fas fa-print"></i> 列印輪值表
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Instructions Section -->
+        <section id="program-instructions" class="section">
+            <div class="card fade-in-up">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <h2 class="card-title">程式使用說明</h2>
+                </div>
+
+                <div style="line-height: 1.8;">
+                    <p style="font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 2rem;">
+                        歡迎使用校慶園遊會攤位規劃程式！以下是各個功能的詳細使用說明：
+                    </p>
+
+                    <div class="card" style="margin-bottom: 2rem;">
+                        <h3 style="color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-utensils"></i> 食物主題規劃頁面
+                        </h3>
+                        <ol style="padding-left: 1.5rem;">
+                            <li>在「攤位主題名稱」欄位輸入您的攤位主題。</li>
+                            <li>選擇您想販售的食物種類，可點選「手動輸入食物」或「手動刪除食物」進行編輯。</li>
+                            <li>可使用食物搜尋框與熱食、甜點、飲料分類篩選快速縮小清單，也可點擊「選取目前顯示」批次選取。</li>
+                            <li>若想重新規劃菜單，可使用「清除食物選取」快速取消所有已選食物。</li>
+                            <li>點擊「儲存資料」按鈕來保存您的設定，或「讀取主題」從已儲存的主題中選擇。</li>
+                            <li>「AI搜尋」會使用已選食物與園遊會準備關鍵字開啟 Google 搜尋，協助查找食材、設備、成本與販售資料。</li>
+                            <li>「ChatGPT」會自動複製已選食物與完整攤位規劃提示詞，並開啟 ChatGPT，貼上後即可請 AI 協助規劃菜單、分工、成本、動線與宣傳。</li>
+                            <li>在「已選擇的食物」區可下載圖片、下載 PDF 或列印食物介紹，輸出內容只包含已選食物與說明。</li>
+                            <li>右側統計面板會即時顯示已選擇的食物數量和分類。</li>
+                        </ol>
+                    </div>
+
+                    <div class="card" style="margin-bottom: 2rem;">
+                        <h3 style="color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-users-cog"></i> 攤位工作規劃頁面
+                        </h3>
+                        <ol style="padding-left: 1.5rem;">
+                            <li>在「新增工作項目」輸入工作項目名稱，並在「工作內容簡介」說明該工作要負責的內容、注意事項或完成標準，再點擊「新增項目」。</li>
+                            <li>若輸入錯誤，可點擊「清空輸入」重新填寫工作項目名稱與簡介。</li>
+                            <li>新增後的工作項目名稱與工作內容簡介會顯示在「工作項目列表」，可在表格中快速調整所需人數。</li>
+                            <li>人員名單位於「工作項目列表」下方，可手動輸入人員姓名，或匯入含有多個班級分頁的 Excel 檔案並選擇班級分頁。</li>
+                            <li>Excel 匯入後會自動同步到攤位工作規劃人員名單與販賣食物輪值名單，不需另外操作。</li>
+                            <li>「顯示人員列表」會將所有人員以姓名卡片完整展開，方便檢視名單；實際指派人員請在工作分配表的「選擇」彈窗中勾選。</li>
+                            <li>「顯示人員列表」與「分配工作」按鈕放在同一區，點擊「分配工作」後會產生工作分配表。</li>
+                            <li>工作分配表產生後，可在每一列「所需人數」欄位手動調整該工作需要的人力數量。</li>
+                            <li>若要快速產生初稿，可點擊「一鍵平均分配」，系統會依各工作所需人數隨機平均分配人員。</li>
+                            <li>在工作分配表中點擊「選擇」，會跳出人員勾選視窗，可直接勾選負責人員；也可使用「隨機」自動分配。</li>
+                            <li>工作分配表可下載圖片、下載 PDF 或列印，輸出內容只包含分配結果，不包含操作按鈕。</li>
+                            <li>使用「儲存資料」按鈕保存人員名單與分配結果，或「清除資料」按鈕重置。</li>
+                        </ol>
+                    </div>
+
+                    <div class="card" style="margin-bottom: 2rem;">
+                        <h3 style="color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-clock"></i> 販賣食物輪值頁面
+                        </h3>
+                        <ol style="padding-left: 1.5rem;">
+                            <li>在上方「人員姓名」欄位輸入參與輪值的人員，每行一位人員；若已在攤位工作規劃匯入 Excel，名單會自動同步到此欄位。</li>
+                            <li>若後續修改了工作規劃頁人員名單，可使用「同步工作名單」重新帶入輪值頁；若另外手動加入家長或支援人員，可點擊「新增到人員列表」更新顯示。</li>
+                            <li>可點擊「顯示人員列表」將輪值名單完整展開檢視。</li>
+                            <li>設定營業時間段，選擇開始和結束的時間。</li>
+                            <li>選擇每班次的長度和所需人數。</li>
+                            <li>點擊「設定輪班」生成班次表，產生後可在每一列「所需人數」欄位手動調整各時段需要的人力。</li>
+                            <li>輪班安排表的呈現與工作分配表一致，每個班次都可在「操作」欄單獨選取人員、隨機分配或刪除已安排的人員。</li>
+                            <li>使用「隨機分配班次表」按鈕可一次自動分配所有班次，也可用每列的「隨機」按鈕只調整單一班次。</li>
+                            <li>輪值表可下載圖片、下載 PDF 或列印，輸出內容只包含輪值安排結果。</li>
+                            <li>使用「儲存資料」按鈕保存輪值表，或「清除資料」按鈕重置。</li>
+                        </ol>
+                    </div>
+
+                    <div class="alert alert-success">
+                        <strong><i class="fas fa-lightbulb"></i> 小提示：</strong>
+                        所有資料都會自動儲存在瀏覽器中，下次開啟程式時會自動載入您的設定。
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <strong><i class="fas fa-exclamation-triangle"></i> 注意事項：</strong>
+                        請定期使用「儲存資料」功能備份您的設定，避免資料遺失。
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modals -->
+    <div id="food-input-modal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-plus-circle"></i> 新增食物
+                </h3>
+                <button id="close-modal" class="btn btn-outline" style="padding: 0.5rem;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">食物名稱</label>
+                <input type="text" id="food-name-input" class="form-input" placeholder="輸入食物名稱">
+            </div>
+            <div class="form-group">
+                <label class="form-label">食物介紹</label>
+                <textarea id="food-description-input" class="form-textarea" rows="4" placeholder="輸入食物介紹"></textarea>
+            </div>
+            <div class="btn-group">
+                <button id="save-new-food" class="btn btn-success">
+                    <i class="fas fa-save"></i> 儲存
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="delete-food-modal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-trash"></i> 刪除食物
+                </h3>
+                <button id="close-delete-modal" class="btn btn-outline" style="padding: 0.5rem;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">選擇類別</label>
+                <select id="delete-food-category-select" class="form-select">
+                    <option value="hot-food">熱食</option>
+                    <option value="dessert">甜點</option>
+                    <option value="drink">飲料</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">選擇食物</label>
+                <select id="delete-food-select" class="form-select"></select>
+            </div>
+            <div class="btn-group">
+                <button id="confirm-delete-food" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> 確認刪除
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="excel-import-modal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-file-excel"></i> 匯入班級人員名單
+                </h3>
+                <button id="close-excel-modal" class="btn btn-outline" style="padding: 0.5rem;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="form-group">
+                <label for="excel-sheet-select" class="form-label">選擇班級分頁</label>
+                <select id="excel-sheet-select" class="form-select">
+                    <option value="">請先選擇 Excel 檔案</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">匯入預覽</label>
+                <div id="excel-import-preview" class="import-preview">尚未讀取資料。</div>
+            </div>
+            <div class="btn-group">
+                <button id="confirm-excel-import" class="btn btn-success">
+                    <i class="fas fa-check"></i> 匯入人員名單並同步輪值
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p><i class="fas fa-graduation-cap"></i> 製作者：臺北市立麗山高中林獻升老師</p>
+        <p style="margin: 0.5rem 0 0 0; opacity: 0.8; font-size: 0.9rem;">
+            Enhanced with modern UI/UX design
+        </p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        // Enhanced JavaScript with modern features and improved UX
+        
+        // Global variables and data
+        let tasks = [
+            {
+                name: "食物採買組",
+                people: 2,
+                description: "食物採買組負責根據攤位所需的食品清單，採購所有食材，包括原材料如肉類、蔬菜、粉類、調料等。該組需要確保所有食材新鮮且數量充足，並與食物準備組保持密切溝通，確保購買的食材符合需求。還需妥善規劃儲存，避免食材腐壞，並確保在園遊會當天能順利使用。",
+                students: []
+            },
+            {
+                name: "器材採買組",
+                people: 2,
+                description: "器材採買組負責準備烹飪和銷售所需的各類器材，如烤架、油炸鍋、攪拌器、煮鍋、保溫設備，以及相關的餐具和包裝材料（紙杯、筷子、吸管等）。他們需要提前檢查和測試所有設備，確保其在活動當天正常運行，並準備備用設備以應對突發狀況。",
+                students: []
+            },
+            {
+                name: "食物準備組",
+                people: 3,
+                description: "食物準備組負責處理和準備攤位所需的各類食品。根據菜單需求，這一組在活動前處理食材，並在活動當天進行現場烹飪。食物準備組需確保食材的衛生與安全，並按照食譜和顧客需求即時製作食品，保持食品的新鮮度和口感。",
+                students: []
+            },
+            {
+                name: "攤位佈置組",
+                people: 3,
+                description: "攤位佈置組負責攤位的整體設計與裝飾，確保攤位吸引顧客。他們將設計攤位的佈局，合理分配烹飪區、展示區、服務區等，並用海報、裝飾品吸引顧客的注意力。該組需確保攤位外觀整齊，並考慮動線設計，使顾客可以順暢地購物。",
+                students: []
+            },
+            {
+                name: "宣傳海報組",
+                people: 2,
+                description: "宣傳海報組負責設計並製作吸引顧客的宣傳材料，如海報、菜單和社交媒體宣傳內容。他們需突出攤位特色產品、價格與促銷活動，並將這些資訊視覺化呈現。活動前，宣傳海報組可在校內或社交媒體上發布宣傳信息，吸引潛在顧客。",
+                students: []
+            },
+            {
+                name: "物流運輸組",
+                people: 2,
+                description: "物流運輸組負責運輸所有食材、器材和裝備至活動現場，並在活動結束後進行物資的回收和處理。他們需確保物資按時送達且狀況良好，特別是冷藏食品與重型設備的運輸。同時也需協助攤位的搭建與拆除工作。",
+                students: []
+            },
+            {
+                name: "後勤支援組",
+                people: 2,
+                description: "後勤支援組負責活動當天的後勤保障工作，包括物資補給、設備維護和攤位清潔。他們需要隨時檢查攤位的運營狀況，確保食材不短缺、設備運行正常，並定期清理垃圾，維持攤位的整潔。後勤支援組還需協助其他組解決突發問題，保障活動順利進行。",
+                students: []
+            }
+        ];
+
+        const hotFoods = ["鹽酥雞", "章魚燒", "烤香腸", "鐵板麵", "甜不辣", "烤玉米", "煎餃", "蛋餅", "鹽水雞", "咖哩魚蛋", "炸地瓜球", "烤肉串", "炸雞排", "滷味", "關東煮", "生煎包", "炸物拼盤", "披薩", "焗烤馬鈴薯", "炒年糕", "魯肉飯", "米血糕", "炸花枝丸", "炒泡麵", "炒米粉", "燒賣", "蔥抓餅", "香煎餃子", "麻辣燙", "烤雞翅", "咖哩飯", "雞肉捲餅", "牛肉捲餅", "韓式炸雞", "烤肉飯", "燒烤雞腿", "烤雞肉串", "炸芝士球", "壽司", "薯餅", "薯條", "烤地瓜"];
+
+        const desserts = ["鬆餅", "棉花糖", "泡芙", "巧克力香蕉", "奶酪", "芋圓", "豆花", "花生湯", "仙草", "紅豆餅", "果凍杯", "蛋塔", "布丁", "冰淇淋", "奶昔蛋糕", "乳酪蛋糕", "法式可麗餅", "手作餅乾", "馬卡龍", "提拉米蘇", "生乳捲", "手工牛軔糖", "芋頭酥", "麻糬", "草莓大福", "麵包", "蘋果派", "千層酥", "花生湯圓", "冰淇淋聖代", "奶茶布丁", "紫薯球", "手工餅乾", "爆米花"];
+
+        const drinks = ["珍珠奶茶", "檸檬紅茶", "楊枝甘露", "綠豆薏仁湯", "百香果氣泡飲", "泰式奶茶", "芒果冰沙", "草莓優格飲", "檸檬愛玉", "蘆薈檸檬汁", "蜂蜜檸檬水", "洛神花茶", "杏仁茶", "木瓜牛奶", "乾冰汽水", "可樂", "雪碧", "果汁", "冷泡茶", "咖啡", "奶茶", "養樂多", "可爾必思", "黑糖珍珠鮮奶", "芋頭西米露", "焦糖奶茶", "巧克力飲品", "冬瓜檸檬茶"];
+
+        const foodTips = {
+            hot: {
+                feature: "適合當作園遊會主力商品，香氣明顯、現場感強，容易吸引路過同學與家長。",
+                materials: "主食材、調味料、醬料、耐熱餐盒或紙袋、夾子、手套、保溫箱，若需加熱要準備電磁爐、烤盤、油炸鍋或瓦斯爐並先確認學校用電與安全規定。",
+                steps: "活動前先試做一次，確認每份份量、成本與售價；可前一天完成清洗、切配、醃製或分裝，當天採少量多次製作，避免冷掉或排隊過久。",
+                safety: "熱食最重要的是衛生、溫度與動線。生熟食器具要分開，油炸或煎烤區要遠離收銀區，負責同學需戴手套並安排補貨、出餐、收錢分工。",
+                sales: "可設計小份試吃、套餐價或加料選項，海報要直接寫清楚口味、價格、等候時間與是否限量。"
+            },
+            dessert: {
+                feature: "適合做成拍照感強、價格親切的甜點商品，對人員客群很有吸引力，也方便搭配飲料做套餐。",
+                materials: "甜點主材料、裝飾配料、杯盒、湯匙或叉子、保冷袋、冰桶、標籤貼紙與展示盤；若需要烘烤或冷藏，務必先安排製作時間與保存方式。",
+                steps: "活動前先決定份量規格並試算成本。多數甜點適合提前分裝，當天只做淋醬、裝飾或最後組裝，讓出餐速度穩定。",
+                safety: "鮮奶油、乳製品、蛋奶類與水果甜點要注意低溫保存，擺攤時不要一次拿出太多，並標示可能的過敏原如牛奶、蛋、花生、堅果。",
+                sales: "甜點適合做外觀展示、限量口味與拍照打卡活動，也可推出兩入組、飲料組或班級限定包裝。"
+            },
+            drink: {
+                feature: "飲料準備門檻較低、出餐快，適合搭配熱食或甜點販售，是園遊會穩定增加收入的品項。",
+                materials: "茶湯或果汁基底、糖漿、冰塊、杯子、封膜或杯蓋、吸管、量杯、冰桶、保冷桶與標籤；若有珍珠、果肉或配料，要另備撈勺與分裝盒。",
+                steps: "活動前先測試甜度、冰量與每杯容量，基底飲品可先大量製作並冷藏，當天依訂單加冰塊與配料，保持口味一致。",
+                safety: "飲料最怕冰塊不足、杯子不夠與配料變質。需準備備用冰塊，乳製飲品要低溫保存，現場要避免徒手接觸杯口與吸管。",
+                sales: "可提供甜度冰量選項、買餐加購價、大杯升級或限定口味。菜單要讓顧客一眼看懂口味、容量與價格。"
+            }
+        };
+
+        const foodSpecificNotes = {
+            "鹽酥雞": "建議使用已醃好的雞丁或半成品，現場重點是油溫控制、瀝油與調味粉分裝。",
+            "章魚燒": "需要章魚燒烤盤與熟練翻面同學，麵糊、章魚丁、高麗菜與醬料要先分裝。",
+            "烤香腸": "可先蒸熟或使用熟香腸縮短等待時間，現場烤出香氣並搭配蒜片最有吸引力。",
+            "鐵板麵": "麵條、醬包與配料可事先分份，現場用鐵板或平底鍋快速加熱拌炒。",
+            "甜不辣": "可做成炸甜不辣或滷甜不辣，重點是醬料、竹籤、保溫與份量一致。",
+            "烤玉米": "建議先煮熟再烤，現場刷醬加熱上色，避免生玉米烤太久造成排隊。",
+            "煎餃": "可採冷凍煎餃，需準備平底鍋、鍋蓋與水煎流程，安排同學固定顧火。",
+            "蛋餅": "蛋液、餅皮與配料要分區放置，適合做起司、玉米、火腿等加價口味。",
+            "鹽水雞": "可提前完成雞肉與蔬菜處理，當天以拌料分裝為主，注意冷藏與熟食衛生。",
+            "咖哩魚蛋": "適合用保溫鍋販售，魚蛋先煮入味，現場以竹籤或紙碗出餐。",
+            "炸地瓜球": "需要掌握油溫與按壓膨脹技巧，建議先練習並準備瀝油架。",
+            "烤肉串": "肉串可事先醃製串好，當天注意熟度、炭火或烤盤安全與醬料刷具衛生。",
+            "炸雞排": "份量大、吸睛但油炸風險較高，建議使用半成品並確認學校是否允許油炸。",
+            "滷味": "可前一天滷好入味，現場保溫販售，讓顧客選料時要設計清楚價目表。",
+            "關東煮": "適合保溫鍋穩定販售，湯底、竹輪、蘿蔔、丸類要標示單價或套餐價。",
+            "生煎包": "可採半成品加熱，現場要注意鍋底焦度與翻面安全。",
+            "炸物拼盤": "適合清庫存與套餐販售，建議每盒固定品項，避免現場配餐混亂。",
+            "披薩": "可用小披薩或切片販售，烤箱容量會決定出餐速度，需先排好批次。",
+            "焗烤馬鈴薯": "馬鈴薯可先蒸熟，現場加起司與配料焗烤，注意烤箱等待時間。",
+            "炒年糕": "醬汁可先調好，年糕先汆燙，現場拌炒更快也較不易黏鍋。",
+            "魯肉飯": "滷肉可提前完成，現場保溫飯與滷汁，適合做小碗提高購買意願。",
+            "米血糕": "可蒸熱後刷醬撒粉，出餐快，竹籤與醬料區要保持整潔。",
+            "炸花枝丸": "半成品容易操作，重點是油溫、瀝油與每份顆數固定。",
+            "炒泡麵": "材料便宜且校園客群接受度高，需控制鍋具數量與每鍋出餐時間。",
+            "炒米粉": "可先炒大鍋再保溫分裝，注意不要過乾，配料與醬料要夠香。",
+            "燒賣": "適合蒸籠或電鍋保溫，出餐快，搭配辣醬或醬油膏即可。",
+            "蔥抓餅": "冷凍餅皮方便操作，可加蛋、起司或火腿提高客單價。",
+            "香煎餃子": "與煎餃類似，適合固定每份顆數並提供醬油、辣油選項。",
+            "麻辣燙": "食材選擇多但管理較複雜，建議改成固定套餐，降低結帳混亂。",
+            "烤雞翅": "需確保全熟，可先烤至半熟或全熟再現場回烤上色。",
+            "咖哩飯": "咖哩醬可提前煮好，現場重點是白飯保溫、分量一致與盛裝速度。",
+            "雞肉捲餅": "餅皮、雞肉、生菜與醬料分開放，現場組裝即可，適合做清爽套餐。",
+            "牛肉捲餅": "成本較高，需先試算售價；牛肉熟度與保溫要特別注意。",
+            "韓式炸雞": "醬料是賣點，可準備甜辣、蜂蜜蒜味等口味，炸後再拌醬。",
+            "烤肉飯": "飯、肉片、醬汁與配菜要分工，適合午餐時段主打。",
+            "燒烤雞腿": "雞腿需確認全熟，建議先熟化再現場烤香，避免等待過久。",
+            "烤雞肉串": "比整塊肉更好掌握熟度，串好後冷藏，現場少量多次烤。",
+            "炸芝士球": "起司內餡容易爆開，油溫與時間要先試做，出餐後提醒燙口。",
+            "壽司": "適合提前製作，現場冷藏展示，注意飯類保存時間與生食風險，建議以熟食壽司為主。",
+            "薯餅": "半成品操作容易，適合搭配番茄醬，注意油炸或氣炸設備容量。",
+            "薯條": "高人氣且出餐快，建議固定大中小份與醬料加購。",
+            "烤地瓜": "可提前烤熟保溫，現場香氣佳，適合冬天或健康取向攤位。",
+            "鬆餅": "麵糊可預先調好，現場用鬆餅機製作，搭配巧克力、蜂蜜或冰淇淋加價。",
+            "棉花糖": "視覺效果強，但需要棉花糖機與防風位置，糖絲區要保持乾燥。",
+            "泡芙": "可使用現成泡芙殼，現場擠餡或提前分裝，乳製餡料需冷藏。",
+            "巧克力香蕉": "香蕉切段或整支裹巧克力，需準備竹籤、冷藏與裝飾配料。",
+            "奶酪": "適合前一天製作杯裝冷藏，當天加果醬或水果即可販售。",
+            "芋圓": "芋圓需煮熟後保溫或冰鎮，搭配糖水、仙草或豆花都容易販售。",
+            "豆花": "可採桶裝豆花分碗，糖水與配料分開，出餐速度快。",
+            "花生湯": "適合熱甜湯，花生需煮軟，現場保溫並注意燙口。",
+            "仙草": "可做仙草凍杯或仙草茶，配料如奶油球、芋圓可加價。",
+            "紅豆餅": "需要紅豆餅機與熟練操作，餡料可準備奶油、紅豆、起司等口味。",
+            "果凍杯": "可提前製作杯裝，成本穩定，外觀與貼紙包裝會影響銷售。",
+            "蛋塔": "可用冷凍塔皮與蛋液烘烤，需確認烤箱容量與冷卻展示方式。",
+            "布丁": "可提前杯裝冷藏，適合搭配焦糖或鮮奶油，注意蛋奶保存。",
+            "冰淇淋": "需要穩定冷凍設備，若現場保冷不足，建議改成冰淇淋聖代少量製作。",
+            "奶昔蛋糕": "名稱吸睛但需明確定義，可做杯裝蛋糕加奶昔醬，注意冷藏。",
+            "乳酪蛋糕": "適合切片販售，需提前製作冷藏，包裝要避免變形。",
+            "法式可麗餅": "現做香氣佳，但需要可麗餅機與練習攤皮，餡料可甜可鹹。",
+            "手作餅乾": "可提前烘烤包裝，適合班級貼紙與禮物感設計。",
+            "馬卡龍": "製作難度高，若製作經驗不足可採代購或改成簡易夾心餅。",
+            "提拉米蘇": "需冷藏且含乳製品，建議做杯裝，避免切塊混亂。",
+            "生乳捲": "冷藏需求高，適合切片盒裝，銷售時要控量取出。",
+            "手工牛軔糖": "可提前製作包裝，適合常溫販售，但需標示堅果或奶類成分。",
+            "芋頭酥": "適合單顆包裝，外觀精緻，可主打伴手禮感。",
+            "麻糬": "要避免黏手與乾硬，建議杯裝或盒裝，口味標示要清楚。",
+            "草莓大福": "賣相好但保存要求高，草莓需新鮮且當天少量販售。",
+            "麵包": "可做小餐包或夾心麵包，提前包裝並標示口味。",
+            "蘋果派": "可切片或小派販售，烤後香氣佳，注意酥皮回軟問題。",
+            "千層酥": "口感與包裝很重要，建議獨立包裝避免碎裂。",
+            "花生湯圓": "適合熱甜湯，花生與湯圓需分批煮，避免湯圓泡爛。",
+            "冰淇淋聖代": "可用杯裝冰淇淋加餅乾、醬料與配料，出餐快但需保冷。",
+            "奶茶布丁": "可提前杯裝，搭配珍珠或茶凍做特色，注意冷藏。",
+            "紫薯球": "外型可愛、顏色明顯，適合油炸或氣炸，需控制每份顆數。",
+            "手工餅乾": "與手作餅乾類似，適合提前包裝、做禮盒與套餐加購。",
+            "爆米花": "香氣強且成本低，可現爆或預包裝，適合甜鹹雙口味。",
+            "珍珠奶茶": "珍珠煮好後口感會隨時間變化，需少量多次煮並控糖控冰。",
+            "檸檬紅茶": "基底茶可先泡好冷藏，檸檬汁建議當天準備，酸甜比例要先試喝。",
+            "楊枝甘露": "芒果、西米露、柚粒與椰奶需冷藏，成本較高但很有特色。",
+            "綠豆薏仁湯": "可煮成冰甜湯，適合杯裝販售，甜度與料量要一致。",
+            "百香果氣泡飲": "現加氣泡水口感最好，百香果醬可先分裝，杯蓋要防溢。",
+            "泰式奶茶": "顏色鮮明、甜度高，茶湯可先煮好，煉乳比例要固定。",
+            "芒果冰沙": "需要果汁機與冰塊量，出餐聲音與用電要先確認。",
+            "草莓優格飲": "需冷藏，適合用草莓醬或冷凍草莓穩定風味。",
+            "檸檬愛玉": "愛玉可提前切塊，檸檬糖水分開保存，夏天很受歡迎。",
+            "蘆薈檸檬汁": "蘆薈粒與檸檬汁是賣點，需注意配料撈取衛生。",
+            "蜂蜜檸檬水": "製作簡單但需真材實料，蜂蜜先調開避免沉底。",
+            "洛神花茶": "可先煮成濃縮液，顏色漂亮，適合冷飲或熱飲。",
+            "杏仁茶": "適合熱飲，味道有客群差異，可搭配油條或小點心。",
+            "木瓜牛奶": "現打風味好但保存短，木瓜成熟度與牛奶冷藏很重要。",
+            "乾冰汽水": "視覺效果強但乾冰安全風險高，若學校未核准不建議使用乾冰，可改成氣泡汽水。",
+            "可樂": "可作為保底飲品，重點是冰桶、杯子與套餐搭配。",
+            "雪碧": "適合搭配水果糖漿做特調，透明飲品視覺變化多。",
+            "果汁": "可用柳橙、葡萄、芭樂等口味，需標明是否為濃縮還原或現榨。",
+            "冷泡茶": "可前一天冷泡，成本穩定且清爽，適合無糖或微糖選項。",
+            "咖啡": "可提供冰咖啡或拿鐵，需注意咖啡因標示與牛奶保存。",
+            "奶茶": "基礎款接受度高，可搭配珍珠、椰果或布丁加價。",
+            "養樂多": "適合做養樂多綠茶或氣泡飲，需冷藏並控糖。",
+            "可爾必思": "可做原味、氣泡或水果口味，操作簡單且大家熟悉。",
+            "黑糖珍珠鮮奶": "珍珠與黑糖漿是關鍵，鮮奶需全程冷藏，杯身可做漂亮漸層。",
+            "芋頭西米露": "芋泥與西米露可提前煮好冷藏，口感濃郁但準備工序較多。",
+            "焦糖奶茶": "焦糖香氣明顯，可用固定比例糖漿維持品質。",
+            "巧克力飲品": "適合熱飲或冰飲，粉類要先溶解均勻，避免杯底沉澱。",
+            "冬瓜檸檬茶": "冬瓜茶基底穩定，檸檬汁提味，適合大量製作。"
+        };
+
+        function getFoodCategoryLabel(food) {
+            const category = getCategoryByFood(food);
+            if (category === 'hot-food') return '熱食';
+            if (category === 'dessert') return '甜點';
+            if (category === 'drink') return '飲料';
+            return '自訂品項';
+        }
+
+        function buildFoodDetail(food) {
+            const category = getCategoryByFood(food);
+            const profile = category === 'dessert' ? foodTips.dessert : category === 'drink' ? foodTips.drink : foodTips.hot;
+            const specific = foodSpecificNotes[food] || `${food}可依班級設備與同學能力調整成現做、半成品加熱或預先分裝版本，先試做並記錄每份成本與出餐時間。`;
+            return {
+                feature: `${food}屬於${getFoodCategoryLabel(food)}類品項。${profile.feature}`,
+                materials: profile.materials,
+                steps: `${specific}${profile.steps}`,
+                safety: profile.safety,
+                sales: profile.sales
+            };
+        }
+
+        const foodDetails = {};
+        [...hotFoods, ...desserts, ...drinks].forEach(food => {
+            foodDetails[food] = buildFoodDetail(food);
+        });
+
+        let shifts = [];
+        let studentNames = [];
+        let excelWorkbook = null;
+        let excelImportedStudents = [];
+
+        // DOM Elements
+        const elements = {
+            nav: document.querySelectorAll('.nav-item'),
+            sections: document.querySelectorAll('.section'),
+            themeNameInput: document.getElementById('theme-name'),
+            themeSelect: document.getElementById('theme-select'),
+            foodCheckboxes: document.getElementById('food-checkboxes'),
+            foodDetails: document.getElementById('food-details'),
+            foodSearch: document.getElementById('food-search'),
+            aiAnalysisInput: document.getElementById('ai-analysis-input'),
+            taskTableBody: document.getElementById('task-table-body'),
+            studentNamesInput: document.getElementById('student-names'),
+            excelInput: document.getElementById('student-excel-input'),
+            excelSheetSelect: document.getElementById('excel-sheet-select'),
+            excelPreview: document.getElementById('excel-import-preview'),
+            assignmentResult: document.getElementById('assignment-result'),
+            assignmentTableBody: document.getElementById('assignment-table-body'),
+            shiftsResult: document.getElementById('shifts-result'),
+            shiftsTableBody: document.getElementById('shifts-table-body'),
+            rotationStudentsInput: document.getElementById('rotation-students')
+        };
+
+        // Enhanced navigation with smooth animations
+        function initNavigation() {
+            elements.nav.forEach(navItem => {
+                navItem.addEventListener('click', () => {
+                    const targetSection = navItem.dataset.section;
+                    
+                    // Update active nav item
+                    elements.nav.forEach(item => item.classList.remove('active'));
+                    navItem.classList.add('active');
+                    
+                    // Update active section
+                    elements.sections.forEach(section => {
+                        section.classList.remove('active');
+                        if (section.id === targetSection) {
+                            section.classList.add('active');
+                            section.classList.add('fade-in-up');
+                            setTimeout(() => section.classList.remove('fade-in-up'), 600);
+                        }
+                    });
+                });
+            });
+        }
+
+        // Enhanced food selection with modern grid layout
+        function populateFoodCheckboxes() {
+            const allFoods = [...hotFoods, ...desserts, ...drinks];
+            const container = elements.foodCheckboxes;
+            container.innerHTML = '';
+            
+            allFoods.forEach(food => {
+                const foodItem = document.createElement('div');
+                foodItem.className = 'food-item';
+                foodItem.dataset.foodName = food;
+                foodItem.dataset.category = getCategoryByFood(food);
+                foodItem.innerHTML = `
+                    <label style="display: flex; align-items: center; cursor: pointer; width: 100%;">
+                        <input type="checkbox" class="food-checkbox" value="${food}" data-category="${getCategoryByFood(food)}">
+                        <span style="margin-left: 0.5rem; font-weight: 500;">${food}</span>
+                    </label>
+                `;
+                
+                const checkbox = foodItem.querySelector('input');
+                checkbox.addEventListener('change', () => {
+                    if (checkbox.checked) {
+                        foodItem.classList.add('selected');
+                    } else {
+                        foodItem.classList.remove('selected');
+                    }
+                    updateSelectedFoods();
+                    updateStats();
+                });
+                
+                container.appendChild(foodItem);
+            });
+        }
+
+        function getCategoryByFood(food) {
+            if (hotFoods.includes(food)) return 'hot-food';
+            if (desserts.includes(food)) return 'dessert';
+            if (drinks.includes(food)) return 'drink';
+            return 'other';
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function renderFoodDetailHtml(details) {
+            if (typeof details === 'string') {
+                return `<p style="margin: 0; line-height: 1.6;">${escapeHtml(details)}</p>`;
+            }
+            return `
+                <div class="food-card-detail">
+                    <p><strong>特色定位：</strong>${escapeHtml(details.feature)}</p>
+                    <p><strong>材料與器材：</strong>${escapeHtml(details.materials)}</p>
+                    <p><strong>準備流程：</strong>${escapeHtml(details.steps)}</p>
+                    <p><strong>衛生安全：</strong>${escapeHtml(details.safety)}</p>
+                    <p><strong>販售建議：</strong>${escapeHtml(details.sales)}</p>
+                </div>
+            `;
+        }
+
+        // Enhanced food details display
+        function updateSelectedFoods() {
+            const detailsElement = elements.foodDetails;
+            detailsElement.innerHTML = '';
+            
+            const checkboxes = document.querySelectorAll('.food-checkbox:checked');
+            if (checkboxes.length === 0) {
+                detailsElement.innerHTML = '<p style="color: var(--text-secondary); font-style: italic;">尚未選擇任何食物</p>';
+                return;
+            }
+            
+            checkboxes.forEach(checkbox => {
+                const food = checkbox.value;
+                const details = foodDetails[food] || buildFoodDetail(food);
+                
+                const foodCard = document.createElement('div');
+                foodCard.className = 'card';
+                foodCard.style.marginBottom = '1rem';
+                foodCard.innerHTML = `
+                    <h4 style="color: var(--primary-color); margin: 0 0 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-utensils"></i> ${escapeHtml(food)}
+                    </h4>
+                    ${renderFoodDetailHtml(details)}
+                `;
+                detailsElement.appendChild(foodCard);
+            });
+        }
+
+        // Statistics update
+        function updateStats() {
+            const hotFoodCount = document.querySelectorAll('.food-checkbox[data-category="hot-food"]:checked').length;
+            const dessertCount = document.querySelectorAll('.food-checkbox[data-category="dessert"]:checked').length;
+            const drinkCount = document.querySelectorAll('.food-checkbox[data-category="drink"]:checked').length;
+            const totalCount = hotFoodCount + dessertCount + drinkCount;
+            
+            document.getElementById('total-foods').textContent = totalCount;
+            document.getElementById('hot-foods-count').textContent = hotFoodCount;
+            document.getElementById('desserts-count').textContent = dessertCount;
+            document.getElementById('drinks-count').textContent = drinkCount;
+        }
+
+        function filterFoodItems() {
+            const keyword = elements.foodSearch.value.trim().toLowerCase();
+            const activeFilter = document.querySelector('.food-filter-btn.active')?.dataset.filter || 'all';
+            let visibleCount = 0;
+            
+            document.querySelectorAll('.food-item').forEach(item => {
+                const matchesKeyword = !keyword || item.dataset.foodName.toLowerCase().includes(keyword);
+                const matchesCategory = activeFilter === 'all' || item.dataset.category === activeFilter;
+                const shouldShow = matchesKeyword && matchesCategory;
+                item.style.display = shouldShow ? '' : 'none';
+                if (shouldShow) visibleCount++;
+            });
+            
+            if (visibleCount === 0) {
+                showNotification('目前沒有符合條件的食物，請換個關鍵字或分類。', 'warning');
+            }
+        }
+
+        function setFoodFilter(filter) {
+            document.querySelectorAll('.food-filter-btn').forEach(button => {
+                button.classList.toggle('active', button.dataset.filter === filter);
+            });
+            filterFoodItems();
+        }
+
+        function selectVisibleFoods() {
+            let selectedCount = 0;
+            document.querySelectorAll('.food-item').forEach(item => {
+                if (item.style.display === 'none') return;
+                const checkbox = item.querySelector('.food-checkbox');
+                if (checkbox && !checkbox.checked) {
+                    checkbox.checked = true;
+                    item.classList.add('selected');
+                    selectedCount++;
+                }
+            });
+            
+            updateSelectedFoods();
+            updateStats();
+            showNotification(selectedCount > 0 ? `已選取目前顯示的 ${selectedCount} 種食物。` : '目前顯示的食物都已經被選取。');
+        }
+
+        function clearFoodSelection() {
+            document.querySelectorAll('.food-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+                checkbox.closest('.food-item')?.classList.remove('selected');
+            });
+            updateSelectedFoods();
+            updateStats();
+            showNotification('已清除所有食物選取。');
+        }
+
+        // Enhanced task management
+        function renderTasks() {
+            elements.taskTableBody.innerHTML = '';
+            
+            tasks.forEach((task, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="font-weight: 500;">${task.name}</td>
+                    <td style="line-height: 1.7;">${task.description}</td>
+                    <td>
+                        <input type="number" min="1" value="${task.people}" data-index="${index}" 
+                               class="form-input" style="width: 72px; padding: 0.45rem;">
+                    </td>
+                    <td style="color: var(--text-secondary); font-size: 0.9rem;">調整人數</td>
+                `;
+                elements.taskTableBody.appendChild(row);
+            });
+        }
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'times-circle'}"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(notification);
+            notification.style.position = 'fixed';
+            notification.style.top = '20px';
+            notification.style.right = '20px';
+            notification.style.zIndex = '10000';
+            notification.style.maxWidth = '400px';
+            notification.style.animation = 'slideInRight 0.3s ease-out';
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease-in';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Enhanced auto-resize textarea
+        function autoResizeTextarea(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }
+
+        // Initialize time dropdowns
+        function populateTimeDropdowns() {
+            const hourSelects = [document.getElementById('start-hour'), document.getElementById('end-hour')];
+            const minuteSelects = [document.getElementById('start-minute'), document.getElementById('end-minute')];
+            
+            // Populate hours
+            for (let i = 0; i < 24; i++) {
+                const hour = i.toString().padStart(2, '0');
+                hourSelects.forEach(select => {
+                    const option = document.createElement('option');
+                    option.value = hour;
+                    option.textContent = hour;
+                    select.appendChild(option);
+                });
+            }
+            
+            // Populate minutes
+            for (let i = 0; i < 60; i += 15) {
+                const minute = i.toString().padStart(2, '0');
+                minuteSelects.forEach(select => {
+                    const option = document.createElement('option');
+                    option.value = minute;
+                    option.textContent = minute;
+                    select.appendChild(option);
+                });
+            }
+            
+            // Set default values
+            document.getElementById('start-hour').value = '09';
+            document.getElementById('end-hour').value = '17';
+        }
+
+        // Event Listeners
+        function initEventListeners() {
+            // Theme management
+            document.getElementById('save-theme').addEventListener('click', saveTheme);
+            document.getElementById('load-theme').addEventListener('click', loadTheme);
+            document.getElementById('delete-theme').addEventListener('click', deleteAllData);
+            
+            // Food management
+            document.getElementById('add-food-btn').addEventListener('click', () => {
+                document.getElementById('food-input-modal').style.display = 'block';
+            });
+            
+            document.getElementById('delete-food-btn').addEventListener('click', () => {
+                populateDeleteFoodSelect();
+                document.getElementById('delete-food-modal').style.display = 'block';
+            });
+            
+            document.getElementById('save-new-food').addEventListener('click', addNewFood);
+            document.getElementById('close-modal').addEventListener('click', () => {
+                document.getElementById('food-input-modal').style.display = 'none';
+            });
+            
+            document.getElementById('close-delete-modal').addEventListener('click', () => {
+                document.getElementById('delete-food-modal').style.display = 'none';
+            });
+            
+            document.getElementById('confirm-delete-food').addEventListener('click', deleteFood);
+            document.getElementById('delete-food-category-select').addEventListener('change', populateDeleteFoodSelect);
+            elements.foodSearch.addEventListener('input', filterFoodItems);
+            document.querySelectorAll('.food-filter-btn').forEach(button => {
+                button.addEventListener('click', () => setFoodFilter(button.dataset.filter));
+            });
+            document.getElementById('select-visible-foods').addEventListener('click', selectVisibleFoods);
+            document.getElementById('clear-food-selection').addEventListener('click', clearFoodSelection);
+            
+            document.getElementById('save-selected-foods').addEventListener('click', saveSelectedFoods);
+            document.getElementById('copy-selected-foods').addEventListener('click', copySelectedFoods);
+            document.getElementById('ai-search-btn').addEventListener('click', () => {
+                openGoogleFoodSearch();
+            });
+            document.getElementById('chatgpt-btn').addEventListener('click', () => {
+                openChatGPTWithFoodPrompt();
+            });
+            
+            document.getElementById('save-ai-analysis').addEventListener('click', saveAiAnalysis);
+            
+            // Task management
+            document.getElementById('add-task').addEventListener('click', addTask);
+            document.getElementById('clear-task-form').addEventListener('click', clearTaskForm);
+            document.getElementById('show-student-list').addEventListener('click', showStudentList);
+            document.getElementById('assign-tasks').addEventListener('click', assignTasks);
+            document.getElementById('auto-assign-all-tasks').addEventListener('click', autoAssignAllTasks);
+            document.getElementById('save-assignment-data').addEventListener('click', saveAssignmentData);
+            document.getElementById('clear-assignment-data').addEventListener('click', clearAssignmentData);
+            document.getElementById('clear-student-assignments').addEventListener('click', clearStudentsFromTasks);
+            document.getElementById('download-assignment').addEventListener('click', downloadAssignment);
+            document.getElementById('student-excel-input').addEventListener('change', handleExcelFileSelect);
+            document.getElementById('open-excel-import').addEventListener('click', openExcelImportModal);
+            document.getElementById('close-excel-modal').addEventListener('click', () => {
+                document.getElementById('excel-import-modal').style.display = 'none';
+            });
+            document.getElementById('excel-sheet-select').addEventListener('change', updateExcelPreview);
+            document.getElementById('confirm-excel-import').addEventListener('click', importExcelStudents);
+            document.querySelectorAll('.export-image-btn').forEach(button => {
+                button.addEventListener('click', () => exportSectionAsImage(button.dataset.section, button.dataset.name));
+            });
+            document.querySelectorAll('.export-pdf-btn').forEach(button => {
+                button.addEventListener('click', () => exportSectionAsPdf(button.dataset.section, button.dataset.name));
+            });
+            document.querySelectorAll('.print-section-btn').forEach(button => {
+                button.addEventListener('click', () => printSection(button.dataset.section));
+            });
+            
+            // Shift management
+            document.getElementById('set-shifts').addEventListener('click', setShifts);
+            document.getElementById('assign-shifts').addEventListener('click', assignShifts);
+            document.getElementById('save-shift-data').addEventListener('click', saveShiftData);
+            document.getElementById('clear-shift-data').addEventListener('click', clearShiftData);
+            document.getElementById('show-rotation-student-list').addEventListener('click', showRotationStudentList);
+            document.getElementById('sync-rotation-students').addEventListener('click', syncRotationStudentsFromWorkList);
+            document.getElementById('append-rotation-students').addEventListener('click', appendRotationStudentsToList);
+            document.getElementById('download-shifts').addEventListener('click', downloadShifts);
+            
+            // Auto-resize textareas
+            elements.aiAnalysisInput.addEventListener('input', function() {
+                autoResizeTextarea(this);
+            });
+            document.getElementById('task-description').addEventListener('input', function() {
+                autoResizeTextarea(this);
+            });
+            
+            // Task table event delegation
+            elements.taskTableBody.addEventListener('change', handleTaskTableChange);
+            
+            // Assignment table event delegation
+            elements.assignmentTableBody.addEventListener('click', handleAssignmentTableClick);
+            elements.assignmentTableBody.addEventListener('change', handleAssignmentTableChange);
+            
+            // Shifts table event delegation
+            elements.shiftsTableBody.addEventListener('click', handleShiftsTableClick);
+            elements.shiftsTableBody.addEventListener('change', handleShiftsTableChange);
+            
+            // Modal close on outside click
+            window.addEventListener('click', handleModalClose);
+        }
+
+        // Theme management functions
+        function saveTheme() {
+            const themeName = elements.themeNameInput.value.trim();
+            if (!themeName) {
+                showNotification('請輸入攤位主題名稱！', 'warning');
+                return;
+            }
+            
+            const selectedFoods = [];
+            document.querySelectorAll('.food-checkbox:checked').forEach(checkbox => {
+                selectedFoods.push({
+                    name: checkbox.value,
+                    description: foodDetails[checkbox.value] || ''
+                });
+            });
+            
+            const themes = JSON.parse(localStorage.getItem('foodThemes')) || [];
+            const themeData = { name: themeName, selectedFoods };
+            const existingIndex = themes.findIndex(t => t.name === themeName);
+            
+            if (existingIndex !== -1) {
+                themes[existingIndex] = themeData;
+            } else {
+                themes.push(themeData);
+            }
+            
+            localStorage.setItem('foodThemes', JSON.stringify(themes));
+            loadThemes();
+            showNotification('攤位主題和選擇的食物已儲存！');
+        }
+
+        function loadTheme() {
+            const selectedTheme = elements.themeSelect.value;
+            if (!selectedTheme) {
+                showNotification('請選擇一個攤位主題！', 'warning');
+                return;
+            }
+            
+            const themes = JSON.parse(localStorage.getItem('foodThemes')) || [];
+            const theme = themes.find(t => t.name === selectedTheme);
+            
+            if (theme) {
+                elements.themeNameInput.value = theme.name;
+                
+                // Clear all checkboxes
+                document.querySelectorAll('.food-checkbox').forEach(checkbox => {
+                    checkbox.checked = false;
+                    checkbox.closest('.food-item').classList.remove('selected');
+                });
+                
+                // Select theme foods
+                theme.selectedFoods.forEach(foodItem => {
+                    const checkbox = document.querySelector(`.food-checkbox[value="${foodItem.name}"]`);
+                    if (checkbox) {
+                        checkbox.checked = true;
+                        checkbox.closest('.food-item').classList.add('selected');
+                    }
+                });
+                
+                updateSelectedFoods();
+                updateStats();
+                showNotification('主題已載入！');
+            }
+        }
+
+        function loadThemes() {
+            const themes = JSON.parse(localStorage.getItem('foodThemes')) || [];
+            elements.themeSelect.innerHTML = '<option value="">選擇一個主題</option>';
+            
+            themes.forEach(theme => {
+                const option = document.createElement('option');
+                option.value = theme.name;
+                option.textContent = theme.name;
+                elements.themeSelect.appendChild(option);
+            });
+        }
+
+        function deleteAllData() {
+            if (!confirm('確定要刪除所有資料嗎？此操作無法復原！')) return;
+            
+            localStorage.clear();
+            
+            // Reset UI
+            elements.themeNameInput.value = '';
+            elements.aiAnalysisInput.value = '';
+            elements.studentNamesInput.value = '';
+            elements.rotationStudentsInput.value = '';
+            
+            document.querySelectorAll('.food-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+                checkbox.closest('.food-item').classList.remove('selected');
+            });
+            
+            tasks.forEach(task => task.students = []);
+            shifts = [];
+            
+            loadThemes();
+            renderTasks();
+            updateSelectedFoods();
+            updateStats();
+            elements.assignmentResult.style.display = 'none';
+            elements.shiftsResult.style.display = 'none';
+            
+            showNotification('所有資料已刪除！', 'error');
+        }
+
+        // Food management functions
+        function addNewFood() {
+            const name = document.getElementById('food-name-input').value.trim();
+            const description = document.getElementById('food-description-input').value.trim();
+            
+            if (!name || !description) {
+                showNotification('請輸入完整的食物名稱和介紹！', 'warning');
+                return;
+            }
+            
+            // Add to appropriate category (default to hot food)
+            hotFoods.push(name);
+            foodDetails[name] = description;
+            
+            // Refresh food grid
+            populateFoodCheckboxes();
+            
+            // Clear form and close modal
+            document.getElementById('food-name-input').value = '';
+            document.getElementById('food-description-input').value = '';
+            document.getElementById('food-input-modal').style.display = 'none';
+            
+            showNotification(`${name} 已新增！`);
+        }
+
+        function populateDeleteFoodSelect() {
+            const category = document.getElementById('delete-food-category-select').value;
+            const select = document.getElementById('delete-food-select');
+            select.innerHTML = '';
+            
+            let foods = [];
+            switch (category) {
+                case 'hot-food': foods = hotFoods; break;
+                case 'dessert': foods = desserts; break;
+                case 'drink': foods = drinks; break;
+            }
+            
+            foods.forEach(food => {
+                const option = document.createElement('option');
+                option.value = food;
+                option.textContent = food;
+                select.appendChild(option);
+            });
+        }
+
+        function deleteFood() {
+            const category = document.getElementById('delete-food-category-select').value;
+            const foodToDelete = document.getElementById('delete-food-select').value;
+            
+            let foods = [];
+            switch (category) {
+                case 'hot-food': foods = hotFoods; break;
+                case 'dessert': foods = desserts; break;
+                case 'drink': foods = drinks; break;
+            }
+            
+            const index = foods.indexOf(foodToDelete);
+            if (index > -1) {
+                foods.splice(index, 1);
+                delete foodDetails[foodToDelete];
+                
+                populateFoodCheckboxes();
+                updateSelectedFoods();
+                updateStats();
+                
+                document.getElementById('delete-food-modal').style.display = 'none';
+                showNotification(`${foodToDelete} 已刪除！`);
+            }
+        }
+
+        function saveSelectedFoods() {
+            const themeName = elements.themeNameInput.value.trim();
+            if (!themeName) {
+                showNotification('請先輸入攤位主題名稱！', 'warning');
+                return;
+            }
+            saveTheme();
+        }
+
+        function copySelectedFoods() {
+            const allText = buildFoodPlanningPrompt();
+            if (!allText) return;
+            
+            navigator.clipboard.writeText(allText).then(() => {
+                showNotification('食物種類與攤位規劃提示詞已複製到剪貼簿！');
+            }).catch(() => {
+                showNotification('無法複製，請手動複製。', 'error');
+            });
+        }
+
+        function getSelectedFoodNames() {
+            return Array.from(document.querySelectorAll('.food-checkbox:checked'))
+                .map(checkbox => checkbox.value);
+        }
+
+        function buildFoodPlanningPrompt() {
+            const selectedFoods = getSelectedFoodNames();
+            if (selectedFoods.length === 0) {
+                showNotification('請先選擇至少一種食物，再使用 ChatGPT 或複製提示詞。', 'warning');
+                return '';
+            }
+
+            const themeName = elements.themeNameInput.value.trim() || '尚未命名的校慶園遊會攤位';
+            const foodDescriptions = elements.foodDetails.innerText.trim();
+            return `你是一位熟悉高中校慶園遊會、人員分工、食品衛生、成本控管與攤位行銷的企劃顧問。請協助我們根據以下資料，規劃一個高中班級成員可以實際執行的校慶園遊會販賣攤位。\n\n攤位主題名稱：${themeName}\n\n已選擇的食物種類：\n${selectedFoods.map((food, index) => `${index + 1}. ${food}`).join('\n')}\n\n目前內建食物介紹與準備提醒：\n${foodDescriptions}\n\n請用繁體中文，以高中班級成員能照著執行的方式，提供完整規劃。請包含以下內容：\n1. 攤位整體定位：適合主打哪一種風格、客群與賣點。\n2. 食物品項評估：逐一分析每種食物的準備難度、出餐速度、設備需求、保存方式、衛生風險與適合販售時段。\n3. 推薦菜單組合：建議主打品項、備用品項、套餐搭配、加價購與不建議同時販售的組合。\n4. 材料與器材清單：分成食材、調味料、包材、烹調設備、保溫保冷設備、清潔衛生用品與備用物資。\n5. 前置準備時程：活動前一週、前三天、前一天、當天早上、營業中、收攤後各要做什麼。\n6. 人員分工建議：採買、備料、烹調、收銀、叫號、補貨、清潔、宣傳、排隊動線與突發支援如何安排。\n7. 成本與售價建議：用簡單表格列出每種食物的成本估算方式、建議售價、可能利潤與控成本提醒。\n8. 攤位動線與安全：如何安排烹調區、出餐區、收銀區、等候區，並提醒用電、瓦斯、油炸、熱湯、刀具、過敏原與垃圾處理注意事項。\n9. 宣傳與銷售話術：提供海報標語、菜單文字、廣播/口頭招呼語、限量促銷與社群宣傳文案。\n10. 最後請提出一份「最推薦執行方案」，若品項太多，請幫我們刪減成最適合高中班級實際完成的版本。`;
+        }
+
+        function openChatGPTWithFoodPrompt() {
+            const prompt = buildFoodPlanningPrompt();
+            if (!prompt) return;
+
+            navigator.clipboard.writeText(prompt).then(() => {
+                showNotification('已複製 ChatGPT 攤位規劃提示詞，開啟後可直接貼上使用。');
+                window.open('https://chatgpt.com/', '_blank');
+            }).catch(() => {
+                showNotification('無法自動複製提示詞，已開啟 ChatGPT，請手動複製「複製食物」內容。', 'warning');
+                window.open('https://chatgpt.com/', '_blank');
+            });
+        }
+
+        function saveAiAnalysis() {
+            const analysisText = elements.aiAnalysisInput.value.trim();
+            if (!analysisText) {
+                showNotification('請輸入AI分析結果後再儲存。', 'warning');
+                return;
+            }
+            
+            localStorage.setItem('aiAnalysisResult', analysisText);
+            showNotification('AI分析結果已儲存！');
+        }
+
+        function openGoogleFoodSearch() {
+            const selectedFoods = getSelectedFoodNames();
+            if (selectedFoods.length === 0) {
+                showNotification('請先選擇至少一種食物，再使用 AI 搜尋。', 'warning');
+                return;
+            }
+            const themeName = elements.themeNameInput.value.trim();
+            const queryParts = [
+                themeName,
+                selectedFoods.join(' '),
+                '校慶 園遊會 食物 攤位 準備 材料 器材 成本 衛生 販售'
+            ].filter(Boolean);
+            const query = encodeURIComponent(queryParts.join(' '));
+            window.open(`https://www.google.com/search?q=${query}`, '_blank');
+        }
+
+        function handleExcelFileSelect(event) {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            if (!window.XLSX) {
+                showNotification('Excel 解析套件尚未載入，請確認網路連線後重新開啟程式。', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (loadEvent) => {
+                try {
+                    const data = new Uint8Array(loadEvent.target.result);
+                    excelWorkbook = XLSX.read(data, { type: 'array' });
+                    populateExcelSheets();
+                    document.getElementById('excel-import-modal').style.display = 'block';
+                    showNotification(`已讀取 ${file.name}，請選擇班級分頁。`);
+                } catch (error) {
+                    console.error(error);
+                    showNotification('無法讀取 Excel 檔案，請確認檔案格式是否正確。', 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function populateExcelSheets() {
+            elements.excelSheetSelect.innerHTML = '';
+            if (!excelWorkbook || excelWorkbook.SheetNames.length === 0) {
+                elements.excelSheetSelect.innerHTML = '<option value="">沒有可匯入的分頁</option>';
+                elements.excelPreview.textContent = '尚未讀取資料。';
+                return;
+            }
+
+            excelWorkbook.SheetNames.forEach(sheetName => {
+                const option = document.createElement('option');
+                option.value = sheetName;
+                option.textContent = sheetName;
+                elements.excelSheetSelect.appendChild(option);
+            });
+            elements.excelSheetSelect.value = excelWorkbook.SheetNames[0];
+            updateExcelPreview();
+        }
+
+        function openExcelImportModal() {
+            if (!excelWorkbook) {
+                showNotification('請先選擇 Excel 檔案。', 'warning');
+                elements.excelInput.click();
+                return;
+            }
+            updateExcelPreview();
+            document.getElementById('excel-import-modal').style.display = 'block';
+        }
+
+        function normalizeCell(value) {
+            return String(value ?? '').trim();
+        }
+
+        function parseStudentsFromSheet(sheetName) {
+            if (!excelWorkbook || !sheetName) return [];
+            const sheet = excelWorkbook.Sheets[sheetName];
+            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+            if (!rows.length) return [];
+
+            let headerRowIndex = -1;
+            let seatCol = -1;
+            let nameCol = -1;
+
+            rows.slice(0, 20).forEach((row, rowIndex) => {
+                if (nameCol !== -1) return;
+                row.forEach((cell, colIndex) => {
+                    const text = normalizeCell(cell).replace(/\s/g, '');
+                    if (/(座號|座号|號碼|号碼|學號|学号|No\.?|編號|编号)/i.test(text)) {
+                        seatCol = colIndex;
+                        headerRowIndex = rowIndex;
+                    }
+                    if (/(姓名|人員姓名|学生姓名|名字|Name)/i.test(text)) {
+                        nameCol = colIndex;
+                        headerRowIndex = rowIndex;
+                    }
+                });
+            });
+
+            if (nameCol === -1) {
+                const firstDataRow = rows.find(row => row.filter(cell => normalizeCell(cell)).length >= 2) || [];
+                seatCol = 0;
+                nameCol = firstDataRow.length > 1 ? 1 : 0;
+                headerRowIndex = -1;
+            }
+
+            return rows
+                .slice(headerRowIndex + 1)
+                .map(row => {
+                    const seat = normalizeCell(row[seatCol]);
+                    const name = normalizeCell(row[nameCol]);
+                    if (!name || /(姓名|人員姓名|学生姓名|名字|Name)/i.test(name)) return '';
+                    if (seat && !/(座號|座号|號碼|号碼|學號|学号|No\.?|編號|编号)/i.test(seat)) {
+                        return `${seat.padStart(2, '0')} ${name}`;
+                    }
+                    return name;
+                })
+                .filter(Boolean);
+        }
+
+        function updateExcelPreview() {
+            const sheetName = elements.excelSheetSelect.value;
+            excelImportedStudents = parseStudentsFromSheet(sheetName);
+            if (excelImportedStudents.length === 0) {
+                elements.excelPreview.textContent = '這個分頁沒有偵測到座號與姓名資料，請改選其他分頁，或確認表格有「座號」「姓名」欄位。';
+                return;
+            }
+
+            const previewRows = excelImportedStudents.slice(0, 30);
+            const moreText = excelImportedStudents.length > previewRows.length
+                ? `\n...另有 ${excelImportedStudents.length - previewRows.length} 筆`
+                : '';
+            elements.excelPreview.textContent = previewRows.join('\n') + moreText;
+        }
+
+        function importExcelStudents() {
+            if (excelImportedStudents.length === 0) {
+                showNotification('沒有可匯入的人員資料。', 'warning');
+                return;
+            }
+
+            const importedText = excelImportedStudents.join('\n');
+            elements.studentNamesInput.value = importedText;
+            elements.rotationStudentsInput.value = importedText;
+            document.getElementById('excel-import-modal').style.display = 'none';
+            showStudentList();
+            showNotification(`已匯入 ${excelImportedStudents.length} 位人員，並同步到輪值名單。`);
+        }
+
+        // Task management functions
+        function addTask() {
+            const taskName = document.getElementById('task-name').value.trim();
+            const taskDescription = document.getElementById('task-description').value.trim();
+            if (!taskName || !taskDescription) {
+                showNotification('請輸入工作項目名稱與工作內容簡介！', 'warning');
+                return;
+            }
+            
+            tasks.push({
+                name: taskName,
+                people: 1,
+                description: taskDescription,
+                students: []
+            });
+            
+            renderTasks();
+            document.getElementById('task-name').value = '';
+            document.getElementById('task-description').value = '';
+            showNotification(`工作項目「${taskName}」已新增！`);
+        }
+
+        function clearTaskForm() {
+            document.getElementById('task-name').value = '';
+            document.getElementById('task-description').value = '';
+            showNotification('已清空工作項目輸入欄位。');
+        }
+
+        function showStudentList() {
+            studentNames = getWorkStudentNames();
+            
+            if (studentNames.length === 0) {
+                showNotification('請先輸入人員姓名！', 'warning');
+                return;
+            }
+            
+            const container = document.getElementById('student-list-container');
+            const list = document.getElementById('student-list');
+            list.innerHTML = '';
+            
+            studentNames.forEach(student => {
+                const item = document.createElement('div');
+                item.className = 'student-item';
+                item.innerHTML = `
+                    <i class="fas fa-user"></i>
+                    <span>${escapeHtml(student)}</span>
+                `;
+                list.appendChild(item);
+            });
+            
+            container.classList.remove('hidden');
+            showNotification(`已顯示 ${studentNames.length} 位人員！`);
+        }
+
+        function showRotationStudentList() {
+            const students = elements.rotationStudentsInput.value.split('\n')
+                .map(s => s.trim())
+                .filter(s => s);
+            
+            if (students.length === 0) {
+                showNotification('請先輸入或匯入輪值人員姓名！', 'warning');
+                return;
+            }
+            
+            const container = document.getElementById('rotation-student-list-container');
+            const list = document.getElementById('rotation-student-list');
+            list.innerHTML = '';
+            
+            students.forEach(student => {
+                const item = document.createElement('div');
+                item.className = 'student-item';
+                item.innerHTML = `
+                    <i class="fas fa-user"></i>
+                    <span>${escapeHtml(student)}</span>
+                `;
+                list.appendChild(item);
+            });
+            
+            container.classList.remove('hidden');
+            showNotification(`已顯示 ${students.length} 位輪值人員！`);
+        }
+
+        function getWorkStudentNames() {
+            return elements.studentNamesInput.value.split('\n')
+                .map(s => s.trim())
+                .filter(s => s);
+        }
+
+        function assignTasks() {
+            showStudentList();
+            createWorkTable();
+        }
+
+        function createWorkTable() {
+            elements.assignmentResult.style.display = 'block';
+            elements.assignmentTableBody.innerHTML = '';
+            
+            tasks.forEach((task, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="font-weight: 500;">${task.name}</td>
+                    <td>
+                        <input type="number" min="1" value="${task.people}" data-assignment-people="${index}" 
+                               class="form-input assignment-people-input" style="width: 90px; padding: 0.5rem;">
+                    </td>
+                    <td id="assigned-students-${index}">${task.students.join(', ')}</td>
+                    <td class="no-export">
+                        <div class="btn-group" style="gap: 0.25rem;">
+                            <button data-task="${index}" class="btn btn-primary btn-sm assign-students-btn">
+                                <i class="fas fa-user-plus"></i> 選擇
+                            </button>
+                            <button data-task="${index}" class="btn btn-info btn-sm random-assign-btn">
+                                <i class="fas fa-random"></i> 隨機
+                            </button>
+                            <button data-task="${index}" class="btn btn-danger btn-sm delete-students-btn">
+                                <i class="fas fa-user-times"></i> 刪除
+                            </button>
+                        </div>
+                    </td>
+                `;
+                elements.assignmentTableBody.appendChild(row);
+            });
+        }
+
+        function autoAssignAllTasks() {
+            studentNames = getWorkStudentNames();
+            if (studentNames.length === 0) {
+                showNotification('請先輸入或匯入人員姓名！', 'warning');
+                return;
+            }
+            if (tasks.length === 0) {
+                showNotification('請先建立至少一個工作項目。', 'warning');
+                return;
+            }
+
+            const shuffledStudents = [...studentNames].sort(() => 0.5 - Math.random());
+            let cursor = 0;
+            
+            tasks.forEach(task => {
+                task.students = [];
+                for (let i = 0; i < task.people; i++) {
+                    task.students.push(shuffledStudents[cursor % shuffledStudents.length]);
+                    cursor++;
+                }
+            });
+            
+            showStudentList();
+            createWorkTable();
+            showNotification('已依各工作所需人數完成平均分配。');
+        }
+
+        function handleTaskTableChange(e) {
+            if (e.target.tagName === 'INPUT' && e.target.type === 'number') {
+                const index = parseInt(e.target.dataset.index);
+                const value = parseInt(e.target.value);
+                
+                if (value > 0) {
+                    tasks[index].people = value;
+                } else {
+                    e.target.value = tasks[index].people;
+                    showNotification('人數必須大於0！', 'warning');
+                }
+            }
+        }
+
+        function handleAssignmentTableClick(e) {
+            const taskIndex = parseInt(e.target.dataset.task || e.target.closest('[data-task]')?.dataset.task);
+            const actionButton = e.target.closest('button');
+            
+            if (actionButton?.classList.contains('assign-students-btn')) {
+                assignSelectedStudents(taskIndex);
+            } else if (actionButton?.classList.contains('random-assign-btn')) {
+                assignRandomStudents(taskIndex);
+            } else if (actionButton?.classList.contains('delete-students-btn')) {
+                deleteStudentsFromTask(taskIndex);
+            }
+        }
+
+        function handleAssignmentTableChange(e) {
+            if (!e.target.matches('.assignment-people-input')) return;
+            
+            const taskIndex = parseInt(e.target.dataset.assignmentPeople);
+            const value = parseInt(e.target.value);
+            
+            if (Number.isNaN(value) || value <= 0) {
+                e.target.value = tasks[taskIndex].people;
+                showNotification('每個工作所需人數必須大於0。', 'warning');
+                return;
+            }
+            
+            tasks[taskIndex].people = value;
+            const taskTableInput = elements.taskTableBody.querySelector(`input[data-index="${taskIndex}"]`);
+            if (taskTableInput) {
+                taskTableInput.value = value;
+            }
+            
+            if (tasks[taskIndex].students.length > value) {
+                showNotification(`「${tasks[taskIndex].name}」已調整為 ${value} 人，目前已選人員較多，可重新選取或重新隨機分配。`, 'warning');
+            } else {
+                showNotification(`「${tasks[taskIndex].name}」所需人數已調整為 ${value} 人。`);
+            }
+        }
+
+        function assignSelectedStudents(taskIndex) {
+            const task = tasks[taskIndex];
+            const allStudents = elements.studentNamesInput.value.split('\n')
+                .map(s => s.trim())
+                .filter(s => s);
+            
+            if (allStudents.length === 0) {
+                showNotification('請先輸入或匯入人員姓名！', 'warning');
+                return;
+            }
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-users"></i> 選擇「${escapeHtml(task.name)}」負責人員
+                    </h3>
+                    <p style="color: var(--text-secondary); margin-top: -0.5rem;">
+                        建議選擇 ${task.people} 位人員，可依實際需求調整。
+                    </p>
+                    <div class="student-grid">
+                        ${allStudents.map(student => `
+                            <label class="student-item" style="cursor: pointer;">
+                                <input type="checkbox" value="${escapeHtml(student)}" 
+                                       ${task.students.includes(student) ? 'checked' : ''}>
+                                <span>${escapeHtml(student)}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                    <div class="btn-group" style="margin-top: 1rem;">
+                        <button id="confirm-task-students" class="btn btn-success">
+                            <i class="fas fa-check"></i> 確認
+                        </button>
+                        <button id="cancel-task-students" class="btn btn-outline">
+                            <i class="fas fa-times"></i> 取消
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            modal.querySelector('#confirm-task-students').addEventListener('click', () => {
+                const selectedStudents = Array.from(modal.querySelectorAll('input:checked'))
+                    .map(cb => cb.value);
+                
+                if (selectedStudents.length === 0) {
+                    showNotification('請至少選擇一位人員。', 'warning');
+                    return;
+                }
+                
+                task.students = selectedStudents;
+                document.getElementById(`assigned-students-${taskIndex}`).textContent = selectedStudents.join(', ');
+                document.body.removeChild(modal);
+                showStudentList();
+                showNotification(`已為「${task.name}」更新負責人員！`);
+            });
+            
+            modal.querySelector('#cancel-task-students').addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+        }
+
+        function assignRandomStudents(taskIndex) {
+            const task = tasks[taskIndex];
+            studentNames = getWorkStudentNames();
+            
+            if (studentNames.length === 0) {
+                showNotification('請先輸入或匯入人員姓名！', 'warning');
+                return;
+            }
+            
+            const allAssignedStudents = tasks.reduce((acc, t, idx) => {
+                if (idx !== taskIndex) {
+                    return acc.concat(t.students);
+                }
+                return acc;
+            }, []);
+            
+            const unassignedStudents = studentNames.filter(student => 
+                !allAssignedStudents.includes(student) && !task.students.includes(student)
+            );
+            
+            if (unassignedStudents.length < task.people) {
+                showNotification(`無足夠的未分配人員來隨機分配給「${task.name}」！`, 'warning');
+                return;
+            }
+            
+            const shuffled = [...unassignedStudents].sort(() => 0.5 - Math.random());
+            const selectedStudents = shuffled.slice(0, task.people);
+            
+            task.students = selectedStudents;
+            document.getElementById(`assigned-students-${taskIndex}`).textContent = selectedStudents.join(', ');
+            showNotification(`已隨機為「${task.name}」分配人員！`);
+        }
+
+        function deleteStudentsFromTask(taskIndex) {
+            const task = tasks[taskIndex];
+            const assignedStudentsCell = document.getElementById(`assigned-students-${taskIndex}`);
+            
+            task.students = [];
+            assignedStudentsCell.textContent = '';
+            showNotification(`已刪除「${task.name}」的所有人員！`);
+        }
+
+        function clearStudentsFromTasks() {
+            if (!confirm('確定要清除所有工作項目的人員指派嗎？')) return;
+            
+            tasks.forEach(task => {
+                task.students = [];
+            });
+            
+            createWorkTable();
+            showNotification('所有工作項目的人員指派已清除！');
+        }
+
+        // Shift management functions
+        function setShifts() {
+            const startHour = document.getElementById('start-hour').value;
+            const startMinute = document.getElementById('start-minute').value;
+            const endHour = document.getElementById('end-hour').value;
+            const endMinute = document.getElementById('end-minute').value;
+            const duration = parseInt(document.getElementById('shift-duration').value);
+            const peoplePerShift = parseInt(document.getElementById('shift-people').value);
+            
+            if (isNaN(duration) || duration <= 0) {
+                showNotification('請正確輸入班次長度！', 'warning');
+                return;
+            }
+            
+            if (isNaN(peoplePerShift) || peoplePerShift <= 0) {
+                showNotification('請正確輸入每班次所需人數！', 'warning');
+                return;
+            }
+            
+            const startTime = parseTime(`${startHour}:${startMinute}`);
+            const endTime = parseTime(`${endHour}:${endMinute}`);
+            
+            if (startTime >= endTime) {
+                showNotification('結束時間必須晚於開始時間！', 'warning');
+                return;
+            }
+            
+            shifts = [];
+            let currentTime = new Date(startTime);
+            
+            while (currentTime < endTime) {
+                const shiftEnd = new Date(currentTime.getTime() + duration * 60000);
+                const actualEnd = shiftEnd > endTime ? endTime : shiftEnd;
+                
+                shifts.push({
+                    start: formatTime(currentTime),
+                    end: formatTime(actualEnd),
+                    students: [],
+                    people: peoplePerShift
+                });
+                
+                currentTime = actualEnd;
+            }
+            
+            renderShifts();
+            elements.shiftsResult.style.display = 'block';
+            showNotification(`已生成 ${shifts.length} 個班次！`);
+        }
+
+        function parseTime(timeStr) {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            const date = new Date();
+            date.setHours(hours, minutes, 0, 0);
+            return date;
+        }
+
+        function formatTime(date) {
+            return date.getHours().toString().padStart(2, '0') + ':' + 
+                   date.getMinutes().toString().padStart(2, '0');
+        }
+
+        function renderShifts() {
+            elements.shiftsTableBody.innerHTML = '';
+            
+            shifts.forEach((shift, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>班次 ${index + 1}</td>
+                    <td>${shift.start} - ${shift.end}</td>
+                    <td>
+                        <input type="number" min="1" value="${shift.people}" data-shift-people="${index}" 
+                               class="form-input shift-people-input" style="width: 90px; padding: 0.5rem;">
+                    </td>
+                    <td>
+                        <span id="shift-students-${index}" style="margin-right: 1rem;">${shift.students.join(', ')}</span>
+                    </td>
+                    <td class="no-export">
+                        <div class="btn-group" style="gap: 0.25rem;">
+                            <button class="btn btn-primary btn-sm select-students-btn" data-shift="${index}">
+                                <i class="fas fa-user-plus"></i> 選取
+                            </button>
+                            <button class="btn btn-info btn-sm random-shift-btn" data-shift="${index}">
+                                <i class="fas fa-random"></i> 隨機
+                            </button>
+                            <button class="btn btn-danger btn-sm delete-students-btn" data-shift="${index}">
+                                <i class="fas fa-user-times"></i> 刪除
+                            </button>
+                        </div>
+                    </td>
+                `;
+                elements.shiftsTableBody.appendChild(row);
+            });
+        }
+
+        function assignShifts() {
+            const students = elements.rotationStudentsInput.value.split('\n')
+                .map(s => s.trim())
+                .filter(s => s);
+            
+            if (students.length === 0) {
+                showNotification('請輸入人員姓名！', 'warning');
+                return;
+            }
+            
+            const totalRequired = shifts.reduce((sum, shift) => sum + shift.people, 0);
+            if (students.length < totalRequired) {
+                showNotification('人數不足以填補所有班次的需要！', 'warning');
+                return;
+            }
+            
+            // Shuffle students for random assignment
+            const shuffledStudents = [...students].sort(() => 0.5 - Math.random());
+            let studentIndex = 0;
+            
+            shifts.forEach(shift => {
+                shift.students = [];
+                for (let i = 0; i < shift.people; i++) {
+                    shift.students.push(shuffledStudents[studentIndex % shuffledStudents.length]);
+                    studentIndex++;
+                }
+            });
+            
+            renderShifts();
+            showNotification('班次已隨機分配完成！');
+        }
+
+        function handleShiftsTableClick(e) {
+            const shiftIndex = parseInt(e.target.dataset.shift || e.target.closest('[data-shift]')?.dataset.shift);
+            const actionButton = e.target.closest('button');
+            
+            if (actionButton?.classList.contains('select-students-btn')) {
+                selectStudentsForShift(shiftIndex);
+            } else if (actionButton?.classList.contains('random-shift-btn')) {
+                assignRandomStudentsToShift(shiftIndex);
+            } else if (actionButton?.classList.contains('delete-students-btn')) {
+                deleteStudentsFromShift(shiftIndex);
+            }
+        }
+
+        function handleShiftsTableChange(e) {
+            if (!e.target.matches('.shift-people-input')) return;
+            
+            const shiftIndex = parseInt(e.target.dataset.shiftPeople);
+            const value = parseInt(e.target.value);
+            
+            if (Number.isNaN(value) || value <= 0) {
+                e.target.value = shifts[shiftIndex].people;
+                showNotification('每個班次所需人數必須大於0。', 'warning');
+                return;
+            }
+            
+            shifts[shiftIndex].people = value;
+            if (shifts[shiftIndex].students.length > value) {
+                showNotification(`班次 ${shiftIndex + 1} 已調整為 ${value} 人，目前已選人員較多，可重新選取或重新隨機分配。`, 'warning');
+            } else {
+                showNotification(`班次 ${shiftIndex + 1} 所需人數已調整為 ${value} 人。`);
+            }
+        }
+
+        function assignRandomStudentsToShift(shiftIndex) {
+            const shift = shifts[shiftIndex];
+            const allStudents = elements.rotationStudentsInput.value.split('\n')
+                .map(s => s.trim())
+                .filter(s => s);
+            
+            if (allStudents.length === 0) {
+                showNotification('請先輸入人員姓名！', 'warning');
+                return;
+            }
+            
+            if (allStudents.length < shift.people) {
+                showNotification(`人員數不足，班次 ${shiftIndex + 1} 需要 ${shift.people} 人。`, 'warning');
+                return;
+            }
+            
+            const selectedStudents = [...allStudents].sort(() => 0.5 - Math.random()).slice(0, shift.people);
+            shift.students = selectedStudents;
+            document.getElementById(`shift-students-${shiftIndex}`).textContent = selectedStudents.join(', ');
+            showNotification(`已隨機分配班次 ${shiftIndex + 1}。`);
+        }
+
+        function selectStudentsForShift(shiftIndex) {
+            const shift = shifts[shiftIndex];
+            const allStudents = elements.rotationStudentsInput.value.split('\n')
+                .map(s => s.trim())
+                .filter(s => s);
+            
+            if (allStudents.length === 0) {
+                showNotification('請先輸入人員姓名！', 'warning');
+                return;
+            }
+            
+            // Create modal for student selection
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-users"></i> 選擇班次 ${shiftIndex + 1} 的人員
+                    </h3>
+                    <div class="student-grid">
+                        ${allStudents.map(student => `
+                            <div class="student-item">
+                                <input type="checkbox" value="${student}" 
+                                       ${shift.students.includes(student) ? 'checked' : ''}>
+                                <span>${student}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="btn-group" style="margin-top: 1rem;">
+                        <button id="confirm-students" class="btn btn-success">
+                            <i class="fas fa-check"></i> 確認
+                        </button>
+                        <button id="cancel-selection" class="btn btn-outline">
+                            <i class="fas fa-times"></i> 取消
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            modal.querySelector('#confirm-students').addEventListener('click', () => {
+                const selectedStudents = Array.from(modal.querySelectorAll('input:checked'))
+                    .map(cb => cb.value);
+                
+                shift.students = selectedStudents;
+                document.getElementById(`shift-students-${shiftIndex}`).textContent = selectedStudents.join(', ');
+                document.body.removeChild(modal);
+                showNotification(`班次 ${shiftIndex + 1} 的人員已更新！`);
+            });
+            
+            modal.querySelector('#cancel-selection').addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+        }
+
+        function deleteStudentsFromShift(shiftIndex) {
+            const shift = shifts[shiftIndex];
+            shift.students = [];
+            document.getElementById(`shift-students-${shiftIndex}`).textContent = '';
+            showNotification(`班次 ${shiftIndex + 1} 的人員已刪除！`);
+        }
+
+        // Data management functions
+        function saveAssignmentData() {
+            const studentNames = elements.studentNamesInput.value;
+            const assignmentData = tasks.map(task => ({
+                name: task.name,
+                people: task.people,
+                description: task.description,
+                students: task.students
+            }));
+            
+            localStorage.setItem('studentNames', studentNames);
+            localStorage.setItem('assignmentData', JSON.stringify(assignmentData));
+            showNotification('人員資料與工作分配結果已儲存！');
+        }
+
+        function clearAssignmentData() {
+            if (!confirm('確定要清除儲存的人員資料與工作分配結果嗎？')) return;
+            
+            localStorage.removeItem('studentNames');
+            localStorage.removeItem('assignmentData');
+            
+            elements.studentNamesInput.value = '';
+            tasks.forEach(task => task.students = []);
+            renderTasks();
+            createWorkTable();
+            
+            showNotification('儲存的人員資料與工作分配結果已清除！');
+        }
+
+        function saveShiftData() {
+            const rotationStudentsData = elements.rotationStudentsInput.value.trim();
+            localStorage.setItem('rotationStudents', rotationStudentsData);
+            localStorage.setItem('shiftsData', JSON.stringify(shifts));
+            showNotification('人員姓名資料和班次分配表已儲存！');
+        }
+
+        function clearShiftData() {
+            if (!confirm('確定要清除人員姓名資料和班次分配表嗎？')) return;
+            
+            localStorage.removeItem('rotationStudents');
+            localStorage.removeItem('shiftsData');
+            
+            elements.rotationStudentsInput.value = '';
+            shifts = [];
+            renderShifts();
+            elements.shiftsResult.style.display = 'none';
+            
+            showNotification('人員姓名資料和班次分配表已清除！');
+        }
+
+        function syncRotationStudentsFromWorkList() {
+            const studentText = elements.studentNamesInput.value.trim();
+            if (!studentText) {
+                showNotification('工作規劃頁尚未輸入人員名單。', 'warning');
+                return;
+            }
+            elements.rotationStudentsInput.value = studentText;
+            showNotification('已從攤位工作規劃同步人員名單到輪值頁。');
+        }
+
+        function appendRotationStudentsToList() {
+            const people = elements.rotationStudentsInput.value.split('\n')
+                .map(s => s.trim())
+                .filter(s => s);
+            
+            if (people.length === 0) {
+                showNotification('請先在輪值名單欄位輸入人員姓名。', 'warning');
+                return;
+            }
+            
+            showRotationStudentList();
+            showNotification(`已將 ${people.length} 位人員更新到輪值人員列表。`);
+        }
+
+        // Download functions
+        function getExportElement(sectionId) {
+            const element = document.getElementById(sectionId);
+            if (!element) {
+                showNotification('找不到要輸出的內容。', 'error');
+                return null;
+            }
+            if (getComputedStyle(element).display === 'none') {
+                showNotification('請先產生或開啟要輸出的頁面內容。', 'warning');
+                return null;
+            }
+            if (sectionId === 'food-export-result') {
+                const hasSelectedFood = document.querySelectorAll('.food-checkbox:checked').length > 0;
+                if (!hasSelectedFood) {
+                    showNotification('請先選擇食物種類，再下載或列印食物介紹。', 'warning');
+                    return null;
+                }
+            }
+            return element;
+        }
+
+        function createExportClone(element) {
+            const clone = element.cloneNode(true);
+            clone.classList.add('export-capture');
+            clone.classList.remove('fade-in-up');
+            clone.querySelectorAll('.shift-people-input, .assignment-people-input').forEach(input => {
+                const valueText = document.createElement('span');
+                valueText.textContent = input.value;
+                input.replaceWith(valueText);
+            });
+            clone.querySelectorAll('.no-export').forEach(node => node.remove());
+            clone.querySelectorAll('.btn-group:empty, .form-group:empty').forEach(node => node.remove());
+            clone.style.display = 'block';
+            document.body.appendChild(clone);
+            return clone;
+        }
+
+        function getExportCanvas(element) {
+            const clone = createExportClone(element);
+            return html2canvas(clone, {
+                scale: Math.min(window.devicePixelRatio || 2, 2),
+                backgroundColor: '#ffffff',
+                useCORS: true,
+                scrollX: 0,
+                scrollY: 0,
+                ignoreElements: el => el.classList?.contains('no-export')
+            }).finally(() => {
+                clone.remove();
+            });
+        }
+
+        function exportSectionAsImage(sectionId, fileName = '園遊會規劃') {
+            const element = getExportElement(sectionId);
+            if (!element) return;
+            getExportCanvas(element).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `${fileName}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                showNotification(`${fileName}圖片已下載！`);
+            }).catch((error) => {
+                console.error(error);
+                showNotification('無法生成圖片，請稍後再試。', 'error');
+            });
+        }
+
+        function exportSectionAsPdf(sectionId, fileName = '園遊會規劃') {
+            const element = getExportElement(sectionId);
+            if (!element) return;
+            if (!window.jspdf?.jsPDF) {
+                showNotification('PDF 套件尚未載入，請確認網路連線後重新開啟程式。', 'error');
+                return;
+            }
+
+            getExportCanvas(element).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const margin = 8;
+                const imgWidth = pageWidth - margin * 2;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let heightLeft = imgHeight;
+                let position = margin;
+
+                pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight - margin * 2;
+
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight + margin;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight - margin * 2;
+                }
+
+                pdf.save(`${fileName}.pdf`);
+                showNotification(`${fileName}PDF 已下載！`);
+            }).catch((error) => {
+                console.error(error);
+                showNotification('無法生成 PDF，請稍後再試。', 'error');
+            });
+        }
+
+        function printSection(sectionId) {
+            const element = getExportElement(sectionId);
+            if (!element) return;
+            document.querySelectorAll('.print-only-clone').forEach(clone => clone.remove());
+            const clone = createExportClone(element);
+            clone.classList.remove('export-capture');
+            clone.classList.add('print-only-clone');
+            clone.removeAttribute('style');
+            document.body.classList.add('printing-export');
+            
+            const cleanup = () => {
+                document.body.classList.remove('printing-export');
+                clone.remove();
+                window.removeEventListener('afterprint', cleanup);
+            };
+            
+            window.addEventListener('afterprint', cleanup);
+            window.print();
+            setTimeout(cleanup, 1000);
+        }
+
+        function downloadAssignment() {
+            exportSectionAsImage('assignment-result', '工作分配表');
+        }
+
+        function downloadShifts() {
+            exportSectionAsImage('shifts-result', '輪值表');
+        }
+
+        // Modal handling
+        function handleModalClose(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+
+        // Data loading functions
+        function loadAllData() {
+            loadThemes();
+            
+            // Load AI analysis
+            const savedAnalysis = localStorage.getItem('aiAnalysisResult');
+            if (savedAnalysis) {
+                elements.aiAnalysisInput.value = savedAnalysis;
+                autoResizeTextarea(elements.aiAnalysisInput);
+            }
+            
+            // Load assignment data
+            const savedStudentNames = localStorage.getItem('studentNames');
+            const savedAssignmentData = localStorage.getItem('assignmentData');
+            
+            if (savedStudentNames) {
+                elements.studentNamesInput.value = savedStudentNames;
+            }
+            
+            if (savedAssignmentData) {
+                const parsedData = JSON.parse(savedAssignmentData);
+                if (Array.isArray(parsedData) && parsedData.length > 0) {
+                    tasks = parsedData.map(task => ({
+                        name: task.name,
+                        people: task.people || 1,
+                        description: task.description || '',
+                        students: task.students || []
+                    }));
+                }
+            }
+            
+            // Load shift data
+            const savedRotationStudents = localStorage.getItem('rotationStudents');
+            if (savedRotationStudents) {
+                elements.rotationStudentsInput.value = savedRotationStudents;
+            }
+            
+            const savedShifts = localStorage.getItem('shiftsData');
+            if (savedShifts) {
+                shifts = JSON.parse(savedShifts);
+                renderShifts();
+                elements.shiftsResult.style.display = 'block';
+            }
+            
+            renderTasks();
+            updateStats();
+        }
+
+        // Initialize the application
+        function init() {
+            initNavigation();
+            populateFoodCheckboxes();
+            populateTimeDropdowns();
+            initEventListeners();
+            loadAllData();
+            
+            // Add loading animation
+            document.body.style.opacity = '0';
+            setTimeout(() => {
+                document.body.style.transition = 'opacity 0.5s ease-in-out';
+                document.body.style.opacity = '1';
+            }, 100);
+            
+            showNotification('校慶園遊會攤位規劃程式已載入完成！', 'success');
+        }
+
+        // Start the application when DOM is loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        // Add CSS animations for notifications
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            
+            @keyframes slideOutRight {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+            
+            .btn-sm {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.875rem;
+            }
+            
+            .hidden {
+                display: none;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Add responsive design improvements
+        function handleResize() {
+            const isMobile = window.innerWidth <= 768;
+            const foodGrid = document.getElementById('food-checkboxes');
+            
+            if (isMobile) {
+                foodGrid.style.gridTemplateColumns = '1fr';
+            } else {
+                foodGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(200px, 1fr))';
+            }
+        }
+
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('load', handleResize);
+
+        // Service Worker for offline functionality (optional enhancement)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // Register service worker for offline functionality
+                // This would require a separate service worker file
+            });
+        }
+
+        // Export functionality for future enhancements
+        window.StallPlannerApp = {
+            saveTheme,
+            loadTheme,
+            deleteAllData,
+            updateStats,
+            showNotification,
+            tasks,
+            shifts,
+            foodDetails
+        };
+    </script>
+</body>
+</html>
+                

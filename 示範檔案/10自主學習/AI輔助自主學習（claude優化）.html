@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 輔助自主學習計畫</title>
+<style>
+  :root{
+    --ink:#1f2733;          /* 深色標題 */
+    --ink-soft:#4a5568;
+    --muted:#7a8699;
+    --line:#e3e8ef;
+    --line-strong:#cfd6e1;
+    --bg:#f4f6f9;
+    --card:#ffffff;
+    --accent:#2f5fe0;       /* 主色：沉穩藍 */
+    --accent-dark:#1f3f9e;
+    --accent-soft:#eaf0ff;
+    --ok:#1f9d6b;
+    --ok-soft:#e7f6ef;
+    --warn:#c2410c;
+    --danger:#c33;
+    --ai:#6b46c1;
+    --ai-soft:#f1ecfb;
+    --radius:10px;
+    --shadow:0 1px 2px rgba(20,30,50,.05), 0 2px 10px rgba(20,30,50,.04);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+    color:var(--ink);
+    background:var(--bg);
+    line-height:1.6;
+    font-size:16px;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:0 16px 80px;}
+
+  /* Header */
+  header.site{
+    background:var(--ink);
+    color:#fff;
+    padding:22px 16px;
+  }
+  header.site .inner{max-width:880px;margin:0 auto;}
+  header.site h1{margin:0;font-size:1.45rem;font-weight:700;letter-spacing:.5px;}
+  header.site p{margin:6px 0 0;color:#c4ccda;font-size:.9rem;}
+
+  /* Student bar */
+  .studentbar{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:14px;margin:18px 0;
+    display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+  }
+  .studentbar select,.studentbar input{flex:1;min-width:140px;}
+  .studentbar .btns{display:flex;gap:6px;flex-wrap:wrap;}
+
+  /* Stepper nav */
+  nav.steps{
+    display:flex;gap:6px;flex-wrap:wrap;margin:0 0 16px;
+  }
+  nav.steps button{
+    flex:1;min-width:120px;background:var(--card);border:1px solid var(--line);
+    color:var(--ink-soft);padding:10px 6px;border-radius:var(--radius);cursor:pointer;
+    font-size:.92rem;font-weight:600;transition:.15s;display:flex;flex-direction:column;gap:2px;align-items:center;
+  }
+  nav.steps button .num{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:22px;height:22px;border-radius:50%;background:var(--bg);color:var(--muted);font-size:.8rem;
+  }
+  nav.steps button.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+  nav.steps button.active .num{background:rgba(255,255,255,.25);color:#fff;}
+  nav.steps button.done .num{background:var(--ok);color:#fff;}
+
+  /* Progress bar */
+  .progress-wrap{margin:0 0 18px;}
+  .progress-wrap .bar{height:7px;background:#e7ebf2;border-radius:99px;overflow:hidden;}
+  .progress-wrap .bar > i{display:block;height:100%;width:0;background:var(--accent);transition:width .4s ease;}
+  .progress-wrap .lbl{font-size:.8rem;color:var(--muted);margin-top:5px;}
+
+  /* Panels */
+  .panel{display:none;}
+  .panel.active{display:block;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:20px;margin-bottom:16px;
+  }
+  .card > h2{
+    margin:0 0 4px;font-size:1.15rem;color:var(--ink);
+    display:flex;align-items:center;gap:8px;
+  }
+  .card > h2 .tag{font-size:.72rem;font-weight:600;background:var(--accent-soft);color:var(--accent-dark);padding:2px 8px;border-radius:99px;}
+  .card .lead{color:var(--muted);font-size:.9rem;margin:0 0 16px;}
+
+  label.field{display:block;font-weight:600;font-size:.92rem;margin:14px 0 5px;color:var(--ink);}
+  label.field .req{color:var(--danger);font-weight:700;}
+  .hint{font-size:.82rem;color:var(--muted);background:#f8fafc;border-left:3px solid var(--line-strong);
+        padding:8px 11px;border-radius:0 6px 6px 0;margin:0 0 8px;}
+  .hint b{color:var(--ink-soft);}
+
+  input[type=text],input[type=date],select,textarea{
+    width:100%;padding:11px 12px;border:1px solid var(--line-strong);border-radius:8px;
+    font-size:1rem;font-family:inherit;background:#fff;color:var(--ink);
+  }
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+  textarea{resize:vertical;min-height:90px;}
+  select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%237a8699' stroke-width='1.6' fill='none'/></svg>");
+    background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+
+  .row{display:flex;gap:12px;flex-wrap:wrap;}
+  .row > *{flex:1;min-width:140px;}
+
+  /* Choice chips (radio / checkbox) */
+  .choices{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 4px;}
+  .choices label{
+    display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line-strong);
+    border-radius:99px;padding:8px 14px;cursor:pointer;font-size:.9rem;background:#fff;transition:.15s;user-select:none;
+  }
+  .choices label:hover{border-color:var(--accent);}
+  .choices input{accent-color:var(--accent);margin:0;}
+  .choices input:checked + span{color:var(--accent-dark);font-weight:600;}
+  .choices label:has(input:checked){background:var(--accent-soft);border-color:var(--accent);}
+
+  /* Buttons */
+  button{font-family:inherit;font-size:.92rem;font-weight:600;border:none;border-radius:8px;
+    padding:10px 16px;cursor:pointer;transition:.15s;}
+  .btn{background:var(--accent);color:#fff;}
+  .btn:hover{background:var(--accent-dark);}
+  .btn.ghost{background:#fff;color:var(--accent);border:1px solid var(--accent);}
+  .btn.ghost:hover{background:var(--accent-soft);}
+  .btn.ai{background:var(--ai);color:#fff;}
+  .btn.ai:hover{filter:brightness(.92);}
+  .btn.sub{background:#eef1f6;color:var(--ink-soft);}
+  .btn.sub:hover{background:#e2e7ef;}
+  .btn.ok{background:var(--ok);color:#fff;}
+  .btn.danger{background:#fff;color:var(--danger);border:1px solid var(--danger);}
+  .btn.danger:hover{background:#fff0f0;}
+  .btn.sm{padding:7px 12px;font-size:.84rem;}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+  .spacer{flex:1;}
+
+  /* AI assist block */
+  .ai-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px;}
+  .ai-result{display:none;margin-top:8px;border:1px dashed var(--ai);background:var(--ai-soft);border-radius:8px;padding:12px;}
+  .ai-result.show{display:block;}
+  .ai-result .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  .ai-result .head b{color:var(--ai);font-size:.85rem;}
+  .ai-result pre{white-space:pre-wrap;word-break:break-word;font-family:inherit;font-size:.9rem;margin:0 0 8px;color:var(--ink);max-height:320px;overflow:auto;}
+  .ai-busy{font-size:.85rem;color:var(--ai);}
+
+  /* AI settings */
+  .ai-settings{border:1px solid var(--line);border-radius:var(--radius);background:var(--card);box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden;}
+  .ai-settings > summary{cursor:pointer;list-style:none;padding:13px 16px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:8px;}
+  .ai-settings > summary::-webkit-details-marker{display:none;}
+  .ai-settings > summary .pill{font-size:.72rem;font-weight:600;padding:2px 9px;border-radius:99px;background:#eef1f6;color:var(--muted);}
+  .ai-settings > summary .pill.on{background:var(--ok-soft);color:var(--ok);}
+  .ai-settings .body{padding:0 16px 16px;border-top:1px solid var(--line);}
+  .ai-settings .body p.note{font-size:.82rem;color:var(--muted);margin:12px 0;}
+
+  /* Tables */
+  .tablewrap{overflow-x:auto;margin-top:10px;}
+  table{width:100%;border-collapse:collapse;font-size:.9rem;}
+  th,td{border:1px solid var(--line-strong);padding:8px;text-align:left;vertical-align:top;}
+  th{background:#f1f4f9;color:var(--ink);font-weight:600;}
+  td textarea{min-height:60px;border:1px solid var(--line);}
+  td .wk{font-weight:700;color:var(--ink);white-space:nowrap;}
+  td .dt{font-size:.78rem;color:var(--muted);}
+  td select,td input[type=text]{padding:7px 8px;}
+  td.center{text-align:center;}
+  .milestone{background:var(--accent-soft) !important;}
+
+  .stat{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0;}
+  .stat .box{flex:1;min-width:90px;background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center;}
+  .stat .box .n{font-size:1.5rem;font-weight:700;color:var(--accent-dark);}
+  .stat .box .t{font-size:.78rem;color:var(--muted);}
+
+  .effect-img{margin-top:6px;}
+  .effect-img img{max-width:120px;max-height:120px;border-radius:6px;border:1px solid var(--line);display:none;margin-top:6px;}
+
+  .navbtns{display:flex;justify-content:space-between;margin-top:8px;gap:8px;}
+
+  footer.site{text-align:center;color:var(--muted);font-size:.82rem;padding:24px 0 0;border-top:1px solid var(--line);margin-top:8px;}
+  footer.site a{color:var(--accent);text-decoration:none;}
+
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:#fff;padding:11px 18px;border-radius:99px;font-size:.9rem;
+    opacity:0;pointer-events:none;transition:.25s;z-index:9999;box-shadow:0 6px 24px rgba(0,0,0,.25);}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  @media (max-width:600px){
+    body{font-size:15px;}
+    nav.steps button{min-width:0;flex-basis:30%;font-size:.78rem;}
+    .card{padding:16px;}
+  }
+  /* print handled in JS popup */
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <h1>AI 輔助自主學習計畫</h1>
+    <p>臺北市立麗山高中　林獻升老師　｜　聯絡信箱：<a href="mailto:frog@lssh.tp.edu.tw" style="color:#9fc0ff;text-decoration:none;">frog@lssh.tp.edu.tw</a></p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- 學生資料列 -->
+  <div class="studentbar">
+    <select id="savedStudents"><option value="">— 選擇已儲存的學生 —</option></select>
+    <div class="btns">
+      <button class="btn sub sm" onclick="loadData()">讀取</button>
+      <button class="btn sm" onclick="saveData()">儲存</button>
+      <button class="btn danger sm" onclick="deleteData()">刪除</button>
+      <button class="btn sub sm" onclick="clearForm()">清空表單</button>
+    </div>
+  </div>
+
+  <!-- AI 設定 -->
+  <details class="ai-settings" id="aiSettings">
+    <summary>
+      ⚙️ AI 輔助設定
+      <span class="pill" id="aiModePill">外部模式</span>
+      <span class="spacer"></span>
+      <span style="font-size:.8rem;color:var(--muted);font-weight:400;">點此展開</span>
+    </summary>
+    <div class="body">
+      <p class="note">本工具的每個欄位旁都有「AI 協助」。預設為<b>外部模式</b>：自動複製為你量身打造的指令，並開啟你選的 AI 網站，貼上即可。若你有 API 金鑰，可切換為<b>即時模式</b>，直接在頁面內生成建議。</p>
+      <label class="field">使用的 AI 服務</label>
+      <div class="choices" id="aiProvider">
+        <label><input type="radio" name="aiprov" value="chatgpt" checked><span>ChatGPT</span></label>
+        <label><input type="radio" name="aiprov" value="claude"><span>Claude</span></label>
+        <label><input type="radio" name="aiprov" value="gemini"><span>Gemini</span></label>
+      </div>
+      <label class="field">即時模式 API 金鑰（選填，留空＝外部模式）</label>
+      <div class="hint">金鑰只儲存在你這台電腦的瀏覽器（localStorage），不會上傳到任何伺服器。學生使用建議留空、走外部模式即可。</div>
+      <input type="text" id="aiApiKey" placeholder="貼上 API Key（sk-... / Gemini key 等）" autocomplete="off">
+      <p class="note" style="margin:8px 0 0;">沒有金鑰？<a id="aiKeyLink" href="https://platform.openai.com/api-keys" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600;">前往 OpenAI 申請 API 金鑰 →</a></p>
+      <label class="field">模型名稱（選填，可改）</label>
+      <input type="text" id="aiModel" placeholder="留空使用預設">
+      <div class="actions">
+        <button class="btn sm" onclick="saveAiConfig()">儲存設定</button>
+        <button class="btn sub sm" onclick="clearAiKey()">清除金鑰</button>
+      </div>
+    </div>
+  </details>
+
+  <!-- 進度條 -->
+  <div class="progress-wrap">
+    <div class="bar"><i id="progFill"></i></div>
+    <div class="lbl"><span id="progPct">0%</span> 完成 ｜ 隨時可按右下角〈儲存〉保存進度</div>
+  </div>
+
+  <!-- 步驟導覽 -->
+  <nav class="steps" id="stepNav">
+    <button data-step="basic" class="active" onclick="goStep('basic')"><span class="num">1</span>基本資料</button>
+    <button data-step="plan" onclick="goStep('plan')"><span class="num">2</span>學習計畫</button>
+    <button data-step="schedule" onclick="goStep('schedule')"><span class="num">3</span>預計進度</button>
+    <button data-step="effect" onclick="goStep('effect')"><span class="num">4</span>學習成效</button>
+    <button data-step="export" onclick="goStep('export')"><span class="num">5</span>匯出列印</button>
+  </nav>
+
+  <!-- ========== 1 基本資料 ========== -->
+  <section class="panel active" id="step-basic">
+    <div class="card">
+      <h2>基本資料 <span class="tag">計畫書封面欄位</span></h2>
+      <p class="lead">這些欄位會直接對應到學校的計畫書封面，先把身分與計畫定位填好。</p>
+
+      <label class="field">申請人姓名 <span class="req">*</span></label>
+      <input type="text" id="studentName" data-field placeholder="你的姓名（也是儲存資料的名稱）">
+
+      <div class="row">
+        <div>
+          <label class="field">班級</label>
+          <input type="text" id="className" data-field placeholder="例：高二3班 / 203">
+        </div>
+        <div>
+          <label class="field">座號</label>
+          <input type="text" id="seatNo" data-field placeholder="例：15">
+        </div>
+      </div>
+
+      <label class="field">計畫主題 <span class="req">*</span></label>
+      <div class="hint">用一句話講清楚你想探究／學習的大方向。<b>範例：</b>「探討校園常見植物的固碳能力」。</div>
+      <input type="text" id="projectTopic" data-field placeholder="一句話描述你的主題">
+
+      <label class="field">計畫類型 <span class="req">*</span></label>
+      <div class="choices" id="planType">
+        <label><input type="radio" name="ptype" value="1"><span>1 延伸與預修課程</span></label>
+        <label><input type="radio" name="ptype" value="2"><span>2 課外閱讀</span></label>
+        <label><input type="radio" name="ptype" value="3"><span>3 線上學習課程</span></label>
+        <label><input type="radio" name="ptype" value="4"><span>4 能力檢定</span></label>
+        <label><input type="radio" name="ptype" value="5"><span>5 服務學習課程</span></label>
+        <label><input type="radio" name="ptype" value="6"><span>6 培訓課程</span></label>
+        <label><input type="radio" name="ptype" value="7"><span>7 專題研討</span></label>
+      </div>
+
+      <div id="subjectWrap" style="display:none;">
+        <label class="field">專題研討領域（可複選）</label>
+        <div class="choices" id="subjects">
+          <label><input type="checkbox" value="國文"><span>國文</span></label>
+          <label><input type="checkbox" value="英文"><span>英文</span></label>
+          <label><input type="checkbox" value="數學"><span>數學</span></label>
+          <label><input type="checkbox" value="物理"><span>物理</span></label>
+          <label><input type="checkbox" value="化學"><span>化學</span></label>
+          <label><input type="checkbox" value="生物"><span>生物</span></label>
+          <label><input type="checkbox" value="地科"><span>地科</span></label>
+          <label><input type="checkbox" value="資訊"><span>資訊</span></label>
+          <label><input type="checkbox" value="生科"><span>生科</span></label>
+          <label><input type="checkbox" value="歷史"><span>歷史</span></label>
+          <label><input type="checkbox" value="地理"><span>地理</span></label>
+          <label><input type="checkbox" value="公民"><span>公民</span></label>
+          <label><input type="checkbox" value="其他"><span>其他</span></label>
+        </div>
+      </div>
+
+      <label class="field">實施方式 <span class="req">*</span></label>
+      <div class="choices" id="implMethod">
+        <label><input type="radio" name="impl" value="個人學習"><span>個人學習</span></label>
+        <label><input type="radio" name="impl" value="小組學習"><span>小組學習（上限 3 人）</span></label>
+      </div>
+      <div id="membersWrap" style="display:none;">
+        <label class="field">小組成員（含你自己，最多 3 人）</label>
+        <input type="text" id="members" data-field placeholder="例：王小明、陳大華">
+      </div>
+
+      <label class="field">計畫名稱 <span class="req">*</span></label>
+      <div class="hint">比主題更具體、像一個正式標題。<b>範例：</b>「校園喬木與灌木固碳量之比較與綠化建議」。</div>
+      <input type="text" id="planName" data-field placeholder="你的計畫正式名稱">
+
+      <label class="field">詳細主題 / 簡短說明</label>
+      <textarea id="detailTopic" data-field placeholder="補充說明你的計畫範圍、想解決的問題或好奇之處。"></textarea>
+
+      <div class="ai-tools">
+        <button class="btn ai sm" onclick="aiAssist('topic')">🤖 AI 協助：把主題想得更清楚</button>
+      </div>
+      <div class="ai-result" id="ai-topic"></div>
+
+      <div class="navbtns">
+        <span></span>
+        <button class="btn" onclick="goStep('plan')">下一步：學習計畫 →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 2 學習計畫 ========== -->
+  <section class="panel" id="step-plan">
+    <div class="card">
+      <h2>學習計畫（內容概述）<span class="tag">計畫書核心</span></h2>
+      <p class="lead">這是計畫書的靈魂。先自己寫下想法，再用 AI 幫你補強、深化。四個問題都有引導與範例。</p>
+
+      <!-- 動機 -->
+      <label class="field">1. 為什麼想做這個主題？（學習動機）</label>
+      <div class="hint"><b>可從這些角度想：</b>什麼經驗或好奇引發興趣？它跟你的生活／升學／未來有什麼關係？為什麼值得花一學期？</div>
+      <textarea id="motivation" data-field placeholder="寫下你選這個主題的理由與好奇心…"></textarea>
+      <div class="ai-tools">
+        <button class="btn ai sm" onclick="aiAssist('motivation')">🤖 AI 協助這欄</button>
+      </div>
+      <div class="ai-result" id="ai-motivation"></div>
+
+      <!-- 資源 -->
+      <label class="field">2. 我需要什麼資源或工具？</label>
+      <div class="hint"><b>可從這些角度想：</b>書籍／論文／網站／影片；軟體或設備；場地或人（老師、專家）；可能的花費與取得方式。</div>
+      <textarea id="resources" data-field placeholder="列出你需要的資料、工具、設備、人力…"></textarea>
+      <div class="ai-tools">
+        <button class="btn ai sm" onclick="aiAssist('resources')">🤖 AI 協助這欄</button>
+      </div>
+      <div class="ai-result" id="ai-resources"></div>
+
+      <!-- 方法 -->
+      <label class="field">3. 我如何有效學習？哪些方法或技巧適合我？</label>
+      <div class="hint"><b>可從這些角度想：</b>具體步驟（先做什麼、再做什麼）；學習策略（筆記、實作、訪談、實驗）；如何檢查自己學會了。</div>
+      <textarea id="methods" data-field placeholder="描述你打算用的學習方法與流程…"></textarea>
+      <div class="ai-tools">
+        <button class="btn ai sm" onclick="aiAssist('methods')">🤖 AI 協助這欄</button>
+      </div>
+      <div class="ai-result" id="ai-methods"></div>
+
+      <!-- 目標 -->
+      <label class="field">4. 預期目標</label>
+      <div class="hint"><b>讓目標可被檢核：</b>學期結束你會「產出什麼」「會做什麼」？盡量具體、可衡量。<b>範例：</b>「完成一份 1500 字探究報告與一張比較圖表」。</div>
+      <textarea id="goals" data-field placeholder="寫下具體、看得到成果的預期目標…"></textarea>
+      <div class="ai-tools">
+        <button class="btn ai sm" onclick="aiAssist('goals')">🤖 AI 協助這欄</button>
+      </div>
+      <div class="ai-result" id="ai-goals"></div>
+
+      <hr style="border:none;border-top:1px solid var(--line);margin:20px 0;">
+      <div class="actions">
+        <button class="btn ai" onclick="aiAssist('wholeplan')">✨ AI 統整全計畫：檢視四欄、給整體建議與潤稿</button>
+        <button class="btn ghost sm" onclick="webSearch()">🔎 上網查資料</button>
+      </div>
+      <div class="ai-result" id="ai-wholeplan"></div>
+
+      <div class="navbtns">
+        <button class="btn sub" onclick="goStep('basic')">← 上一步</button>
+        <button class="btn" onclick="goStep('schedule')">下一步：預計進度 →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 3 預計進度 ========== -->
+  <section class="panel" id="step-schedule">
+    <div class="card">
+      <h2>預計進度（週計畫）<span class="tag">對齊週次／反思檢核</span></h2>
+      <p class="lead">設定週數與起始日，產生週進度表。每週填「進度安排」與「自我反思檢核（A/B/C）」，最後兩週通常安排成果分享與反思。</p>
+
+      <div class="row">
+        <div>
+          <label class="field">總週數</label>
+          <select id="weeks" data-field>
+            <option value="">選擇週數</option>
+          </select>
+        </div>
+        <div>
+          <label class="field">起始日期（選填，自動帶入每週日期）</label>
+          <input type="date" id="startDate" data-field>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn" onclick="buildScheduleTable()">產生 / 更新進度表</button>
+        <button class="btn ai sm" onclick="aiAssist('schedule')">🤖 AI 設計每週進度與檢核</button>
+      </div>
+      <div class="ai-result" id="ai-schedule"></div>
+
+      <div class="hint" style="margin-top:12px;">檢核代碼：<b>A</b> 依計畫完成　<b>B</b> 修正後完成　<b>C</b> 部分完成。執行階段再回來逐週勾選即可。</div>
+      <div class="tablewrap" id="scheduleTableWrap"></div>
+
+      <div class="navbtns">
+        <button class="btn sub" onclick="goStep('plan')">← 上一步</button>
+        <button class="btn" onclick="goStep('effect')">下一步：學習成效 →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 4 學習成效 ========== -->
+  <section class="panel" id="step-effect">
+    <div class="card">
+      <h2>學習成效與回饋 <span class="tag">執行後紀錄</span></h2>
+      <p class="lead">開始執行後再來填這一頁：逐週紀錄成效並可附上成果照片，最後填家長回饋、成果發表形式與檢核統計。</p>
+
+      <label class="field">逐週學習成效紀錄</label>
+      <div class="actions">
+        <button class="btn sub sm" onclick="buildEffectTable()">依進度週數產生成效表</button>
+        <button class="btn ai sm" onclick="aiAssist('effect')">🤖 AI 協助潤飾成效紀錄</button>
+      </div>
+      <div class="ai-result" id="ai-effect"></div>
+      <div class="tablewrap" id="effectTableWrap"></div>
+
+      <label class="field">自我檢核次數統計（依進度表自動計算）</label>
+      <div class="stat" id="abcStat">
+        <div class="box"><div class="n" id="cntA">0</div><div class="t">A 依計畫完成</div></div>
+        <div class="box"><div class="n" id="cntB">0</div><div class="t">B 修正後完成</div></div>
+        <div class="box"><div class="n" id="cntC">0</div><div class="t">C 部分完成</div></div>
+      </div>
+      <button class="btn sub sm" onclick="updateAbcStat()">重新計算統計</button>
+
+      <label class="field" style="margin-top:20px;">家長給學生自主學習的回饋</label>
+      <textarea id="parentFeedback" data-field placeholder="請家長閱讀計畫與成果後，寫下鼓勵與建議。"></textarea>
+      <label class="field">家長簽名（可由家長親簽於紙本，此處留紀錄）</label>
+      <input type="text" id="parentSign" data-field placeholder="家長姓名">
+
+      <label class="field">成果發表形式（可複選）</label>
+      <div class="choices" id="presentForm">
+        <label><input type="checkbox" value="併入期末學習成果作業展（提供作業讓老師檢核）"><span>併入期末學習成果作業展</span></label>
+        <label><input type="checkbox" value="撰寫閱讀心得/小論文參加比賽（提供作品讓老師檢核）"><span>閱讀心得／小論文比賽</span></label>
+        <label><input type="checkbox" value="配合班會等活動做心得分享（提供照片讓老師檢核）"><span>班會等活動心得分享</span></label>
+        <label><input type="checkbox" value="配合研方專題課堂發表（提供照片讓老師檢核）"><span>研方專題課堂發表</span></label>
+        <label><input type="checkbox" value="其他方式"><span>其他方式</span></label>
+      </div>
+      <input type="text" id="presentOther" data-field placeholder="若選「其他方式」，請敘明">
+
+      <div class="navbtns">
+        <button class="btn sub" onclick="goStep('schedule')">← 上一步</button>
+        <button class="btn" onclick="goStep('export')">下一步：匯出列印 →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 5 匯出 ========== -->
+  <section class="panel" id="step-export">
+    <div class="card">
+      <h2>匯出與列印 <span class="tag">產生計畫書草稿</span></h2>
+      <p class="lead">把整份計畫整理成對齊官方計畫書格式的版面，可列印、存成 Word 檔，或複製純文字貼進計畫書模版。</p>
+      <div class="actions">
+        <button class="btn" onclick="printPlan()">🖨️ 預覽 / 列印</button>
+        <button class="btn ghost" onclick="exportWord()">⬇️ 下載 Word（.doc）</button>
+        <button class="btn sub" onclick="copyAllText()">📋 複製全文純文字</button>
+      </div>
+      <div class="hint" style="margin-top:14px;">小提醒：列印視窗中可選「另存為 PDF」。Word 檔可直接開啟編修後貼進學校的 odt 計畫書。</div>
+
+      <div class="navbtns">
+        <button class="btn sub" onclick="goStep('effect')">← 上一步</button>
+        <button class="btn ok" onclick="saveData()">完成並儲存</button>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site">
+    <p style="font-size:.78rem;">資料僅儲存在你的瀏覽器本機，換裝置或清除瀏覽器資料會消失，重要內容請記得匯出保存。</p>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ 基本工具 ============ */
+function $(id){return document.getElementById(id);}
+function toast(msg){
+  const t=$('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200);
+}
+const STEPS=['basic','plan','schedule','effect','export'];
+function goStep(step){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  $('step-'+step).classList.add('active');
+  document.querySelectorAll('#stepNav button').forEach(b=>b.classList.toggle('active',b.dataset.step===step));
+  window.scrollTo({top:0,behavior:'smooth'});
+  updateProgress();
+}
+
+/* ============ 進度條 ============ */
+function updateProgress(){
+  const keyFields=['studentName','projectTopic','planName','motivation','resources','methods','goals'];
+  let filled=0;
+  keyFields.forEach(f=>{if(($(f).value||'').trim())filled++;});
+  if(getRadio('ptype'))filled++;
+  if(getRadio('impl'))filled++;
+  if($('weeks').value)filled++;
+  const total=keyFields.length+3;
+  const pct=Math.round(filled/total*100);
+  $('progFill').style.width=pct+'%';
+  $('progPct').textContent=pct+'%';
+  // step done marks
+  document.querySelectorAll('#stepNav button').forEach(b=>{
+    const s=b.dataset.step;let done=false;
+    if(s==='basic')done=($('studentName').value&&$('projectTopic').value&&getRadio('ptype')&&getRadio('impl'));
+    if(s==='plan')done=($('motivation').value&&$('resources').value&&$('methods').value&&$('goals').value);
+    if(s==='schedule')done=!!$('weeks').value;
+    if(s==='effect')done=!!($('parentFeedback').value||document.querySelector('#presentForm input:checked'));
+    b.classList.toggle('done',!!done && !b.classList.contains('active'));
+  });
+}
+
+/* ============ radio / checkbox helpers ============ */
+function getRadio(name){const el=document.querySelector(`input[name="${name}"]:checked`);return el?el.value:'';}
+function setRadio(name,val){document.querySelectorAll(`input[name="${name}"]`).forEach(r=>r.checked=(r.value===val));}
+function getChecks(containerId){return Array.from(document.querySelectorAll(`#${containerId} input:checked`)).map(c=>c.value);}
+function setChecks(containerId,arr){
+  arr=arr||[];
+  document.querySelectorAll(`#${containerId} input`).forEach(c=>c.checked=arr.includes(c.value));
+}
+
+/* ============ 初始化週數選項 ============ */
+(function initWeeks(){
+  const sel=$('weeks');
+  for(let i=1;i<=20;i++){const o=document.createElement('option');o.value=i;o.textContent=i+' 週';sel.appendChild(o);}
+})();
+
+/* ============ 類型 / 實施方式 連動 ============ */
+document.querySelectorAll('input[name="ptype"]').forEach(r=>{
+  r.addEventListener('change',()=>{$('subjectWrap').style.display=(getRadio('ptype')==='7')?'block':'none';});
+});
+document.querySelectorAll('input[name="impl"]').forEach(r=>{
+  r.addEventListener('change',()=>{$('membersWrap').style.display=(getRadio('impl')==='小組學習')?'block':'none';});
+});
+document.addEventListener('input',updateProgress);
+document.addEventListener('change',updateProgress);
+
+/* ============ 進度表 ============ */
+function weekDate(start,idx){
+  if(!start)return '';
+  const d=new Date(start);d.setDate(d.getDate()+idx*7);
+  return (d.getMonth()+1)+'/'+d.getDate();
+}
+function buildScheduleTable(preserve){
+  const weeks=parseInt($('weeks').value);
+  if(!weeks){toast('請先選擇週數');return;}
+  const start=$('startDate').value;
+  // preserve existing values
+  const old={};
+  if(preserve){document.querySelectorAll('#scheduleTableWrap [data-srow]').forEach(el=>{old[el.dataset.srow]=el.value;});}
+  let html='<table><thead><tr><th style="width:74px;">週次</th><th style="width:56px;">日期</th><th>進度內容（安排）</th><th style="width:120px;">自我反思檢核</th><th style="width:96px;">指導老師簽名</th></tr></thead><tbody>';
+  for(let i=1;i<=weeks;i++){
+    const milestone = (i===weeks-1)?' milestone':(i===weeks?' milestone':'');
+    let placeholder='';
+    if(i===weeks-1)placeholder='自主學習成果分享';
+    else if(i===weeks)placeholder='自主學習成果反思';
+    html+=`<tr class="${milestone.trim()}">
+      <td class="center"><span class="wk">第${i}週</span></td>
+      <td class="center dt">${weekDate(start,i-1)}</td>
+      <td><textarea data-srow="content${i}" placeholder="${placeholder||'本週要完成…'}"></textarea></td>
+      <td class="center"><select data-srow="check${i}" onchange="updateAbcStat()">
+        <option value="">—</option><option value="A">A 依計畫完成</option><option value="B">B 修正後完成</option><option value="C">C 部分完成</option>
+      </select></td>
+      <td><input type="text" data-srow="teacher${i}"></td>
+    </tr>`;
+  }
+  html+='</tbody></table>';
+  $('scheduleTableWrap').innerHTML=html;
+  if(preserve){document.querySelectorAll('#scheduleTableWrap [data-srow]').forEach(el=>{if(old[el.dataset.srow]!==undefined)el.value=old[el.dataset.srow];});}
+  updateAbcStat();
+}
+$('startDate').addEventListener('change',()=>{if($('scheduleTableWrap').innerHTML)buildScheduleTable(true);});
+
+function collectSchedule(){
+  const weeks=parseInt($('weeks').value)||0;const rows=[];
+  for(let i=1;i<=weeks;i++){
+    const g=k=>{const el=document.querySelector(`[data-srow="${k}${i}"]`);return el?el.value:'';};
+    rows.push({content:g('content'),check:g('check'),teacher:g('teacher')});
+  }
+  return rows;
+}
+function updateAbcStat(){
+  let a=0,b=0,c=0;
+  document.querySelectorAll('#scheduleTableWrap select[data-srow^="check"]').forEach(s=>{
+    if(s.value==='A')a++;else if(s.value==='B')b++;else if(s.value==='C')c++;
+  });
+  $('cntA').textContent=a;$('cntB').textContent=b;$('cntC').textContent=c;
+}
+
+/* ============ 成效表 ============ */
+function buildEffectTable(){
+  const weeks=parseInt($('weeks').value);
+  if(!weeks){toast('請先到「預計進度」選擇週數');return;}
+  const old={};
+  document.querySelectorAll('#effectTableWrap [data-erow]').forEach(el=>{old[el.dataset.erow]=el.value;});
+  const oldImg={};
+  document.querySelectorAll('#effectTableWrap img[data-eimg]').forEach(im=>{if(im.src&&im.style.display!=='none')oldImg[im.dataset.eimg]=im.src;});
+  let html='<table><thead><tr><th style="width:64px;">週次</th><th>學習成效</th><th style="width:150px;">成果影像</th></tr></thead><tbody>';
+  for(let i=1;i<=weeks;i++){
+    html+=`<tr>
+      <td class="center"><span class="wk">第${i}週</span></td>
+      <td><textarea data-erow="effect${i}" placeholder="這週實際學到、做到什麼？遇到什麼問題？"></textarea></td>
+      <td class="center effect-img">
+        <button class="btn sub sm" onclick="document.getElementById('upl${i}').click()">📷 上傳</button>
+        <button class="btn danger sm" onclick="delImg(${i})">🗑</button>
+        <input type="file" id="upl${i}" accept="image/*" style="display:none" onchange="onImg(${i})">
+        <img data-eimg="img${i}" id="img${i}">
+      </td>
+    </tr>`;
+  }
+  html+='</tbody></table>';
+  $('effectTableWrap').innerHTML=html;
+  document.querySelectorAll('#effectTableWrap [data-erow]').forEach(el=>{if(old[el.dataset.erow]!==undefined)el.value=old[el.dataset.erow];});
+  Object.keys(oldImg).forEach(k=>{const im=document.querySelector(`img[data-eimg="${k}"]`);if(im){im.src=oldImg[k];im.style.display='block';}});
+}
+function onImg(i){
+  const f=$('upl'+i).files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{const im=$('img'+i);im.src=e.target.result;im.style.display='block';};
+  r.readAsDataURL(f);
+}
+function delImg(i){const im=$('img'+i);im.src='';im.style.display='none';$('upl'+i).value='';}
+function collectEffect(){
+  const weeks=parseInt($('weeks').value)||0;const rows=[];
+  for(let i=1;i<=weeks;i++){
+    const t=document.querySelector(`[data-erow="effect${i}"]`);
+    const im=document.querySelector(`img[data-eimg="img${i}"]`);
+    rows.push({effect:t?t.value:'',img:(im&&im.style.display!=='none')?im.src:''});
+  }
+  return rows;
+}
+
+/* ============ 儲存 / 讀取 ============ */
+function gatherData(){
+  const d={meta:{},checks:{},radios:{}};
+  document.querySelectorAll('[data-field]').forEach(el=>{d.meta[el.id]=el.value;});
+  d.radios.ptype=getRadio('ptype');
+  d.radios.impl=getRadio('impl');
+  d.checks.subjects=getChecks('subjects');
+  d.checks.presentForm=getChecks('presentForm');
+  d.schedule=collectSchedule();
+  d.effect=collectEffect();
+  return d;
+}
+function applyData(d){
+  if(!d)return;
+  Object.keys(d.meta||{}).forEach(id=>{const el=$(id);if(el)el.value=d.meta[id];});
+  setRadio('ptype',(d.radios||{}).ptype||'');
+  setRadio('impl',(d.radios||{}).impl||'');
+  setChecks('subjects',(d.checks||{}).subjects);
+  setChecks('presentForm',(d.checks||{}).presentForm);
+  $('subjectWrap').style.display=(getRadio('ptype')==='7')?'block':'none';
+  $('membersWrap').style.display=(getRadio('impl')==='小組學習')?'block':'none';
+  if($('weeks').value){
+    buildScheduleTable(false);
+    (d.schedule||[]).forEach((r,idx)=>{
+      const i=idx+1;
+      const set=(k,v)=>{const el=document.querySelector(`[data-srow="${k}${i}"]`);if(el)el.value=v||'';};
+      set('content',r.content);set('check',r.check);set('teacher',r.teacher);
+    });
+    updateAbcStat();
+    if((d.effect||[]).some(e=>e.effect||e.img) || $('effectTableWrap').innerHTML){
+      buildEffectTable();
+      (d.effect||[]).forEach((r,idx)=>{
+        const i=idx+1;
+        const t=document.querySelector(`[data-erow="effect${i}"]`);if(t)t.value=r.effect||'';
+        if(r.img){const im=document.querySelector(`img[data-eimg="img${i}"]`);if(im){im.src=r.img;im.style.display='block';}}
+      });
+    }
+  }
+  updateProgress();
+}
+function saveData(){
+  const name=($('studentName').value||'').trim();
+  if(!name){toast('請先填寫申請人姓名');goStep('basic');return;}
+  try{
+    localStorage.setItem('slp_'+name,JSON.stringify(gatherData()));
+    refreshStudentList();
+    toast('已儲存：'+name);
+  }catch(e){
+    toast(e.name==='QuotaExceededError'?'儲存空間已滿，請刪除舊資料或減少照片':'儲存失敗');
+  }
+}
+function loadData(){
+  const name=$('savedStudents').value;
+  if(!name){toast('請先選擇學生');return;}
+  try{
+    const raw=localStorage.getItem('slp_'+name);
+    applyData(JSON.parse(raw));
+    toast('已讀取：'+name);
+  }catch(e){toast('讀取失敗，資料可能損壞');}
+}
+function deleteData(){
+  const name=$('savedStudents').value;
+  if(!name){toast('請先選擇學生');return;}
+  if(!confirm('確定刪除「'+name+'」的資料？')) return;
+  localStorage.removeItem('slp_'+name);refreshStudentList();toast('已刪除');
+}
+function clearForm(){
+  if(!confirm('清空目前表單內容？（不會刪除已儲存的學生）'))return;
+  document.querySelectorAll('[data-field]').forEach(el=>el.value='');
+  document.querySelectorAll('input[type=radio],input[type=checkbox]').forEach(el=>el.checked=false);
+  $('scheduleTableWrap').innerHTML='';$('effectTableWrap').innerHTML='';
+  $('subjectWrap').style.display='none';$('membersWrap').style.display='none';
+  updateAbcStat();updateProgress();toast('已清空表單');
+}
+function refreshStudentList(){
+  const sel=$('savedStudents');const cur=sel.value;
+  sel.innerHTML='<option value="">— 選擇已儲存的學生 —</option>';
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k.startsWith('slp_')){
+      const n=k.slice(4);const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);
+    }
+  }
+  sel.value=cur;
+}
+
+/* ============ AI 設定 ============ */
+function loadAiConfig(){
+  try{
+    const c=JSON.parse(localStorage.getItem('slp_aicfg')||'{}');
+    if(c.provider)setRadio('aiprov',c.provider);
+    $('aiApiKey').value=c.key||'';
+    $('aiModel').value=c.model||'';
+    updateAiPill();
+  }catch(e){}
+}
+function saveAiConfig(){
+  const c={provider:getRadio('aiprov'),key:$('aiApiKey').value.trim(),model:$('aiModel').value.trim()};
+  localStorage.setItem('slp_aicfg',JSON.stringify(c));
+  updateAiPill();toast('AI 設定已儲存');
+}
+function clearAiKey(){$('aiApiKey').value='';saveAiConfig();}
+const AI_KEY_LINK={
+  chatgpt:{url:'https://platform.openai.com/api-keys',label:'前往 OpenAI 申請 API 金鑰 →',model:'gpt-4o-mini'},
+  claude:{url:'https://console.anthropic.com/settings/keys',label:'前往 Anthropic Console 申請 API 金鑰 →',model:'claude-3-5-sonnet-latest'},
+  gemini:{url:'https://aistudio.google.com/apikey',label:'前往 Google AI Studio 申請 API 金鑰 →',model:'gemini-2.5-flash'}
+};
+function updateAiPill(){
+  const hasKey=!!$('aiApiKey').value.trim();
+  const pill=$('aiModePill');
+  pill.textContent=hasKey?'即時模式':'外部模式';
+  pill.classList.toggle('on',hasKey);
+  const info=AI_KEY_LINK[getRadio('aiprov')]||AI_KEY_LINK.chatgpt;
+  const link=$('aiKeyLink');
+  link.href=info.url;link.textContent=info.label;
+  $('aiModel').placeholder='留空使用預設：'+info.model;
+}
+$('aiApiKey').addEventListener('input',updateAiPill);
+document.querySelectorAll('input[name="aiprov"]').forEach(r=>r.addEventListener('change',updateAiPill));
+
+/* ============ AI 指令產生 ============ */
+function ctx(){
+  return `【主題】${$('projectTopic').value||'(未填)'}\n【計畫名稱】${$('planName').value||'(未填)'}\n【類型】${typeLabel()}`;
+}
+function typeLabel(){
+  const m={'1':'延伸與預修課程','2':'課外閱讀','3':'線上學習課程','4':'能力檢定','5':'服務學習課程','6':'培訓課程','7':'專題研討'};
+  let t=m[getRadio('ptype')]||'(未選)';
+  if(getRadio('ptype')==='7'){const s=getChecks('subjects');if(s.length)t+='（'+s.join('、')+'）';}
+  return t;
+}
+const PERSONA='你是一位資深的高中自主學習指導老師，擅長引導學生把模糊的想法發展成清楚、可行、可檢核的學習計畫。請用親切、具體、條列的方式給建議，並避免空話。';
+
+function buildPrompt(kind){
+  const c=ctx();
+  switch(kind){
+    case 'topic':
+      return `${PERSONA}\n\n以下是一位高中生的自主學習主題構想：\n${c}\n【詳細說明】${$('detailTopic').value||'(未填)'}\n\n請幫我：\n1. 判斷這個主題是否太大或太小，並給出更聚焦的建議題目（2-3 個版本）。\n2. 指出可探究的核心問題。\n3. 提醒可行性與資源上的注意事項。`;
+    case 'motivation':
+      return `${PERSONA}\n\n計畫背景：\n${c}\n\n學生對「為什麼想做這個主題（學習動機）」的草稿如下：\n「${$('motivation').value||'(尚未填寫)'}」\n\n請協助補強這段學習動機，讓它更具體、有個人連結與說服力，並以條列＋一段潤稿後完整版呈現。`;
+    case 'resources':
+      return `${PERSONA}\n\n計畫背景：\n${c}\n\n學生對「需要什麼資源或工具」的草稿如下：\n「${$('resources').value||'(尚未填寫)'}」\n\n請幫我列出更完整的資源清單（書籍/論文/網站/影片/軟體/設備/人力/場地），並標示取得方式與可能花費。`;
+    case 'methods':
+      return `${PERSONA}\n\n計畫背景：\n${c}\n\n學生對「如何有效學習、用什麼方法」的草稿如下：\n「${$('methods').value||'(尚未填寫)'}」\n\n請提供具體可執行的學習方法與步驟流程，並建議如何檢核自己是否真的學會（自我檢核機制）。`;
+    case 'goals':
+      return `${PERSONA}\n\n計畫背景：\n${c}\n\n學生對「預期目標」的草稿如下：\n「${$('goals').value||'(尚未填寫)'}」\n\n請把目標改寫得更具體、可衡量（說明學期末會產出什麼、會做到什麼），並提供 2-3 個層次（基本／進階）的目標版本。`;
+    case 'wholeplan':
+      return `${PERSONA}\n\n以下是一位高中生完整的自主學習計畫草稿，請整體檢視一致性與完整度，指出可加強之處，並提供一份潤稿後的「內容概述」。\n\n${c}\n\n1. 學習動機：${$('motivation').value||'(未填)'}\n2. 需要的資源或工具：${$('resources').value||'(未填)'}\n3. 學習方法：${$('methods').value||'(未填)'}\n4. 預期目標：${$('goals').value||'(未填)'}`;
+    case 'schedule':{
+      const w=$('weeks').value||'14';
+      return `${PERSONA}\n\n請依下列計畫，規劃 ${w} 週的每週進度安排，並為每一週設計具體的「自我反思與檢核方式」。最後兩週請安排成果分享與成果反思。請用「第N週：進度內容｜檢核方式」的條列格式呈現。\n\n${c}\n學習動機：${$('motivation').value||'(未填)'}\n學習方法：${$('methods').value||'(未填)'}\n預期目標：${$('goals').value||'(未填)'}`;
+    }
+    case 'effect':{
+      const rows=collectEffect().map((e,i)=>`第${i+1}週：${e.effect||'(空)'}`).join('\n');
+      return `${PERSONA}\n\n以下是學生逐週的學習成效紀錄，請協助潤飾、補充與深化，使其更完整具體，並保留逐週格式呈現。\n\n${c}\n\n${rows||'(尚無紀錄)'}`;
+    }
+  }
+  return '';
+}
+
+/* ============ AI 執行（外部 / 即時） ============ */
+const PROVIDER_URL={
+  chatgpt:'https://chatgpt.com/g/g-6a1b78648b3881918a9d365cc5c61e24-bei-shen-mian-shi-xie-zuo/c/6a300a6e-976c-83ee-b6df-83866c7459ec',
+  claude:'https://claude.ai/new',
+  gemini:'https://gemini.google.com/gem/748244d336e3?usp=sharing'
+};
+const TARGET={topic:'detailTopic',motivation:'motivation',resources:'resources',methods:'methods',goals:'goals',wholeplan:null,schedule:null,effect:null};
+
+async function aiAssist(kind){
+  const prompt=buildPrompt(kind);
+  const key=($('aiApiKey').value||'').trim();
+  const box=$('ai-'+kind);
+  if(!key){
+    // 外部模式
+    window._lastPrompt=prompt;
+    try{await navigator.clipboard.writeText(prompt);}catch(e){}
+    const prov=getRadio('aiprov');
+    window.open(PROVIDER_URL[prov]||PROVIDER_URL.chatgpt,'_blank');
+    box.classList.add('show');
+    box.innerHTML=`<div class="head"><b>外部模式：指令已複製</b><button class="btn sub sm" onclick="hideAi('${kind}')">關閉</button></div>
+      <p style="font-size:.85rem;margin:0 0 8px;color:var(--ink-soft)">已開啟 ${prov.toUpperCase()}，到對話框按 <b>Ctrl/⌘+V</b> 貼上即可。指令內容如下：</p>
+      <pre>${escapeHtml(prompt)}</pre>
+      <button class="btn sub sm" onclick="copyText(window._lastPrompt)">再複製一次</button>`;
+    return;
+  }
+  // 即時模式
+  box.classList.add('show');
+  box.innerHTML=`<div class="ai-busy">🤖 AI 生成中，請稍候…</div>`;
+  try{
+    const text=await callAI(prompt,key);
+    const tgt=TARGET[kind];
+    box.innerHTML=`<div class="head"><b>AI 建議</b><button class="btn sub sm" onclick="hideAi('${kind}')">關閉</button></div>
+      <pre id="aiout-${kind}">${escapeHtml(text)}</pre>
+      <div class="actions">
+        <button class="btn sm" onclick="copyText(document.getElementById('aiout-${kind}').textContent)">複製</button>
+        ${tgt?`<button class="btn ok sm" onclick="applyAi('${kind}','${tgt}')">套用到欄位</button>`:''}
+      </div>`;
+  }catch(err){
+    const msg=err.message||'未知錯誤';
+    const transient=isTransient(msg);
+    const tip=transient
+      ? '這是 AI 服務「暫時過載」造成的，通常稍等十幾秒就會恢復。可按「重試」，或換一個 AI 服務／改用外部模式。'
+      : (/api key|x-api-key|invalid|unauthor|permission|401|403/i.test(msg)
+          ? '看起來是金鑰或權限問題，請到「AI 輔助設定」確認金鑰正確、且已啟用該服務的 API。'
+          : '可改用外部模式（清空金鑰）或檢查金鑰／模型名稱。');
+    box.innerHTML=`<div class="head"><b style="color:var(--danger)">即時生成失敗</b><button class="btn sub sm" onclick="hideAi('${kind}')">關閉</button></div>
+      <p style="font-size:.85rem;color:var(--ink-soft)">原因：${escapeHtml(msg)}</p>
+      <p style="font-size:.85rem;color:var(--ink-soft)">${tip}</p>
+      <div class="actions">
+        <button class="btn sm" onclick="aiAssist('${kind}')">🔁 重試</button>
+        <button class="btn sub sm" onclick="copyText(window._lastPrompt||'')">複製指令改用外部 AI</button>
+      </div>`;
+    window._lastPrompt=prompt;
+  }
+}
+function applyAi(kind,tgt){
+  const text=$('aiout-'+kind).textContent;
+  const el=$(tgt);if(!el)return;
+  el.value=el.value.trim()?el.value+'\n\n[AI 建議]\n'+text:text;
+  updateProgress();toast('已套用到欄位');
+}
+function hideAi(kind){$('ai-'+kind).classList.remove('show');}
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+// 暫時性錯誤（過載 / 流量過高 / 限流 / 連線問題）→ 值得重試或換模型
+function isTransient(msg){return /high demand|overload|unavailable|temporar|rate.?limit|quota|exceed|timed? ?out|資源|忙碌|503|502|504|500|429|fetch|network|failed to fetch/i.test(msg||'');}
+function isModelIssue(msg){return /not found|not supported|no such model|model.*(invalid|unknown)|404/i.test(msg||'');}
+
+// 單次呼叫各家 API；失敗時 throw Error（訊息含原因）
+async function geminiOnce(model,prompt,key){
+  let r;
+  try{
+    r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`,{
+      method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:8192,temperature:0.7}})
+    });
+  }catch(e){throw new Error('網路連線失敗（failed to fetch）');}
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error((j.error&&j.error.message)||('HTTP '+r.status));
+  const cand=j.candidates&&j.candidates[0];
+  if(!cand)throw new Error((j.promptFeedback&&j.promptFeedback.blockReason)?('內容被安全機制阻擋：'+j.promptFeedback.blockReason):'AI 無回應');
+  let txt=(cand.content&&cand.content.parts?cand.content.parts.map(p=>p.text||'').join(''):'')||'';
+  if(!txt)throw new Error('AI 無內容回應，請重試或換模型');
+  if(cand.finishReason==='MAX_TOKENS')txt+='\n\n（⚠ 內容較長已達輸出上限，可能未完整；可請 AI「接續上文繼續」或縮小範圍。）';
+  return txt;
+}
+async function claudeOnce(model,prompt,key){
+  let r;
+  try{
+    r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:model||'claude-3-5-sonnet-latest',max_tokens:4096,messages:[{role:'user',content:prompt}]})
+    });
+  }catch(e){throw new Error('網路連線失敗（failed to fetch）');}
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error((j.error&&j.error.message)||('HTTP '+r.status));
+  let txt=(j.content||[]).map(b=>b.text||'').join('')||'';
+  if(!txt)throw new Error('AI 無內容回應，請重試或換模型');
+  if(j.stop_reason==='max_tokens')txt+='\n\n（⚠ 內容較長已達輸出上限，可能未完整；可請 AI「接續上文繼續」。）';
+  return txt;
+}
+async function openaiOnce(model,prompt,key){
+  let r;
+  try{
+    r=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+key},
+      body:JSON.stringify({model:model||'gpt-4o-mini',messages:[{role:'user',content:prompt}]})
+    });
+  }catch(e){throw new Error('網路連線失敗（failed to fetch）');}
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error((j.error&&j.error.message)||('HTTP '+r.status));
+  return (j.choices&&j.choices[0]&&j.choices[0].message.content)||'(無內容)';
+}
+
+// 統一入口：自動重試（暫時性錯誤）＋ Gemini 自動換模型
+async function callAI(prompt,key){
+  const prov=getRadio('aiprov');
+  const model=($('aiModel').value||'').trim();
+  const RETRY=2;       // 同一模型最多再重試 2 次
+  const DELAYS=[1000,2500];
+  let lastErr='';
+
+  if(prov==='gemini'){
+    const candidates=model?[model]:['gemini-2.5-flash','gemini-2.0-flash','gemini-flash-latest'];
+    for(const m of candidates){
+      for(let attempt=0;attempt<=RETRY;attempt++){
+        try{return await geminiOnce(m,prompt,key);}
+        catch(e){
+          lastErr=e.message||'';
+          if(isModelIssue(lastErr))break;                 // 換下一個模型
+          if(isTransient(lastErr)&&attempt<RETRY){await sleep(DELAYS[attempt]);continue;} // 重試
+          if(isTransient(lastErr))break;                  // 重試用完→換下一個模型
+          throw e;                                        // 金鑰/權限等→直接報錯
+        }
+      }
+    }
+    throw new Error((lastErr||'Gemini 呼叫失敗')+'（已自動嘗試備援模型仍失敗，請稍候再試或改用外部模式）');
+  }
+
+  const once=prov==='claude'?claudeOnce:openaiOnce;
+  for(let attempt=0;attempt<=RETRY;attempt++){
+    try{return await once(model,prompt,key);}
+    catch(e){
+      lastErr=e.message||'';
+      if(isTransient(lastErr)&&attempt<RETRY){await sleep(DELAYS[attempt]);continue;}
+      throw e;
+    }
+  }
+  throw new Error(lastErr);
+}
+
+/* ============ 上網查資料 ============ */
+function webSearch(){
+  const q=$('planName').value||$('projectTopic').value;
+  if(!q){toast('請先填主題或計畫名稱');return;}
+  window.open('https://www.google.com/search?q='+encodeURIComponent(q),'_blank');
+}
+
+/* ============ 工具：複製 / escape ============ */
+function copyText(t){navigator.clipboard.writeText(t).then(()=>toast('已複製'),()=>toast('複製失敗，請手動選取'));}
+function escapeHtml(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function escapeBacktick(s){return (s||'').replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\$/g,'\\$');}
+
+/* ============ 匯出 ============ */
+function buildPlanHtml(){
+  const v=id=>($(id)?$(id).value:'')||'';
+  const sched=collectSchedule();const eff=collectEffect();
+  const start=v('startDate');
+  let schedRows='';
+  sched.forEach((r,i)=>{
+    schedRows+=`<tr><td style="text-align:center">第${i+1}週</td><td style="text-align:center">${weekDate(start,i)}</td><td>${escapeHtml(r.content)}</td><td style="text-align:center">${r.check||''}</td><td>${escapeHtml(r.teacher)}</td></tr>`;
+  });
+  let effRows='';
+  eff.forEach((r,i)=>{
+    if(!r.effect&&!r.img)return;
+    effRows+=`<tr><td style="text-align:center">第${i+1}週</td><td>${escapeHtml(r.effect)}</td><td>${r.img?`<img src="${r.img}" style="max-width:140px;max-height:140px">`:''}</td></tr>`;
+  });
+  let a=0,b=0,c=0;sched.forEach(r=>{if(r.check==='A')a++;if(r.check==='B')b++;if(r.check==='C')c++;});
+  const present=getChecks('presentForm');
+  const subj=getChecks('subjects');
+  return `
+  <h1 style="text-align:center">臺北市立麗山高級中學　高二自主學習計畫書</h1>
+  <table>
+    <tr><th style="width:120px">申請人</th><td>${escapeHtml(v('studentName'))}</td><th style="width:120px">班級座號</th><td>${escapeHtml(v('className'))} ${escapeHtml(v('seatNo'))}</td></tr>
+    <tr><th>計畫主題</th><td colspan="3">${escapeHtml(v('projectTopic'))}</td></tr>
+    <tr><th>計畫類型</th><td colspan="3">${typeLabel()}${subj.length?'':''}</td></tr>
+    <tr><th>實施方式</th><td colspan="3">${getRadio('impl')||''} ${getRadio('impl')==='小組學習'?'　成員：'+escapeHtml(v('members')):''}</td></tr>
+    <tr><th>計畫名稱</th><td colspan="3">${escapeHtml(v('planName'))}</td></tr>
+    <tr><th>詳細主題</th><td colspan="3">${escapeHtml(v('detailTopic')).replace(/\n/g,'<br>')}</td></tr>
+  </table>
+  <h2>內容概述</h2>
+  <table>
+    <tr><th style="width:230px">為什麼想做這個主題？(學習動機)</th><td>${escapeHtml(v('motivation')).replace(/\n/g,'<br>')}</td></tr>
+    <tr><th>我需要什麼資源或工具？</th><td>${escapeHtml(v('resources')).replace(/\n/g,'<br>')}</td></tr>
+    <tr><th>我如何有效學習？哪些方法或技巧適合我？</th><td>${escapeHtml(v('methods')).replace(/\n/g,'<br>')}</td></tr>
+    <tr><th>預期目標</th><td>${escapeHtml(v('goals')).replace(/\n/g,'<br>')}</td></tr>
+  </table>
+  <h2>預計進度（週計畫）</h2>
+  <table>
+    <thead><tr><th>週次</th><th>日期</th><th>內容(進度安排)</th><th>自我反思及檢核<br>A.依計畫完成 B.修正後完成 C.部分完成</th><th>指導老師簽名</th></tr></thead>
+    <tbody>${schedRows||'<tr><td colspan="5" style="text-align:center;color:#999">(尚未規劃)</td></tr>'}</tbody>
+  </table>
+  <h2>學習成效</h2>
+  <table>
+    <thead><tr><th>週次</th><th>學習成效</th><th>成果影像</th></tr></thead>
+    <tbody>${effRows||'<tr><td colspan="3" style="text-align:center;color:#999">(尚未紀錄)</td></tr>'}</tbody>
+  </table>
+  <table style="margin-top:10px">
+    <tr><th style="width:200px">家長給學生自主學習的回饋</th><td>${escapeHtml(v('parentFeedback')).replace(/\n/g,'<br>')}</td></tr>
+    <tr><th>家長簽名</th><td>${escapeHtml(v('parentSign'))}</td></tr>
+    <tr><th>成果發表形式</th><td>${present.length?present.map(escapeHtml).join('<br>'):'(未選)'}${getChecks('presentForm').includes('其他方式')&&v('presentOther')?'<br>其他：'+escapeHtml(v('presentOther')):''}</td></tr>
+    <tr><th>自我檢核次數統計</th><td>A 依計畫完成：${a} 次　｜　B 修正後完成：${b} 次　｜　C 部分完成：${c} 次</td></tr>
+  </table>`;
+}
+function printPlan(){
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><title>自主學習計畫書</title>
+  <style>
+    body{font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;color:#1f2733;padding:24px;line-height:1.6;}
+    h1{font-size:1.4rem;} h2{font-size:1.1rem;border-left:4px solid #2f5fe0;padding-left:8px;margin-top:22px;}
+    table{width:100%;border-collapse:collapse;margin:8px 0;} th,td{border:1px solid #999;padding:7px;text-align:left;vertical-align:top;font-size:.9rem;}
+    th{background:#eef1f6;}
+    @media print{body{padding:0;}}
+  </style></head><body>${buildPlanHtml()}
+  <p style="text-align:center;color:#888;font-size:.8rem;margin-top:24px">本草稿由「AI 輔助自主學習計畫」工具產生，請核對後謄入正式計畫書。</p>
+  </body></html>`);
+  w.document.close();w.focus();setTimeout(()=>w.print(),400);
+}
+function exportWord(){
+  const name=$('studentName').value||'自主學習計畫';
+  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8">
+  <style>body{font-family:"Noto Sans TC",sans-serif;} table{border-collapse:collapse;width:100%;} th,td{border:1px solid #666;padding:6px;} th{background:#eef1f6;} h2{border-left:4px solid #2f5fe0;padding-left:8px;}</style></head><body>${buildPlanHtml()}</body></html>`;
+  const blob=new Blob(['﻿'+html],{type:'application/msword'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name+'_自主學習計畫書.doc';a.click();
+  toast('已下載 Word 檔');
+}
+function copyAllText(){
+  const v=id=>($(id)?$(id).value:'')||'';
+  const sched=collectSchedule();const eff=collectEffect();
+  let t=`【高二自主學習計畫書】\n申請人：${v('studentName')}　班級座號：${v('className')} ${v('seatNo')}\n計畫主題：${v('projectTopic')}\n計畫類型：${typeLabel()}\n實施方式：${getRadio('impl')}${getRadio('impl')==='小組學習'?'（成員：'+v('members')+'）':''}\n計畫名稱：${v('planName')}\n詳細主題：${v('detailTopic')}\n\n── 內容概述 ──\n1. 學習動機：\n${v('motivation')}\n\n2. 需要的資源或工具：\n${v('resources')}\n\n3. 學習方法：\n${v('methods')}\n\n4. 預期目標：\n${v('goals')}\n\n── 預計進度 ──\n`;
+  sched.forEach((r,i)=>{t+=`第${i+1}週：${r.content}　[檢核:${r.check||'-'}]\n`;});
+  t+=`\n── 學習成效 ──\n`;
+  eff.forEach((r,i)=>{if(r.effect)t+=`第${i+1}週：${r.effect}\n`;});
+  t+=`\n家長回饋：${v('parentFeedback')}\n成果發表形式：${getChecks('presentForm').join('、')}\n`;
+  copyText(t);
+}
+
+/* ============ 啟動 ============ */
+document.addEventListener('DOMContentLoaded',()=>{
+  refreshStudentList();
+  loadAiConfig();
+  updateProgress();
+});
+</script>
+</body>
+</html>

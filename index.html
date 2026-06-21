@@ -3,426 +3,1580 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>教學小幫手 ・ AI 工具箱｜林獻升老師</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+<title>AI輔助教學與班級管理｜臺北市麗山高中林獻升老師</title>
 <style>
   :root{
-    --bg:#EEF2F7;
-    --surface:#FFFFFF;
-    --ink:#16212E;
-    --ink-soft:#5E6E80;
-    --ink-faint:#90A0B0;
-    --line:#E2E8F0;
-    --brand:#1F6F87;
-    --brand-deep:#15505F;
-    --ring:#7FB7C7;
-
-    /* 五大分類色 */
-    --c-class:#3B6FD4;   --c-class-t:#EAF0FE;
-    --c-grade:#7B57E6;   --c-grade-t:#F0ECFD;
-    --c-comment:#E0407E; --c-comment-t:#FDF2F7;
-    --c-career:#118A5E;  --c-career-t:#E3F5ED;
-    --c-event:#D98318;   --c-event-t:#FBF0DD;
-    --c-life:#D44C72;    --c-life-t:#FCE9EF;
-
-    --radius:18px;
-    --shadow:0 1px 2px rgba(22,33,46,.04), 0 8px 24px -12px rgba(22,33,46,.18);
-    --shadow-hover:0 2px 4px rgba(22,33,46,.06), 0 22px 40px -18px rgba(22,33,46,.32);
-    --maxw:1180px;
+    --bg:#f5f7fb;
+    --panel:#ffffff;
+    --panel-2:#eef3f8;
+    --ink:#182230;
+    --muted:#667085;
+    --line:#d9e1ea;
+    --blue:#2563eb;
+    --green:#168a68;
+    --amber:#b76e00;
+    --red:#c2415b;
+    --violet:#6d5bd0;
+    --teal:#0f7585;
+    --shadow:0 14px 38px rgba(31,42,55,.10);
+    --radius:8px;
+    --max:1240px;
   }
 
-  *{box-sizing:border-box;margin:0;padding:0}
+  *{box-sizing:border-box}
   html{scroll-behavior:smooth}
   body{
-    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+    margin:0;
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",Arial,sans-serif;
     color:var(--ink);
     background:var(--bg);
-    line-height:1.6;
-    -webkit-font-smoothing:antialiased;
-    text-rendering:optimizeLegibility;
+    line-height:1.65;
   }
-  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+  a{color:inherit}
+  .shell{max-width:var(--max);margin:0 auto;padding:0 22px}
 
-  /* ---------- 頂列 ---------- */
   .topbar{
-    background:var(--surface);
+    position:sticky;
+    top:0;
+    z-index:30;
+    background:rgba(255,255,255,.94);
     border-bottom:1px solid var(--line);
-    position:relative;z-index:5;
+    backdrop-filter:blur(10px);
   }
-  .topbar .wrap{display:flex;align-items:center;justify-content:space-between;height:64px;gap:16px;flex-wrap:wrap}
-  .brand{display:flex;align-items:center;gap:11px;font-weight:900;font-size:1.12rem;letter-spacing:.01em}
-  .brand .mark{
-    width:34px;height:34px;border-radius:10px;flex:none;
-    background:linear-gradient(135deg,var(--brand),var(--brand-deep));
-    color:#fff;display:grid;place-items:center;font-size:1.12rem;
-    box-shadow:0 4px 10px -3px rgba(31,111,135,.6);
+  .topbar .shell{
+    min-height:62px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:18px;
   }
-  .author-chip{
-    display:flex;align-items:center;gap:8px;
-    font-size:.82rem;color:var(--ink-soft);
-    background:#F3F6FA;border:1px solid var(--line);
-    padding:6px 13px;border-radius:999px;
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    font-weight:900;
+    letter-spacing:0;
+    min-width:0;
   }
-  .author-chip a{color:var(--brand);text-decoration:none;font-weight:500}
-  .author-chip a:hover{text-decoration:underline}
+  .brand-mark{
+    width:36px;
+    height:36px;
+    display:grid;
+    place-items:center;
+    border-radius:8px;
+    background:#182230;
+    color:#fff;
+    font-weight:900;
+    flex:none;
+  }
+  .brand span:last-child{
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .meta{
+    font-size:.9rem;
+    color:var(--muted);
+    white-space:nowrap;
+  }
 
-  /* ---------- Hero ---------- */
   .hero{
-    background:
-      radial-gradient(1100px 380px at 88% -8%, rgba(123,87,230,.10), transparent 60%),
-      radial-gradient(900px 360px at 6% 0%, rgba(31,111,135,.12), transparent 55%),
-      var(--surface);
+    background:#fff;
     border-bottom:1px solid var(--line);
   }
-  .hero .wrap{padding:54px 24px 46px}
-  .eyebrow{
-    font-family:"Outfit",sans-serif;font-weight:600;letter-spacing:.22em;
-    font-size:.72rem;color:var(--brand);text-transform:uppercase;margin-bottom:14px;
-    display:inline-flex;align-items:center;gap:9px;
+  .hero-grid{
+    display:grid;
+    grid-template-columns:minmax(0,1.45fr) minmax(280px,.75fr);
+    gap:34px;
+    align-items:center;
+    padding:34px 0 28px;
   }
-  .eyebrow::before{content:"";width:26px;height:2px;background:var(--brand);border-radius:2px;display:inline-block}
   .hero h1{
-    font-size:clamp(2rem,4.4vw,3.1rem);font-weight:900;line-height:1.18;
-    letter-spacing:-.01em;max-width:18ch;
+    margin:0;
+    font-size:clamp(2.05rem,4vw,3.35rem);
+    line-height:1.12;
+    letter-spacing:0;
   }
-  .hero h1 em{font-style:normal;color:var(--brand)}
-  .hero p.lead{
-    margin-top:16px;font-size:clamp(1rem,1.6vw,1.18rem);color:var(--ink-soft);
-    max-width:46ch;font-weight:500;
+  .hero .maker{
+    margin:12px 0 0;
+    font-size:1.06rem;
+    color:var(--muted);
+    font-weight:700;
   }
-  .hero-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px}
-  .pill{
-    display:inline-flex;align-items:center;gap:7px;
-    background:#F2F6FA;border:1px solid var(--line);
-    border-radius:999px;padding:8px 15px;font-size:.86rem;color:var(--ink-soft);font-weight:500;
+  .hero .lead{
+    max-width:760px;
+    margin:16px 0 0;
+    color:#475467;
+    font-size:1.02rem;
   }
-  .pill b{color:var(--ink);font-weight:700}
-  .pill .dot{width:8px;height:8px;border-radius:50%;background:var(--c-career)}
-
-  /* ---------- 使用說明 ---------- */
-  .howto{display:flex;gap:14px;flex-wrap:wrap;margin-top:30px}
-  .howto .step{
-    flex:1 1 200px;display:flex;gap:12px;align-items:flex-start;
-    background:#F7FAFC;border:1px solid var(--line);border-radius:14px;padding:14px 16px;
+  .strong{font-weight:900;color:#101828}
+  .hero-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:22px;
   }
-  .howto .n{
-    width:26px;height:26px;border-radius:8px;flex:none;background:var(--brand);color:#fff;
-    font-family:"Outfit",sans-serif;font-weight:700;font-size:.9rem;display:grid;place-items:center;margin-top:1px;
+  .btn{
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--ink);
+    min-height:42px;
+    padding:9px 14px;
+    border-radius:8px;
+    text-decoration:none;
+    font-weight:800;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    cursor:pointer;
   }
-  .howto .step b{display:block;font-size:.92rem;font-weight:700}
-  .howto .step span{font-size:.82rem;color:var(--ink-soft)}
-
-  /* ---------- 控制列 ---------- */
-  .controls{position:sticky;top:0;z-index:4;background:var(--bg);
-    border-bottom:1px solid var(--line);padding:16px 0;
-    box-shadow:0 6px 18px -16px rgba(22,33,46,.4);
+  .btn.primary{
+    background:var(--blue);
+    border-color:var(--blue);
+    color:#fff;
   }
-  .controls .wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-  .search{position:relative;flex:1 1 260px;max-width:380px}
-  .search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--ink-faint)}
-  .search input{
-    width:100%;border:1px solid var(--line);background:var(--surface);
-    border-radius:12px;padding:11px 14px 11px 42px;font:inherit;font-size:.95rem;color:var(--ink);
-    transition:border-color .15s, box-shadow .15s;
+  .btn:hover{filter:brightness(.98)}
+  .hero-visual{
+    border:1px solid var(--line);
+    background:#f8fafc;
+    border-radius:8px;
+    overflow:hidden;
+    box-shadow:var(--shadow);
   }
-  .search input::placeholder{color:var(--ink-faint)}
-  .search input:focus{outline:none;border-color:var(--ring);box-shadow:0 0 0 4px rgba(127,183,199,.25)}
-  .chips{display:flex;gap:8px;flex-wrap:wrap}
-  .chip{
-    border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);
-    border-radius:999px;padding:8px 15px;font:inherit;font-size:.88rem;font-weight:500;
-    cursor:pointer;display:inline-flex;align-items:center;gap:7px;
-    transition:all .15s;white-space:nowrap;
-  }
-  .chip .cdot{width:9px;height:9px;border-radius:50%;background:var(--cc,var(--ink-faint))}
-  .chip:hover{border-color:var(--ring);color:var(--ink)}
-  .chip[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
-  .chip[aria-pressed="true"] .cdot{background:#fff}
-  .count{margin-left:auto;font-size:.85rem;color:var(--ink-soft);font-weight:500;white-space:nowrap}
-  .count b{color:var(--ink);font-weight:700}
-
-  /* ---------- 區塊 ---------- */
-  main{padding:38px 0 20px}
-  .section{margin-bottom:40px}
-  .section.hidden{display:none}
-  .sec-head{display:flex;align-items:center;gap:12px;margin-bottom:18px}
-  .sec-head .bar{width:5px;height:24px;border-radius:3px;background:var(--cc)}
-  .sec-head h2{font-size:1.32rem;font-weight:900;letter-spacing:-.01em}
-  .sec-head .tag{
-    font-size:.78rem;font-weight:600;color:var(--cc);background:var(--cc-t);
-    padding:3px 11px;border-radius:999px;
-  }
-  .sec-head .line{flex:1;height:1px;background:var(--line)}
-
-  /* ---------- 卡片 ---------- */
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(266px,1fr));gap:16px}
-  .card{
-    position:relative;display:flex;flex-direction:column;
-    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
-    padding:20px 20px 18px;text-decoration:none;color:inherit;
-    box-shadow:var(--shadow);overflow:hidden;
-    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-  }
-  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--cc);opacity:.0;transition:opacity .18s}
-  .card:hover{transform:translateY(-5px);box-shadow:var(--shadow-hover);border-color:transparent}
-  .card:hover::before{opacity:1}
-  .card:focus-visible{outline:3px solid var(--ring);outline-offset:2px}
-  .card .icon{
-    width:50px;height:50px;border-radius:14px;flex:none;
-    background:var(--cc-t);color:var(--cc);
-    display:grid;place-items:center;font-size:1.55rem;margin-bottom:15px;
-  }
-  .card h3{font-size:1.1rem;font-weight:700;letter-spacing:.005em}
-  .card p{margin-top:7px;font-size:.9rem;color:var(--ink-soft);line-height:1.55;flex:1}
-  .card .open{
-    margin-top:15px;display:inline-flex;align-items:center;gap:6px;
-    font-size:.86rem;font-weight:700;color:var(--cc);
-  }
-  .card .open svg{width:15px;height:15px;transition:transform .18s}
-  .card:hover .open svg{transform:translateX(4px)}
-
-  /* ---------- 空狀態 ---------- */
-  .empty{display:none;text-align:center;padding:60px 20px;color:var(--ink-soft)}
-  .empty.show{display:block}
-  .empty .big{font-size:2.4rem;margin-bottom:8px}
-  .empty b{color:var(--ink)}
-
-  /* ---------- 頁尾 ---------- */
-  footer{border-top:1px solid var(--line);background:var(--surface);margin-top:20px}
-  footer .wrap{padding:34px 24px;display:flex;gap:18px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
-  footer .who b{font-size:1rem}
-  footer .who span{display:block;font-size:.86rem;color:var(--ink-soft);margin-top:4px}
-  footer .who a{color:var(--brand);text-decoration:none}
-  footer .who a:hover{text-decoration:underline}
-  footer .note{font-size:.8rem;color:var(--ink-faint);max-width:42ch;text-align:right}
-
-  /* ---------- 進場動畫 ---------- */
-  .card{opacity:0;transform:translateY(14px);animation:rise .5s ease forwards}
-  @keyframes rise{to{opacity:1;transform:none}}
-  @media (prefers-reduced-motion:reduce){
-    .card{animation:none;opacity:1;transform:none}
-    .card:hover{transform:none}
-    html{scroll-behavior:auto}
+  .hero-visual img{
+    width:100%;
+    display:block;
+    aspect-ratio:4/3;
+    object-fit:cover;
   }
 
-  @media (max-width:560px){
-    .hero .wrap{padding:38px 20px 34px}
-    .count{width:100%;margin-left:0}
-    footer .note{text-align:left}
+  .summary{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:12px;
+    margin:22px 0 0;
+  }
+  .stat{
+    background:#f8fafc;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:12px 14px;
+  }
+  .stat b{display:block;font-size:1.32rem;line-height:1.15}
+  .stat span{font-size:.86rem;color:var(--muted)}
+
+  main{padding:24px 0 44px}
+  .layout{
+    display:grid;
+    grid-template-columns:280px minmax(0,1fr);
+    gap:18px;
+    align-items:start;
+  }
+  .nav-panel{
+    position:sticky;
+    top:80px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:8px;
+    box-shadow:0 8px 22px rgba(31,42,55,.06);
+    padding:12px;
+  }
+  .nav-title{
+    padding:6px 8px 10px;
+    color:var(--muted);
+    font-weight:900;
+    font-size:.86rem;
+  }
+  .tab-list{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .tab{
+    width:100%;
+    border:1px solid transparent;
+    background:transparent;
+    border-radius:8px;
+    padding:10px;
+    display:grid;
+    grid-template-columns:32px minmax(0,1fr);
+    gap:9px;
+    text-align:left;
+    cursor:pointer;
+    font:inherit;
+    color:var(--ink);
+  }
+  .tab:hover{background:#f5f8fb}
+  .tab[aria-selected="true"]{
+    background:#edf4ff;
+    border-color:#b9d1ff;
+  }
+  .tab-num{
+    width:32px;
+    height:32px;
+    border-radius:8px;
+    display:grid;
+    place-items:center;
+    background:var(--tool);
+    color:#fff;
+    font-weight:900;
+  }
+  .tab-name{font-weight:900;line-height:1.25}
+  .tab-note{display:block;color:var(--muted);font-size:.82rem;margin-top:2px}
+
+  .content{
+    min-width:0;
+  }
+  .program{
+    display:none;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:8px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  .program.active{display:block}
+  .program-head{
+    padding:24px 26px;
+    background:linear-gradient(90deg, var(--tool-soft), #fff);
+    border-bottom:1px solid var(--line);
+  }
+  .kicker{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    color:var(--tool);
+    font-weight:900;
+    font-size:.9rem;
+    margin-bottom:8px;
+  }
+  .kicker:before{
+    content:"";
+    width:18px;
+    height:3px;
+    background:var(--tool);
+    border-radius:3px;
+  }
+  .program h2{
+    margin:0;
+    font-size:clamp(1.55rem,2.4vw,2.2rem);
+    line-height:1.2;
+    letter-spacing:0;
+  }
+  .program-desc{
+    max-width:820px;
+    margin:12px 0 0;
+    color:#475467;
+  }
+  .quick-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:18px;
+  }
+  .quick-actions .btn{
+    background:#fff;
+  }
+  .quick-actions .btn.primary{
+    background:var(--tool);
+    border-color:var(--tool);
+    color:#fff;
+  }
+
+  .program-body{
+    padding:24px 26px 28px;
+  }
+  .two-col{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(280px,.82fr);
+    gap:18px;
+  }
+  .block{
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:#fff;
+    padding:18px;
+  }
+  .block + .block{margin-top:16px}
+  .block h3{
+    margin:0 0 10px;
+    font-size:1.06rem;
+  }
+  .block p{margin:0;color:#475467}
+  .tags{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:12px;
+  }
+  .tag{
+    border:1px solid var(--line);
+    background:#f8fafc;
+    border-radius:999px;
+    padding:5px 10px;
+    color:#475467;
+    font-size:.86rem;
+    font-weight:800;
+  }
+  .flow{
+    display:grid;
+    gap:9px;
+    margin:12px 0 0;
+  }
+  .flow-step{
+    display:grid;
+    grid-template-columns:28px minmax(0,1fr);
+    gap:10px;
+    align-items:start;
+  }
+  .flow-step b:first-child{
+    width:28px;
+    height:28px;
+    border-radius:8px;
+    display:grid;
+    place-items:center;
+    background:var(--tool-soft);
+    color:var(--tool);
+    line-height:1;
+  }
+  .flow-step span{color:#475467}
+
+  .resource-list{
+    display:grid;
+    gap:9px;
+    margin-top:12px;
+  }
+  .resource{
+    display:grid;
+    grid-template-columns:72px minmax(0,1fr) auto;
+    gap:10px;
+    align-items:center;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:10px;
+    text-decoration:none;
+    background:#fbfcfe;
+  }
+  .resource:hover{border-color:#b9c7d6;background:#fff}
+  .rtype{
+    justify-self:start;
+    border-radius:8px;
+    padding:4px 8px;
+    background:var(--tool-soft);
+    color:var(--tool);
+    font-size:.78rem;
+    font-weight:900;
+  }
+  .rname{
+    min-width:0;
+    font-weight:800;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .ropen{
+    color:var(--muted);
+    font-weight:900;
+    font-size:.9rem;
+  }
+  .impact-grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:10px;
+    margin-top:12px;
+  }
+  .impact{
+    background:#f8fafc;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:12px;
+  }
+  .impact b{display:block;margin-bottom:5px}
+  .impact span{display:block;color:#475467;font-size:.9rem}
+  .notice{
+    margin-top:16px;
+    border-left:5px solid var(--tool);
+    background:#fbfcfe;
+    padding:13px 15px;
+    color:#475467;
+  }
+
+  .all-resources{
+    margin-top:18px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:18px;
+  }
+  .all-resources h2{font-size:1.25rem;margin:0 0 8px}
+  .search-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin:14px 0;
+  }
+  .search-row input{
+    flex:1 1 260px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    min-height:42px;
+    padding:9px 12px;
+    font:inherit;
+  }
+  .search-row input:focus{
+    outline:3px solid #c8ddff;
+    border-color:#88b6ff;
+  }
+
+  footer{
+    border-top:1px solid var(--line);
+    background:#fff;
+    padding:24px 0;
+    color:var(--muted);
+    font-size:.9rem;
+  }
+
+  @media (max-width:980px){
+    .hero-grid,.layout,.two-col{grid-template-columns:1fr}
+    .nav-panel{position:static}
+    .tab-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+    .impact-grid,.summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  @media (max-width:620px){
+    .shell{padding:0 16px}
+    .topbar .shell{align-items:flex-start;flex-direction:column;padding-top:12px;padding-bottom:12px;gap:6px}
+    .meta{white-space:normal}
+    .hero-grid{padding:24px 0}
+    .tab-list,.impact-grid,.summary{grid-template-columns:1fr}
+    .program-head,.program-body{padding:20px 16px}
+    .resource{grid-template-columns:1fr}
+    .rname{white-space:normal}
+    .ropen{display:none}
   }
 </style>
 </head>
 <body>
-
-  <!-- 頂列 -->
-  <div class="topbar">
-    <div class="wrap">
-      <div class="brand"><span class="mark">🧰</span>教學小幫手 ・ AI 工具箱</div>
-      <div class="author-chip">
-        <span>臺北市立麗山高中　林獻升 老師</span>
-        <a href="mailto:frog@lssh.tp.edu.tw">frog@lssh.tp.edu.tw</a>
+  <header class="topbar">
+    <div class="shell">
+      <div class="brand">
+        <span class="brand-mark">AI</span>
+        <span>AI輔助教學與班級管理</span>
       </div>
-    </div>
-  </div>
-
-  <!-- Hero -->
-  <header class="hero">
-    <div class="wrap">
-      <span class="eyebrow">AI Teaching Toolkit</span>
-      <h1>把瑣碎的班務交給工具，<br><em>把時間留給學生。</em></h1>
-      <p class="lead">一站式集合班級經營、成績評量、升學輔導與課堂活動的 AI 小工具，點一下就能用。</p>
-
-      <div class="hero-meta">
-        <span class="pill"><span class="dot"></span><b id="totalCount">16</b>個工具</span>
-        <span class="pill">5 大類別</span>
-        <span class="pill">免安裝 ・ 開啟即用</span>
-      </div>
-
-      <div class="howto">
-        <div class="step"><span class="n">1</span><div><b>找工具</b><span>用上方搜尋或點類別標籤快速篩選</span></div></div>
-        <div class="step"><span class="n">2</span><div><b>開工具</b><span>點任一張卡片，會在新分頁開啟</span></div></div>
-        <div class="step"><span class="n">3</span><div><b>直接用</b><span>免登入、免安裝，跟著畫面操作即可</span></div></div>
-      </div>
+      <div class="meta">製作者：臺北市麗山高中林獻升老師</div>
     </div>
   </header>
 
-  <!-- 控制列 -->
-  <div class="controls">
-    <div class="wrap">
-      <div class="search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="searchBox" type="search" placeholder="搜尋工具名稱或用途…　例如：座位、成績、計時" aria-label="搜尋工具">
+  <section class="hero">
+    <div class="shell hero-grid">
+      <div>
+        <h1>AI輔助教學與班級管理</h1>
+        <p class="maker">製作者：臺北市麗山高中林獻升老師</p>
+        <p class="lead">本研習網頁整理 16 個導師與教師常用工具，將原本分散在資料夾中的程式、使用說明、表單、PDF、範例檔與 Android APK 安裝檔整合成清楚的分頁。老師可以依照班級經營任務，快速開啟主程式、查看教學情境、下載資源，並理解每個工具在 <span class="strong">公平分工、行政減量、資料留存、學習支持與活動管理</span> 上的具體價值。</p>
+        <div class="summary" aria-label="研習資源摘要">
+          <div class="stat"><b>16</b><span>教學與班級管理程式分頁</span></div>
+          <div class="stat"><b>82</b><span>程式、APK、說明與範本資源</span></div>
+          <div class="stat"><b>100%</b><span>瀏覽器開啟使用</span></div>
+          <div class="stat"><b>本機</b><span>多數資料留在瀏覽器</span></div>
+        </div>
+        <div class="hero-actions">
+          <a class="btn primary" href="#tools">進入工具分頁</a>
+          <a class="btn" href="#resources">查看全部資源</a>
+          <a class="btn" href="https://froglssh.github.io/teacher-grades-analysis-web/%E6%88%90%E7%B8%BE%E5%88%86%E6%9E%90/%E5%AD%B8%E7%94%9F%E6%88%90%E7%B8%BEAI%E5%88%86%E6%9E%90%E7%A0%94%E7%BF%92%E6%95%99%E5%AD%B8%E7%B6%B2%E9%A0%81.html" target="_blank" rel="noopener">運用 AI 分析學生成績表現</a>
+          <a class="btn" href="https://froglssh.github.io/ai-homeroom-comment-workshop/" target="_blank" rel="noopener">AI輔助德性評語書寫</a>
+        </div>
       </div>
-      <div class="chips" id="chips" role="group" aria-label="依類別篩選"></div>
-      <div class="count" id="resultCount"></div>
+      <figure class="hero-visual" aria-label="AI輔助導師事務處理示意圖">
+        <img src="./ AI輔助導師事務處理.png" alt="AI輔助導師事務處理">
+      </figure>
     </div>
-  </div>
+  </section>
 
-  <!-- 工具區 -->
-  <main class="wrap">
-    <div id="sections"></div>
-    <div class="empty" id="emptyState">
-      <div class="big">🔍</div>
-      <p>找不到符合 <b id="emptyTerm"></b> 的工具。</p>
-      <p style="font-size:.9rem;margin-top:6px">試試別的關鍵字，或點上方「全部」看完整清單。</p>
+  <main id="tools" class="shell">
+    <div class="layout">
+      <aside class="nav-panel" aria-label="工具分頁">
+        <div class="nav-title">選擇教學與班級管理工具</div>
+        <div class="tab-list" id="tabList" role="tablist"></div>
+      </aside>
+      <section class="content" id="programs"></section>
     </div>
+
+    <section id="resources" class="all-resources">
+      <h2>全部檔案資源索引</h2>
+      <p>輸入關鍵字可快速查找程式、Android APK、使用說明、PDF、Word、Excel、圖片或研究文件。</p>
+      <div class="search-row">
+        <input id="resourceSearch" type="search" placeholder="搜尋資源，例如：座位、班費、APK、PDF、Excel、使用說明" aria-label="搜尋全部檔案資源">
+      </div>
+      <div class="resource-list" id="allResourceList"></div>
+    </section>
   </main>
 
-  <!-- 頁尾 -->
   <footer>
-    <div class="wrap">
-      <div class="who">
-        <b>林獻升 老師</b>
-        <span>臺北市立麗山高中　生物科</span>
-        <span>聯絡：<a href="mailto:frog@lssh.tp.edu.tw">frog@lssh.tp.edu.tw</a></span>
-      </div>
-      <div class="note">
-        本頁為工具入口，點選後會連至各工具頁面。歡迎教學現場的夥伴老師自由取用與分享。
-      </div>
+    <div class="shell">
+      本頁由 AI 依據資料夾內容與程式功能進行教學情境整理。建議正式處理學生個資時，於教師個人電腦操作，並定期匯出備份檔。APK 安裝檔供 Android 裝置使用，安裝前請確認來源與裝置安全設定。
     </div>
   </footer>
 
 <script>
-/* ===== 類別定義 ===== */
-const CATS = {
-  class:  {name:"班級經營", desc:"導師日常", color:"var(--c-class)",  tint:"var(--c-class-t)"},
-  grade:  {name:"成績與評量", desc:"打分・統計", color:"var(--c-grade)",  tint:"var(--c-grade-t)"},
-  comment:{name:"德性評語", desc:"評語撰寫・優化", color:"var(--c-comment)", tint:"var(--c-comment-t)"},
-  career: {name:"生涯與升學", desc:"學習歷程・升學", color:"var(--c-career)", tint:"var(--c-career-t)"},
-  event:  {name:"課堂與活動", desc:"上課・辦活動", color:"var(--c-event)",  tint:"var(--c-event-t)"},
-  life:   {name:"生活與國際", desc:"出國・旅遊", color:"var(--c-life)",   tint:"var(--c-life-t)"},
-};
-
-/* ===== 工具資料（可自行新增 / 修改）===== */
-const TOOLS = [
-  // 班級經營
-  {cat:"class", icon:"🏅", name:"幹部選取獎勵", desc:"隨機抽選幹部與小老師，並記錄服務與獎勵。", url:"https://app.notion.com/p/12daf21fa89580feb44df028b43c58a8"},
-  {cat:"class", icon:"🪑", name:"教室座位抽籤", desc:"公平隨機排定教室座位，產生座位表。", url:"https://app.notion.com/p/12daf21fa895808a9e84ff914d74ceed"},
-  {cat:"class", icon:"🧹", name:"班級打掃安排", desc:"自動分配打掃區域，產生輪值表。", url:"https://app.notion.com/p/12daf21fa89580f69295f17528c0cb99"},
-  {cat:"class", icon:"🎯", name:"學生選取紀錄", desc:"課堂隨機點名，並記錄發言與抽中次數。", url:"https://app.notion.com/p/12daf21fa89580678e85d926f6eebb79"},
-  {cat:"class", icon:"💰", name:"班費收支紀錄", desc:"班費收入支出記帳，自動結算餘額。", url:"https://app.notion.com/p/12eaf21fa89580e0a613f47301fb4fec"},
-
-  // 成績與評量
-  {cat:"grade", icon:"📈", name:"學生成績 AI 分析研習網頁", desc:"學生成績 AI 分析與探究實作研習網頁，包含班級與個人分析工具、教學說明與簡報素材。", url:"成績分析/學生成績AI分析研習教學網頁.html"},
-  {cat:"grade", icon:"🧮", name:"學期成績計算", desc:"依各項權重計算學期總成績。", url:"https://app.notion.com/p/12daf21fa89580f39d7fc377081fcc8c"},
-  {cat:"grade", icon:"📊", name:"成績統計分析", desc:"班級成績分布、排名與趨勢圖表一次看。", url:"https://app.notion.com/p/12daf21fa8958055a281edc55bf98390"},
-
-  // 德性評語
-  {cat:"comment", icon:"📝", name:"AI 輔助德性評語教學", desc:"AI 輔助德性評語寫作研習網頁，提供評語資料庫與生成系統。", url:"https://froglssh.github.io/ai-homeroom-comment-workshop/"},
-  {cat:"comment", icon:"✍️", name:"德性評語優化", desc:"AI 協助潤飾學期德性評語的措辭。", url:"https://app.notion.com/p/12daf21fa89580d2aaece85e719ee326"},
-
-  // 生涯與升學
-  {cat:"career", icon:"🧭", name:"自主學習規劃", desc:"引導學生規劃自主學習計畫與進度。", url:"https://app.notion.com/p/12eaf21fa8958020bf1cf187ada62cfd"},
-  {cat:"career", icon:"🎓", name:"智慧升學輔導", desc:"協助探索校系，提供升學方向建議。", url:"https://app.notion.com/p/384af21fa895803b9943e617e63cac43"},
-  {cat:"career", icon:"🗂️", name:"學習歷程檔案", desc:"協助整理與反思學習歷程成果。", url:"https://app.notion.com/p/384af21fa89580a5958ceaeab54f4edc"},
-
-  // 課堂與活動
-  {cat:"event", icon:"⏱️", name:"演講計時倒數", desc:"報告與演講倒數計時器，附時間提醒。", url:"https://app.notion.com/p/12eaf21fa89580cd9a2ee018e20ae86c"},
-  {cat:"event", icon:"🎪", name:"校慶攤位規劃", desc:"園遊會攤位、人力與收支一起規劃。", url:"https://app.notion.com/p/12eaf21fa89580b8aef0f92a385be804"},
-  {cat:"event", icon:"🌐", name:"多功能翻譯機", desc:"多國語言即時翻譯小工具。", url:"https://app.notion.com/p/12eaf21fa89580d9933ffa5f07c43e06"},
-
-  // 生活與國際
-  {cat:"life", icon:"💱", name:"貨幣轉換紀錄", desc:"出國旅遊匯率換算與消費紀錄。", url:"https://app.notion.com/p/12eaf21fa895806e89b1f5c25b2a1f04"},
-  {cat:"life", icon:"🧳", name:"旅遊行李整理", desc:"旅遊行李清單規劃與打包檢查。", url:"https://app.notion.com/p/383af21fa895800f8312f20dbb59f44b"},
+const tools = [
+  {
+    id: "cadres",
+    no: "01",
+    name: "幹部設定",
+    title: "班級幹部與小老師選取獎勵程式",
+    color: "#2563eb",
+    soft: "#edf4ff",
+    folder: "示範檔案/01幹部設定",
+    program: "示範檔案/01幹部設定/班級幹部小老師選取獎勵程式(codex優化版).html",
+    guide: "示範檔案/01幹部設定/班級幹部小老師選取獎勵程式(codex優化版)-使用說明.html",
+    summary: "協助導師快速安排班級幹部與各科小老師，能匯入學生名單、套用預設職務、手動或隨機分配，並將結果輸出為 Excel、PDF 或 Android APK 行動版使用。",
+    scenario: "適合新學期班級組織建立、幹部改選、小老師安排、服務學習紀錄整理，以及需要讓分工過程更透明、公平且可追蹤的班會時間。",
+    value: [
+      "降低導師手動比對名單與職務的時間成本。",
+      "讓學生理解班級公共任務分工，提升參與感。",
+      "保留幹部與小老師分配紀錄，方便期末獎勵或服務證明。"
+    ],
+    tags: [
+      "幹部改選",
+      "小老師",
+      "服務紀錄",
+      "班會",
+      "APK"
+    ],
+    flow: [
+      "匯入或貼上學生名單，確認座號與姓名。",
+      "選擇預設幹部、小老師職務，或新增符合班級需求的職務。",
+      "使用手動指定或隨機分配完成安排，必要時避免重複任職。",
+      "匯出 PDF 或 Excel，或下載 APK 安裝到 Android 裝置備用。"
+    ],
+    resources: [
+      [
+        "程式",
+        "班級幹部小老師選取獎勵程式(codex優化版).html",
+        "示範檔案/01幹部設定/班級幹部小老師選取獎勵程式(codex優化版).html"
+      ],
+      [
+        "說明",
+        "班級幹部小老師選取獎勵程式(codex優化版)-使用說明.html",
+        "示範檔案/01幹部設定/班級幹部小老師選取獎勵程式(codex優化版)-使用說明.html"
+      ],
+      [
+        "APK",
+        "幹部小老師app-release.apk",
+        "示範檔案/01幹部設定/幹部小老師app-release.apk"
+      ],
+      [
+        "PDF",
+        "臺北市立麗山高級中學班級幹部職務執掌表.pdf",
+        "示範檔案/01幹部設定/臺北市立麗山高級中學班級幹部職務執掌表.pdf"
+      ],
+      [
+        "PDF",
+        "幹部與小老師表單.pdf",
+        "示範檔案/01幹部設定/幹部與小老師表單.pdf"
+      ],
+      [
+        "Word",
+        "幹部與小老師表單.docx",
+        "示範檔案/01幹部設定/幹部與小老師表單.docx"
+      ]
+    ]
+  },
+  {
+    id: "seats",
+    no: "02",
+    name: "座位安排",
+    title: "座位選取抽籤程式",
+    color: "#168a68",
+    soft: "#e8f6f1",
+    folder: "示範檔案/02座位安排",
+    program: "示範檔案/02座位安排/座位選取抽籤程式(codex優化版).html",
+    guide: "示範檔案/02座位安排/座位選取抽籤程式(codsex優化版)-使用說明.html",
+    summary: "協助教師匯入學生名單、設定教室座位格局、加入幹部或特殊備註，產生可調整、可列印、可備份的座位安排，並提供 Android APK 安裝檔。",
+    scenario: "適合開學第一次排座位、段考後換座位、視力或學習需求調整、幹部位置安排，以及需要讓座位分配更公平、更少爭議的班級經營情境。",
+    value: [
+      "讓座位抽籤兼具公平性與教師專業判斷。",
+      "快速產生教師視角與學生張貼版座位表。",
+      "透過 JSON 備份保存方案，方便下次調整或跨電腦使用。"
+    ],
+    tags: [
+      "座位表",
+      "抽籤",
+      "教室配置",
+      "公平分配",
+      "APK"
+    ],
+    flow: [
+      "匯入 Excel、CSV 或直接輸入學生名單。",
+      "設定列數、欄數、空位與特殊座位限制。",
+      "依需求產生座位，並手動微調特殊個案。",
+      "下載、列印或備份座位方案；Android 裝置可下載 APK 安裝使用。"
+    ],
+    resources: [
+      [
+        "程式",
+        "座位選取抽籤程式(codex優化版).html",
+        "示範檔案/02座位安排/座位選取抽籤程式(codex優化版).html"
+      ],
+      [
+        "說明",
+        "座位選取抽籤程式(codsex優化版)-使用說明.html",
+        "示範檔案/02座位安排/座位選取抽籤程式(codsex優化版)-使用說明.html"
+      ],
+      [
+        "APK",
+        "座位安排app-release.apk",
+        "示範檔案/02座位安排/座位安排app-release.apk"
+      ],
+      [
+        "Word",
+        "空白之教室座位圖.docx",
+        "示範檔案/02座位安排/空白之教室座位圖.docx"
+      ],
+      [
+        "PDF",
+        "空白之教室座位圖.pdf",
+        "示範檔案/02座位安排/空白之教室座位圖.pdf"
+      ]
+    ]
+  },
+  {
+    id: "cleaning",
+    no: "03",
+    name: "打掃工作",
+    title: "學生打掃抽籤系統",
+    color: "#0f7585",
+    soft: "#e6f4f6",
+    folder: "示範檔案/03打掃工作",
+    program: "示範檔案/03打掃工作/學生打掃抽籤系統（codex優化版）.html",
+    guide: "示範檔案/03打掃工作/學生打掃抽籤系統使用說明.html",
+    summary: "將內掃、外掃與特殊打掃任務轉成可抽籤、可調整、可保存的工作分配表，支援學生名單匯入、歷史紀錄、輸出與 Android APK 行動安裝。",
+    scenario: "適合開學分配整學期掃區、班級大掃除、外掃責任區調整、衛生股長協作，以及處理打掃工作公平性與輪替紀錄的導師任務。",
+    value: [
+      "把容易引發爭議的掃區分配轉為可公開檢視的流程。",
+      "讓衛生股長與導師共同管理，減少口頭傳達錯誤。",
+      "保存歷史分配，避免同一學生長期負擔高強度工作。"
+    ],
+    tags: [
+      "掃區",
+      "輪值",
+      "衛生股長",
+      "公平抽籤",
+      "APK"
+    ],
+    flow: [
+      "建立班級資訊與學生名單。",
+      "設定內掃、外掃與工作所需人數。",
+      "抽籤產生分配表，依學生狀況微調。",
+      "下載或列印結果，定期保存 JSON 備份，並可提供 APK 給 Android 裝置安裝。"
+    ],
+    resources: [
+      [
+        "程式",
+        "學生打掃抽籤系統（codex優化版）.html",
+        "示範檔案/03打掃工作/學生打掃抽籤系統（codex優化版）.html"
+      ],
+      [
+        "說明",
+        "學生打掃抽籤系統使用說明.html",
+        "示範檔案/03打掃工作/學生打掃抽籤系統使用說明.html"
+      ],
+      [
+        "APK",
+        "打掃工作app-release.apk",
+        "示範檔案/03打掃工作/打掃工作app-release.apk"
+      ],
+      [
+        "PDF",
+        "打掃工作.pdf",
+        "示範檔案/03打掃工作/打掃工作.pdf"
+      ],
+      [
+        "Word",
+        "打掃工作.docx",
+        "示範檔案/03打掃工作/打掃工作.docx"
+      ]
+    ]
+  },
+  {
+    id: "groups",
+    no: "04",
+    name: "抽籤分組",
+    title: "學生選取、分組與紀錄程式",
+    color: "#6d5bd0",
+    soft: "#f0edff",
+    folder: "示範檔案/04抽籤分組",
+    program: "示範檔案/04抽籤分組/學生選取與紀錄程式(codex優化版).html",
+    guide: "示範檔案/04抽籤分組/學生選取與紀錄程式(codex優化版)使用說明.html",
+    summary: "整合隨機點名、課堂選取、分組安排、加減分紀錄與統計輸出，適合把課堂互動與班級活動管理數位化，並提供 Android APK。",
+    scenario: "適合上課提問、分組討論、實驗小組、報告順序抽籤、班會活動分組，以及希望避免固定學生被點名或固定同組的教學現場。",
+    value: [
+      "提升課堂參與公平性，減少教師主觀點名負擔。",
+      "分組與表現紀錄可回收為形成性評量資料。",
+      "將抽籤、紀錄、輸出整合在同一工具，降低操作切換。"
+    ],
+    tags: [
+      "隨機點名",
+      "分組",
+      "課堂紀錄",
+      "形成性評量",
+      "APK"
+    ],
+    flow: [
+      "匯入班級名單或使用示範班級確認操作。",
+      "在上課選取模式進行隨機點名並記錄表現。",
+      "切換到分組安排，依每組人數或組數建立小組。",
+      "課後輸出選取紀錄、加減分統計或分組名單；需要行動裝置時下載 APK。"
+    ],
+    resources: [
+      [
+        "程式",
+        "學生選取與紀錄程式(codex優化版).html",
+        "示範檔案/04抽籤分組/學生選取與紀錄程式(codex優化版).html"
+      ],
+      [
+        "說明",
+        "學生選取與紀錄程式(codex優化版)使用說明.html",
+        "示範檔案/04抽籤分組/學生選取與紀錄程式(codex優化版)使用說明.html"
+      ],
+      [
+        "APK",
+        "抽籤分組app-release.apk",
+        "示範檔案/04抽籤分組/抽籤分組app-release.apk"
+      ]
+    ]
+  },
+  {
+    id: "money",
+    no: "05",
+    name: "班費收支",
+    title: "班費收支記帳程式",
+    color: "#b76e00",
+    soft: "#fff4df",
+    folder: "示範檔案/05班費收支",
+    program: "示範檔案/05班費收支/班費收支記帳程式(codex優化版).html",
+    guide: "示範檔案/05班費收支/班費收支記帳程式_教師使用說明.html",
+    summary: "協助導師或班級幹部登錄學生繳費、班費收入、支出與結餘，支援本機儲存、JSON 備份、PDF 輸出、交接紀錄與 Android APK。",
+    scenario: "適合班費收取、活動費用支出、期末結算、幹部交接、家長或學生查核，以及需要讓班級財務透明、可追蹤的管理情境。",
+    value: [
+      "降低紙本記帳遺失與計算錯誤風險。",
+      "讓收入、支出、憑證與結餘能被清楚追溯。",
+      "協助總務股長培養負責任的財務管理流程。"
+    ],
+    tags: [
+      "班費",
+      "記帳",
+      "核銷",
+      "幹部交接",
+      "APK"
+    ],
+    flow: [
+      "匯入學生名單，建立班費繳交對象。",
+      "登錄每位學生繳費日期與金額。",
+      "新增班費收入與支出，必要時附上說明或憑證。",
+      "定期匯出 JSON 備份，期末輸出 PDF 進行交接；Android 版可用 APK 安裝。"
+    ],
+    resources: [
+      [
+        "程式",
+        "班費收支記帳程式(codex優化版).html",
+        "示範檔案/05班費收支/班費收支記帳程式(codex優化版).html"
+      ],
+      [
+        "說明",
+        "班費收支記帳程式_教師使用說明.html",
+        "示範檔案/05班費收支/班費收支記帳程式_教師使用說明.html"
+      ],
+      [
+        "APK",
+        "班費收支app-release.apk",
+        "示範檔案/05班費收支/班費收支app-release.apk"
+      ],
+      [
+        "PDF",
+        "班費申請核銷.pdf",
+        "示範檔案/05班費收支/班費申請核銷.pdf"
+      ],
+      [
+        "PDF",
+        "班費收支登錄.pdf",
+        "示範檔案/05班費收支/班費收支登錄.pdf"
+      ],
+      [
+        "Word",
+        "班費收支登錄.doc",
+        "示範檔案/05班費收支/班費收支登錄.doc"
+      ],
+      [
+        "Word",
+        "班費申請核銷.doc",
+        "示範檔案/05班費收支/班費申請核銷.doc"
+      ]
+    ]
+  },
+  {
+    id: "festival",
+    no: "06",
+    name: "校慶攤位",
+    title: "校慶園遊會攤位規劃程式",
+    color: "#c2415b",
+    soft: "#fff0f3",
+    folder: "示範檔案/06校慶攤位",
+    program: "示範檔案/06校慶攤位/校慶園遊會攤位規劃程式（codex優化版).html",
+    guide: "示範檔案/06校慶攤位/校慶園遊會攤位規劃程式（codex優化版）使用說明.html",
+    summary: "協助班級規劃園遊會攤位主題、販售品項、食材與設備、工作分配、輪值排班與輸出報表，並提供 AI 搜尋、ChatGPT 提示詞與 Android APK。",
+    scenario: "適合校慶園遊會、班級義賣、成果展攤位、社團活動攤位，以及需要把活動企劃、採買、人力與輪班整合管理的大型任務。",
+    value: [
+      "把大型班級活動拆成明確職務，讓學生學會專案管理。",
+      "即時檢查品項、工作與人力分配，減少活動當天混亂。",
+      "結合 AI 搜尋與提示詞，協助學生做成本、宣傳與流程規劃。"
+    ],
+    tags: [
+      "園遊會",
+      "專案管理",
+      "輪值排班",
+      "活動企劃",
+      "APK"
+    ],
+    flow: [
+      "設定攤位主題、販售食物與預估準備方向。",
+      "建立採買、準備、宣傳、佈置、後勤等工作項目。",
+      "匯入人員名單並進行工作指派。",
+      "設定販售時段與每班人數，產生輪值排班並輸出備份；Android 裝置可下載 APK。"
+    ],
+    resources: [
+      [
+        "程式",
+        "校慶園遊會攤位規劃程式（codex優化版).html",
+        "示範檔案/06校慶攤位/校慶園遊會攤位規劃程式（codex優化版).html"
+      ],
+      [
+        "說明",
+        "校慶園遊會攤位規劃程式（codex優化版）使用說明.html",
+        "示範檔案/06校慶攤位/校慶園遊會攤位規劃程式（codex優化版）使用說明.html"
+      ],
+      [
+        "APK",
+        "校慶攤位app-release.apk",
+        "示範檔案/06校慶攤位/校慶攤位app-release.apk"
+      ]
+    ]
+  },
+  {
+    id: "grades",
+    no: "07",
+    name: "成績計算",
+    title: "多班級成績管理系統",
+    color: "#7c3aed",
+    soft: "#f2edff",
+    folder: "示範檔案/07成績計算",
+    program: "示範檔案/07成績計算/多班級成績管理系統（claude優化版）.html",
+    guide: "示範檔案/07成績計算/多班級成績管理系統（claude優化版）使用說明.html",
+    summary: "協助教師管理多班級成績、匯入 Excel、設定配分、處理個別學生配分、統計分析、列印與備份，資料主要保存在本機瀏覽器，並提供 APK。",
+    scenario: "適合多班授課教師整理平時成績、段考成績、補考與特殊生個別配分，也適合研習時示範如何把成績資料轉為教學決策依據。",
+    value: [
+      "一站式管理多班級成績，減少跨檔案複製與公式錯誤。",
+      "支援個別學生配分，讓長期公假、缺考或轉學生處理更合理。",
+      "統計分析可協助教師掌握班級表現分布與後續補救教學方向。"
+    ],
+    tags: [
+      "成績管理",
+      "Excel 匯入",
+      "配分",
+      "統計分析",
+      "APK"
+    ],
+    flow: [
+      "匯入 Excel 成績或使用內建示範資料練習。",
+      "建立班級名單，設定評量欄位與配分比例。",
+      "輸入或批次貼上成績，必要時調整個別學生配分。",
+      "查看統計分析，匯出、列印或備份成績資料；Android 裝置可下載 APK。"
+    ],
+    resources: [
+      [
+        "程式",
+        "多班級成績管理系統（claude優化版）.html",
+        "示範檔案/07成績計算/多班級成績管理系統（claude優化版）.html"
+      ],
+      [
+        "說明",
+        "多班級成績管理系統（claude優化版）使用說明.html",
+        "示範檔案/07成績計算/多班級成績管理系統（claude優化版）使用說明.html"
+      ],
+      [
+        "APK",
+        "成績計算app-release.apk",
+        "示範檔案/07成績計算/成績計算app-release.apk"
+      ],
+      [
+        "Excel",
+        "成績示範資料.xlsx",
+        "示範檔案/07成績計算/成績示範資料.xlsx"
+      ]
+    ]
+  },
+  {
+    id: "gradeAnalysis",
+    no: "08",
+    name: "成績分析",
+    title: "班級與個人成績 AI 分析工具",
+    color: "#8b5cf6",
+    soft: "#f4f0ff",
+    folder: "示範檔案/08成績分析",
+    program: "示範檔案/08成績分析/班級成績分析系統_Codex優化.html",
+    guide: "示範檔案/08成績分析/班級成績分析系統_Codex優化使用說明.html",
+    summary: "整合班級成績分析、個人成績分析、模擬成績檔、NotebookLM 示範成果與深度研究文件，協助教師從分數資料看見班級差異、個別學生需求與後續輔導方向。",
+    scenario: "適合段考後班級診斷、學生個別晤談、家長溝通、補救教學規劃、學習策略建議，以及研習中示範如何把成績檔轉成可理解的分析報告。",
+    value: [
+      "將原始成績轉為圖表與診斷語言，減少教師手動統計時間。",
+      "可比較班級、個人與多次考試變化，提升輔導精準度。",
+      "搭配分析報告與 LM 簡報，可直接轉化為研習案例或教學研究素材。"
+    ],
+    tags: [
+      "成績分析",
+      "個別輔導",
+      "NotebookLM",
+      "圖表診斷",
+      "APK"
+    ],
+    flow: [
+      "先用模擬成績檔熟悉班級分析與個人分析兩套流程。",
+      "匯入實際成績資料，檢查欄位與班級資訊是否正確。",
+      "產生班級整體、個別學生或跨次考試分析。",
+      "搭配分析結果 PDF、圖片或 APK，作為補救教學、晤談與研習示範材料。"
+    ],
+    resources: [
+      [
+        "程式",
+        "班級成績分析系統_Codex優化.html",
+        "示範檔案/08成績分析/班級成績分析系統_Codex優化.html"
+      ],
+      [
+        "說明",
+        "班級成績分析系統_Codex優化使用說明.html",
+        "示範檔案/08成績分析/班級成績分析系統_Codex優化使用說明.html"
+      ],
+      [
+        "程式",
+        "學生個人成績分析_codex優化版.html",
+        "示範檔案/08成績分析/學生個人成績分析_codex優化版.html"
+      ],
+      [
+        "說明",
+        "學生個人成績分析_codex使用說明.html",
+        "示範檔案/08成績分析/學生個人成績分析_codex使用說明.html"
+      ],
+      [
+        "APK",
+        "班級成績app-release.apk",
+        "示範檔案/08成績分析/班級成績app-release.apk"
+      ],
+      [
+        "APK",
+        "個人成績app-release.apk",
+        "示範檔案/08成績分析/個人成績app-release.apk"
+      ],
+      [
+        "Excel",
+        "模擬成績1.xlsx",
+        "示範檔案/08成績分析/成績檔案/模擬成績1.xlsx"
+      ],
+      [
+        "Excel",
+        "模擬成績2.xlsx",
+        "示範檔案/08成績分析/成績檔案/模擬成績2.xlsx"
+      ],
+      [
+        "PDF",
+        "模擬成績1.pdf",
+        "示範檔案/08成績分析/成績檔案/模擬成績1.pdf"
+      ],
+      [
+        "PDF",
+        "模擬成績2.pdf",
+        "示範檔案/08成績分析/成績檔案/模擬成績2.pdf"
+      ],
+      [
+        "圖片",
+        "1號成績分析.png",
+        "示範檔案/08成績分析/分析結果/1號成績分析.png"
+      ],
+      [
+        "圖片",
+        "10號成績分析.png",
+        "示範檔案/08成績分析/分析結果/10號成績分析.png"
+      ],
+      [
+        "PDF",
+        "一位學生成績分析_LM簡報.pdf",
+        "示範檔案/08成績分析/分析結果/一位學生成績分析_LM簡報.pdf"
+      ],
+      [
+        "PDF",
+        "兩次考試成績分析_LM簡報.pdf",
+        "示範檔案/08成績分析/分析結果/兩次考試成績分析_LM簡報.pdf"
+      ],
+      [
+        "PDF",
+        "全部成績 班級完整分析報告.pdf",
+        "示範檔案/08成績分析/分析結果/全部成績 班級完整分析報告.pdf"
+      ],
+      [
+        "PDF",
+        "考試成績分析示範 - NotebookLM.pdf",
+        "示範檔案/08成績分析/分析結果/考試成績分析示範 - NotebookLM.pdf"
+      ],
+      [
+        "PDF",
+        "班級與個別成績分析App設計.pdf",
+        "示範檔案/08成績分析/深度研究/班級與個別成績分析App設計.pdf"
+      ],
+      [
+        "Word",
+        "班級與個別成績分析App設計.docx",
+        "示範檔案/08成績分析/深度研究/班級與個別成績分析App設計.docx"
+      ],
+      [
+        "Markdown",
+        "班級與個體多維學術評量統計診斷-App-之計量方法學設計藍圖.md",
+        "示範檔案/08成績分析/深度研究/班級與個體多維學術評量統計診斷-App-之計量方法學設計藍圖.md"
+      ]
+    ]
+  },
+  {
+    id: "comments",
+    no: "09",
+    name: "德行評語",
+    title: "導師評語生成系統",
+    color: "#db2777",
+    soft: "#fff0f7",
+    folder: "示範檔案/09德行評語",
+    program: "示範檔案/09德行評語/導師評語生成系統（codex優化版）.html",
+    guide: "示範檔案/09德行評語/導師評語生成系統（codex優化版）使用說明.html",
+    summary: "整合導師評語生成程式、學生自評表、導師資料範本、評語資料庫與 GPTs 系統提示詞，協助導師產生更具體、正向且符合學生特質的德行評語。",
+    scenario: "適合學期末大量撰寫德行評語、導師評語風格一致化、學生自評資料匯入、評語資料庫研習，以及協助新手導師掌握高中評語語氣。",
+    value: [
+      "減少期末大量重複撰寫評語的負擔。",
+      "以學生自評與導師觀察為素材，提升評語個別化程度。",
+      "透過資料庫與提示詞，讓評語保持正向、具體且避免空泛。"
+    ],
+    tags: [
+      "德性評語",
+      "學生自評",
+      "GPTs",
+      "資料庫",
+      "APK"
+    ],
+    flow: [
+      "先閱讀評語資料庫與提示詞文件，理解評語風格。",
+      "使用自評表或導師學生資料範本整理學生素材。",
+      "開啟評語生成系統，匯入資料並產生草稿。",
+      "導師進行最後審稿、修飾與校務系統輸入；Android 裝置可下載 APK。"
+    ],
+    resources: [
+      [
+        "程式",
+        "導師評語生成系統（codex優化版）.html",
+        "示範檔案/09德行評語/導師評語生成系統（codex優化版）.html"
+      ],
+      [
+        "說明",
+        "導師評語生成系統（codex優化版）使用說明.html",
+        "示範檔案/09德行評語/導師評語生成系統（codex優化版）使用說明.html"
+      ],
+      [
+        "APK",
+        "德性評語app-release.apk",
+        "示範檔案/09德行評語/德性評語app-release.apk"
+      ],
+      [
+        "Excel",
+        "學生德性自評匯入範例表.xlsx",
+        "示範檔案/09德行評語/學生德性自評匯入範例表.xlsx"
+      ],
+      [
+        "Word",
+        "導師學生資料範本.docx",
+        "示範檔案/09德行評語/導師學生資料範本.docx"
+      ],
+      [
+        "Word",
+        "學生德行自評表(空白)高一.docx",
+        "示範檔案/09德行評語/學生德行自評表(空白)高一.docx"
+      ],
+      [
+        "Word",
+        "學生德行自評表(空白)高二高三.docx",
+        "示範檔案/09德行評語/學生德行自評表(空白)高二高三.docx"
+      ],
+      [
+        "Word",
+        "高中導師德性評語優化 GPTs 系統設定提示詞.docx",
+        "示範檔案/09德行評語/高中導師德性評語優化 GPTs 系統設定提示詞.docx"
+      ],
+      [
+        "PDF",
+        "高中導師德性評語優化 GPTs 系統設定提示詞.pdf",
+        "示範檔案/09德行評語/高中導師德性評語優化 GPTs 系統設定提示詞.pdf"
+      ],
+      [
+        "Word",
+        "高中生日常生活與特殊表現評語書寫輔助系統練習資料.docx",
+        "示範檔案/09德行評語/高中生日常生活與特殊表現評語書寫輔助系統練習資料.docx"
+      ],
+      [
+        "PDF",
+        "導師評語參考文本.pdf",
+        "示範檔案/09德行評語/0德行評語資料庫/導師評語參考文本.pdf"
+      ],
+      [
+        "PDF",
+        "德性評語總整理(超完整).pdf",
+        "示範檔案/09德行評語/0德行評語資料庫/德性評語總整理(超完整).pdf"
+      ],
+      [
+        "PDF",
+        "網路德性評語總集合.pdf",
+        "示範檔案/09德行評語/0德行評語資料庫/網路德性評語總集合.pdf"
+      ],
+      [
+        "PDF",
+        "麗山高中導師評語對照表.pdf",
+        "示範檔案/09德行評語/0德行評語資料庫/麗山高中導師評語對照表.pdf"
+      ]
+    ]
+  },
+  {
+    id: "selfLearning",
+    no: "10",
+    name: "自主學習",
+    title: "AI 輔助自主學習規劃工具",
+    color: "#059669",
+    soft: "#e8f8f1",
+    folder: "示範檔案/10自主學習",
+    program: "示範檔案/10自主學習/AI輔助自主學習（claude優化）.html",
+    guide: "示範檔案/10自主學習/AI輔助自主學習（claude優化）使用說明.html",
+    summary: "協助學生從主題發想、目標設定、週次規劃、成果整理到反思撰寫，讓自主學習不只停留在表格填寫，而能轉化為可追蹤的學習計畫。",
+    scenario: "適合高一高二自主學習課程、導師或課諮師輔導學生設定主題、學習歷程素材整理，以及研習中示範 AI 如何協助學生聚焦問題。",
+    value: [
+      "把模糊興趣轉成可執行的學習問題與步驟。",
+      "協助學生定期檢核進度，減少期末才補資料。",
+      "讓導師能快速看出學生卡關點並給予具體建議。"
+    ],
+    tags: [
+      "自主學習",
+      "學習計畫",
+      "歷程反思",
+      "APK"
+    ],
+    flow: [
+      "輸入學生興趣、想研究的方向或課程主題。",
+      "讓工具協助整理學習目標、時程與可交付成果。",
+      "依週次更新進度與遇到的問題。",
+      "期末整理成果、反思與學習歷程素材；Android 裝置可下載 APK。"
+    ],
+    resources: [
+      [
+        "程式",
+        "AI輔助自主學習（claude優化）.html",
+        "示範檔案/10自主學習/AI輔助自主學習（claude優化）.html"
+      ],
+      [
+        "說明",
+        "AI輔助自主學習（claude優化）使用說明.html",
+        "示範檔案/10自主學習/AI輔助自主學習（claude優化）使用說明.html"
+      ],
+      [
+        "APK",
+        "自主學習app-release.apk",
+        "示範檔案/10自主學習/自主學習app-release.apk"
+      ]
+    ]
+  },
+  {
+    id: "admission",
+    no: "11A",
+    name: "升學輔導",
+    title: "AI 智慧輔助升學系統",
+    color: "#0f766e",
+    soft: "#e7f7f4",
+    folder: "示範檔案/11升學輔導",
+    program: "示範檔案/11升學輔導/AI智慧輔助升學系統(codex優化).html",
+    guide: "示範檔案/11升學輔導/AI智慧輔助升學系統(codex優化)使用說明.html",
+    summary: "協助學生與導師整理升學條件、興趣方向、校系探索與備審策略，將升學輔導從零散諮詢轉化為有結構的決策流程。",
+    scenario: "適合個別升學諮詢、班級升學講座、學生校系探索、備審方向討論，以及導師需要快速建立學生升學輪廓的情境。",
+    value: [
+      "把學生分數、興趣與校系需求放在同一脈絡中判讀。",
+      "協助導師快速準備個別諮詢材料。",
+      "讓學生從被動詢問轉為主動比較校系與準備策略。"
+    ],
+    tags: [
+      "升學輔導",
+      "校系探索",
+      "個別諮詢",
+      "APK"
+    ],
+    flow: [
+      "輸入學生興趣、學群方向或成績條件。",
+      "使用工具整理可探索校系與準備重點。",
+      "與學生討論選擇理由、風險與備審素材。",
+      "保留諮詢紀錄作為後續追蹤，Android 裝置可下載 APK。"
+    ],
+    resources: [
+      [
+        "程式",
+        "AI智慧輔助升學系統(codex優化).html",
+        "示範檔案/11升學輔導/AI智慧輔助升學系統(codex優化).html"
+      ],
+      [
+        "說明",
+        "AI智慧輔助升學系統(codex優化)使用說明.html",
+        "示範檔案/11升學輔導/AI智慧輔助升學系統(codex優化)使用說明.html"
+      ],
+      [
+        "APK",
+        "升學輔導app-release.apk",
+        "示範檔案/11升學輔導/升學輔導app-release.apk"
+      ]
+    ]
+  },
+  {
+    id: "portfolio",
+    no: "11B",
+    name: "學習歷程",
+    title: "學習歷程檔案輔助程式",
+    color: "#4f46e5",
+    soft: "#eef2ff",
+    folder: "示範檔案/11學習歷程",
+    program: "示範檔案/11學習歷程/學習歷程檔案輔助程式(claude優化).html",
+    guide: "",
+    summary: "協助學生整理課程學習成果、多元表現、反思文字與上傳前檢核，讓學習歷程從檔案堆疊轉為有主題、有證據、有反思的作品集。",
+    scenario: "適合學習歷程檔案撰寫課、課諮與導師個別指導、學生整理作品說明，以及期末上傳前的品質檢核。",
+    value: [
+      "協助學生從活動紀錄中找出可呈現的學習證據。",
+      "降低教師逐份提醒格式與反思缺漏的負擔。",
+      "讓學習歷程更能連結學生興趣、能力與升學方向。"
+    ],
+    tags: [
+      "學習歷程",
+      "作品集",
+      "反思",
+      "APK"
+    ],
+    flow: [
+      "學生輸入作品、活動或課程成果內容。",
+      "工具協助整理作品亮點、學習證據與反思方向。",
+      "導師或任課教師檢查是否具體、有脈絡、有學生觀點。",
+      "上傳前再次檢核格式與文字品質；Android 裝置可下載 APK。"
+    ],
+    resources: [
+      [
+        "程式",
+        "學習歷程檔案輔助程式(claude優化).html",
+        "示範檔案/11學習歷程/學習歷程檔案輔助程式(claude優化).html"
+      ],
+      [
+        "APK",
+        "學習歷程app-release.apk",
+        "示範檔案/11學習歷程/學習歷程app-release.apk"
+      ]
+    ]
+  },
+  {
+    id: "travelPacking",
+    no: "12A",
+    name: "旅遊行李",
+    title: "出國行李打包清單工具",
+    color: "#0284c7",
+    soft: "#e8f5ff",
+    folder: "示範檔案/12旅遊行李",
+    program: "示範檔案/12旅遊行李/出國行李打包清單（claude優化）.html",
+    guide: "",
+    summary: "依旅行天數、地點、季節與活動需求建立出國行李清單，協助師生在教育旅行、國際交流或個人旅行前完成物品檢核。",
+    scenario: "適合國際教育旅行、交換參訪、校外教學、學生出國前提醒，以及導師協助學生檢查證件、衣物、藥品與學習用品。",
+    value: [
+      "把出國準備拆成可檢核項目，降低遺漏重要物品的風險。",
+      "適合班級共同提醒，也能讓學生個別調整。",
+      "可作為國際交流行前教育的一部分，建立學生自我管理能力。"
+    ],
+    tags: [
+      "教育旅行",
+      "行李清單",
+      "國際交流",
+      "APK"
+    ],
+    flow: [
+      "輸入旅行地點、天數、季節與活動類型。",
+      "依工具清單檢查證件、衣物、藥品、電子設備與學習用品。",
+      "刪修不需要的品項並補入個人特殊需求。",
+      "出發前與返程前各檢查一次，Android 裝置可下載 APK。"
+    ],
+    resources: [
+      [
+        "程式",
+        "出國行李打包清單（claude優化）.html",
+        "示範檔案/12旅遊行李/出國行李打包清單（claude優化）.html"
+      ],
+      [
+        "APK",
+        "旅遊行李app-release.apk",
+        "示範檔案/12旅遊行李/旅遊行李app-release.apk"
+      ]
+    ]
+  },
+  {
+    id: "translate",
+    no: "12B",
+    name: "語言翻譯",
+    title: "多功能翻譯工具",
+    color: "#0891b2",
+    soft: "#e7f8fb",
+    folder: "示範檔案/12語言翻譯",
+    program: "示範檔案/12語言翻譯/多功能翻譯工具(claude優化版).html",
+    guide: "",
+    summary: "提供多語翻譯與語意轉換支援，可協助教師準備雙語教學、國際交流、外賓接待與學生跨語言溝通任務。",
+    scenario: "適合雙語課程輔助、教育旅行溝通、國際筆友或姊妹校交流、外賓接待，以及學生練習把中文內容轉為外語表達。",
+    value: [
+      "降低教師準備多語材料的門檻。",
+      "協助學生在真實交流情境中快速理解與表達。",
+      "可作為雙語教學與國際教育活動的即時支援工具。"
+    ],
+    tags: [
+      "翻譯",
+      "雙語教學",
+      "國際交流",
+      "APK"
+    ],
+    flow: [
+      "輸入要翻譯或改寫的文字。",
+      "選擇目標語言與需要的語氣。",
+      "檢查專有名詞、人名、校名與文化脈絡。",
+      "將結果用於課堂、行前手冊、交流訊息或活動簡報；Android 裝置可下載 APK。"
+    ],
+    resources: [
+      [
+        "程式",
+        "多功能翻譯工具(claude優化版).html",
+        "示範檔案/12語言翻譯/多功能翻譯工具(claude優化版).html"
+      ],
+      [
+        "APK",
+        "語言翻譯app-release.apk",
+        "示範檔案/12語言翻譯/語言翻譯app-release.apk"
+      ]
+    ]
+  },
+  {
+    id: "timer",
+    no: "13",
+    name: "演講計時",
+    title: "演講報告計時器",
+    color: "#ea580c",
+    soft: "#fff3e8",
+    folder: "示範檔案/13演講計時",
+    program: "示範檔案/13演講計時/演講報告計時器(claude優化).html",
+    guide: "",
+    summary: "提供報告、演講、討論與發表活動的倒數計時功能，協助教師維持課堂節奏，也讓學生練習在限制時間內完整表達。",
+    scenario: "適合課堂口頭報告、科展簡報練習、分組成果發表、班會提案、研習講者控制時間，以及需要公平分配發言時間的活動。",
+    value: [
+      "讓每組報告時間一致，維持課堂節奏。",
+      "透過視覺化倒數提醒學生收束重點。",
+      "可用於正式發表前的演練，提高學生時間感與表達效率。"
+    ],
+    tags: [
+      "計時",
+      "口頭報告",
+      "成果發表",
+      "APK"
+    ],
+    flow: [
+      "設定每位或每組報告時間。",
+      "開始倒數並投影給學生觀看。",
+      "提醒學生在剩餘時間內完成重點與結論。",
+      "課後可調整時間規則用於下一輪報告；Android 裝置可下載 APK。"
+    ],
+    resources: [
+      [
+        "程式",
+        "演講報告計時器(claude優化).html",
+        "示範檔案/13演講計時/演講報告計時器(claude優化).html"
+      ],
+      [
+        "APK",
+        "演講計時app-release.apk",
+        "示範檔案/13演講計時/演講計時app-release.apk"
+      ]
+    ]
+  },
+  {
+    id: "currency",
+    no: "14",
+    name: "貨幣轉換",
+    title: "貨幣轉換與旅遊記帳工具",
+    color: "#64748b",
+    soft: "#f1f5f9",
+    folder: "示範檔案/14貨幣轉換",
+    program: "示範檔案/14貨幣轉換/貨幣轉換與旅遊記帳（claude優化v2）.html",
+    guide: "",
+    summary: "協助教育旅行或個人旅遊進行匯率換算、消費紀錄與預算控管，讓學生在國際交流活動中練習金錢管理與資料紀錄。",
+    scenario: "適合國際教育旅行、出國參訪、學生自主旅行規劃、外幣消費記帳，以及將生活情境轉化為財務素養教學。",
+    value: [
+      "讓匯率換算與消費紀錄變得即時且清楚。",
+      "協助學生培養旅遊預算與金錢管理能力。",
+      "可作為國際教育與生活數學、財務素養的跨域素材。"
+    ],
+    tags: [
+      "貨幣轉換",
+      "旅遊記帳",
+      "財務素養",
+      "APK"
+    ],
+    flow: [
+      "設定旅行地點與使用貨幣。",
+      "輸入匯率或依工具設定進行換算。",
+      "旅途中紀錄每筆消費、分類與金額。",
+      "活動後整理總支出與消費結構，Android 裝置可下載 APK。"
+    ],
+    resources: [
+      [
+        "程式",
+        "貨幣轉換與旅遊記帳（claude優化v2）.html",
+        "示範檔案/14貨幣轉換/貨幣轉換與旅遊記帳（claude優化v2）.html"
+      ],
+      [
+        "APK",
+        "貨幣講換app-release.apk",
+        "示範檔案/14貨幣轉換/貨幣講換app-release.apk"
+      ]
+    ]
+  }
 ];
 
-/* ===== 狀態 ===== */
-let activeCat = "all";
-let query = "";
+const tabList = document.getElementById("tabList");
+const programs = document.getElementById("programs");
+const allResourceList = document.getElementById("allResourceList");
+const searchBox = document.getElementById("resourceSearch");
 
-const sectionsEl = document.getElementById("sections");
-const chipsEl = document.getElementById("chips");
-const emptyEl = document.getElementById("emptyState");
-const arrowSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>';
-
-document.getElementById("totalCount").textContent = TOOLS.length;
-
-/* ===== 建立篩選標籤 ===== */
-function buildChips(){
-  const all = document.createElement("button");
-  all.className="chip"; all.dataset.cat="all"; all.setAttribute("aria-pressed","true");
-  all.innerHTML = `<span class="cdot" style="background:var(--ink)"></span>全部`;
-  chipsEl.appendChild(all);
-  Object.entries(CATS).forEach(([key,c])=>{
-    const b=document.createElement("button");
-    b.className="chip"; b.dataset.cat=key; b.setAttribute("aria-pressed","false");
-    b.style.setProperty("--cc", c.color);
-    b.innerHTML = `<span class="cdot"></span>${c.name}`;
-    chipsEl.appendChild(b);
-  });
-  chipsEl.addEventListener("click", e=>{
-    const btn = e.target.closest(".chip"); if(!btn) return;
-    activeCat = btn.dataset.cat;
-    [...chipsEl.children].forEach(c=>c.setAttribute("aria-pressed", c===btn ? "true":"false"));
-    render();
-  });
+function htmlEscape(text){
+  return String(text).replace(/[&<>"']/g, ch => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+  }[ch]));
 }
 
-/* ===== 渲染 ===== */
-function render(){
-  sectionsEl.innerHTML="";
-  const q = query.trim().toLowerCase();
-  let shown = 0, delay = 0;
+function resourceLink(res, tool){
+  const [type, name, href] = res;
+  return `
+    <a class="resource" href="${href}" target="_blank" rel="noopener" data-search="${htmlEscape((tool.name + " " + tool.title + " " + type + " " + name).toLowerCase())}">
+      <span class="rtype">${htmlEscape(type)}</span>
+      <span class="rname">${htmlEscape(name)}</span>
+      <span class="ropen">開啟</span>
+    </a>`;
+}
 
-  Object.entries(CATS).forEach(([key,c])=>{
-    if(activeCat!=="all" && activeCat!==key) return;
+function renderTabs(){
+  tabList.innerHTML = tools.map((tool, index) => `
+    <button class="tab" style="--tool:${tool.color}" role="tab" aria-selected="${index === 0 ? "true" : "false"}" aria-controls="panel-${tool.id}" id="tab-${tool.id}" data-id="${tool.id}">
+      <span class="tab-num">${tool.no}</span>
+      <span>
+        <span class="tab-name">${tool.name}</span>
+        <span class="tab-note">${tool.resources.length} 個資源</span>
+      </span>
+    </button>
+  `).join("");
+}
 
-    const items = TOOLS.filter(t => t.cat===key &&
-      (q==="" || (t.name+t.desc).toLowerCase().includes(q)));
-    if(items.length===0) return;
-
-    const sec = document.createElement("section");
-    sec.className="section";
-    sec.style.setProperty("--cc", c.color);
-    sec.style.setProperty("--cc-t", c.tint);
-    sec.innerHTML = `
-      <div class="sec-head">
-        <span class="bar"></span>
-        <h2>${c.name}</h2>
-        <span class="tag">${c.desc}</span>
-        <span class="line"></span>
+function renderPrograms(){
+  programs.innerHTML = tools.map((tool, index) => `
+    <article class="program ${index === 0 ? "active" : ""}" style="--tool:${tool.color};--tool-soft:${tool.soft}" role="tabpanel" id="panel-${tool.id}" aria-labelledby="tab-${tool.id}">
+      <div class="program-head">
+        <div class="kicker">${tool.no} ${tool.name}</div>
+        <h2>${tool.title}</h2>
+        <p class="program-desc">${tool.summary}</p>
+        <div class="tags">${tool.tags.map(tag => `<span class="tag">${tag}</span>`).join("")}</div>
+        <div class="quick-actions">
+          <a class="btn primary" href="${tool.program}" target="_blank" rel="noopener">開啟主程式</a>
+          ${tool.guide ? `<a class="btn" href="${tool.guide}" target="_blank" rel="noopener">查看使用說明</a>` : ""}
+          ${tool.resources.filter(res => res[0] === "APK").slice(0, 1).map(res => `<a class="btn" href="${res[2]}" target="_blank" rel="noopener">下載 Android APK</a>`).join("")}
+          <a class="btn" href="#resources">檔案資源索引</a>
+        </div>
       </div>
-      <div class="grid"></div>`;
-    const grid = sec.querySelector(".grid");
-
-    items.forEach(t=>{
-      shown++;
-      const a = document.createElement("a");
-      a.className="card";
-      a.href=t.url; a.target="_blank"; a.rel="noopener";
-      a.style.setProperty("--cc", c.color);
-      a.style.setProperty("--cc-t", c.tint);
-      a.style.animationDelay = (delay++ * 35) + "ms";
-      a.innerHTML = `
-        <span class="icon">${t.icon}</span>
-        <h3>${t.name}</h3>
-        <p>${t.desc}</p>
-        <span class="open">開啟工具 ${arrowSVG}</span>`;
-      grid.appendChild(a);
-    });
-    sectionsEl.appendChild(sec);
-  });
-
-  // 計數 + 空狀態
-  const cnt = document.getElementById("resultCount");
-  if(shown===0){
-    emptyEl.classList.add("show");
-    document.getElementById("emptyTerm").textContent = query.trim() ? `「${query.trim()}」` : "此類別";
-    cnt.innerHTML="";
-  }else{
-    emptyEl.classList.remove("show");
-    cnt.innerHTML = `顯示 <b>${shown}</b> 個工具`;
-  }
+      <div class="program-body">
+        <div class="two-col">
+          <div>
+            <section class="block">
+              <h3>AI 判讀的教學使用情境</h3>
+              <p>${tool.scenario}</p>
+            </section>
+            <section class="block">
+              <h3>建議研習操作流程</h3>
+              <div class="flow">
+                ${tool.flow.map((step, i) => `<div class="flow-step"><b>${i+1}</b><span>${step}</span></div>`).join("")}
+              </div>
+            </section>
+            <section class="block">
+              <h3>對教學與班級管理的作用</h3>
+              <div class="impact-grid">
+                ${tool.value.map((item, i) => `<div class="impact"><b>${["效率","公平","紀錄"][i] || "延伸"}</b><span>${item}</span></div>`).join("")}
+              </div>
+              <div class="notice">導入建議：第一次研習可先用範例資料操作，再讓老師帶自己的班級名單或實際任務進行演練。涉及學生個資時，請使用教師可控裝置並定期備份。</div>
+            </section>
+          </div>
+          <aside class="block">
+            <h3>此資料夾內的所有檔案資源</h3>
+            <p>${tool.folder}</p>
+            <div class="resource-list">
+              ${tool.resources.map(res => resourceLink(res, tool)).join("")}
+            </div>
+          </aside>
+        </div>
+      </div>
+    </article>
+  `).join("");
 }
 
-/* ===== 搜尋 ===== */
-const box = document.getElementById("searchBox");
-box.addEventListener("input", e=>{ query=e.target.value; render(); });
+function renderAllResources(){
+  const all = tools.flatMap(tool => tool.resources.map(res => ({tool, res})));
+  allResourceList.innerHTML = all.map(({tool, res}) => resourceLink(res, tool)).join("");
+}
 
-buildChips();
-render();
+function activateTool(id){
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.setAttribute("aria-selected", tab.dataset.id === id ? "true" : "false");
+  });
+  document.querySelectorAll(".program").forEach(panel => {
+    panel.classList.toggle("active", panel.id === `panel-${id}`);
+  });
+}
+
+function filterResources(){
+  const query = searchBox.value.trim().toLowerCase();
+  allResourceList.querySelectorAll(".resource").forEach(item => {
+    item.style.display = item.dataset.search.includes(query) ? "" : "none";
+  });
+}
+
+renderTabs();
+renderPrograms();
+renderAllResources();
+
+tabList.addEventListener("click", event => {
+  const tab = event.target.closest(".tab");
+  if(!tab) return;
+  activateTool(tab.dataset.id);
+  document.getElementById("tools").scrollIntoView({behavior:"smooth", block:"start"});
+});
+
+tabList.addEventListener("keydown", event => {
+  const tabs = [...tabList.querySelectorAll(".tab")];
+  const current = tabs.findIndex(tab => tab.getAttribute("aria-selected") === "true");
+  if(event.key !== "ArrowDown" && event.key !== "ArrowUp" && event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+  event.preventDefault();
+  const direction = event.key === "ArrowDown" || event.key === "ArrowRight" ? 1 : -1;
+  const next = (current + direction + tabs.length) % tabs.length;
+  tabs[next].focus();
+  activateTool(tabs[next].dataset.id);
+});
+
+searchBox.addEventListener("input", filterResources);
 </script>
 </body>
 </html>

@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>學生打掃抽籤系統｜臺北市立麗山高中林獻升老師製作</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #667085;
+      --line: #d7dee8;
+      --paper: #ffffff;
+      --soft: #f5f7fb;
+      --brand: #2563eb;
+      --brand-dark: #1d4ed8;
+      --teal: #0f766e;
+      --amber: #b45309;
+      --rose: #be123c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Noto Sans TC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        linear-gradient(120deg, rgba(37,99,235,.08), transparent 34%),
+        linear-gradient(155deg, transparent 48%, rgba(15,118,110,.08)),
+        #eef3f8;
+    }
+    button, input, textarea, select { font: inherit; }
+    button { transition: transform .12s ease, box-shadow .12s ease, background .12s ease; }
+    button:hover:not(:disabled) { transform: translateY(-1px); }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    .shell { max-width: 1560px; margin: 0 auto; padding: 22px; }
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    .brand {
+      border: 1px solid rgba(23,32,51,.08);
+      background: rgba(255,255,255,.82);
+      backdrop-filter: blur(12px);
+      border-radius: 8px;
+      padding: 18px 20px;
+      box-shadow: 0 16px 42px rgba(23,32,51,.08);
+    }
+    .brand h1 { margin: 0; font-size: clamp(1.45rem, 2.6vw, 2.45rem); font-weight: 800; letter-spacing: 0; }
+    .brand p { margin: 7px 0 0; color: var(--muted); line-height: 1.65; }
+    .status {
+      min-width: 280px;
+      border: 1px solid rgba(23,32,51,.08);
+      background: #172033;
+      color: white;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 16px 42px rgba(23,32,51,.12);
+    }
+    .status .label { color: rgba(255,255,255,.72); font-size: .86rem; }
+    .status strong { display: block; font-size: 1.08rem; margin-top: 4px; }
+    .layout { display: grid; grid-template-columns: minmax(330px, 430px) minmax(0, 1fr); gap: 18px; align-items: start; }
+    .panel {
+      background: rgba(255,255,255,.92);
+      border: 1px solid rgba(23,32,51,.08);
+      border-radius: 8px;
+      box-shadow: 0 16px 42px rgba(23,32,51,.08);
+      overflow: hidden;
+    }
+    .panel + .panel { margin-top: 14px; }
+    .panel-head {
+      padding: 15px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: #fbfcfe;
+    }
+    .panel-head h2, .panel-head h3 { margin: 0; font-size: 1rem; font-weight: 800; }
+    .panel-body { padding: 16px; }
+    .field { display: grid; gap: 6px; }
+    .field label { font-size: .86rem; color: #344054; font-weight: 700; }
+    .field small { color: var(--muted); line-height: 1.55; }
+    .input, .select, .textarea {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      background: white;
+      color: var(--ink);
+      border-radius: 8px;
+      padding: 10px 11px;
+      outline: none;
+    }
+    .textarea { min-height: 155px; resize: vertical; line-height: 1.55; }
+    .input:focus, .select:focus, .textarea:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.14);
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .stack { display: grid; gap: 12px; }
+    .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .btn {
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 13px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(23,32,51,.08);
+    }
+    .btn-primary { background: var(--brand); color: white; }
+    .btn-primary:hover:not(:disabled) { background: var(--brand-dark); }
+    .btn-dark { background: #172033; color: white; }
+    .btn-soft { background: #eef2f7; color: #1f2937; border: 1px solid #d8e0ea; box-shadow: none; }
+    .btn-teal { background: var(--teal); color: white; }
+    .btn-amber { background: var(--amber); color: white; }
+    .btn-rose { background: var(--rose); color: white; }
+    .mini { padding: 7px 9px; font-size: .86rem; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #1e3a8a;
+      padding: 4px 9px;
+      font-size: .78rem;
+      font-weight: 800;
+    }
+    .task-list { display: grid; gap: 8px; max-height: 320px; overflow: auto; padding-right: 3px; }
+    .task-section {
+      border: 1px solid #dbe4ee;
+      border-radius: 8px;
+      background: #f8fafc;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+    .task-section h3 {
+      margin: 0;
+      font-size: .92rem;
+      font-weight: 800;
+      color: #172033;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .task-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: minmax(110px, 1.2fr) 76px minmax(120px, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+    }
+    .result-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .result-sheet {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .sheet-head {
+      padding: 18px;
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: start;
+      background: linear-gradient(90deg, #f8fafc, #eff6ff);
+    }
+    .sheet-head h2 { margin: 0; font-size: 1.35rem; font-weight: 800; }
+    .sheet-head p { margin: 6px 0 0; color: var(--muted); }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(90px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .metric {
+      border: 1px solid #dbe4ee;
+      background: rgba(255,255,255,.78);
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .metric span { display: block; color: var(--muted); font-size: .76rem; font-weight: 700; }
+    .metric strong { display: block; font-size: 1.08rem; margin-top: 4px; }
+    .table-wrap { overflow-x: auto; overflow-y: visible; max-height: none; }
+    .exporting .table-wrap { overflow: visible; max-height: none; }
+    .exporting th { position: static; }
+    .exporting .no-export { display: none; }
+    .export-text { display: none; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.45; }
+    .exporting .export-text { display: block; font-size: .74rem; color: #172033; }
+    .exporting .detail-input { display: none; }
+    .exporting td { break-inside: avoid; page-break-inside: avoid; }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    th, td { padding: 11px 12px; border-bottom: 1px solid #e6ebf2; vertical-align: top; }
+    th { position: sticky; top: 0; z-index: 4; background: #172033; color: white; text-align: left; font-size: .88rem; }
+    tbody tr:nth-child(even) td { background: #fafcff; }
+    .slot-name { font-weight: 800; color: #101828; }
+    .student-name { font-weight: 800; color: #0f766e; }
+    .empty {
+      min-height: 280px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+      padding: 40px 18px;
+    }
+    .history-list { display: grid; gap: 8px; max-height: 320px; overflow: auto; }
+    .history-item {
+      width: 100%;
+      text-align: left;
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: 8px;
+      padding: 10px;
+      cursor: pointer;
+    }
+    .history-item.active { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+    .history-item strong { display: block; }
+    .history-item span { display: block; margin-top: 4px; color: var(--muted); font-size: .78rem; }
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      z-index: 80;
+      min-width: min(460px, calc(100vw - 32px));
+      border-radius: 8px;
+      padding: 12px 14px;
+      color: white;
+      background: #172033;
+      box-shadow: 0 16px 42px rgba(23,32,51,.24);
+      display: none;
+      font-weight: 700;
+    }
+    .print-only { display: none; }
+    @media (max-width: 1050px) {
+      .topbar, .layout { grid-template-columns: 1fr; }
+      .status { min-width: 0; }
+    }
+    @media (max-width: 720px) {
+      .shell { padding: 12px; }
+      .grid-2, .grid-3, .summary-grid { grid-template-columns: 1fr; }
+      .task-card { grid-template-columns: 1fr; }
+      .sheet-head { grid-template-columns: 1fr; }
+      .btn { width: 100%; justify-content: center; }
+      .row .btn { width: auto; }
+    }
+    @media print {
+      body { background: white; }
+      .left-col, .topbar, .result-actions, .toast { display: none !important; }
+      .shell { max-width: none; padding: 0; }
+      .layout { display: block; }
+      .panel { box-shadow: none; border: 0; }
+      .panel-head { display: none; }
+      .table-wrap { max-height: none; overflow: visible; }
+      th { position: static; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <section class="brand">
+        <h1>學生打掃抽籤系統</h1>
+        <p>臺北市立麗山高中林獻升老師製作。整合學年學期、班級資料、Excel 多分頁匯入、JSON 備份還原、歷史紀錄命名、工作人次設定與圖片/PDF 輸出。</p>
+      </section>
+      <aside class="status">
+        <div class="label">目前方案</div>
+        <strong id="statusTitle">尚未建立班級資料</strong>
+        <div class="label" id="statusSub">請先設定學年學期、班級與學生名單</div>
+      </aside>
+    </header>
+
+    <div class="layout">
+      <div class="left-col">
+        <section class="panel">
+          <div class="panel-head">
+            <h2>班級資訊</h2>
+            <span class="pill" id="autosaveState">自動保存</span>
+          </div>
+          <div class="panel-body stack">
+            <div class="grid-2">
+              <div class="field">
+                <label for="schoolYear">學年</label>
+                <input id="schoolYear" class="input" type="text" placeholder="例如：114">
+              </div>
+              <div class="field">
+                <label for="semester">學期</label>
+                <select id="semester" class="select">
+                  <option value="上學期">上學期</option>
+                  <option value="下學期">下學期</option>
+                  <option value="暑期">暑期</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <label for="className">班級</label>
+              <input id="className" class="input" type="text" placeholder="例如：三年二班">
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Excel 匯入學生</h2>
+            <span class="pill" id="excelCount">0 個分頁</span>
+          </div>
+          <div class="panel-body stack">
+            <div class="field">
+              <label for="excelFile">選擇 Excel / CSV 檔案</label>
+              <input id="excelFile" class="input" type="file" accept=".xlsx,.xls,.csv">
+              <small>支援多班級分頁；匯入後可選擇指定分頁作為本次打掃安排名單。</small>
+            </div>
+            <div class="grid-2">
+              <div class="field">
+                <label for="sheetSelect">班級分頁</label>
+                <select id="sheetSelect" class="select">
+                  <option value="">尚未讀取檔案</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="nameColumn">姓名欄位</label>
+                <select id="nameColumn" class="select">
+                  <option value="">自動偵測</option>
+                </select>
+              </div>
+            </div>
+            <button id="importSheetBtn" class="btn btn-primary">匯入所選班級名單</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>學生名單</h2>
+            <span class="pill" id="studentCount">0 位</span>
+          </div>
+          <div class="panel-body stack">
+            <div class="field">
+              <label for="studentsInput">手動輸入或編修</label>
+              <textarea id="studentsInput" class="textarea" placeholder="每行一位，可輸入「座號 姓名」或只輸入姓名"></textarea>
+            </div>
+            <div class="row">
+              <button id="loadStudentsBtn" class="btn btn-primary">載入名單</button>
+              <button id="sampleStudentsBtn" class="btn btn-soft">範例</button>
+              <button id="clearStudentsBtn" class="btn btn-soft">清空</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>打掃工作項目</h2>
+            <span class="pill" id="taskCount">0 個位置</span>
+          </div>
+          <div class="panel-body stack">
+            <div class="task-list" id="taskList"></div>
+            <div class="row">
+              <button id="addInnerTaskBtn" class="btn btn-primary">新增內掃工作</button>
+              <button id="addOuterTaskBtn" class="btn btn-primary">新增外掃工作</button>
+              <button id="resetDefaultTasksBtn" class="btn btn-soft">載入常見工作</button>
+            </div>
+            <div class="field">
+              <label for="bulkTasksInput">快速貼上工作</label>
+              <textarea id="bulkTasksInput" class="textarea" placeholder="格式：工作名稱, 人次, 細項說明&#10;例如：走廊, 2, 掃地與拖地"></textarea>
+            </div>
+            <button id="bulkAddTasksBtn" class="btn btn-soft">加入貼上工作</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>抽籤設定</h2>
+          </div>
+          <div class="panel-body stack">
+            <label class="row"><input id="avoidRecent" type="checkbox"> 避免學生連續抽到相同工作類型</label>
+            <label class="row"><input id="balanceLoad" type="checkbox" checked> 參考歷史次數，優先平均分配</label>
+            <div class="field">
+              <label for="historyName">本次結果名稱</label>
+              <input id="historyName" class="input" type="text" placeholder="例如：第一次、第二次、期中後打掃">
+            </div>
+            <div class="row">
+              <button id="drawBtn" class="btn btn-primary">抽籤安排</button>
+              <button id="saveHistoryBtn" class="btn btn-teal">紀錄目前結果</button>
+              <button id="clearCurrentBtn" class="btn btn-amber">清除目前結果</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>資料儲存與匯出</h2>
+          </div>
+          <div class="panel-body stack">
+            <div class="row">
+              <button id="exportJsonBtn" class="btn btn-dark">下載 JSON</button>
+              <label class="btn btn-soft" for="importJsonFile">匯入 JSON</label>
+              <input id="importJsonFile" type="file" accept=".json,application/json" hidden>
+            </div>
+            <div class="row">
+              <button id="exportExcelBtn" class="btn btn-soft">下載 Excel</button>
+              <button id="exportPngBtn" class="btn btn-soft">下載圖片</button>
+              <button id="exportPdfBtn" class="btn btn-soft">下載 PDF</button>
+            </div>
+            <button id="clearAllBtn" class="btn btn-rose">清除全部資料</button>
+          </div>
+        </section>
+      </div>
+
+      <section class="panel">
+        <div class="panel-head result-actions">
+          <div>
+            <h2>打掃安排結果</h2>
+            <span class="pill" id="currentBadge">尚未抽籤</span>
+          </div>
+          <div class="row">
+            <button id="printBtn" class="btn btn-soft mini">列印</button>
+            <button id="rerenderBtn" class="btn btn-soft mini">重新整理</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div id="captureArea" class="result-sheet">
+            <div class="sheet-head">
+              <div>
+                <h2 id="sheetTitle">學生打掃工作分配表</h2>
+                <p id="sheetMeta">請先設定班級資訊並完成抽籤。</p>
+                <div class="summary-grid">
+                  <div class="metric"><span>學生</span><strong id="metricStudents">0</strong></div>
+                  <div class="metric"><span>工作位置</span><strong id="metricSlots">0</strong></div>
+                  <div class="metric"><span>已分配</span><strong id="metricAssigned">0</strong></div>
+                  <div class="metric"><span>歷史紀錄</span><strong id="metricHistory">0</strong></div>
+                </div>
+              </div>
+              <div>
+                <span class="pill" id="generatedAt">尚未產生</span>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table id="resultTable"></table>
+              <div id="emptyState" class="empty">
+                <div>
+                  <strong>尚未產生打掃分配</strong>
+                  <p>請先匯入或輸入學生名單，確認工作項目與人次，再按「抽籤安排」。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <section class="panel" style="margin-top:14px">
+            <div class="panel-head">
+              <h3>歷史資料</h3>
+              <span class="pill" id="historyCount">0 筆</span>
+            </div>
+            <div class="panel-body stack">
+              <div id="historyList" class="history-list"></div>
+              <div class="row">
+                <button id="loadHistoryBtn" class="btn btn-primary">回復選取紀錄</button>
+                <button id="deleteHistoryBtn" class="btn btn-amber">刪除選取紀錄</button>
+                <button id="clearHistoryBtn" class="btn btn-rose">清除所有紀錄</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const STORAGE_KEY = 'codex.cleaning.lottery.v2';
+    const TASK_TEMPLATE_VERSION = 3;
+    const defaultTasks = [
+      { area: 'inner', name: '內掃督導', count: 1, detail: '' },
+      { area: 'inner', name: '黑板講桌', count: 2, detail: '' },
+      { area: 'inner', name: '掃地', count: 4, detail: '' },
+      { area: 'inner', name: '拖地', count: 4, detail: '' },
+      { area: 'inner', name: '窗戶窗台', count: 2, detail: '' },
+      { area: 'inner', name: '教室走廊', count: 3, detail: '' },
+      { area: 'inner', name: '資源回收', count: 2, detail: '' },
+      { area: 'inner', name: '倒垃圾', count: 2, detail: '' },
+      { area: 'inner', name: '支援', count: 1, detail: '' },
+      { area: 'outer', name: '外掃督導', count: 1, detail: '' }
+    ];
+
+    const state = {
+      info: { schoolYear: '', semester: '上學期', className: '' },
+      students: [],
+      tasks: [],
+      current: null,
+      history: [],
+      settings: { avoidRecent: false, balanceLoad: true },
+      excel: { workbook: null, rows: [], headers: [] },
+      selectedHistoryIndex: -1
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const els = {
+      schoolYear: $('schoolYear'),
+      semester: $('semester'),
+      className: $('className'),
+      excelFile: $('excelFile'),
+      sheetSelect: $('sheetSelect'),
+      nameColumn: $('nameColumn'),
+      excelCount: $('excelCount'),
+      importSheetBtn: $('importSheetBtn'),
+      studentsInput: $('studentsInput'),
+      studentCount: $('studentCount'),
+      loadStudentsBtn: $('loadStudentsBtn'),
+      sampleStudentsBtn: $('sampleStudentsBtn'),
+      clearStudentsBtn: $('clearStudentsBtn'),
+      taskList: $('taskList'),
+      taskCount: $('taskCount'),
+      addInnerTaskBtn: $('addInnerTaskBtn'),
+      addOuterTaskBtn: $('addOuterTaskBtn'),
+      resetDefaultTasksBtn: $('resetDefaultTasksBtn'),
+      bulkTasksInput: $('bulkTasksInput'),
+      bulkAddTasksBtn: $('bulkAddTasksBtn'),
+      avoidRecent: $('avoidRecent'),
+      balanceLoad: $('balanceLoad'),
+      historyName: $('historyName'),
+      drawBtn: $('drawBtn'),
+      saveHistoryBtn: $('saveHistoryBtn'),
+      clearCurrentBtn: $('clearCurrentBtn'),
+      exportJsonBtn: $('exportJsonBtn'),
+      importJsonFile: $('importJsonFile'),
+      exportExcelBtn: $('exportExcelBtn'),
+      exportPngBtn: $('exportPngBtn'),
+      exportPdfBtn: $('exportPdfBtn'),
+      clearAllBtn: $('clearAllBtn'),
+      resultTable: $('resultTable'),
+      emptyState: $('emptyState'),
+      captureArea: $('captureArea'),
+      sheetTitle: $('sheetTitle'),
+      sheetMeta: $('sheetMeta'),
+      generatedAt: $('generatedAt'),
+      metricStudents: $('metricStudents'),
+      metricSlots: $('metricSlots'),
+      metricAssigned: $('metricAssigned'),
+      metricHistory: $('metricHistory'),
+      statusTitle: $('statusTitle'),
+      statusSub: $('statusSub'),
+      currentBadge: $('currentBadge'),
+      historyList: $('historyList'),
+      historyCount: $('historyCount'),
+      loadHistoryBtn: $('loadHistoryBtn'),
+      deleteHistoryBtn: $('deleteHistoryBtn'),
+      clearHistoryBtn: $('clearHistoryBtn'),
+      printBtn: $('printBtn'),
+      rerenderBtn: $('rerenderBtn'),
+      toast: $('toast'),
+      autosaveState: $('autosaveState')
+    };
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function uid(prefix = 'id') {
+      return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    function clone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function toast(message, type = 'dark') {
+      els.toast.textContent = message;
+      els.toast.style.background = type === 'error' ? '#be123c' : type === 'warn' ? '#b45309' : '#172033';
+      els.toast.style.display = 'block';
+      clearTimeout(toast.timer);
+      toast.timer = setTimeout(() => { els.toast.style.display = 'none'; }, 2600);
+    }
+
+    function parseStudentLine(line) {
+      const text = line.trim();
+      if (!text) return null;
+      const cleaned = text.replace(/\s+/g, ' ');
+      const match = cleaned.match(/^(\d{1,3})[.\s、,-]+(.+)$/);
+      if (match) return { no: match[1].padStart(2, '0'), name: match[2].trim() };
+      return { no: '', name: cleaned };
+    }
+
+    function studentLabel(student) {
+      return student.no ? `${student.no} ${student.name}` : student.name;
+    }
+
+    function parseStudents(text) {
+      const seen = new Set();
+      return text.split(/\r?\n/)
+        .map(parseStudentLine)
+        .filter(Boolean)
+        .filter(student => {
+          const key = student.name;
+          if (!key || seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+    }
+
+    function taskSlots(tasks = state.tasks) {
+      const slots = [];
+      tasks.forEach(task => {
+        const count = Math.max(1, Number(task.count) || 1);
+        for (let i = 1; i <= count; i++) {
+          slots.push({
+            id: `${task.id}_${i}`,
+            taskId: task.id,
+            area: task.area || 'inner',
+            baseName: task.name,
+            label: count > 1 ? `${task.name} ${i}` : task.name,
+            detail: task.detail || ''
+          });
+        }
+      });
+      return slots;
+    }
+
+    function taskDemand(area) {
+      return state.tasks
+        .filter(task => !area || (task.area || 'inner') === area)
+        .reduce((sum, task) => sum + Math.max(1, Number(task.count) || 1), 0);
+    }
+
+    function classTitle() {
+      const parts = [state.info.schoolYear ? `${state.info.schoolYear}學年` : '', state.info.semester, state.info.className].filter(Boolean);
+      return parts.length ? parts.join(' ') : '未命名班級';
+    }
+
+    function filenameBase(suffix) {
+      const safe = `${classTitle()}_${suffix}`.replace(/[\\/:*?"<>|]+/g, '-').replace(/\s+/g, '_');
+      return safe || `打掃抽籤_${suffix}`;
+    }
+
+    function syncInfoFromInputs() {
+      state.info.schoolYear = els.schoolYear.value.trim();
+      state.info.semester = els.semester.value;
+      state.info.className = els.className.value.trim();
+    }
+
+    function syncInputsFromState() {
+      els.schoolYear.value = state.info.schoolYear || '';
+      els.semester.value = state.info.semester || '上學期';
+      els.className.value = state.info.className || '';
+      els.studentsInput.value = state.students.map(studentLabel).join('\n');
+      els.avoidRecent.checked = !!state.settings.avoidRecent;
+      els.balanceLoad.checked = state.settings.balanceLoad !== false;
+    }
+
+    function saveLocal() {
+      syncInfoFromInputs();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        info: state.info,
+        taskTemplateVersion: TASK_TEMPLATE_VERSION,
+        students: state.students,
+        tasks: state.tasks,
+        current: state.current,
+        history: state.history,
+        settings: state.settings
+      }));
+      els.autosaveState.textContent = '已自動保存';
+    }
+
+    function loadLocal() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        state.tasks = clone(defaultTasks).map(t => ({ ...t, id: uid('task') }));
+        return;
+      }
+      try {
+        const data = JSON.parse(raw);
+        state.info = { ...state.info, ...(data.info || {}) };
+        state.students = Array.isArray(data.students) ? data.students : [];
+        state.tasks = data.taskTemplateVersion === TASK_TEMPLATE_VERSION && Array.isArray(data.tasks) && data.tasks.length ? data.tasks : clone(defaultTasks).map(t => ({ ...t, id: uid('task') }));
+        state.tasks = state.tasks.map(t => ({ id: t.id || uid('task'), area: t.area === 'outer' ? 'outer' : 'inner', name: typeof t.name === 'string' ? t.name : '', count: Math.max(1, Number(t.count) || 1), detail: t.detail || '' }));
+        state.current = data.current || null;
+        state.history = Array.isArray(data.history) ? data.history : [];
+        state.settings = { ...state.settings, ...(data.settings || {}) };
+      } catch (err) {
+        state.tasks = clone(defaultTasks).map(t => ({ ...t, id: uid('task') }));
+      }
+    }
+
+    function renderTasks() {
+      if (!state.tasks.length) {
+        els.taskList.innerHTML = '<div class="empty" style="min-height:120px">尚未設定工作項目</div>';
+      } else {
+        const renderGroup = (area, title) => {
+          const tasks = state.tasks.filter(task => (task.area || 'inner') === area);
+          const demand = taskDemand(area);
+          const body = tasks.length
+            ? tasks.map((task, index) => `
+              <div class="task-card" data-task-id="${escapeHtml(task.id)}">
+                <input class="input task-name" value="${escapeHtml(task.name)}" aria-label="${title}工作名稱 ${index + 1}">
+                <input class="input task-count" type="number" min="1" max="20" value="${escapeHtml(task.count)}" aria-label="人次">
+                <input class="input task-detail" value="${escapeHtml(task.detail)}" placeholder="細項內容" aria-label="細項內容">
+                <button class="btn btn-soft mini remove-task" type="button">刪除</button>
+              </div>
+            `).join('')
+            : '<div class="empty" style="min-height:80px">尚未新增工作項目</div>';
+          return `
+            <section class="task-section">
+              <h3>${title}<span class="pill">需求 ${demand} 人</span></h3>
+              ${body}
+            </section>`;
+        };
+        els.taskList.innerHTML = renderGroup('inner', '內掃區域') + renderGroup('outer', '外掃區域');
+      }
+      const totalDemand = taskDemand();
+      const studentTotal = state.students.length;
+      const diff = totalDemand - studentTotal;
+      const matchText = diff === 0 ? '人數相符' : diff > 0 ? `多 ${diff} 人` : `少 ${Math.abs(diff)} 人`;
+      els.taskCount.textContent = `總需求 ${totalDemand} 人 / 班級 ${studentTotal} 人（${matchText}）`;
+    }
+
+    function bindTaskListEvents() {
+      els.taskList.addEventListener('input', (event) => {
+        const card = event.target.closest('.task-card');
+        if (!card) return;
+        const task = state.tasks.find(item => item.id === card.dataset.taskId);
+        if (!task) return;
+        task.name = card.querySelector('.task-name').value.trim();
+        task.count = Math.max(1, Number(card.querySelector('.task-count').value) || 1);
+        task.detail = card.querySelector('.task-detail').value.trim();
+        state.current = null;
+        renderResult();
+        saveLocal();
+      });
+      els.taskList.addEventListener('click', (event) => {
+        if (!event.target.classList.contains('remove-task')) return;
+        const card = event.target.closest('.task-card');
+        state.tasks = state.tasks.filter(item => item.id !== card.dataset.taskId);
+        state.current = null;
+        renderAll();
+        saveLocal();
+      });
+    }
+
+    function renderResult() {
+      const slots = taskSlots();
+      const assignments = state.current?.assignments || [];
+      const assignedMap = new Map(assignments.map(item => [item.slotId, item]));
+      const assignedCount = assignments.filter(item => item.student?.name).length;
+      const title = `${classTitle()} 學生打掃工作分配表`;
+      els.sheetTitle.textContent = title;
+      els.sheetMeta.textContent = [
+        state.current?.name ? `結果名稱：${state.current.name}` : '',
+        state.current?.createdAt ? `建立時間：${formatDateTime(state.current.createdAt)}` : ''
+      ].filter(Boolean).join('　') || '請先完成抽籤安排。';
+      els.generatedAt.textContent = state.current?.createdAt ? formatDateTime(state.current.createdAt) : '尚未產生';
+      els.metricStudents.textContent = state.students.length;
+      els.metricSlots.textContent = slots.length;
+      els.metricAssigned.textContent = assignedCount;
+      els.metricHistory.textContent = state.history.length;
+      els.currentBadge.textContent = state.current ? state.current.name : '尚未抽籤';
+
+      if (!slots.length || !state.current) {
+        els.resultTable.innerHTML = '';
+        els.emptyState.style.display = 'grid';
+      } else {
+        els.emptyState.style.display = 'none';
+        els.resultTable.innerHTML = `
+          <thead>
+            <tr>
+              <th style="width:70px">序號</th>
+              <th>區域</th>
+              <th>工作項目</th>
+              <th>分配學生</th>
+              <th>細項內容</th>
+              <th class="no-export">手動調整</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${slots.map((slot, index) => {
+              const item = assignedMap.get(slot.id) || {};
+              const selectedName = item.student?.name || '';
+              return `
+                <tr>
+                  <td>${index + 1}</td>
+                  <td>${slot.area === 'outer' ? '外掃區域' : '內掃區域'}</td>
+                  <td>
+                    <div class="slot-name">${escapeHtml(slot.label)}</div>
+                  </td>
+                  <td><span class="student-name">${escapeHtml(item.student ? studentLabel(item.student) : '未分配')}</span></td>
+                  <td>
+                    <input class="input detail-input" data-slot-id="${escapeHtml(slot.id)}" value="${escapeHtml(item.detail ?? slot.detail)}" placeholder="可補充更細的工作內容">
+                    <div class="export-text">${escapeHtml(item.detail ?? slot.detail)}</div>
+                  </td>
+                  <td class="no-export">
+                    <select class="select manual-select" data-slot-id="${escapeHtml(slot.id)}">
+                      <option value="">未分配</option>
+                      ${state.students.map(stu => `<option value="${escapeHtml(stu.name)}" ${stu.name === selectedName ? 'selected' : ''}>${escapeHtml(studentLabel(stu))}</option>`).join('')}
+                    </select>
+                  </td>
+                </tr>`;
+            }).join('')}
+          </tbody>
+        `;
+      }
+      updateHeader();
+    }
+
+    function formatDateTime(value) {
+      return new Date(value).toLocaleString('zh-TW', { hour12: false });
+    }
+
+    function updateHeader() {
+      els.statusTitle.textContent = classTitle();
+      els.statusSub.textContent = `${state.students.length} 位學生，${taskSlots().length} 個工作位置，${state.history.length} 筆歷史紀錄`;
+      els.studentCount.textContent = `${state.students.length} 位`;
+      els.historyCount.textContent = `${state.history.length} 筆`;
+    }
+
+    function renderHistory() {
+      if (!state.history.length) {
+        els.historyList.innerHTML = '<div class="empty" style="min-height:120px">尚無歷史紀錄</div>';
+        return;
+      }
+      els.historyList.innerHTML = state.history.map((item, index) => `
+        <button class="history-item ${index === state.selectedHistoryIndex ? 'active' : ''}" data-index="${index}" type="button">
+          <strong>${escapeHtml(item.name || `第 ${index + 1} 次`)}</strong>
+          <span>${escapeHtml(formatDateTime(item.createdAt))}　${item.assignments?.length || 0} 個工作位置</span>
+        </button>
+      `).join('');
+    }
+
+    function renderAll() {
+      syncInputsFromState();
+      renderTasks();
+      renderResult();
+      renderHistory();
+      updateHeader();
+    }
+
+    function shuffle(items) {
+      const arr = items.slice();
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function historyStats() {
+      const byStudentTask = {};
+      const totalByStudent = {};
+      state.history.forEach(record => {
+        (record.assignments || []).forEach(item => {
+          const name = item.student?.name;
+          if (!name) return;
+          totalByStudent[name] = (totalByStudent[name] || 0) + 1;
+          const key = `${name}::${item.baseName}`;
+          byStudentTask[key] = (byStudentTask[key] || 0) + 1;
+        });
+      });
+      return { byStudentTask, totalByStudent };
+    }
+
+    function drawAssignments() {
+      syncInfoFromInputs();
+      if (!state.students.length) {
+        toast('請先載入學生名單', 'warn');
+        return;
+      }
+      const slots = taskSlots();
+      if (!slots.length) {
+        toast('請先設定打掃工作項目', 'warn');
+        return;
+      }
+
+      const stats = historyStats();
+      const randomizedStudents = shuffle(state.students);
+      const useUnique = state.students.length >= slots.length;
+      const used = new Set();
+      const assignments = slots.map(slot => {
+        let pool = randomizedStudents;
+        if (useUnique) pool = randomizedStudents.filter(stu => !used.has(stu.name));
+        if (!pool.length) pool = randomizedStudents;
+        const ranked = pool.slice().sort((a, b) => {
+          const recentA = state.settings.avoidRecent ? (stats.byStudentTask[`${a.name}::${slot.baseName}`] || 0) : 0;
+          const recentB = state.settings.avoidRecent ? (stats.byStudentTask[`${b.name}::${slot.baseName}`] || 0) : 0;
+          const loadA = state.settings.balanceLoad ? (stats.totalByStudent[a.name] || 0) : 0;
+          const loadB = state.settings.balanceLoad ? (stats.totalByStudent[b.name] || 0) : 0;
+          return (recentA - recentB) || (loadA - loadB) || (Math.random() - 0.5);
+        });
+        const student = ranked[0];
+        if (student) used.add(student.name);
+        return {
+          slotId: slot.id,
+          taskId: slot.taskId,
+          area: slot.area,
+          baseName: slot.baseName,
+          label: slot.label,
+          detail: slot.detail,
+          student: student ? clone(student) : null
+        };
+      });
+
+      const name = els.historyName.value.trim() || `第 ${state.history.length + 1} 次`;
+      state.current = { id: uid('result'), name, createdAt: new Date().toISOString(), assignments };
+      renderResult();
+      saveLocal();
+      toast('已完成本次打掃抽籤，可再手動調整細項或學生。');
+    }
+
+    function saveCurrentToHistory() {
+      if (!state.current) {
+        toast('目前沒有可紀錄的結果', 'warn');
+        return;
+      }
+      const name = els.historyName.value.trim() || state.current.name || `第 ${state.history.length + 1} 次`;
+      const record = { ...clone(state.current), id: uid('history'), name, savedAt: new Date().toISOString() };
+      state.history.unshift(record);
+      state.current.name = name;
+      els.historyName.value = '';
+      state.selectedHistoryIndex = 0;
+      renderAll();
+      saveLocal();
+      toast(`已紀錄「${name}」。`);
+    }
+
+    function updateCurrentFromControls(event) {
+      if (!state.current) return;
+      const slotId = event.target.dataset.slotId;
+      if (!slotId) return;
+      const item = state.current.assignments.find(row => row.slotId === slotId);
+      if (!item) return;
+      if (event.target.classList.contains('detail-input')) {
+        item.detail = event.target.value.trim();
+        const exportText = event.target.parentElement?.querySelector('.export-text');
+        if (exportText) exportText.textContent = item.detail;
+        saveLocal();
+        return;
+      }
+      if (event.target.classList.contains('manual-select')) {
+        const selected = state.students.find(stu => stu.name === event.target.value);
+        item.student = selected ? clone(selected) : null;
+        renderResult();
+        saveLocal();
+      }
+    }
+
+    function parseBulkTasks(text) {
+      return text.split(/\r?\n/).map(line => line.trim()).filter(Boolean).map(line => {
+        const parts = line.split(/[,，\t]/).map(part => part.trim());
+        return {
+          id: uid('task'),
+          area: 'inner',
+          name: parts[0] || '',
+          count: Math.max(1, Number(parts[1]) || 1),
+          detail: parts.slice(2).join('，')
+        };
+      });
+    }
+
+    function exportExcel() {
+      if (!state.current) {
+        toast('請先產生結果再匯出 Excel', 'warn');
+        return;
+      }
+      if (!window.XLSX) {
+        toast('Excel 匯出套件尚未載入，請確認網路連線後重試', 'error');
+        return;
+      }
+      const rows = [['學年學期', '班級', '結果名稱', '區域', '工作項目', '分配學生', '細項內容']];
+      state.current.assignments.forEach(item => {
+        rows.push([
+          `${state.info.schoolYear} ${state.info.semester}`.trim(),
+          state.info.className || '',
+          state.current.name,
+          item.area === 'outer' ? '外掃區域' : '內掃區域',
+          item.label,
+          item.student ? studentLabel(item.student) : '',
+          item.detail || ''
+        ]);
+      });
+      const worksheet = XLSX.utils.aoa_to_sheet(rows);
+      worksheet['!cols'] = [
+        { wch: 16 }, { wch: 14 }, { wch: 18 }, { wch: 12 },
+        { wch: 18 }, { wch: 18 }, { wch: 32 }
+      ];
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, '打掃分配');
+      XLSX.writeFile(workbook, `${filenameBase('打掃分配')}.xlsx`);
+    }
+
+    function exportJSON() {
+      syncInfoFromInputs();
+      const payload = {
+        app: '學生打掃抽籤系統 Codex 優化版',
+        version: 2,
+        taskTemplateVersion: TASK_TEMPLATE_VERSION,
+        exportedAt: new Date().toISOString(),
+        info: state.info,
+        students: state.students,
+        tasks: state.tasks,
+        current: state.current,
+        history: state.history,
+        settings: state.settings
+      };
+      downloadBlob(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' }), `${filenameBase('資料備份')}.json`);
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    async function captureFullSheet() {
+      els.captureArea.classList.add('exporting');
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const canvas = await html2canvas(els.captureArea, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        useCORS: true,
+        windowWidth: Math.max(document.documentElement.scrollWidth, els.captureArea.scrollWidth),
+        windowHeight: els.captureArea.scrollHeight
+      });
+      els.captureArea.classList.remove('exporting');
+      return canvas;
+    }
+
+    function createPdfPageShell() {
+      const shell = document.createElement('div');
+      shell.className = 'result-sheet exporting';
+      shell.style.position = 'fixed';
+      shell.style.left = '-10000px';
+      shell.style.top = '0';
+      shell.style.width = `${els.captureArea.offsetWidth}px`;
+      shell.style.background = '#ffffff';
+      const head = els.captureArea.querySelector('.sheet-head').cloneNode(true);
+      const wrap = document.createElement('div');
+      wrap.className = 'table-wrap';
+      const table = document.createElement('table');
+      table.appendChild(els.resultTable.querySelector('thead').cloneNode(true));
+      table.appendChild(document.createElement('tbody'));
+      wrap.appendChild(table);
+      shell.appendChild(head);
+      shell.appendChild(wrap);
+      document.body.appendChild(shell);
+      return { shell, tbody: table.querySelector('tbody') };
+    }
+
+    async function addPdfPageFromShell(pdf, shell, pageIndex) {
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const pageCanvas = await html2canvas(shell, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        useCORS: true,
+        windowWidth: shell.scrollWidth,
+        windowHeight: shell.scrollHeight
+      });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const margin = 24;
+      const printableWidth = pageWidth - margin * 2;
+      const scale = printableWidth / pageCanvas.width;
+      if (pageIndex > 0) pdf.addPage();
+      pdf.addImage(pageCanvas.toDataURL('image/png'), 'PNG', margin, margin, printableWidth, pageCanvas.height * scale);
+    }
+
+    async function exportPdfByRows() {
+      const { jsPDF } = window.jspdf || {};
+      if (!jsPDF) {
+        toast('PDF 輸出套件尚未載入，請確認網路連線後重試', 'error');
+        return;
+      }
+      els.captureArea.classList.add('exporting');
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 24;
+      const printableWidth = pageWidth - margin * 2;
+      const printableHeight = pageHeight - margin * 2;
+      const sourceRows = [...els.resultTable.querySelectorAll('tbody tr')];
+      const { shell, tbody } = createPdfPageShell();
+      const shellScale = printableWidth / shell.offsetWidth;
+      let pageIndex = 0;
+
+      try {
+        for (const row of sourceRows) {
+          const clonedRow = row.cloneNode(true);
+          tbody.appendChild(clonedRow);
+          await new Promise(resolve => requestAnimationFrame(resolve));
+          if (shell.scrollHeight * shellScale > printableHeight && tbody.children.length > 1) {
+            clonedRow.remove();
+            await addPdfPageFromShell(pdf, shell, pageIndex);
+            pageIndex++;
+            tbody.innerHTML = '';
+            tbody.appendChild(clonedRow);
+          }
+        }
+        if (tbody.children.length) {
+          await addPdfPageFromShell(pdf, shell, pageIndex);
+        }
+      } finally {
+        shell.remove();
+        els.captureArea.classList.remove('exporting');
+      }
+      pdf.save(`${filenameBase('打掃分配')}.pdf`);
+    }
+
+    async function exportImage(kind) {
+      if (!state.current) {
+        toast('請先產生結果再匯出', 'warn');
+        return;
+      }
+      if (!window.html2canvas) {
+        toast('圖片輸出套件尚未載入，請確認網路連線後重試', 'error');
+        return;
+      }
+      let canvas;
+      try {
+        canvas = await captureFullSheet();
+      } catch (err) {
+        els.captureArea.classList.remove('exporting');
+        toast('匯出畫面時發生錯誤，請稍後再試。', 'error');
+        return;
+      }
+      if (kind === 'png') {
+        canvas.toBlob(blob => downloadBlob(blob, `${filenameBase('打掃分配')}.png`));
+      } else {
+        await exportPdfByRows();
+      }
+    }
+
+    function importJSONFile(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(reader.result);
+          state.info = { ...state.info, ...(data.info || {}) };
+          state.students = Array.isArray(data.students) ? data.students : [];
+          state.tasks = Array.isArray(data.tasks) ? data.tasks.map(t => ({ id: t.id || uid('task'), area: t.area === 'outer' ? 'outer' : 'inner', name: typeof t.name === 'string' ? t.name : '', count: Math.max(1, Number(t.count) || 1), detail: t.detail || '' })) : [];
+          state.current = data.current || null;
+          state.history = Array.isArray(data.history) ? data.history : [];
+          state.settings = { ...state.settings, ...(data.settings || {}) };
+          state.selectedHistoryIndex = -1;
+          renderAll();
+          saveLocal();
+          toast('已匯入 JSON 備份。');
+        } catch (err) {
+          toast('JSON 格式無法讀取，請確認檔案內容。', 'error');
+        }
+      };
+      reader.readAsText(file, 'utf-8');
+    }
+
+    function readExcel(file) {
+      if (!window.XLSX) {
+        toast('Excel 套件尚未載入，請確認網路連線後重試', 'error');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          state.excel.workbook = XLSX.read(reader.result, { type: 'array' });
+          els.sheetSelect.innerHTML = state.excel.workbook.SheetNames.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
+          els.excelCount.textContent = `${state.excel.workbook.SheetNames.length} 個分頁`;
+          refreshSheetColumns();
+          toast('已讀取 Excel，請選擇要匯入的班級分頁。');
+        } catch (err) {
+          toast('無法讀取這個 Excel 檔案。', 'error');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function refreshSheetColumns() {
+      const wb = state.excel.workbook;
+      const sheetName = els.sheetSelect.value;
+      if (!wb || !sheetName) return;
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, defval: '' });
+      state.excel.rows = rows;
+      const headerRowIndex = detectHeaderRow(rows);
+      const headers = (rows[headerRowIndex] || []).map((cell, index) => String(cell || `第 ${index + 1} 欄`).trim());
+      state.excel.headers = headers;
+      els.nameColumn.innerHTML = '<option value="">自動偵測</option>' + headers.map((h, i) => `<option value="${i}">${escapeHtml(h)}</option>`).join('');
+    }
+
+    function detectHeaderRow(rows) {
+      const keywords = /姓名|學生|name|座號|學號/i;
+      const index = rows.findIndex(row => row.some(cell => keywords.test(String(cell))));
+      return index >= 0 ? index : 0;
+    }
+
+    function importSelectedSheet() {
+      const wb = state.excel.workbook;
+      const sheetName = els.sheetSelect.value;
+      if (!wb || !sheetName) {
+        toast('請先選擇 Excel 檔案與分頁', 'warn');
+        return;
+      }
+      const rows = state.excel.rows.length ? state.excel.rows : XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, defval: '' });
+      const headerIndex = detectHeaderRow(rows);
+      const headers = rows[headerIndex] || [];
+      let nameCol = els.nameColumn.value === '' ? detectColumn(headers, /姓名|學生|name/i) : Number(els.nameColumn.value);
+      if (nameCol < 0) nameCol = detectBestTextColumn(rows.slice(headerIndex + 1));
+      const noCol = detectColumn(headers, /座號|號碼|學號|座次|number|no/i);
+      const students = rows.slice(headerIndex + 1).map(row => {
+        const name = String(row[nameCol] || '').trim();
+        if (!name || /姓名|學生|合計|平均|總分/.test(name)) return null;
+        const no = noCol >= 0 ? String(row[noCol] || '').trim().padStart(2, '0') : '';
+        return { no: /^\d+$/.test(no) ? no : '', name };
+      }).filter(Boolean);
+      if (!students.length) {
+        toast('此分頁未偵測到學生姓名，請改選姓名欄位。', 'warn');
+        return;
+      }
+      state.students = dedupeStudents(students);
+      state.current = null;
+      if (!state.info.className) state.info.className = sheetName;
+      els.className.value = state.info.className;
+      renderAll();
+      saveLocal();
+      toast(`已匯入 ${sheetName}：${state.students.length} 位學生。`);
+    }
+
+    function detectColumn(headers, pattern) {
+      return headers.findIndex(cell => pattern.test(String(cell)));
+    }
+
+    function detectBestTextColumn(rows) {
+      let best = 0;
+      let bestScore = -1;
+      const width = Math.max(...rows.map(row => row.length), 1);
+      for (let col = 0; col < width; col++) {
+        const score = rows.reduce((sum, row) => {
+          const text = String(row[col] || '').trim();
+          return sum + (text && /[\u4e00-\u9fa5A-Za-z]/.test(text) && !/^\d+(\.\d+)?$/.test(text) ? 1 : 0);
+        }, 0);
+        if (score > bestScore) {
+          best = col;
+          bestScore = score;
+        }
+      }
+      return best;
+    }
+
+    function dedupeStudents(students) {
+      const seen = new Set();
+      return students.filter(stu => {
+        const key = stu.name;
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function attachEvents() {
+      ['schoolYear', 'semester', 'className'].forEach(id => {
+        els[id].addEventListener('input', () => { syncInfoFromInputs(); renderResult(); saveLocal(); });
+      });
+      els.avoidRecent.addEventListener('change', () => { state.settings.avoidRecent = els.avoidRecent.checked; saveLocal(); });
+      els.balanceLoad.addEventListener('change', () => { state.settings.balanceLoad = els.balanceLoad.checked; saveLocal(); });
+      els.loadStudentsBtn.addEventListener('click', () => {
+        state.students = parseStudents(els.studentsInput.value);
+        state.current = null;
+        renderAll();
+        saveLocal();
+        toast(`已載入 ${state.students.length} 位學生。`);
+      });
+      els.sampleStudentsBtn.addEventListener('click', () => {
+        els.studentsInput.value = ['01 王小明', '02 林小美', '03 陳大仁', '04 張心怡', '05 李同學', '06 周同學', '07 黃同學', '08 吳同學', '09 蔡同學', '10 鄭同學'].join('\n');
+      });
+      els.clearStudentsBtn.addEventListener('click', () => {
+        state.students = [];
+        state.current = null;
+        els.studentsInput.value = '';
+        renderAll();
+        saveLocal();
+      });
+      els.addInnerTaskBtn.addEventListener('click', () => {
+        state.tasks.push({ id: uid('task'), area: 'inner', name: '', count: 1, detail: '' });
+        renderTasks();
+        saveLocal();
+      });
+      els.addOuterTaskBtn.addEventListener('click', () => {
+        state.tasks.push({ id: uid('task'), area: 'outer', name: '', count: 1, detail: '' });
+        renderTasks();
+        saveLocal();
+      });
+      els.resetDefaultTasksBtn.addEventListener('click', () => {
+        state.tasks = clone(defaultTasks).map(t => ({ ...t, id: uid('task') }));
+        state.current = null;
+        renderAll();
+        saveLocal();
+      });
+      els.bulkAddTasksBtn.addEventListener('click', () => {
+        const tasks = parseBulkTasks(els.bulkTasksInput.value);
+        if (!tasks.length) {
+          toast('請先貼上工作項目', 'warn');
+          return;
+        }
+        state.tasks.push(...tasks);
+        els.bulkTasksInput.value = '';
+        state.current = null;
+        renderAll();
+        saveLocal();
+      });
+      els.drawBtn.addEventListener('click', drawAssignments);
+      els.saveHistoryBtn.addEventListener('click', saveCurrentToHistory);
+      els.clearCurrentBtn.addEventListener('click', () => {
+        state.current = null;
+        renderResult();
+        saveLocal();
+        toast('已清除目前結果，歷史紀錄保留。');
+      });
+      els.resultTable.addEventListener('change', updateCurrentFromControls);
+      els.resultTable.addEventListener('input', updateCurrentFromControls);
+      els.historyList.addEventListener('click', (event) => {
+        const btn = event.target.closest('.history-item');
+        if (!btn) return;
+        state.selectedHistoryIndex = Number(btn.dataset.index);
+        renderHistory();
+      });
+      els.loadHistoryBtn.addEventListener('click', () => {
+        const record = state.history[state.selectedHistoryIndex];
+        if (!record) {
+          toast('請先選取歷史紀錄', 'warn');
+          return;
+        }
+        state.current = clone(record);
+        renderResult();
+        saveLocal();
+        toast(`已回復「${record.name}」。`);
+      });
+      els.deleteHistoryBtn.addEventListener('click', () => {
+        if (!state.history[state.selectedHistoryIndex]) {
+          toast('請先選取歷史紀錄', 'warn');
+          return;
+        }
+        const removed = state.history.splice(state.selectedHistoryIndex, 1)[0];
+        state.selectedHistoryIndex = -1;
+        renderAll();
+        saveLocal();
+        toast(`已刪除「${removed.name}」。`);
+      });
+      els.clearHistoryBtn.addEventListener('click', () => {
+        state.history = [];
+        state.selectedHistoryIndex = -1;
+        renderAll();
+        saveLocal();
+        toast('已清除所有歷史紀錄。');
+      });
+      els.exportExcelBtn.addEventListener('click', exportExcel);
+      els.exportJsonBtn.addEventListener('click', exportJSON);
+      els.importJsonFile.addEventListener('change', event => {
+        const file = event.target.files?.[0];
+        if (file) importJSONFile(file);
+        event.target.value = '';
+      });
+      els.exportPngBtn.addEventListener('click', () => exportImage('png'));
+      els.exportPdfBtn.addEventListener('click', () => exportImage('pdf'));
+      els.printBtn.addEventListener('click', () => window.print());
+      els.rerenderBtn.addEventListener('click', renderAll);
+      els.clearAllBtn.addEventListener('click', () => {
+        if (!confirm('確定要清除全部資料？這會移除目前名單、工作、結果與歷史紀錄。')) return;
+        localStorage.removeItem(STORAGE_KEY);
+        state.info = { schoolYear: '', semester: '上學期', className: '' };
+        state.students = [];
+        state.tasks = clone(defaultTasks).map(t => ({ ...t, id: uid('task') }));
+        state.current = null;
+        state.history = [];
+        state.selectedHistoryIndex = -1;
+        renderAll();
+        saveLocal();
+        toast('已清除全部資料並重置常見工作。');
+      });
+      els.excelFile.addEventListener('change', event => {
+        const file = event.target.files?.[0];
+        if (file) readExcel(file);
+      });
+      els.sheetSelect.addEventListener('change', refreshSheetColumns);
+      els.importSheetBtn.addEventListener('click', importSelectedSheet);
+    }
+
+    loadLocal();
+    attachEvents();
+    bindTaskListEvents();
+    renderAll();
+  </script>
+</body>
+</html>

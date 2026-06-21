@@ -1,0 +1,3785 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>多班級成績管理系統 2.0</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --paper:#F7F8F5; --card:#FFFFFF; --ink:#22302A; --ink-soft:#5C6B63;
+    --line:#DDE3DD; --line-strong:#C2CCC2;
+    --green:#1E6B52; --green-deep:#14503C; --green-tint:#EAF3EE;
+    --amber:#B97D14; --amber-tint:#FBF3E2;
+    --blue:#2D5F8A;  --blue-tint:#EAF1F7;
+    --plum:#7A4A78;  --plum-tint:#F4ECF4;
+    --red:#B5443C;   --red-tint:#F9ECEA;
+    --avg-tint:#FFF8E8;
+    --radius:10px;
+    --mono:"Consolas","Menlo",monospace;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif;
+    font-size:15px; line-height:1.55;
+  }
+  /* ── 頂列 ── */
+  .topbar{
+    background:linear-gradient(120deg, #14503C 0%, #1E6B52 55%, #237857 100%);
+    color:#fff; padding:16px 28px; display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+    box-shadow:0 2px 10px rgba(20,80,60,.25);
+  }
+  .brand{display:flex; align-items:center; gap:14px;}
+  .logo-mark{display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,.2));}
+  .topbar h1{margin:0; font-size:27px; font-weight:800; letter-spacing:2px; line-height:1.15;
+    text-shadow:0 1px 3px rgba(0,0,0,.18);}
+  .topbar h1 .ver{font-size:14px; font-weight:600; opacity:.7; letter-spacing:1px; vertical-align:super;
+    background:rgba(255,255,255,.16); padding:2px 8px; border-radius:99px; margin-left:4px;}
+  .topbar .sub{font-size:13px; opacity:.8; letter-spacing:1px; margin-top:3px;}
+  .topbar .spacer{flex:1}
+  .topright{display:flex; flex-direction:column; align-items:flex-end; gap:8px;}
+  .credit{font-size:12.5px; line-height:1.5; text-align:right; opacity:.92;}
+  .credit a{color:#F2C879; text-decoration:none;}
+  .credit a:hover{text-decoration:underline;}
+  .savebadge{font-size:12px; background:rgba(255,255,255,.16); padding:4px 12px; border-radius:99px;}
+
+  .wrap{max-width:1280px; margin:0 auto; padding:20px 24px 60px;}
+
+  @media (max-width:680px){
+    .topbar h1{font-size:21px;}
+    .topright{align-items:flex-start; width:100%;}
+    .credit{text-align:left;}
+  }
+
+  /* ── 分頁籤 ── */
+  .tabs{display:flex; gap:4px; border-bottom:2px solid var(--line-strong); margin-bottom:20px; flex-wrap:wrap;}
+  .tab{
+    border:none; background:none; cursor:pointer; font-family:inherit;
+    font-size:15px; padding:10px 18px; color:var(--ink-soft);
+    border-bottom:3px solid transparent; margin-bottom:-2px; font-weight:500;
+  }
+  .tab:hover{color:var(--green)}
+  .tab.active{color:var(--green); border-bottom-color:var(--green); font-weight:700;}
+  .panel{display:none}
+  .panel.active{display:block}
+
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:20px 22px; margin-bottom:18px;
+  }
+  .card h2{margin:0 0 6px; font-size:17px; color:var(--green-deep);}
+  .card h2 .tag{font-size:12px; color:var(--ink-soft); font-weight:400; margin-left:8px;}
+  .hint{font-size:13px; color:var(--ink-soft); margin:4px 0 14px;}
+
+  /* ── 表單 ── */
+  label{font-size:13.5px; font-weight:600; display:block; margin-bottom:4px;}
+  input[type=text],input[type=number],select,textarea{
+    font-family:inherit; font-size:14px; padding:8px 10px;
+    border:1px solid var(--line-strong); border-radius:6px; background:#fff; color:var(--ink);
+  }
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--green); outline-offset:0; border-color:var(--green);}
+  textarea{width:100%; resize:vertical;}
+  .row{display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; margin-bottom:14px;}
+  .row > div{display:flex; flex-direction:column;}
+
+  button{
+    font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;
+    border:none; border-radius:7px; padding:9px 16px;
+    background:var(--green); color:#fff; transition:background .15s;
+  }
+  button:hover{background:var(--green-deep)}
+  button.ghost{background:#fff; color:var(--green); border:1.5px solid var(--green);}
+  button.ghost:hover{background:var(--green-tint)}
+  button.warn{background:var(--amber)}
+  button.warn:hover{background:#96650D}
+  button.danger{background:var(--red)}
+  button.danger:hover{background:#8F3530}
+  button.small{font-size:12.5px; padding:5px 10px;}
+  button:disabled{opacity:.45; cursor:not-allowed;}
+
+  /* ── 匯入區 ── */
+  .dropzone{
+    border:2px dashed var(--line-strong); border-radius:var(--radius);
+    padding:36px 20px; text-align:center; color:var(--ink-soft); cursor:pointer;
+    transition:all .15s; background:#FCFDFB;
+  }
+  .dropzone:hover,.dropzone.drag{border-color:var(--green); background:var(--green-tint); color:var(--green-deep);}
+  .dropzone .big{font-size:17px; font-weight:700; color:var(--ink); margin-bottom:4px;}
+  .sheet-list{margin-top:16px;}
+  .sheet-item{
+    display:flex; align-items:center; gap:12px; padding:10px 14px;
+    border:1px solid var(--line); border-radius:8px; margin-bottom:8px; background:#fff;
+  }
+  .sheet-item.detected{border-left:4px solid var(--green);}
+  .sheet-item.skip{opacity:.55; border-left:4px solid var(--line-strong);}
+  .sheet-item .name{font-weight:700; min-width:70px;}
+  .sheet-item .meta{font-size:13px; color:var(--ink-soft); flex:1;}
+  .sheet-item .badge{font-size:11.5px; padding:2px 9px; border-radius:99px; font-weight:600;}
+  .badge.has-score{background:var(--blue-tint); color:var(--blue);}
+  .badge.blank{background:var(--amber-tint); color:var(--amber);}
+  .badge.nodetect{background:#EEE; color:#888;}
+
+  /* ── 成績表 ── */
+  .table-tools{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px;}
+  .table-tools .sep{width:1px; height:24px; background:var(--line-strong); margin:0 4px;}
+  .weight-pill{
+    font-size:13.5px; font-weight:700; padding:6px 14px; border-radius:99px;
+    background:var(--green-tint); color:var(--green-deep);
+  }
+  .weight-pill.bad{background:var(--red-tint); color:var(--red);}
+  .weight-pill.table-weight{display:inline-flex; align-items:center; justify-content:center; font-size:12px; padding:2px 9px; line-height:1.25;}
+  .table-scroll{overflow:auto; max-height:80vh; border:1px solid var(--line-strong); border-radius:8px; background:#fff;}
+  table.score{border-collapse:separate; border-spacing:0; width:max-content; min-width:0; font-size:13.5px;}
+  table.score th, table.score td{border-right:1px solid var(--line); border-bottom:1px solid var(--line); padding:0; white-space:nowrap; text-align:center;}
+  table.score thead th{position:sticky; background:#fff; z-index:5;}
+  table.score thead tr.grp th{top:0; height:26px; font-size:12px; letter-spacing:1px; color:#fff; z-index:6;}
+  table.score thead tr.hdr th{top:26px; vertical-align:top;}
+  /* 群組色帶（簽名元素）：每個成績群組一條色帶，對應紙本成績冊分區 */
+  .g-daily{background:var(--green)!important;}
+  .g-prelim{background:#4A8DB7!important;}   /* 期初考：淺藍 */
+  .g-exam{background:var(--blue)!important;}  /* 期中考：藍 */
+  .g-final{background:#1E5A7A!important;}     /* 期末考：深藍 */
+  .g-work{background:var(--plum)!important;}
+  .g-other{background:var(--ink-soft)!important;}
+  .g-fixed{background:#8A958D!important;}
+  .hdr-cell{padding:5px 3px 5px; display:flex; flex-direction:column; gap:3px; min-width:42px; align-items:center;}
+  .hdr-cell input.colname{width:100%; max-width:70px; font-size:11px; padding:3px 3px; border:1px solid var(--line); border-radius:5px; font-weight:600; text-align:center;}
+  .hdr-cell .wline{display:flex; align-items:center; gap:2px; font-size:11px; color:var(--ink-soft);}
+  .hdr-cell input.colweight{width:38px; font-size:10px; padding:2px 2px; border:1px solid var(--line); border-radius:5px; text-align:center; font-family:var(--mono); -moz-appearance:textfield;}
+  .hdr-cell input.colweight::-webkit-outer-spin-button,
+  .hdr-cell input.colweight::-webkit-inner-spin-button{-webkit-appearance:none; margin:0;}
+  .hdr-cell .selbox{display:none; align-items:center; gap:3px; font-size:10.5px; color:var(--green-deep); font-weight:600; cursor:pointer;}
+  .select-mode .hdr-cell .selbox{display:flex;}
+  .hdr-cell .delcol{display:none; font-size:10.5px; color:var(--red); cursor:pointer; text-align:center; background:none; border:none; padding:0; font-weight:600;}
+  .edit-mode .hdr-cell .delcol{display:inline}
+  th.avg-col .hdr-cell{background:var(--avg-tint);}
+  th.avg-col{background:var(--avg-tint)!important;}
+  td.avg-cell{background:var(--avg-tint); text-align:center; padding:5px 4px; font-family:var(--mono); color:var(--amber); font-weight:700; font-size:12.5px;}
+  .sticky-l{position:sticky; left:0; background:#fff; z-index:4;}
+  .sticky-l2{position:sticky; background:#fff; z-index:4;}
+  thead .sticky-l, thead .sticky-l2{z-index:8!important;}
+  table.score td.seat{padding:5px 4px; color:var(--ink-soft); font-family:var(--mono); text-align:center; font-size:12.5px;}
+  table.score td.sname{padding:5px 4px; font-weight:600; min-width:64px; font-size:13px; text-align:center;}
+  table.score td input.sc{
+    width:44px; border:none; padding:6px 3px; font-size:13px; text-align:center;
+    font-family:var(--mono); background:transparent;
+  }
+  table.score td input.sc:focus{outline:2px solid var(--green); outline-offset:-2px; background:var(--green-tint);}
+  td.calc{padding:5px 8px; text-align:center; font-family:var(--mono); font-size:12.5px;}
+  td.calc.total{color:var(--ink-soft);}
+  td.calc.final{font-weight:800; color:var(--green-deep); background:var(--green-tint);}
+  td.calc.final.fail{color:var(--red)!important; background:var(--red-tint); font-weight:800;}
+  td.adj-cell{padding:3px 5px; background:var(--blue-tint);}
+  td input.adj{
+    width:44px; border:1.5px solid var(--blue); padding:5px 3px; text-align:center;
+    font-family:var(--mono); background:#fff; font-size:13px; border-radius:5px;
+    color:var(--blue); font-weight:700;
+  }
+  td input.adj:focus{outline:2px solid var(--blue); border-color:var(--blue);}
+  /* 個別配分按鈕 */
+  .btn-personal{
+    font-size:10px; padding:2px 5px; border-radius:4px; cursor:pointer; font-weight:700;
+    border:1px solid var(--plum); background:var(--plum-tint); color:var(--plum);
+    line-height:1; white-space:nowrap; margin-left:3px;
+  }
+  .btn-personal:hover{background:var(--plum); color:#fff;}
+  .btn-personal.active{background:var(--plum); color:#fff;}
+  tbody tr:hover td{background-color:#F3F7F3;}
+  tbody tr:hover td.avg-cell{background-color:#FBF0D6;}
+  tbody tr:hover td.adj-cell{background-color:#DDE9F4;}
+  /* 表格縮放：使用 zoom 保留 sticky 表頭的正確吸附位置 */
+  #scoreTable{transform-origin:top left;}
+
+  /* 建立平均欄位面板 */
+  .avgpanel{
+    display:none; background:var(--amber-tint); border:1px solid #E8D5A8;
+    border-radius:8px; padding:14px 16px; margin-bottom:12px;
+  }
+  .avgpanel.open{display:block}
+  .avgpanel .row{margin-bottom:8px}
+  .avgpanel .src-list{font-size:13px; color:var(--ink-soft);}
+
+  /* 統計 */
+  .stat-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:12px; margin-bottom:20px;}
+  .stat{background:#fff; border:1px solid var(--line); border-radius:8px; padding:12px 14px;}
+  .stat .k{font-size:12.5px; color:var(--ink-soft);}
+  .stat .v{font-size:22px; font-weight:800; font-family:var(--mono); color:var(--green-deep);}
+  .stat.bad .v{color:var(--red)}
+  .chart-box{background:#fff; border:1px solid var(--line); border-radius:8px; padding:16px; height:340px;}
+  .stat-subtabs{display:flex; gap:6px; margin-bottom:18px;}
+  .stab{font-family:inherit; font-size:14px; padding:7px 16px; border-radius:99px; border:1.5px solid var(--line-strong);
+        background:#fff; color:var(--ink-soft); cursor:pointer; font-weight:600;}
+  .stab:hover{border-color:var(--green); color:var(--green);}
+  .stab.active{background:var(--green); color:#fff; border-color:var(--green);}
+  .stat-panel{display:none;}
+  .stat-panel.active{display:block;}
+  .chk-grid{display:flex; flex-wrap:wrap; gap:6px 14px; padding:8px 0;}
+  .chk-grid label{font-weight:400; font-size:13.5px; display:flex; align-items:center; gap:5px; margin:0;}
+  .chk-grid input{width:15px; height:15px; accent-color:var(--green);}
+  .export-picker{border:1px solid var(--line); border-radius:8px; padding:12px 14px; background:#FCFDFB; margin:12px 0 18px;}
+  .export-term{border-top:1px solid var(--line); padding:10px 0 4px;}
+  .export-term:first-child{border-top:none; padding-top:0;}
+  .export-term-head{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:6px;}
+  .export-term-title{font-size:13.5px; font-weight:800; color:var(--green-deep);}
+  .export-actions{display:flex; gap:6px; flex-wrap:wrap;}
+  table.stat-table{border-collapse:collapse; width:100%; font-size:13px; margin:10px 0 18px; background:#fff;}
+  table.stat-table th{background:var(--green); color:#fff; padding:8px 10px; text-align:center; font-weight:600; position:sticky; top:0;}
+  table.stat-table th:first-child{text-align:left;}
+  table.stat-table td{padding:7px 10px; border-bottom:1px solid var(--line); text-align:center; font-family:var(--mono);}
+  table.stat-table td:first-child{text-align:left; font-weight:600; font-family:inherit;}
+  table.stat-table tr:hover td{background:var(--green-tint);}
+  table.stat-table td.bad{color:var(--red); font-weight:700;}
+  table.stat-table tfoot td{background:var(--paper); font-weight:700; border-top:2px solid var(--line-strong);}
+
+  /* 班級三層選取器 */
+  .class-picker{background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:10px 14px; margin-bottom:4px;}
+  .cp-row{display:flex; align-items:flex-start; gap:10px; padding:4px 0; min-height:34px;}
+  .cp-row + .cp-row{border-top:1px solid var(--line);}
+  .cp-term-row{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px; padding:4px 0; min-height:34px;}
+  .cp-term-row + .cp-row{border-top:1px solid var(--line);}
+  .cp-field{display:flex; align-items:flex-start; gap:10px; min-width:0;}
+  .cp-label{font-size:12.5px; font-weight:700; color:var(--ink-soft); min-width:38px; padding-top:5px; flex-shrink:0;}
+  .cp-pills{display:flex; flex-wrap:wrap; gap:5px; flex:1;}
+  .cp-pill{
+    font-size:13px; padding:4px 13px; border-radius:99px; cursor:pointer; font-weight:600;
+    border:1.5px solid var(--line-strong); background:#fff; color:var(--ink-soft);
+    transition:all .12s; white-space:nowrap; font-family:inherit;
+  }
+  .cp-pill:hover{border-color:var(--green); color:var(--green); background:var(--green-tint);}
+  .cp-pill.selected{background:var(--green); color:#fff; border-color:var(--green-deep);}
+  .cp-pill.dim{opacity:.38; pointer-events:none;}
+  .cp-empty{font-size:13px; color:var(--ink-soft); padding:4px 0; font-style:italic;}
+  @media (max-width:760px){ .cp-term-row{grid-template-columns:1fr;} }
+
+  /* 載入清單：加刪除按鈕 */
+  .load-class-item-actions{display:flex; align-items:center; gap:6px;}
+
+  /* 上傳成績 Modal */
+  .us-radio{font-size:13px; font-weight:400; display:flex; align-items:center; gap:6px; padding:7px 12px;
+    border:1.5px solid var(--line-strong); border-radius:8px; cursor:pointer; background:#fff;}
+  .us-radio:hover{border-color:var(--blue);}
+  .us-radio input{accent-color:var(--blue);}
+  .us-match-item{display:flex; align-items:flex-start; gap:10px; padding:9px 12px; border:1px solid var(--line);
+    border-radius:8px; margin-bottom:6px; background:#fff;}
+  .us-match-item.matched{border-left:4px solid var(--green);}
+  .us-match-item.partial{border-left:4px solid var(--amber); background:var(--amber-tint);}
+  .us-match-item.nomatch{border-left:4px solid var(--red); background:var(--red-tint);}
+  .us-match-item input[type=checkbox]{width:16px; height:16px; margin-top:2px; accent-color:var(--green); flex-shrink:0;}
+  .us-match-info{flex:1; min-width:0;}
+  .us-match-title{font-weight:700; font-size:13.5px;}
+  .us-match-detail{font-size:12px; color:var(--ink-soft); margin-top:2px; line-height:1.5;}
+  .us-match-badge{font-size:11px; padding:2px 8px; border-radius:99px; font-weight:600; flex-shrink:0; white-space:nowrap;}
+  .badge-ok{background:var(--green-tint); color:var(--green-deep);}
+  .badge-warn{background:var(--amber-tint); color:var(--amber);}
+  .badge-err{background:var(--red-tint); color:var(--red);}
+  .us-warn-list{font-size:11.5px; color:var(--red); margin-top:3px;}
+  .us-warn-list.amber{color:var(--amber);}
+
+  .load-filter-row{display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; margin-bottom:14px;}
+  .load-filter-row > div{display:flex; flex-direction:column;}
+  .load-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:10px;}
+  .load-term-group{background:var(--paper); border:1px solid var(--line); border-radius:10px; overflow:hidden;}
+  .load-term-hdr{
+    background:var(--green); color:#fff; padding:10px 14px;
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+  }
+  .load-term-hdr .term-label{font-weight:700; font-size:14px;}
+  .load-term-hdr .term-count{font-size:12px; opacity:.85;}
+  .load-term-hdr button{font-size:11px; padding:3px 8px; background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.4); border-radius:5px; color:#fff; cursor:pointer; font-family:inherit;}
+  .load-term-hdr button:hover{background:rgba(255,255,255,.32);}
+  .load-class-list{padding:8px 10px; display:flex; flex-direction:column; gap:4px;}
+  .load-class-item{
+    display:flex; align-items:center; gap:10px; padding:8px 10px;
+    background:#fff; border:1px solid var(--line); border-radius:7px; cursor:pointer;
+    transition:border-color .12s, background .12s;
+  }
+  .load-class-item:hover{border-color:var(--green); background:var(--green-tint);}
+  .load-class-item.current-class{border-left:4px solid var(--green); background:var(--green-tint);}
+  .load-class-item input[type=checkbox]{width:15px; height:15px; accent-color:var(--green); flex-shrink:0;}
+  .load-class-info{flex:1; min-width:0;}
+  .load-class-name{font-weight:700; font-size:14px; color:var(--ink);}
+  .load-class-meta{font-size:12px; color:var(--ink-soft); margin-top:1px;}
+  .load-class-badge{font-size:11px; padding:2px 7px; border-radius:99px; flex-shrink:0; font-weight:600;}
+  .badge-active{background:var(--green-tint); color:var(--green-deep);}
+  .badge-inactive{background:#EEF0EE; color:var(--ink-soft);}
+
+  /* 匯出 */
+  textarea.out{font-family:var(--mono); font-size:12.5px; background:#FCFDFB;}
+
+  /* ── 列印對話框 ── */
+  .print-modal-bg{
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.45);
+    z-index:200; align-items:center; justify-content:center;
+  }
+  .print-modal-bg.open{display:flex;}
+  .print-modal{
+    background:#fff; border-radius:14px; padding:28px 32px; min-width:380px; max-width:520px;
+    box-shadow:0 8px 40px rgba(0,0,0,.22);
+  }
+  .print-modal h3{margin:0 0 16px; color:var(--green-deep); font-size:18px;}
+  .print-modal label{font-size:14px; font-weight:600; display:block; margin-bottom:5px;}
+  .print-modal select{width:100%; margin-bottom:14px;}
+  .print-modal .row{margin-bottom:0; gap:10px;}
+  .print-chk-group{display:flex; flex-direction:column; gap:7px; margin-bottom:16px;}
+  .print-chk-group label{font-weight:400; display:flex; align-items:center; gap:8px; font-size:14px;}
+  .print-chk-group input[type=checkbox]{width:16px; height:16px; accent-color:var(--green);}
+
+  /* ── 列印輸出頁（隱藏，只在列印時顯示）── */
+  #printRoot{display:none;}
+  @media print{
+    @page{ margin:8mm; }
+    html,body{background:#fff!important;}
+    body > *:not(#printRoot){display:none!important;}
+    #printRoot{display:block!important;}
+    #toast,.toast{display:none!important;}
+    .pr-page{page-break-after:always; padding:2mm 0; font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    .pr-page:last-child{page-break-after:avoid;}
+    .pr-title{font-size:15pt; font-weight:800; margin-bottom:2mm; color:#14503C;}
+    .pr-sub{font-size:9pt; color:#5C6B63; margin-bottom:4mm;}
+    .pr-section{font-size:10pt; font-weight:700; color:#14503C; margin:4mm 0 2mm; border-bottom:1px solid #C2CCC2; padding-bottom:1mm;}
+    table.pr-table{border-collapse:collapse; width:100%; font-size:8.5pt; margin-bottom:5mm; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    table.pr-table thead{display:table-header-group;}
+    table.pr-table tr{page-break-inside:avoid;}
+    table.pr-table th{background:#1E6B52!important; color:#fff!important; padding:2.5mm 2mm; border:0.5pt solid #ccc; text-align:center; font-size:8pt;}
+    table.pr-table th.g-daily{background:#1E6B52!important;}
+    table.pr-table th.g-exam{background:#2D5F8A!important;}
+    table.pr-table th.g-avg{background:#B97D14!important;}
+    table.pr-table th.g-fixed{background:#8A958D!important;}
+    table.pr-table td{padding:2mm 1.5mm; border:0.5pt solid #ddd; text-align:center; font-size:8pt; color:#22302A;}
+    table.pr-table td.sname{text-align:left; font-weight:600;}
+    table.pr-table td.final{font-weight:800; color:#14503C;}
+    table.pr-table td.fail{color:#B5443C!important; font-weight:800;}
+    table.pr-table td.avg-v{color:#B97D14; font-weight:700;}
+    table.pr-table tr:nth-child(even) td{background:#F7F8F5;}
+    .pr-stats{display:grid; grid-template-columns:repeat(5,1fr); gap:2mm; margin-bottom:5mm;}
+    .pr-stat{border:0.5pt solid #ccc; border-radius:2mm; padding:2mm; text-align:center;}
+    .pr-stat .k{font-size:7pt; color:#5C6B63;}
+    .pr-stat .v{font-size:12pt; font-weight:800; color:#14503C;}
+    .pr-stat.bad .v{color:#B5443C;}
+    .pr-footer{font-size:7pt; color:#888; border-top:0.5pt solid #ccc; padding-top:2mm; margin-top:3mm; display:flex; justify-content:space-between;}
+  }
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:#fff; padding:10px 22px; border-radius:99px;
+    font-size:14px; opacity:0; pointer-events:none; transition:opacity .25s; z-index:99;
+  }
+  .toast.show{opacity:1}
+  details.howto{margin-bottom:18px; border:1px solid var(--line); border-radius:8px; background:#fff;}
+  details.howto summary{cursor:pointer; padding:12px 16px; font-weight:700; color:var(--green-deep);}
+  details.howto .inner{padding:0 20px 16px; font-size:14px;}
+  details.howto h4{margin:14px 0 4px; color:var(--green-deep);}
+  details.howto li{margin-bottom:4px}
+  .empty{padding:40px 20px; text-align:center; color:var(--ink-soft); font-size:14px;}
+  footer{margin-top:30px; text-align:center; font-size:13px; color:var(--ink-soft); padding-bottom:20px;}
+  footer a{color:var(--green)}
+  @media (max-width:760px){ .wrap{padding:14px} .topbar{padding:12px 16px} }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="logo-mark" aria-hidden="true">
+      <svg viewBox="0 0 48 48" width="46" height="46">
+        <rect x="3" y="3" width="42" height="42" rx="11" fill="#ffffff" opacity="0.12"/>
+        <rect x="9" y="22" width="6" height="17" rx="2" fill="#A8D8C0"/>
+        <rect x="21" y="14" width="6" height="25" rx="2" fill="#ffffff"/>
+        <rect x="33" y="8" width="6" height="31" rx="2" fill="#F2C879"/>
+        <path d="M8 19 L20 13 L33 7" stroke="#F2C879" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="8" cy="19" r="2.6" fill="#fff"/><circle cx="20" cy="13" r="2.6" fill="#fff"/><circle cx="33" cy="7" r="2.6" fill="#fff"/>
+      </svg>
+    </div>
+    <div>
+      <h1>多班級成績管理系統 <span class="ver">2.0</span></h1>
+      <div class="sub">Excel 匯入 ・ 分項配分 ・ 平均欄位 ・ 統計分析</div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <div class="topright">
+    <div class="credit">臺北市立麗山高中　林獻升老師<br><a href="mailto:frog@lssh.tp.edu.tw">frog@lssh.tp.edu.tw</a></div>
+    <span class="savebadge" id="saveBadge">自動儲存</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- 隱藏的全域班級選擇（保留供程式同步，不顯示） -->
+<select id="globalClassSelect" onchange="switchClass(this.value)" style="display:none"></select>
+<select id="scoreClassSelect" style="display:none"></select>
+
+<details class="howto">
+  <summary>使用說明（點擊展開）</summary>
+  <div class="inner">
+    <h4>1. 匯入 Excel 成績冊</h4>
+    <ul>
+      <li>在「匯入 Excel」分頁選擇成績冊檔案（支援 .xls / .xlsx），系統會自動偵測每個班級分頁的學生名單與成績欄位結構（日常考查、期中考試、期末考等）。</li>
+      <li><b>成績冊是空白的</b>：產生對應結構的空白成績輸入表，欄位與原檔一致。</li>
+      <li><b>成績冊已有成績</b>：成績會按原格式一併匯入。</li>
+      <li>「平均」「﹪」「學期成績」等計算欄不會被當成輸入欄匯入，由系統自動計算。</li>
+    </ul>
+    <h4>2. 配分與平均欄位</h4>
+    <ul>
+      <li>每個成績欄位上方有「配分」框（％），學期成績 = Σ(各欄成績 × 配分%) + 加減分。配分為 0 的欄位（如個別小考）只做紀錄、不直接計入。學期成績低於 60 分會以紅色標示。</li>
+      <li>點「選取欄位」進入選取模式 → 勾選多筆小考（或作業）→「建立平均欄位」，系統會新增一個自動計算的平均欄（黃底），可設定其配分比例，並可選擇「去掉最低 N 次」。</li>
+      <li>平均欄會即時隨來源成績更新；空白成績不列入平均計算。表格過寬時可用工具列的「顯示大小」調整文字與列高，或用「高度」調整成績表格視窗長度。</li>
+    </ul>
+    <h4>3. 統計與長期追蹤</h4>
+    <ul>
+      <li>統計分析有三種模式：單一班級（各項目分布與班平均）、多班級比較（選多個班＋特定考試項目）、長期追蹤（同名班級跨學年學期趨勢）。</li>
+    </ul>
+    <h4>4. 其他</h4>
+    <ul>
+      <li>「刪除欄位」模式可移除欄位，欄位名稱與配分隨時可改；總配分非 100% 時會以紅色提醒。</li>
+      <li>批次貼上：可一次勾選多個欄位，直接貼上從 Excel 複製的多欄成績資料。</li>
+      <li>所有學年學期資料自動儲存於瀏覽器；可勾選指定班級下載 Excel，也可下載 JSON 備份並還原回系統。</li>
+    </ul>
+  </div>
+</details>
+
+<div class="tabs">
+  <button class="tab active" data-panel="p-import" onclick="openTab(this)">匯入 Excel</button>
+  <button class="tab" data-panel="p-class" onclick="openTab(this)">班級管理</button>
+  <button class="tab" data-panel="p-score" onclick="openTab(this)">成績管理</button>
+  <button class="tab" data-panel="p-stats" onclick="openTab(this)">統計分析</button>
+  <button class="tab" data-panel="p-export" onclick="openTab(this)">匯出資料</button>
+  <button class="tab" data-panel="p-demo" onclick="openTab(this)">成績示範</button>
+</div>
+
+<!-- ════ 匯入 ════ -->
+<div id="p-import" class="panel active">
+
+  <!-- ── 從已儲存資料載入 / 管理 ── -->
+  <div class="card" id="loadFromStoreCard">
+    <h2>已儲存的班級資料 <span class="tag" id="loadStoreSummary"></span></h2>
+    <p class="hint">直接選取已儲存的班級資料載入工作區，或刪除不需要的班級 / 學期。不需要重複上傳 Excel 檔案。</p>
+    <div id="loadStoreEmpty" style="display:none" class="empty">目前瀏覽器尚無儲存資料，請先透過下方「匯入 Excel」建立班級。</div>
+    <div id="loadStoreContent">
+      <div class="load-filter-row">
+        <div>
+          <label>篩選學年</label>
+          <select id="loadYearFilter" onchange="renderLoadStore()">
+            <option value="">全部學年</option>
+          </select>
+        </div>
+        <div>
+          <label>篩選學期</label>
+          <select id="loadSemFilter" onchange="renderLoadStore()">
+            <option value="">全部學期</option>
+            <option value="1">第一學期</option>
+            <option value="2">第二學期</option>
+          </select>
+        </div>
+        <div style="align-self:flex-end; display:flex; gap:8px;">
+          <button class="ghost small" onclick="loadStoreCheckAll(true)">全選</button>
+          <button class="ghost small" onclick="loadStoreCheckAll(false)">全不選</button>
+        </div>
+      </div>
+      <div id="loadStoreList" class="load-grid"></div>
+      <div style="margin-top:14px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <button onclick="doLoadFromStore()" id="btnLoadStore">▶ 載入勾選的班級</button>
+        <span id="loadStoreCount" style="font-size:13px; color:var(--ink-soft);"></span>
+        <span style="flex:1"></span>
+        <button class="danger small" onclick="doDeleteChecked()" id="btnDeleteChecked" style="display:none">🗑 刪除勾選的班級</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Excel 匯入 ── -->
+  <div class="card">
+    <h2>匯入新的 Excel 成績冊 <span class="tag">.xls / .xlsx，支援多班級分頁</span></h2>
+    <p class="hint">系統會逐一分析活頁簿中的每個分頁，自動辨識「座號／姓名」與成績欄位群組（日常考查、期中考試、期末考）。已有成績會原樣帶入；空白成績冊則建立相同結構的空白輸入表。</p>
+    <div class="row">
+      <div><label>學年</label><input type="number" id="impYear" placeholder="例：114" style="width:110px"></div>
+      <div><label>學期</label>
+        <select id="impSemester"><option value="1" selected>第一學期</option><option value="2">第二學期</option></select>
+      </div>
+      <div><label>科目（選填，會加在班級名稱後）</label><input type="text" id="impSubject" placeholder="例：生物" style="width:140px"></div>
+      <div style="align-self:flex-end"><button class="danger small" onclick="clearImportPreview()">清除預覽</button></div>
+    </div>
+    <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+      <div class="big">點擊選擇檔案，或將 Excel 拖曳到這裡</div>
+      <div>請選擇包含各班分頁的學生班級成績冊檔案（.xls / .xlsx）</div>
+    </div>
+    <input type="file" id="fileInput" accept=".xls,.xlsx" style="display:none">
+    <div class="sheet-list" id="sheetList"></div>
+    <div id="importActions" style="display:none; margin-top:10px;">
+      <button onclick="doImport()">匯入勾選的班級</button>
+      <button class="ghost" onclick="toggleAllSheets(true)">全選</button>
+      <button class="ghost" onclick="toggleAllSheets(false)">全不選</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ 班級管理 ════ -->
+<div id="p-class" class="panel">
+
+  <!-- ── 選取班級 ── -->
+  <div class="card">
+    <h2>選取班級 <span class="tag" id="classMgrSummary"></span></h2>
+    <p class="hint">選擇學年 → 學期 → 班級，即可編輯該班的學生名單。</p>
+    <div class="class-picker" id="classPickerMgr">
+      <div class="cp-term-row">
+        <div class="cp-field">
+          <span class="cp-label">學年</span>
+          <div class="cp-pills" id="cmYearPills"></div>
+        </div>
+        <div class="cp-field">
+          <span class="cp-label">學期</span>
+          <div class="cp-pills" id="cmSemPills"></div>
+        </div>
+      </div>
+      <div class="cp-row">
+        <span class="cp-label">班級</span>
+        <div class="cp-pills" id="cmClassPills"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 手動新增 ── -->
+  <div class="card">
+    <h2>手動新增班級</h2>
+    <div class="row">
+      <div><label>班級名稱</label><input type="text" id="newClassName" placeholder="例：301 生物"></div>
+      <div><label>學年</label><input type="number" id="newYear" placeholder="例：114" style="width:90px"></div>
+      <div><label>學期</label>
+        <select id="newSemester"><option value="1" selected>第一學期</option><option value="2">第二學期</option></select>
+      </div>
+      <div><button onclick="addClassManual()">新增班級</button></div>
+    </div>
+  </div>
+
+  <!-- ── 學生名單 ── -->
+  <div class="card">
+    <h2>學生名單 <span class="tag" id="classInfoTag"></span></h2>
+    <p class="hint">每行一位學生，可用「座號(空格或Tab)姓名」或只輸入姓名。修改後按「更新名單」。</p>
+    <textarea id="studentNames" rows="14" placeholder="01 王小明&#10;02 李小華&#10;或每行一個姓名"></textarea>
+    <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button onclick="updateStudents()">更新學生名單</button>
+      <button class="danger" onclick="deleteCurrentClass()">刪除此班級</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ 成績管理 ════ -->
+<div id="p-score" class="panel">
+  <div class="card">
+    <h2>成績輸入與配分 <span class="tag" id="scoreClassTag"></span></h2>
+
+    <!-- 班級選取器 -->
+    <div class="class-picker" id="classPicker">
+      <div class="cp-term-row">
+        <div class="cp-field">
+          <span class="cp-label">學年</span>
+          <div class="cp-pills" id="cpYearPills"></div>
+        </div>
+        <div class="cp-field">
+          <span class="cp-label">學期</span>
+          <div class="cp-pills" id="cpSemPills"></div>
+        </div>
+      </div>
+      <div class="cp-row">
+        <span class="cp-label">班級</span>
+        <div class="cp-pills" id="cpClassPills"></div>
+      </div>
+    </div>
+
+    <div class="table-tools" style="margin-top:10px;">
+      <button class="ghost small" id="btnSelectMode" onclick="toggleSelectMode()">☑ 選取欄位</button>
+      <button class="warn small" id="btnMakeAvg" onclick="openAvgPanel()" style="display:none">建立平均欄位</button>
+      <span class="sep"></span>
+      <button class="ghost small" id="btnEditMode" onclick="toggleEditMode()">🗑 刪除欄位</button>
+      <button class="ghost small" onclick="openAddColumn()">＋ 新增欄位</button>
+      <span class="sep"></span>
+      <button class="ghost small" onclick="toggleBatch()">📋 批次貼上成績</button>
+      <button class="warn small" onclick="openCopyWeights()" title="把本班的欄位配分套用到其他班級">⚖ 複製配分到其他班</button>
+      <button class="small" style="background:var(--blue)" onclick="openUploadScores()" title="上傳段考或日常考查成績檔（可多班分頁）">⬆ 上傳成績檔</button>
+      <button class="ghost small" onclick="saveAll(true)">手動儲存</button>
+      <span class="sep"></span>
+      <span style="font-size:12.5px; color:var(--ink-soft);">顯示大小</span>
+      <button class="ghost small" onclick="zoomTable(-1)" title="縮小">－</button>
+      <span id="zoomLabel" style="font-size:12.5px; font-family:var(--mono); min-width:38px; text-align:center; display:inline-block;">100%</span>
+      <button class="ghost small" onclick="zoomTable(1)" title="放大">＋</button>
+      <span style="font-size:12.5px; color:var(--ink-soft);">高度</span>
+      <button class="ghost small" onclick="resizeTableView(-1)" title="降低表格視窗高度">－</button>
+      <span id="tableHeightLabel" style="font-size:12.5px; font-family:var(--mono); min-width:38px; text-align:center; display:inline-block;">80vh</span>
+      <button class="ghost small" onclick="resizeTableView(1)" title="增加表格視窗高度">＋</button>
+    </div>
+
+    <div class="avgpanel" id="avgPanel">
+      <b style="color:var(--amber)">建立平均欄位</b>
+      <div class="src-list" id="avgSrcList" style="margin:4px 0 8px"></div>
+      <div class="row">
+        <div><label>欄位名稱</label><input type="text" id="avgName" value="小考平均" style="width:140px"></div>
+        <div><label>配分 %</label><input type="number" id="avgWeight" value="0" min="0" max="100" style="width:80px"></div>
+        <div><label>計算方式</label>
+          <select id="avgMode">
+            <option value="all">全部平均（空白不計）</option>
+            <option value="drop1">去掉最低 1 次</option>
+            <option value="drop2">去掉最低 2 次</option>
+          </select>
+        </div>
+        <div><button onclick="createAvgColumn()">建立</button></div>
+        <div><button class="ghost" onclick="closeAvgPanel()">取消</button></div>
+      </div>
+    </div>
+
+    <div class="avgpanel" id="addColPanel">
+      <b style="color:var(--amber)">新增成績欄位</b>
+      <div class="row" style="margin-top:8px">
+        <div><label>欄位名稱</label><input type="text" id="newColName" placeholder="例：小考11、作業3" style="width:150px"></div>
+        <div><label>群組</label>
+          <select id="newColGroup">
+            <option value="日常考查">日常考查</option>
+            <option value="期初考">期初考</option>
+            <option value="期中考">期中考</option>
+            <option value="期末考">期末考</option>
+          </select>
+        </div>
+        <div><label>配分 %</label><input type="number" id="newColWeight" value="0" min="0" max="100" style="width:80px"></div>
+        <div><button onclick="addColumn()">新增</button></div>
+        <div><button class="ghost" onclick="document.getElementById('addColPanel').classList.remove('open')">取消</button></div>
+      </div>
+    </div>
+
+    <div class="avgpanel" id="batchPanel">
+      <b style="color:var(--amber)">批次貼上成績</b>
+      <p class="hint" style="margin:4px 0 8px">可一次勾選多個考試欄位，直接貼上從 Excel 複製的多欄成績資料。系統會依勾選欄位順序，由左到右對應貼上的各欄成績；每列對應一位學生。</p>
+      <div class="row">
+        <div style="min-width:280px; flex:1;">
+          <label>目標欄位（可多選）</label>
+          <div style="display:flex; gap:8px; margin:6px 0;">
+            <button class="ghost small" onclick="batchCheckAll(true)">全選</button>
+            <button class="ghost small" onclick="batchCheckAll(false)">清除</button>
+          </div>
+          <div id="batchColChecks" class="chk-grid" style="border:1px solid var(--line); border-radius:8px; padding:10px; max-height:170px; overflow:auto;"></div>
+        </div>
+        <div style="flex:1; min-width:240px"><label>成績資料</label><textarea id="batchInput" rows="4"></textarea></div>
+        <div><button onclick="applyBatch()">匯入成績</button></div>
+      </div>
+    </div>
+
+    <div class="table-scroll" id="tableWrap">
+      <div class="empty" id="noClassMsg">尚未選擇班級——請先在上方「匯入 Excel」或「班級管理」建立班級。</div>
+      <table class="score" id="scoreTable" style="display:none">
+        <thead>
+          <tr class="grp" id="grpRow"></tr>
+          <tr class="hdr" id="hdrRow"></tr>
+        </thead>
+        <tbody id="scoreBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════ 統計分析 ════ -->
+<div id="p-stats" class="panel">
+  <div class="card">
+    <h2>統計分析</h2>
+    <div class="stat-subtabs">
+      <button class="stab active" data-stab="st-single" onclick="openStatTab(this)">單一班級</button>
+      <button class="stab" data-stab="st-compare" onclick="openStatTab(this)">多班級比較</button>
+      <button class="stab" data-stab="st-track" onclick="openStatTab(this)">長期追蹤</button>
+    </div>
+
+    <!-- 單一班級 -->
+    <div id="st-single" class="stat-panel active">
+      <div class="row" style="align-items:center; margin-bottom:14px;">
+        <div><label>學年</label>
+          <select id="statYearSelect" onchange="fillStatSemSelect(); fillStatClassSelect(); renderSingleStats()" style="min-width:130px"></select>
+        </div>
+        <div><label>學期</label>
+          <select id="statSemSelect" onchange="fillStatClassSelect(); renderSingleStats()" style="min-width:130px"></select>
+        </div>
+        <div><label>班級</label>
+          <select id="statClassSelect" onchange="renderSingleStats()" style="min-width:220px"></select>
+        </div>
+        <div><label>統計依據</label>
+          <select id="statBasisSelect" onchange="renderSingleStats()" style="min-width:160px">
+            <option value="__FINAL__">學期成績（加權後）</option>
+          </select>
+        </div>
+      </div>
+      <div class="stat-grid" id="statGrid"></div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:8px;">
+        <div class="chart-box"><canvas id="distChart"></canvas></div>
+        <div class="chart-box"><canvas id="itemChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- 多班級比較 -->
+    <div id="st-compare" class="stat-panel">
+      <div class="row" style="align-items:flex-end; margin-bottom:8px;">
+        <div><label>學年</label>
+          <select id="cmpYearSelect" onchange="fillCmpSemSelect(); initCompare()" style="min-width:130px"></select>
+        </div>
+        <div><label>學期</label>
+          <select id="cmpSemSelect" onchange="initCompare()" style="min-width:130px"></select>
+        </div>
+        <div style="flex:1; min-width:240px;">
+          <label>選擇要比較的班級</label>
+          <div class="chk-grid" id="cmpClassChecks"></div>
+        </div>
+        <div><label>比較項目</label>
+          <select id="cmpItemSelect" style="min-width:180px"><option value="__FINAL__">學期成績（加權後）</option></select>
+        </div>
+        <div style="align-self:flex-end"><button onclick="renderCompare()">產生比較分析</button></div>
+      </div>
+      <p class="hint">勾選多個班級（同一學年學期），可比較各班在「學期成績」或「特定考試項目（如期中考、期末考、平均欄）」上的表現。</p>
+      <div id="cmpResult"></div>
+    </div>
+
+    <!-- 長期追蹤 -->
+    <div id="st-track" class="stat-panel">
+      <div class="row" style="align-items:flex-end; margin-bottom:8px;">
+        <div><label>學年篩選</label>
+          <select id="trackYearSelect" onchange="fillTrackSemSelect(); renderTrackClassChecks()" style="min-width:130px"></select>
+        </div>
+        <div><label>學期篩選</label>
+          <select id="trackSemSelect" onchange="renderTrackClassChecks()" style="min-width:130px"></select>
+        </div>
+        <div style="align-self:flex-end; display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="ghost small" onclick="trackCheckVisible(true)">全選目前範圍</button>
+          <button class="ghost small" onclick="trackCheckVisible(false)">清除目前範圍</button>
+        </div>
+      </div>
+      <div class="row" style="align-items:flex-start; margin-bottom:8px;">
+        <div style="flex:1; min-width:240px;">
+          <label>選擇要追蹤的班級</label>
+          <div class="chk-grid" id="trackClassChecks" style="max-height:180px; overflow:auto; border:1px solid var(--line); border-radius:8px; padding:10px;"></div>
+        </div>
+        <div><button onclick="renderTrack()">產生長期分析</button></div>
+      </div>
+      <p class="hint">先勾選你要視為同一個班級沿革的班級資料。系統會先檢查各班學生姓名是否一致；若差異過大，會提醒你可能選錯班級。</p>
+      <div id="trackResult"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ 匯出 ════ -->
+<div id="p-export" class="panel">
+  <div class="card">
+    <h2>資料儲存與匯出 <span class="tag" id="storeSummaryTag"></span></h2>
+    <p class="hint">系統會把所有學年、學期、班級的資料一併儲存在瀏覽器中，可長期累積；以下提供 Excel、JSON 兩種下載格式。</p>
+    <div class="table-tools">
+      <button onclick="openExportModal()">⬇ 下載班級成績</button>
+      <button style="background:var(--blue)" onclick="openPrintModal()">🖨 列印班級成績</button>
+      <button style="background:var(--plum)" onclick="exportJSON()">⬇ 下載JSON備份</button>
+      <button class="ghost" onclick="document.getElementById('jsonImport').click()">⬆ 還原 JSON 備份</button>
+      <input type="file" id="jsonImport" accept=".json" style="display:none" onchange="importJSON(this)">
+      <button class="danger" onclick="clearAll()">清除所有資料</button>
+    </div>
+    <h2 style="margin-top:18px">成績資料綜覽</h2>
+    <div class="row" style="margin-bottom:10px; align-items:flex-end;">
+      <div><label>學年</label>
+        <select id="tsvYearSelect" onchange="fillTsvSemSelect(); fillTsvSelect(); renderTSV()" style="min-width:140px"></select>
+      </div>
+      <div><label>學期</label>
+        <select id="tsvSemSelect" onchange="fillTsvSelect(); renderTSV()" style="min-width:140px"></select>
+      </div>
+      <div><label>選擇班級</label>
+        <select id="tsvClassSelect" onchange="renderTSV()" style="min-width:240px"></select>
+      </div>
+      <div><button class="ghost small" onclick="copyTSV()">📋 複製此表</button></div>
+    </div>
+    <textarea class="out" id="tsvOut" rows="14" readonly></textarea>
+  </div>
+</div>
+
+<!-- ════ 成績示範 ════ -->
+<div id="p-demo" class="panel">
+  <div class="card">
+    <h2>成績示範</h2>
+    <p class="hint">內建 2 個學年、4 個學期、共 11 份示範班級成績檔。可勾選單一班級，也可整個學年或整個學期匯入，方便練習匯入、配分、統計分析與長期追蹤。</p>
+    <div class="stat-grid" style="margin-bottom:14px;">
+      <div class="stat"><div class="k">示範資料量</div><div class="v" id="demoDataCount">11 班</div></div>
+      <div class="stat"><div class="k">固定欄位</div><div class="v">3+2+1</div></div>
+      <div class="stat"><div class="k">預設配分</div><div class="v">30/20/20/30</div></div>
+      <div class="stat"><div class="k">建議練習</div><div class="v">匯入/統計/追蹤</div></div>
+    </div>
+    <div class="load-filter-row">
+      <div>
+        <label>學年篩選</label>
+        <select id="demoYearFilter" onchange="renderDemoList()">
+          <option value="">全部學年</option>
+        </select>
+      </div>
+      <div>
+        <label>學期篩選</label>
+        <select id="demoSemFilter" onchange="renderDemoList()">
+          <option value="">全部學期</option>
+          <option value="1">第一學期</option>
+          <option value="2">第二學期</option>
+        </select>
+      </div>
+      <div style="align-self:flex-end; display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="ghost small" onclick="demoCheckRange('year',true)">全選目前學年</button>
+        <button class="ghost small" onclick="demoCheckRange('term',true)">全選目前學期</button>
+        <button class="ghost small" onclick="demoCheckAll(false)">清除勾選</button>
+      </div>
+    </div>
+    <div id="demoList" class="load-grid"></div>
+    <div style="margin-top:14px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+      <button onclick="importDemoSelected()" id="btnImportDemo">▶ 匯入勾選的示範班級</button>
+      <span id="demoCount" style="font-size:13px; color:var(--ink-soft);"></span>
+    </div>
+    <div class="avgpanel open" style="margin-top:16px;">
+      <b style="color:var(--amber)">示範操作建議</b>
+      <div class="src-list" style="margin-top:6px; line-height:1.7;">
+        113 學年的 201 班會在 114 學年升為 301 班，成績平均隨學期穩定上升，適合示範長期追蹤。
+        113 學年的 202 班會在 114 學年升為 302 班，成績逐步下滑，適合示範預警與比較。
+        203、204、305 班則帶有較隨機的起伏，可用來練習多班級比較與成績分布觀察。
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ 個別學生配分 Modal ════ -->
+<div class="print-modal-bg" id="personalWtBg">
+  <div class="print-modal" style="min-width:440px; max-width:600px;">
+    <h3>👤 個別學生配分設定</h3>
+    <p style="font-size:13px; color:var(--ink-soft); margin:0 0 6px" id="personalStudentName"></p>
+    <p style="font-size:12.5px; color:var(--amber); margin:0 0 12px">設為 0% 或空白表示使用班級預設配分。個別配分僅影響此學生的學期成績計算，不影響其他學生。</p>
+    <div style="max-height:320px; overflow:auto; border:1px solid var(--line); border-radius:8px; margin-bottom:14px;">
+      <table class="stat-table" id="personalWtTable">
+        <thead><tr><th>欄位</th><th>群組</th><th>班級配分</th><th>個別配分（%）</th></tr></thead>
+        <tbody id="personalWtBody"></tbody>
+      </table>
+    </div>
+    <div class="row">
+      <button onclick="savePersonalWeights()">儲存個別配分</button>
+      <button class="ghost" onclick="document.getElementById('personalWtBg').classList.remove('open')">取消</button>
+      <button class="danger small" onclick="clearPersonalWeights()" style="margin-left:auto">重設為班級預設</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ 複製配分 Modal ════ -->
+<div class="print-modal-bg" id="copyWtBg">
+  <div class="print-modal">
+    <h3>⚖ 複製配分到其他班級</h3>
+    <p style="font-size:13px; color:var(--ink-soft); margin:0 0 14px">
+      將來源班級每個欄位的配分（%），依「欄位名稱」對應套用到目標班級。名稱相同的欄位才會被套用。</p>
+    <label>來源班級（複製此班的配分）</label>
+    <select id="copyFromSelect" style="width:100%; margin-bottom:14px"></select>
+    <label>套用到以下班級（可多選）</label>
+    <div class="chk-grid" id="copyToChecks" style="max-height:200px; overflow:auto; border:1px solid var(--line); border-radius:8px; padding:10px; margin-bottom:8px"></div>
+    <div style="display:flex; gap:10px; margin-bottom:14px;">
+      <button class="ghost small" onclick="copyToCheckAll(true)">全選同年段</button>
+      <button class="ghost small" onclick="copyToCheckAll(false)">全不選</button>
+    </div>
+    <label style="display:flex; align-items:center; gap:8px; font-weight:400; font-size:13.5px; margin-bottom:14px;">
+      <input type="checkbox" id="copyAlsoMakeAvg"> 同時複製「平均欄位」設定（若目標班有相同來源欄位）
+    </label>
+    <div class="row">
+      <button onclick="doCopyWeights()">套用配分</button>
+      <button class="ghost" onclick="closeCopyWeights()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ 上傳成績檔 Modal ════ -->
+<div class="print-modal-bg" id="uploadScoreBg">
+  <div class="print-modal" style="min-width:560px; max-width:760px; max-height:86vh; overflow:auto;">
+    <h3>⬆ 上傳成績檔匯入</h3>
+
+    <!-- 步驟 1：選檔 -->
+    <div id="usStep1">
+      <p style="font-size:13px; color:var(--ink-soft); margin:0 0 12px">
+        支援多班級分頁的 Excel（.xls/.xlsx）。系統會自動辨識每個分頁的「座號／姓名」與成績欄位，
+        並嚴格比對座號與姓名，確保匯入正確班級的正確學生。
+      </p>
+      <div class="dropzone" id="usDropzone" onclick="document.getElementById('usFileInput').click()" style="padding:28px 20px">
+        <div class="big">點擊選擇成績檔，或拖曳到這裡</div>
+        <div>例如：段考成績單、日常考查成績（可多班分頁）</div>
+      </div>
+      <input type="file" id="usFileInput" accept=".xls,.xlsx" style="display:none">
+    </div>
+
+    <!-- 步驟 2：選欄位與目標 -->
+    <div id="usStep2" style="display:none">
+      <div style="background:var(--green-tint); border-radius:8px; padding:10px 14px; margin-bottom:14px; font-size:13px;">
+        📄 <b id="usFileName"></b>　偵測到 <b id="usSheetCount"></b> 個班級分頁
+      </div>
+
+      <label style="font-size:14px;">① 要匯入哪一種成績？</label>
+      <div style="display:flex; gap:8px; margin:6px 0 14px; flex-wrap:wrap;">
+        <label class="us-radio"><input type="radio" name="usMode" value="exam" checked onchange="usModeChange()"> 段考成績（指定到期初考/期中考/期末考）</label>
+        <label class="us-radio"><input type="radio" name="usMode" value="daily" onchange="usModeChange()"> 日常考查（可一次匯入多筆）</label>
+      </div>
+
+      <!-- 段考模式：單選來源欄位 -->
+      <div id="usColPick" style="margin-bottom:14px;">
+        <label style="font-size:14px;">② 要匯入檔案中的哪個成績欄位？</label>
+        <select id="usSourceCol" style="width:100%; margin-top:6px;"></select>
+      </div>
+
+      <!-- 日常考查模式：多選來源欄位 -->
+      <div id="usDailyCols" style="margin-bottom:14px; display:none;">
+        <label style="font-size:14px;">② 勾選要匯入的成績欄位（可多選，每欄會各自成為一個日常考查欄位）</label>
+        <div style="display:flex; gap:8px; margin:6px 0;">
+          <button class="ghost small" onclick="usDailyColsCheckAll(true)">全選</button>
+          <button class="ghost small" onclick="usDailyColsCheckAll(false)">全不選</button>
+        </div>
+        <div id="usDailyColList" style="border:1px solid var(--line); border-radius:8px; padding:8px; max-height:180px; overflow:auto;"></div>
+        <p style="font-size:12px; color:var(--amber); margin:8px 0 0">💡 欄位名稱會自動沿用檔案中的標題，匯入後可在成績表上方直接修改名稱。不需要事先命名。</p>
+      </div>
+
+      <!-- 段考模式：目標欄位 -->
+      <div id="usExamTarget" style="margin-bottom:14px;">
+        <label style="font-size:14px;">③ 匯入到目前班級結構的哪個欄位？</label>
+        <select id="usTargetCol" style="width:100%; margin-top:6px;"></select>
+        <p style="font-size:12px; color:var(--ink-soft); margin:5px 0 0">所有勾選的班級會匯入到相同名稱的欄位（依欄位名稱對應；找不到同名欄位的班級會自動建立）。</p>
+      </div>
+
+      <label style="font-size:14px;">④ 匯入到哪些班級？（依分頁座號姓名自動比對）</label>
+      <div class="load-filter-row" style="margin:6px 0 8px;">
+        <button class="ghost small" onclick="usCheckAll(true)">全選</button>
+        <button class="ghost small" onclick="usCheckAll(false)">全不選</button>
+        <span style="flex:1"></span>
+        <span style="font-size:12px;color:var(--ink-soft);align-self:center">勾選後系統會比對座號姓名</span>
+      </div>
+      <div id="usClassMatch" style="max-height:280px; overflow:auto; border:1px solid var(--line); border-radius:8px; padding:8px;"></div>
+
+      <div class="row" style="margin-top:16px;">
+        <button onclick="doUploadImport()">確認匯入</button>
+        <button class="ghost" onclick="closeUploadScores()">取消</button>
+        <button class="ghost small" onclick="usBackToStep1()" style="margin-left:auto">↩ 重新選檔</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════ 列印 Modal ════ -->
+<div class="print-modal-bg" id="exportModalBg">
+  <div class="print-modal" style="min-width:560px; max-width:860px; max-height:86vh; overflow:auto;">
+    <h3>⬇ 下載班級成績</h3>
+    <p class="hint" style="margin-top:-6px">先選擇學年與學期，再勾選要下載的班級；同一學期可一鍵全選。</p>
+    <div class="row" style="align-items:flex-end; margin-bottom:10px;">
+      <div><label>學年</label><select id="exportYearFilter" onchange="onRangeYearChange('export')"></select></div>
+      <div><label>學期</label><select id="exportSemFilter" onchange="renderClassRange('export')"></select></div>
+      <div class="export-actions">
+        <button class="ghost small" onclick="setRangeAll('export',true)">全選目前範圍</button>
+        <button class="ghost small" onclick="setRangeAll('export',false)">清除目前範圍</button>
+      </div>
+    </div>
+    <div class="export-picker" style="max-height:420px; overflow:auto;">
+      <div id="exportClassChecks"></div>
+    </div>
+    <div class="row">
+      <button onclick="exportXlsx()">下載 Excel</button>
+      <button class="ghost" onclick="closeExportModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<div class="print-modal-bg" id="printModalBg">
+  <div class="print-modal" style="min-width:560px; max-width:860px; max-height:86vh; overflow:auto;">
+    <h3>🖨 列印班級成績</h3>
+    <p class="hint" style="margin-top:-6px">先選擇學年與學期，再勾選要列印的班級；每班會分頁列印。</p>
+    <div class="row" style="align-items:flex-end; margin-bottom:10px;">
+      <div><label>學年</label><select id="printYearFilter" onchange="onRangeYearChange('print')"></select></div>
+      <div><label>學期</label><select id="printSemFilter" onchange="renderClassRange('print')"></select></div>
+      <div class="export-actions">
+        <button class="ghost small" onclick="setRangeAll('print',true)">全選目前範圍</button>
+        <button class="ghost small" onclick="setRangeAll('print',false)">清除目前範圍</button>
+      </div>
+    </div>
+    <div class="export-picker" style="max-height:260px; overflow:auto;">
+      <div id="printClassChecks"></div>
+    </div>
+    <div style="font-weight:600; font-size:13.5px; margin-bottom:8px; color:var(--ink)">列印內容</div>
+    <div class="print-chk-group">
+      <label><input type="checkbox" id="prChkScores" checked> 完整成績資料表（各欄成績、加權總分、學期成績）</label>
+      <label><input type="checkbox" id="prChkStats" checked> 統計摘要（人數、平均、標準差、最高最低、不及格人數）</label>
+      <label><input type="checkbox" id="prChkDist"> 成績分布（分區人數列表）</label>
+      <label><input type="checkbox" id="prChkRank"> 加入排名欄位</label>
+    </div>
+    <div class="row">
+      <button onclick="doPrint()">列印 / 儲存為 PDF</button>
+      <button class="ghost" onclick="closePrintModal()">取消</button>
+    </div>
+    <p style="font-size:12px; color:var(--ink-soft); margin:10px 0 0">列印對話框開啟後，「目的地」選「另存為 PDF」即可儲存。</p>
+  </div>
+</div>
+</div>
+
+<!-- 列印輸出根節點（必須在 .wrap 之外，否則列印時會被一起隱藏） -->
+<div id="printRoot"></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════ 資料模型 ═══════════════════
+classes[key] = {
+  className, schoolYear, semester, subject,
+  students:[{seat, gender, name}],
+  columns:[{id, name, group, weight, type:'manual'|'avg', sources:[ids], avgMode}],
+  scores:{ sid:{ colId: number } },
+  adjustments:{ sid: number }
+}
+sid = seat + '_' + name
+*/
+let classes = {};
+let curKey = null;
+let selectMode = false, editMode = false;
+let parsedWB = null;       // 暫存解析中的活頁簿
+let parsedSheets = [];     // [{sheetName, detected, students, columns, scores, hasScores}]
+let demoClasses = {};
+let distChart = null;
+let saveTimer = null;
+
+const COL_GROUP_CLASS = g => {
+  if(!g) return 'g-other';
+  if(g.includes('日常')||g.includes('平時')||g.includes('小考')) return 'g-daily';
+  if(g.includes('期初')) return 'g-prelim';
+  if(g.includes('期末')) return 'g-final';
+  if(g.includes('期中')||g.includes('段考')) return 'g-exam';
+  if(g.includes('作業')||g.includes('假期')) return 'g-work';
+  return 'g-other';
+};
+// 群組排序權重：日常考查 → 作業 → 期初考 → 期中考 → 期末考 → 其他
+const GROUP_ORDER = g => {
+  if(!g) return 90;
+  if(g.includes('日常')||g.includes('平時')||g.includes('小考')) return 10;
+  if(g.includes('作業')||g.includes('假期')) return 20;
+  if(g.includes('期初')) return 30;
+  if(g.includes('期中')||g.includes('段考')) return 40;
+  if(g.includes('期末')) return 50;
+  return 90;
+};
+// 依群組權重穩定排序欄位（同群組維持原順序）
+function sortColumns(c){
+  if(!c || !c.columns) return;
+  c.columns = c.columns
+    .map((col,i)=>({col,i}))
+    .sort((a,b)=> (GROUP_ORDER(a.col.group)-GROUP_ORDER(b.col.group)) || (a.i-b.i))
+    .map(x=>x.col);
+}
+const uid = () => 'c' + Math.random().toString(36).slice(2,9);
+const sid = st => st.seat + '_' + st.name;
+const cur = () => classes[curKey] || null;
+const DEMO_SUBJECT = '示範';
+
+/* ═══════════════════ 通用 UI ═══════════════════ */
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._tm); t._tm = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function openTab(btn){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(btn.dataset.panel).classList.add('active');
+  if(btn.dataset.panel==='p-import') initLoadStore();
+  if(btn.dataset.panel==='p-class') { renderClassPanel(); refreshClassMgrPicker(); }
+  if(btn.dataset.panel==='p-stats') renderStats();
+  if(btn.dataset.panel==='p-export'){ renderTSV(); fillStoreSummaryTag(); }
+  if(btn.dataset.panel==='p-demo') renderDemoPage();
+}
+function refreshClassSelect(){
+  ['globalClassSelect','scoreClassSelect'].forEach(id=>{
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    sel.innerHTML = '<option value="">— 選擇班級 —</option>';
+    Object.keys(classes).sort().forEach(k=>{
+      const c = classes[k];
+      const o = document.createElement('option');
+      o.value = k;
+      o.textContent = `${c.className}（${c.schoolYear}-${c.semester}${c.subject? '・'+c.subject:''}）`;
+      sel.appendChild(o);
+    });
+    sel.value = curKey || '';
+  });
+}
+function switchClass(key){
+  curKey = key || null;
+  selectMode = false; editMode = false;
+  document.getElementById('btnSelectMode').textContent = '☑ 選取欄位';
+  document.getElementById('btnMakeAvg').style.display = 'none';
+  closeAvgPanel();
+  // 同步班級管理頁選取器狀態
+  if(key && classes[key]){ _cmKey=key; _cmYear=classes[key].schoolYear; _cmSem=classes[key].semester; }
+  refreshClassSelect();
+  refreshClassPicker();
+  renderTable(); renderStats(); renderTSV(); renderClassPanel();
+}
+
+/* ═══════════════════ 三層班級選取器 ═══════════════════ */
+let _cpYear = null, _cpSem = null;   // 目前選取的學年/學期
+
+function refreshClassPicker(){
+  const allKeys = Object.keys(classes);
+  if(!allKeys.length){ renderCpEmpty(); return; }
+
+  // 所有學年（降序）
+  const years = [...new Set(allKeys.map(k=>classes[k].schoolYear))].sort((a,b)=>+b-+a);
+  // 找目前 curKey 對應的學年/學期，或預設最新學期
+  if(curKey && classes[curKey]){
+    _cpYear = classes[curKey].schoolYear;
+    _cpSem  = classes[curKey].semester;
+  } else {
+    // 預設最新學年最新學期
+    _cpYear = years[0];
+    const semsOfLatest = [...new Set(allKeys.filter(k=>classes[k].schoolYear===_cpYear).map(k=>classes[k].semester))].sort((a,b)=>+b-+a);
+    _cpSem = semsOfLatest[0];
+    // 若 curKey 無效，選第一個班
+    if(!curKey || !classes[curKey]){
+      const firstKey = allKeys.filter(k=>classes[k].schoolYear===_cpYear && classes[k].semester===_cpSem).sort((a,b)=>classes[a].className.localeCompare(classes[b].className))[0];
+      if(firstKey){ curKey=firstKey; refreshClassSelect(); }
+    }
+  }
+  renderCpYear(years);
+  renderCpSem();
+  renderCpClass();
+}
+
+function renderCpYear(years){
+  const container = document.getElementById('cpYearPills');
+  if(!container) return;
+  container.innerHTML = years.map(y=>`
+    <button class="cp-pill ${y===_cpYear?'selected':''}" onclick="cpSelectYear('${y}')">${y} 學年</button>
+  `).join('');
+}
+
+function renderCpSem(){
+  const container = document.getElementById('cpSemPills');
+  if(!container) return;
+  if(!_cpYear){ container.innerHTML='<span class="cp-empty">請先選擇學年</span>'; return; }
+  const sems = [...new Set(Object.keys(classes).filter(k=>classes[k].schoolYear===_cpYear).map(k=>classes[k].semester))].sort((a,b)=>+b-+a);
+  if(!sems.includes(_cpSem)) _cpSem = sems[0];
+  const semLabel = {1:'第一學期', 2:'第二學期'};
+  container.innerHTML = sems.map(s=>`
+    <button class="cp-pill ${s===_cpSem?'selected':''}" onclick="cpSelectSem('${s}')">${semLabel[s]||'第'+s+'學期'}</button>
+  `).join('');
+  // 快速全選此學期按鈕
+  const termKeys = Object.keys(classes).filter(k=>classes[k].schoolYear===_cpYear && classes[k].semester===_cpSem).sort((a,b)=>classes[a].className.localeCompare(classes[b].className));
+  if(termKeys.length>1){
+    container.innerHTML += `<button class="cp-pill" onclick="cpSelectAllSem()" style="border-color:var(--amber); color:var(--amber)">★ 全選此學期</button>`;
+  }
+}
+
+function renderCpClass(){
+  const container = document.getElementById('cpClassPills');
+  if(!container) return;
+  if(!_cpYear || !_cpSem){ container.innerHTML='<span class="cp-empty">請先選擇學年和學期</span>'; return; }
+  const ks = Object.keys(classes).filter(k=>classes[k].schoolYear===_cpYear && classes[k].semester===_cpSem).sort((a,b)=>classes[a].className.localeCompare(classes[b].className));
+  if(!ks.length){ container.innerHTML='<span class="cp-empty">此學年學期尚無班級</span>'; return; }
+  container.innerHTML = ks.map(k=>{
+    const c=classes[k];
+    return `<button class="cp-pill ${k===curKey?'selected':''}" onclick="cpSelectClass('${k}')">${c.className}${c.subject?' ・'+c.subject:''}</button>`;
+  }).join('');
+}
+
+function renderCpEmpty(){
+  ['cpYearPills','cpSemPills','cpClassPills'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.innerHTML='<span class="cp-empty">尚無班級資料</span>';
+  });
+}
+
+function cpSelectYear(y){
+  _cpYear=y;
+  const sems=[...new Set(Object.keys(classes).filter(k=>classes[k].schoolYear===y).map(k=>classes[k].semester))].sort((a,b)=>+b-+a);
+  _cpSem=sems[0]||null;
+  renderCpYear([...new Set(Object.keys(classes).map(k=>classes[k].schoolYear))].sort((a,b)=>+b-+a));
+  renderCpSem(); renderCpClass();
+  // 自動選第一個班
+  const first=Object.keys(classes).filter(k=>classes[k].schoolYear===_cpYear&&classes[k].semester===_cpSem).sort((a,b)=>classes[a].className.localeCompare(classes[b].className))[0];
+  if(first && first!==curKey){ curKey=first; refreshClassSelect(); renderTable(); renderClassPanel(); renderCpClass(); }
+}
+
+function cpSelectSem(s){
+  _cpSem=s;
+  renderCpSem(); renderCpClass();
+  const first=Object.keys(classes).filter(k=>classes[k].schoolYear===_cpYear&&classes[k].semester===s).sort((a,b)=>classes[a].className.localeCompare(classes[b].className))[0];
+  if(first && first!==curKey){ curKey=first; refreshClassSelect(); renderTable(); renderClassPanel(); renderCpClass(); }
+}
+
+function cpSelectClass(key){
+  curKey=key;
+  refreshClassSelect(); renderTable(); renderClassPanel(); renderCpClass();
+  const c=classes[key]; if(c){_cpYear=c.schoolYear; _cpSem=c.semester;}
+  document.getElementById('scoreClassTag').textContent = c? `${c.className}・${c.schoolYear}學年第${c.semester}學期`:'';
+}
+
+function cpSelectAllSem(){
+  const ks=Object.keys(classes).filter(k=>classes[k].schoolYear===_cpYear&&classes[k].semester===_cpSem).sort((a,b)=>classes[a].className.localeCompare(classes[b].className));
+  if(!ks.length) return;
+  curKey=ks[0];
+  refreshClassSelect(); renderTable(); renderClassPanel(); renderCpClass();
+  toast(`已切換至 ${_cpYear}學年第${_cpSem}學期，共 ${ks.length} 個班級（目前顯示 ${classes[curKey].className}）`);
+}
+
+/* ═══════════════════ 班級管理頁選取器 ═══════════════════ */
+let _cmYear = null, _cmSem = null, _cmKey = null;   // 班級管理頁獨立狀態
+
+function refreshClassMgrPicker(){
+  const allKeys = Object.keys(classes);
+  const summary = document.getElementById('classMgrSummary');
+  if(summary) summary.textContent = allKeys.length? `共 ${allKeys.length} 個班級`:'';
+  if(!allKeys.length){ renderCmEmpty(); renderClassPanel(); return; }
+
+  const years = [...new Set(allKeys.map(k=>classes[k].schoolYear))].sort((a,b)=>+b-+a);
+  // 預設最新學年學期，或沿用 curKey
+  if(curKey && classes[curKey]){
+    _cmKey  = curKey;
+    _cmYear = classes[curKey].schoolYear;
+    _cmSem  = classes[curKey].semester;
+  } else {
+    _cmYear = _cmYear || years[0];
+    const sems=[...new Set(allKeys.filter(k=>classes[k].schoolYear===_cmYear).map(k=>classes[k].semester))].sort((a,b)=>+b-+a);
+    _cmSem  = _cmSem && sems.includes(_cmSem) ? _cmSem : sems[0];
+    const ks=allKeys.filter(k=>classes[k].schoolYear===_cmYear&&classes[k].semester===_cmSem).sort((a,b)=>classes[a].className.localeCompare(classes[b].className));
+    _cmKey  = _cmKey && classes[_cmKey] ? _cmKey : (ks[0]||null);
+  }
+  renderCmYears(years);
+  renderCmSems();
+  renderCmClasses();
+  // 同步名單顯示
+  if(_cmKey !== curKey){ curKey = _cmKey; refreshClassSelect(); refreshClassPicker(); }
+  renderClassPanel();
+}
+
+function renderCmEmpty(){
+  ['cmYearPills','cmSemPills','cmClassPills'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.innerHTML='<span class="cp-empty">尚無班級資料</span>';
+  });
+}
+
+function renderCmYears(years){
+  const el=document.getElementById('cmYearPills'); if(!el) return;
+  if(!years) years=[...new Set(Object.keys(classes).map(k=>classes[k].schoolYear))].sort((a,b)=>+b-+a);
+  el.innerHTML=years.map(y=>`<button class="cp-pill ${y===_cmYear?'selected':''}" onclick="cmSelectYear('${y}')">${y} 學年</button>`).join('');
+}
+
+function renderCmSems(){
+  const el=document.getElementById('cmSemPills'); if(!el) return;
+  if(!_cmYear){ el.innerHTML='<span class="cp-empty">請先選擇學年</span>'; return; }
+  const sems=[...new Set(Object.keys(classes).filter(k=>classes[k].schoolYear===_cmYear).map(k=>classes[k].semester))].sort((a,b)=>+b-+a);
+  if(!sems.includes(_cmSem)) _cmSem=sems[0];
+  const lbl={1:'第一學期',2:'第二學期'};
+  el.innerHTML=sems.map(s=>`<button class="cp-pill ${s===_cmSem?'selected':''}" onclick="cmSelectSem('${s}')">${lbl[s]||'第'+s+'學期'}</button>`).join('');
+}
+
+function renderCmClasses(){
+  const el=document.getElementById('cmClassPills'); if(!el) return;
+  if(!_cmYear||!_cmSem){ el.innerHTML='<span class="cp-empty">請先選擇學年和學期</span>'; return; }
+  const ks=Object.keys(classes).filter(k=>classes[k].schoolYear===_cmYear&&classes[k].semester===_cmSem).sort((a,b)=>classes[a].className.localeCompare(classes[b].className));
+  if(!ks.length){ el.innerHTML='<span class="cp-empty">此學年學期尚無班級</span>'; return; }
+  if(!ks.includes(_cmKey)) _cmKey=ks[0];
+  el.innerHTML=ks.map(k=>{
+    const c=classes[k];
+    return `<button class="cp-pill ${k===_cmKey?'selected':''}" onclick="cmSelectClass('${k}')">${c.className}${c.subject?' ・'+c.subject:''}</button>`;
+  }).join('');
+}
+
+function cmSelectYear(y){
+  _cmYear=y;
+  const sems=[...new Set(Object.keys(classes).filter(k=>classes[k].schoolYear===y).map(k=>classes[k].semester))].sort((a,b)=>+b-+a);
+  _cmSem=sems[0]||null;
+  const ks=Object.keys(classes).filter(k=>classes[k].schoolYear===_cmYear&&classes[k].semester===_cmSem).sort((a,b)=>classes[a].className.localeCompare(classes[b].className));
+  _cmKey=ks[0]||null;
+  const years=[...new Set(Object.keys(classes).map(k=>classes[k].schoolYear))].sort((a,b)=>+b-+a);
+  renderCmYears(years); renderCmSems(); renderCmClasses();
+  if(_cmKey){ curKey=_cmKey; refreshClassSelect(); refreshClassPicker(); renderClassPanel(); }
+}
+
+function cmSelectSem(s){
+  _cmSem=s;
+  const ks=Object.keys(classes).filter(k=>classes[k].schoolYear===_cmYear&&classes[k].semester===s).sort((a,b)=>classes[a].className.localeCompare(classes[b].className));
+  _cmKey=ks[0]||null;
+  renderCmSems(); renderCmClasses();
+  if(_cmKey){ curKey=_cmKey; refreshClassSelect(); refreshClassPicker(); renderClassPanel(); }
+}
+
+function cmSelectClass(key){
+  _cmKey=key; curKey=key;
+  refreshClassSelect(); refreshClassPicker(); renderClassPanel(); renderCmClasses();
+}
+
+
+const fileInput = document.getElementById('fileInput');
+const dropzone = document.getElementById('dropzone');
+fileInput.addEventListener('change', e => { if(e.target.files[0]) readWorkbook(e.target.files[0]); });
+dropzone.addEventListener('dragover', e=>{e.preventDefault(); dropzone.classList.add('drag');});
+dropzone.addEventListener('dragleave', ()=>dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', e=>{
+  e.preventDefault(); dropzone.classList.remove('drag');
+  if(e.dataTransfer.files[0]) readWorkbook(e.dataTransfer.files[0]);
+});
+
+/* ═══════════════════ 從已儲存資料載入 ═══════════════════ */
+function initLoadStore(){
+  const allKeys = Object.keys(classes);
+  const summary = document.getElementById('loadStoreSummary');
+  if(summary) summary.textContent = allKeys.length? `共 ${allKeys.length} 個班級`:'';
+  const empty = document.getElementById('loadStoreEmpty');
+  const content = document.getElementById('loadStoreContent');
+  if(!allKeys.length){
+    empty.style.display=''; content.style.display='none'; return;
+  }
+  empty.style.display='none'; content.style.display='';
+  // 填年度篩選
+  const years = [...new Set(Object.values(classes).map(c=>c.schoolYear))].sort((a,b)=>b-a);
+  const ysel = document.getElementById('loadYearFilter');
+  const prev = ysel.value;
+  ysel.innerHTML='<option value="">全部學年</option>'+years.map(y=>`<option value="${y}">${y}學年</option>`).join('');
+  if(years.includes(prev)) ysel.value=prev;
+  renderLoadStore();
+}
+function renderLoadStore(){
+  const yf = document.getElementById('loadYearFilter').value;
+  const sf = document.getElementById('loadSemFilter').value;
+  const list = document.getElementById('loadStoreList');
+  const allKeys = Object.keys(classes);
+  const filtered = allKeys.filter(k=>{
+    const c=classes[k];
+    return (!yf || c.schoolYear===yf) && (!sf || c.semester===sf);
+  });
+  if(!filtered.length){ list.innerHTML='<div class="empty" style="grid-column:1/-1">沒有符合條件的班級</div>'; updateLoadCount(); return; }
+  const groups = {};
+  filtered.forEach(k=>{ const c=classes[k]; const g=`${c.schoolYear}-${c.semester}`; (groups[g]=groups[g]||[]).push(k); });
+  list.innerHTML = Object.keys(groups).sort().reverse().map(g=>{
+    const [yr,sem]=g.split('-');
+    const ks=groups[g].sort((a,b)=>classes[a].className.localeCompare(classes[b].className));
+    return `<div class="load-term-group">
+      <div class="load-term-hdr">
+        <div>
+          <div class="term-label">${yr}學年 第${sem}學期</div>
+          <div class="term-count">${ks.length} 個班級</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button onclick="loadStoreCheckTerm('${g}',true)">全選</button>
+          <button onclick="loadStoreCheckTerm('${g}',false)">全不選</button>
+          <button onclick="deleteTerm('${g}')" style="background:rgba(181,68,60,.75)">🗑 刪除此學期</button>
+        </div>
+      </div>
+      <div class="load-class-list">
+        ${ks.map(k=>{
+          const c=classes[k]; const isCur=k===curKey;
+          const stN=c.students.length, colN=c.columns.length;
+          const hasScore=Object.values(c.scores||{}).some(r=>Object.keys(r).length>0);
+          return `<div class="load-class-item ${isCur?'current-class':''}">
+            <input type="checkbox" class="load-cls-chk" value="${k}" ${isCur?'checked':''} onchange="updateLoadCount()">
+            <div class="load-class-info">
+              <div class="load-class-name">${c.className}${c.subject?'<span style="color:var(--ink-soft);font-weight:400"> ・ '+c.subject+'</span>':''}</div>
+              <div class="load-class-meta">${stN} 位學生 ・ ${colN} 個欄位${hasScore?' ・ 含成績':' ・ 空白'}</div>
+            </div>
+            <div class="load-class-item-actions">
+              <span class="load-class-badge ${isCur?'badge-active':'badge-inactive'}">${isCur?'使用中':'已儲存'}</span>
+              <button class="small danger" onclick="deleteClassByKey('${k}')" style="font-size:11px;padding:3px 8px">🗑</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+  updateLoadCount();
+}
+function updateLoadCount(){
+  const n = document.querySelectorAll('.load-cls-chk:checked').length;
+  const el = document.getElementById('loadStoreCount');
+  if(el) el.textContent = n ? `已勾選 ${n} 個班級` : '';
+  const btn = document.getElementById('btnLoadStore');
+  if(btn) btn.disabled = !n;
+  const delBtn = document.getElementById('btnDeleteChecked');
+  if(delBtn) delBtn.style.display = n ? 'inline-block' : 'none';
+}
+function loadStoreCheckTerm(g, checked){
+  document.querySelectorAll('.load-cls-chk').forEach(cb=>{
+    const c=classes[cb.value];
+    if(c && `${c.schoolYear}-${c.semester}`===g) cb.checked=checked;
+  });
+  updateLoadCount();
+}
+function loadStoreCheckAll(checked){
+  document.querySelectorAll('.load-cls-chk').forEach(cb=>cb.checked=checked);
+  updateLoadCount();
+}
+function doDeleteChecked(){
+  const keys=[...document.querySelectorAll('.load-cls-chk:checked')].map(cb=>cb.value).filter(k=>classes[k]);
+  if(!keys.length){ toast('請勾選要刪除的班級'); return; }
+  if(!confirm(`確定刪除勾選的 ${keys.length} 個班級？此操作無法復原。`)) return;
+  keys.forEach(k=>{ delete classes[k]; });
+  if(!classes[curKey]) curKey = Object.keys(classes)[0]||null;
+  refreshClassSelect(); renderTable(); renderClassPanel(); initLoadStore(); refreshClassPicker(); saveAll();
+  toast(`已刪除 ${keys.length} 個班級`);
+}
+function doLoadFromStore(){
+  const keys=[...document.querySelectorAll('.load-cls-chk:checked')].map(cb=>cb.value).filter(k=>classes[k]);
+  if(!keys.length){ toast('請至少勾選一個班級'); return; }
+  curKey = keys[0];
+  refreshClassSelect(); refreshClassPicker(); renderTable(); renderClassPanel();
+  const scoreTab = document.querySelector('[data-panel="p-score"]');
+  if(scoreTab) openTab(scoreTab);
+  toast(`已載入，目前顯示「${classes[curKey].className}」`);
+}
+
+
+function readWorkbook(file){
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try{
+      parsedWB = XLSX.read(new Uint8Array(ev.target.result), {type:'array'});
+      analyzeSheets();
+    }catch(err){
+      toast('無法讀取此檔案：' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function analyzeSheets(){
+  parsedSheets = [];
+  parsedWB.SheetNames.forEach(name=>{
+    const ws = parsedWB.Sheets[name];
+    const parsed = parseGradeSheet(ws);
+    parsedSheets.push({ sheetName:name, ...parsed });
+  });
+  unifyColumns();   // 以欄位最完整的班級為模板，補齊其他班級缺漏的欄位
+  renderSheetList();
+}
+function clearImportPreview(){
+  parsedWB = null;
+  parsedSheets = [];
+  const fileInput = document.getElementById('fileInput');
+  const sheetList = document.getElementById('sheetList');
+  const actions = document.getElementById('importActions');
+  if(fileInput) fileInput.value = '';
+  if(sheetList) sheetList.innerHTML = '';
+  if(actions) actions.style.display = 'none';
+  toast('已清除本次 Excel 匯入預覽，不影響已匯入班級資料');
+}
+
+/* ═══════════════════ 成績示範 ═══════════════════ */
+function hashSeed(text){
+  let h = 2166136261;
+  for(const ch of String(text)){
+    h ^= ch.charCodeAt(0);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+function makeRand(seedText){
+  let seed = hashSeed(seedText) || 1;
+  return ()=>{
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+}
+function demoColumns(){
+  return [
+    {id:uid(), name:'1', group:'日常考查', weight:10, type:'manual', sources:[], avgMode:'all'},
+    {id:uid(), name:'2', group:'日常考查', weight:10, type:'manual', sources:[], avgMode:'all'},
+    {id:uid(), name:'3', group:'日常考查', weight:10, type:'manual', sources:[], avgMode:'all'},
+    {id:uid(), name:'期中考1', group:'期中考', weight:20, type:'manual', sources:[], avgMode:'all'},
+    {id:uid(), name:'期中考2', group:'期中考', weight:20, type:'manual', sources:[], avgMode:'all'},
+    {id:uid(), name:'期末考', group:'期末考', weight:30, type:'manual', sources:[], avgMode:'all'}
+  ];
+}
+function clampScore(v){ return Math.max(0, Math.min(100, Math.round(v))); }
+function demoRoster(seedKey){
+  const rand = makeRand(`roster-${seedKey}`);
+  const surnames = ['王','李','張','林','陳','黃','吳','劉','蔡','楊','許','鄭','謝','洪','邱','曾','賴','周','葉','蘇','莊','呂','江','何'];
+  const names = ['宇翔','品妍','承翰','芷晴','宥廷','語涵','柏睿','家妤','冠廷','柔安','思妤','奕辰','詠晴','子恩','宥蓁','靖恩','昀庭','昱廷','嘉恩','承恩','沛蓉','柏安','若涵','彥廷','品蓁','宸宇','佳穎','予晴','宥安','芯妤','冠妤','書維','郁晴','子晴'];
+  const total = 26 + Math.floor(rand()*6);
+  const students = [];
+  for(let i=0;i<total;i++){
+    const seat = String(i+1).padStart(2,'0');
+    const gender = rand()>.48 ? '女' : '男';
+    const surname = surnames[Math.floor(rand()*surnames.length)];
+    const given = names[(i + Math.floor(rand()*names.length)) % names.length];
+    students.push({seat, gender, name:`${surname}${given}`});
+  }
+  return students;
+}
+function demoBlueprints(){
+  return [
+    {year:'113', semester:'1', className:'201', trackSeed:'201-301', trend:'up', step:0},
+    {year:'113', semester:'1', className:'202', trackSeed:'202-302', trend:'down', step:0},
+    {year:'113', semester:'1', className:'203', trackSeed:'203', trend:'mix', step:0},
+    {year:'113', semester:'2', className:'201', trackSeed:'201-301', trend:'up', step:1},
+    {year:'113', semester:'2', className:'202', trackSeed:'202-302', trend:'down', step:1},
+    {year:'113', semester:'2', className:'204', trackSeed:'204', trend:'mix', step:0},
+    {year:'114', semester:'1', className:'301', trackSeed:'201-301', trend:'up', step:2},
+    {year:'114', semester:'1', className:'302', trackSeed:'202-302', trend:'down', step:2},
+    {year:'114', semester:'2', className:'301', trackSeed:'201-301', trend:'up', step:3},
+    {year:'114', semester:'2', className:'302', trackSeed:'202-302', trend:'down', step:3},
+    {year:'114', semester:'2', className:'305', trackSeed:'305', trend:'mix', step:0}
+  ];
+}
+function demoTargetMean(info){
+  if(info.trend==='up') return 62 + info.step * 5;
+  if(info.trend==='down') return 80 - info.step * 5;
+  return 66 + (info.step%2===0 ? -2 : 3);
+}
+function buildDemoClass(info){
+  const rand = makeRand(`${info.year}-${info.semester}-${info.className}`);
+  const columns = demoColumns();
+  const students = demoRoster(info.trackSeed || info.className);
+  const scores = {};
+  const adjustments = {};
+  const target = demoTargetMean(info);
+  students.forEach((st, idx)=>{
+    const ability = target + (idx%7 - 3) * 1.6 + (rand()-.5)*14;
+    const rec = {};
+    columns.forEach((col, ci)=>{
+      const bias = ci < 3 ? 2 : (ci < 5 ? 0 : -1);
+      const noise = ci < 3 ? 8 : 10;
+      rec[col.id] = clampScore(ability + bias + (rand()-.5)*noise*2);
+    });
+    scores[sid(st)] = rec;
+    const adjRand = rand();
+    adjustments[sid(st)] = adjRand>.9 ? 2 : (adjRand<.08 ? -1 : 0);
+  });
+  return {
+    key:`${info.year}-${info.semester}-${info.className}-${DEMO_SUBJECT}`,
+    className: info.className,
+    schoolYear: info.year,
+    semester: info.semester,
+    subject: DEMO_SUBJECT,
+    students,
+    columns,
+    scores,
+    adjustments,
+    trend: info.trend,
+    note: info.trend==='up' ? '班級平均逐期上升，適合練習長期追蹤。'
+      : info.trend==='down' ? '班級平均逐期下降，適合示範預警與比較。'
+      : '班級表現隨機波動，適合觀察分布與多班級比較。'
+  };
+}
+function buildDemoClasses(){
+  const next = {};
+  demoBlueprints().forEach(info=>{
+    const demo = buildDemoClass(info);
+    next[demo.key] = demo;
+  });
+  return next;
+}
+function renderDemoPage(){
+  if(!Object.keys(demoClasses).length) demoClasses = buildDemoClasses();
+  const countEl = document.getElementById('demoDataCount');
+  if(countEl) countEl.textContent = `${Object.keys(demoClasses).length} 班`;
+  const yearSel = document.getElementById('demoYearFilter');
+  if(yearSel && !yearSel.options.length){
+    const years = [...new Set(Object.values(demoClasses).map(c=>c.schoolYear))].sort((a,b)=>+b-+a);
+    yearSel.innerHTML = '<option value="">全部學年</option>' + years.map(y=>`<option value="${y}">${y} 學年</option>`).join('');
+  }
+  renderDemoList();
+}
+function filteredDemoKeys(){
+  const year = document.getElementById('demoYearFilter')?.value || '';
+  const sem = document.getElementById('demoSemFilter')?.value || '';
+  return Object.keys(demoClasses).filter(k=>{
+    const c = demoClasses[k];
+    return (!year || c.schoolYear===year) && (!sem || c.semester===sem);
+  }).sort((a,b)=>{
+    const ca=demoClasses[a], cb=demoClasses[b];
+    return (+cb.schoolYear)-(+ca.schoolYear) || (+cb.semester)-(+ca.semester) || ca.className.localeCompare(cb.className);
+  });
+}
+function renderDemoList(){
+  const box = document.getElementById('demoList');
+  if(!box) return;
+  const keys = filteredDemoKeys();
+  if(!keys.length){
+    box.innerHTML = '<div class="empty">此篩選條件下沒有示範班級</div>';
+    updateDemoCount();
+    return;
+  }
+  const groups = {};
+  keys.forEach(k=>{
+    const c = demoClasses[k];
+    const g = `${c.schoolYear}-${c.semester}`;
+    (groups[g]=groups[g]||[]).push(k);
+  });
+  box.innerHTML = Object.keys(groups).sort((a,b)=>{
+    const [ay,as]=a.split('-'), [by,bs]=b.split('-');
+    return (+by)-(+ay) || (+bs)-(+as);
+  }).map(g=>{
+    const [yr,sem] = g.split('-');
+    const ks = groups[g];
+    return `<div class="load-term-group">
+      <div class="load-term-hdr">
+        <div>
+          <div class="term-label">${yr}學年 第${sem}學期</div>
+          <div class="term-count">${ks.length} 個示範班級</div>
+        </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button onclick="demoCheckTerm('${g}',true)">全選</button>
+          <button onclick="demoCheckTerm('${g}',false)">清除</button>
+        </div>
+      </div>
+      <div class="load-class-list">
+        ${ks.map(k=>{
+          const c=demoClasses[k];
+          return `<div class="load-class-item">
+            <input type="checkbox" class="demo-cls-chk" value="${k}" data-year="${c.schoolYear}" data-term="${c.schoolYear}-${c.semester}" checked onchange="updateDemoCount()">
+            <div class="load-class-info">
+              <div class="load-class-name">${c.className}<span style="color:var(--ink-soft);font-weight:400"> ・ ${c.subject}</span></div>
+              <div class="load-class-meta">${c.students.length} 位學生 ・ 6 個欄位 ・ ${c.note}</div>
+            </div>
+            <div class="load-class-item-actions">
+              <span class="load-class-badge badge-active">${c.trend==='up'?'持續進步':c.trend==='down'?'持續退步':'隨機起伏'}</span>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+  updateDemoCount();
+}
+function demoCheckTerm(term, checked){
+  document.querySelectorAll('.demo-cls-chk').forEach(cb=>{
+    if(cb.dataset.term===term) cb.checked = checked;
+  });
+  updateDemoCount();
+}
+function demoCheckRange(mode, checked){
+  const year = document.getElementById('demoYearFilter')?.value || '';
+  const sem = document.getElementById('demoSemFilter')?.value || '';
+  document.querySelectorAll('.demo-cls-chk').forEach(cb=>{
+    if(mode==='year' && year && cb.dataset.year===year) cb.checked = checked;
+    if(mode==='term' && year && sem && cb.dataset.term===`${year}-${sem}`) cb.checked = checked;
+  });
+  updateDemoCount();
+}
+function demoCheckAll(checked){
+  document.querySelectorAll('.demo-cls-chk').forEach(cb=>{ cb.checked = checked; });
+  updateDemoCount();
+}
+function updateDemoCount(){
+  const n = document.querySelectorAll('.demo-cls-chk:checked').length;
+  const el = document.getElementById('demoCount');
+  if(el) el.textContent = n ? `已勾選 ${n} 個示範班級` : '';
+  const btn = document.getElementById('btnImportDemo');
+  if(btn) btn.disabled = !n;
+}
+function importDemoSelected(){
+  const keys = [...document.querySelectorAll('.demo-cls-chk:checked')].map(cb=>cb.value).filter(k=>demoClasses[k]);
+  if(!keys.length){ toast('請先勾選要匯入的示範班級'); return; }
+  keys.forEach(k=>{
+    const d = demoClasses[k];
+    classes[d.key] = {
+      className:d.className, schoolYear:d.schoolYear, semester:d.semester, subject:d.subject,
+      students: JSON.parse(JSON.stringify(d.students)),
+      columns: JSON.parse(JSON.stringify(d.columns)),
+      scores: JSON.parse(JSON.stringify(d.scores)),
+      adjustments: JSON.parse(JSON.stringify(d.adjustments))
+    };
+  });
+  curKey = demoClasses[keys[0]].key;
+  refreshClassSelect(); refreshClassPicker(); refreshClassMgrPicker();
+  renderTable(); renderStats(); renderTSV(); renderClassPanel(); saveAll();
+  document.querySelector('[data-panel="p-score"]')?.click();
+  toast(`已匯入 ${keys.length} 個示範班級，可直接開始操作`);
+}
+
+/* 模板統一：合併儲存格標籤在部分分頁遺失時，個別解析可能漏掉欄位。
+   取「欄位數最多」的分頁為模板，用各欄相對姓名欄的位移，
+   重新擷取其他欄位數不足的分頁，確保每班結構一致。 */
+function unifyColumns(){
+  const det = parsedSheets.filter(s=>s.detected);
+  if(det.length < 2) return;
+  const tpl = det.reduce((a,b)=> b.columns.length > a.columns.length ? b : a);
+  det.forEach(s=>{
+    if(s === tpl || s.columns.length >= tpl.columns.length) return;
+    const columns = tpl.columns.map(c=>({...c, id:uid()}));
+    const scores = {}; let hasScores = false;
+    s.students.forEach(st=>{
+      const k = sid(st), r = s.rowOf[k], rec = {};
+      columns.forEach(col=>{
+        const v = (s.rows[r]||[])[s.nameCol + col.off];
+        if(v!=='' && v!=null && !isNaN(parseFloat(v))){ rec[col.id]=parseFloat(v); hasScores=true; }
+      });
+      scores[k] = rec;
+    });
+    s.columns = columns; s.scores = scores; s.hasScores = hasScores; s.unified = true;
+  });
+}
+
+/* 解析單一分頁：尋找「座號＋姓名」標頭列，建立欄位與學生 */
+function parseGradeSheet(ws){
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+  // 1) 找標頭列（前 10 列內，同列含 座號 與 姓名）
+  let hRow=-1, seatCol=-1, nameCol=-1, genderCol=-1;
+  for(let r=0; r<Math.min(10, rows.length); r++){
+    const row = rows[r].map(v=>String(v).trim());
+    const si = row.findIndex(v=>v==='座號'), ni = row.findIndex(v=>v==='姓名');
+    if(si>=0 && ni>=0){ hRow=r; seatCol=si; nameCol=ni; genderCol=row.findIndex(v=>v==='性別'); break; }
+  }
+  if(hRow<0) return {detected:false};
+
+  // 實際欄位範圍（!ref 與各列長度取最大）
+  let endC = 0;
+  try{ endC = XLSX.utils.decode_range(ws['!ref']).e.c; }catch(e){}
+  rows.forEach(r=>{ endC = Math.max(endC, r.length-1); });
+
+  // 2) 群組標籤：先取原始儲存格，再依「合併儲存格」展開，最後向前填補。
+  //    記錄來源（cell/merge=確定、fill=推測），推測的群組不用來排除欄位。
+  const headerRow = (rows[hRow]||[]).map(v=>String(v).trim());
+  const groups = [], gSure = [];
+  for(let c=0; c<=endC; c++){
+    let v = String((rows[hRow-1]||[])[c]||'').trim();
+    if(/^班級/.test(v)) v = '';
+    groups[c] = v; gSure[c] = !!v;
+  }
+  (ws['!merges']||[]).forEach(m=>{
+    if(hRow-1 >= m.s.r && hRow-1 <= m.e.r && groups[m.s.c]){
+      for(let c=m.s.c+1; c<=Math.min(m.e.c,endC); c++){
+        if(!groups[c]){ groups[c] = groups[m.s.c]; gSure[c] = true; }
+      }
+    }
+  });
+  let last='';
+  for(let c=0; c<=endC; c++){
+    if(groups[c]) last = groups[c];
+    else if(last){ groups[c] = last; gSure[c] = false; }
+  }
+
+  // 3) 建立成績欄位（姓名欄之後；排除計算欄與不需匯入的欄位）
+  const SKIP = v => v==='平均' || v==='﹪' || v==='%' || v.includes('學期成績');
+  const META = v => ['學號','備註','類組','班級代碼','數甲乙'].some(m=>v.includes(m)) || v.includes('選修') || v.includes('分組');
+  const NUMMAP = {一:1,二:2,三:3,四:4,五:5,六:6};
+  const columns = [];
+  const colMap = {};
+  for(let c=nameCol+1; c<=endC; c++){
+    let h = headerRow[c]||'', g = groups[c]||'';
+    const sure = gSure[c];
+    if(SKIP(h)) continue;
+    if(!h && SKIP(g)) continue;
+    if(META(h) || (sure && META(g))) continue;
+    // 不匯入：假期作業考試、第三次期中考（群組標籤須為「確定來源」才據以排除）
+    if(h.includes('假期作業') || (!h && sure && g.includes('假期作業'))) continue;
+    const seq = h.match(/^第([一二三四五六\d]+)次$/);
+    const seqN = seq ? (NUMMAP[seq[1]] || parseInt(seq[1])) : null;
+    if(seqN===3 && (g.includes('期中') || g.includes('段考') || !g)) continue;
+    let name, group = g;
+    if(h && /^\d+(\.0)?$/.test(h)){                 // 數字編號 → 日常考查小考
+      const n = parseInt(h);
+      if(!g || g.includes('日常') || g.includes('平時')){ name = String(n); group = g || '日常考查'; }
+      else name = g + n;
+    } else if(seqN!=null){                            // 第N次 → 期中考N（成績冊慣例）
+      if(sure && g.includes('段考')){ name = '段考' + seqN; }
+      else { name = '期中考' + seqN; group = (sure && g.includes('期中'))? g : '期中考試'; }
+    } else if(h==='成績'){                            // 期末考成績欄
+      name = g || '期末考'; group = g || '期末考';
+    } else if(h){
+      name = h;
+    } else if(g && sure){
+      name = g;
+    } else continue;
+    // 群組名稱簡化：期中考試 → 期中考
+    if(group==='期中考試') group='期中考';
+    const col = {id:uid(), name, group:group||'其他', weight:0, type:'manual', sources:[], avgMode:'all', off:c-nameCol};
+    columns.push(col); colMap[c] = col;
+  }
+  if(!columns.length) return {detected:false};
+  // 成績表特徵檢核：避免把名冊總表（如「全部」分頁）當成成績表
+  const scoreLike = columns.some(col => /考|成績|作業|平時|小考|測驗/.test(col.name+col.group)) ||
+                    columns.some(col => /^\d+$/.test(col.name));
+  if(!scoreLike) return {detected:false};
+
+  // 4) 學生與成績
+  const students = [], scores = {}, rowOf = {};
+  let hasScores = false;
+  for(let r=hRow+1; r<rows.length; r++){
+    const seat = String(rows[r][seatCol]??'').trim();
+    const name = String(rows[r][nameCol]??'').trim();
+    if(!seat || !name) continue;
+    if(name.includes('繳交') || seat.includes('繳交')) break;
+    const st = {seat: seat.replace(/\.0$/,'').padStart(2,'0'), gender: genderCol>=0? String(rows[r][genderCol]||'').trim():'', name};
+    students.push(st); rowOf[sid(st)] = r;
+    const rec = {};
+    for(const c in colMap){
+      const v = rows[r][c];
+      if(v!=='' && v!=null && !isNaN(parseFloat(v))){ rec[colMap[c].id] = parseFloat(v); hasScores = true; }
+    }
+    scores[sid(st)] = rec;
+  }
+  if(!students.length) return {detected:false};
+  return {detected:true, students, columns, scores, hasScores, rows, rowOf, nameCol};
+}
+
+function renderSheetList(){
+  const box = document.getElementById('sheetList');
+  box.innerHTML = '';
+  let anyDetected = false;
+  parsedSheets.forEach((s,i)=>{
+    const div = document.createElement('div');
+    if(s.detected){
+      anyDetected = true;
+      div.className = 'sheet-item detected';
+      div.innerHTML = `
+        <input type="checkbox" id="sk${i}" checked>
+        <span class="name">${s.sheetName}</span>
+        <span class="meta">${s.students.length} 位學生 ・ ${s.columns.length} 個欄位：${s.columns.map(c=>c.name).join('、')}${s.unified? '<br><b style="color:var(--amber)">⚙ 此分頁標籤不完整，已比對欄位最完整的班級自動補齊結構</b>':''}</span>
+        <span class="badge ${s.hasScores?'has-score':'blank'}">${s.hasScores?'含成績資料':'空白成績冊'}</span>`;
+    }else{
+      div.className = 'sheet-item skip';
+      div.innerHTML = `<span style="width:16px"></span><span class="name">${s.sheetName}</span>
+        <span class="meta">未偵測到「座號＋姓名」成績表結構，將略過（如名冊總表）</span>
+        <span class="badge nodetect">略過</span>`;
+    }
+    box.appendChild(div);
+  });
+  document.getElementById('importActions').style.display = anyDetected? 'block':'none';
+  if(anyDetected) toast(`已分析 ${parsedSheets.filter(s=>s.detected).length} 個班級分頁`);
+}
+function toggleAllSheets(v){
+  parsedSheets.forEach((s,i)=>{ const cb=document.getElementById('sk'+i); if(cb) cb.checked=v; });
+}
+
+/* 移除完全沒有成績的欄位（匯入後清理多餘的空小考/空期中考欄） */
+function pruneEmptyColumns(cls){
+  const hasData = colId => Object.values(cls.scores).some(rec => rec[colId]!=null && !isNaN(rec[colId]));
+  const removed = [];
+  cls.columns = cls.columns.filter(col=>{
+    if(col.type==='avg') return true;            // 平均欄稍後再檢查
+    if(hasData(col.id)) return true;
+    removed.push(col.id); return false;
+  });
+  // 平均欄：移除已不存在的來源；來源全空則一併刪除
+  cls.columns = cls.columns.filter(col=>{
+    if(col.type!=='avg') return true;
+    col.sources = col.sources.filter(s=>!removed.includes(s));
+    if(!col.sources.length){ removed.push(col.id); return false; }
+    return true;
+  });
+  removed.forEach(id=>Object.values(cls.scores).forEach(rec=>delete rec[id]));
+  return cls;
+}
+
+/* 依考試欄位數套用預設配分：
+   2 次期中考 → 各 20%、期末考 30%（日常考查合計 30% 由老師分配）
+   1 次期中考 + 1 次期末考 → 各 30%（日常考查合計 40%）
+   其餘情形維持 0，交由老師手動設定 */
+function applyDefaultWeights(cls){
+  const mids = cls.columns.filter(c=>c.type==='manual' && /期中|段考/.test(c.group+c.name));
+  const fins = cls.columns.filter(c=>c.type==='manual' && /期末/.test(c.group+c.name));
+  if(mids.length===2 && fins.length>=1){
+    mids.forEach(c=>c.weight=20);
+    fins.forEach((c,i)=>c.weight = i===0?30:0);
+  }else if(mids.length===1 && fins.length===1){
+    mids[0].weight=30; fins[0].weight=30;
+  }
+  return cls;
+}
+
+function doImport(){
+  const year = document.getElementById('impYear').value || '114';
+  const sem  = document.getElementById('impSemester').value;
+  const subj = document.getElementById('impSubject').value.trim();
+  let n=0, firstKey=null, prunedTotal=0;
+  parsedSheets.forEach((s,i)=>{
+    if(!s.detected) return;
+    const cb = document.getElementById('sk'+i);
+    if(!cb || !cb.checked) return;
+    const key = `${year}-${sem}-${s.sheetName}${subj?'-'+subj:''}`;
+    let cls = {
+      className: s.sheetName, schoolYear:year, semester:sem, subject:subj,
+      students: s.students,
+      columns: JSON.parse(JSON.stringify(s.columns)),
+      scores: JSON.parse(JSON.stringify(s.scores)),
+      adjustments: {}
+    };
+    const before = cls.columns.length;
+    if(s.hasScores) pruneEmptyColumns(cls);   // 僅在成績冊已有成績時，移除沒有成績的欄位
+    prunedTotal += before - cls.columns.length;
+    applyDefaultWeights(cls);        // 套用預設配分
+    classes[key] = cls;
+    if(!firstKey) firstKey = key;
+    n++;
+  });
+  if(!n){ toast('未勾選任何班級'); return; }
+  curKey = firstKey;
+  refreshClassSelect(); refreshClassPicker(); renderTable(); renderClassPanel(); initLoadStore(); saveAll();
+  toast(`已匯入 ${n} 個班級${prunedTotal? `，自動移除 ${prunedTotal} 個空欄位`:''}，並套用預設配分`);
+  document.querySelector('[data-panel="p-score"]').click();
+}
+
+/* ═══════════════════ 上傳成績檔匯入（段考/日常考查） ═══════════════════ */
+let _usData = null;   // {fileName, sheets:[{className, students:[{seat,name}], cols:[{name,colIdx}], data:{seatName:{colIdx:score}}}]}
+
+function openUploadScores(){
+  if(!Object.keys(classes).length){ toast('請先建立或匯入班級'); return; }
+  document.getElementById('usStep1').style.display='';
+  document.getElementById('usStep2').style.display='none';
+  document.getElementById('usFileInput').value='';
+  _usData = null;
+  document.getElementById('uploadScoreBg').classList.add('open');
+}
+function closeUploadScores(){ document.getElementById('uploadScoreBg').classList.remove('open'); }
+function usBackToStep1(){
+  document.getElementById('usStep1').style.display='';
+  document.getElementById('usStep2').style.display='none';
+}
+
+// 監聽選檔
+document.getElementById('usFileInput').addEventListener('change', e=>{
+  if(e.target.files[0]) usReadFile(e.target.files[0]);
+});
+(function(){
+  const dz = document.getElementById('usDropzone');
+  dz.addEventListener('dragover', e=>{e.preventDefault(); dz.classList.add('drag');});
+  dz.addEventListener('dragleave', ()=>dz.classList.remove('drag'));
+  dz.addEventListener('drop', e=>{ e.preventDefault(); dz.classList.remove('drag'); if(e.dataTransfer.files[0]) usReadFile(e.dataTransfer.files[0]); });
+})();
+
+function usReadFile(file){
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    try{
+      const wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array'});
+      _usData = usParseWorkbook(wb, file.name);
+      if(!_usData.sheets.length){ toast('未能在檔案中辨識出任何成績分頁'); return; }
+      usRenderStep2();
+    }catch(err){ toast('讀取失敗：'+err.message); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+/* 解析成績檔：每個分頁找座號/姓名標頭，擷取所有「實際含數值成績」的欄 */
+function usParseWorkbook(wb, fileName){
+  const sheets = [];
+  wb.SheetNames.forEach(sheetName=>{
+    const ws = wb.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+    // 標頭列（含 座號 與 姓名）
+    let hr=-1, seatC=-1, nameC=-1;
+    for(let r=0; r<Math.min(12, rows.length); r++){
+      const norm = rows[r].map(v=>String(v).replace(/\r?\n/g,'').replace(/\s/g,'').trim());
+      const si = norm.findIndex(v=>v==='座號');
+      const ni = norm.findIndex(v=>v==='姓名');
+      if(si>=0 && ni>=0){ hr=r; seatC=si; nameC=ni; break; }
+    }
+    if(hr<0) return;
+
+    // 實際欄位範圍（取 !ref 與各列長度的最大值，避免欄位被截斷）
+    let endC = 0;
+    try{ endC = XLSX.utils.decode_range(ws['!ref']).e.c; }catch(e){}
+    rows.forEach(r=>{ endC = Math.max(endC, r.length-1); });
+
+    const hdr = rows[hr].map(v=>String(v).replace(/\r?\n/g,'').trim());
+    // 先找出學生資料列範圍
+    const dataRows = [];
+    for(let r=hr+1; r<rows.length; r++){
+      const seat = String(rows[r][seatC]??'').replace(/\.0$/,'').trim();
+      const name = String(rows[r][nameC]??'').trim();
+      if(!/^\d+$/.test(seat) || !name){
+        if(name.includes('答案') || name.includes('說明') || seat.includes('代碼')) break;
+        continue;
+      }
+      dataRows.push({r, seat:seat.padStart(2,'0'), name});
+    }
+    if(!dataRows.length) return;
+
+    // 掃描姓名欄之後的每一欄：只保留「至少有一筆數值成績」的欄
+    const cols = [];
+    for(let cc=nameC+1; cc<=endC; cc++){
+      const h = (hdr[cc]||'').trim();
+      if(/名次|排名|題號|備註|性別|學號|準考|^題$|^號$|^特$|^標$/.test(h)) continue;
+      // 該欄是否含數值成績？
+      let hasNum = false, numCount = 0;
+      for(const dr of dataRows){
+        const v = rows[dr.r][cc];
+        if(v!=='' && v!=null && !isNaN(parseFloat(v)) && String(v).trim()!==''){ hasNum=true; numCount++; }
+      }
+      if(!hasNum) continue;                  // ★ 整欄空白 → 不列入勾選名單
+      if(numCount < 1) continue;
+      // 欄名：用標頭；若標頭空白則以「第N欄」命名（仍可匯入，事後改名）
+      let name = h || `成績欄${cols.length+1}`;
+      cols.push({ name, colIdx:cc, count:numCount });
+    }
+    if(!cols.length) return;
+
+    // 學生與分數
+    const students = [], data = {};
+    dataRows.forEach(dr=>{
+      students.push({seat:dr.seat, name:dr.name});
+      const rec = {};
+      cols.forEach(col=>{
+        const v = rows[dr.r][col.colIdx];
+        if(v!=='' && v!=null && !isNaN(parseFloat(v))) rec[col.colIdx] = Math.round(parseFloat(v)*10)/10;
+      });
+      data[dr.seat+'\u0001'+dr.name] = rec;
+    });
+
+    // 班級號：分頁名末尾 NN班 或純數字
+    let classNo = sheetName;
+    const m = sheetName.match(/(\d+)\s*班\s*$/) || sheetName.match(/(\d{3})/) || sheetName.match(/(\d+)$/);
+    if(m) classNo = m[1];
+    sheets.push({ sheetName, classNo, students, cols, data });
+  });
+  return { fileName, sheets };
+}
+
+function usRenderStep2(){
+  document.getElementById('usStep1').style.display='none';
+  document.getElementById('usStep2').style.display='';
+  document.getElementById('usFileName').textContent = _usData.fileName;
+  document.getElementById('usSheetCount').textContent = _usData.sheets.length;
+
+  // 合併所有分頁的成績欄（依 colIdx 聯集，避免只看第一個分頁漏欄）
+  const colMap = {};
+  _usData.sheets.forEach(sh=>{
+    sh.cols.forEach(c=>{
+      if(!colMap[c.colIdx]) colMap[c.colIdx] = {colIdx:c.colIdx, name:c.name, count:0};
+      colMap[c.colIdx].count += (c.count||0);
+      if(!colMap[c.colIdx].name && c.name) colMap[c.colIdx].name = c.name;
+    });
+  });
+  const cols = Object.values(colMap).sort((a,b)=>a.colIdx-b.colIdx);
+  _usData.mergedCols = cols;
+
+  // 段考單選下拉
+  const sel = document.getElementById('usSourceCol');
+  sel.innerHTML = cols.map(c=>`<option value="${c.colIdx}">${c.name}（${c.count} 筆）</option>`).join('');
+  const totalIdx = cols.findIndex(c=>/合計|總分|總成績/.test(c.name));
+  if(totalIdx>=0) sel.value = cols[totalIdx].colIdx;
+
+  // 日常多選清單（只列有成績的欄位）
+  const dlist = document.getElementById('usDailyColList');
+  dlist.innerHTML = cols.map(c=>`
+    <label style="display:flex; align-items:center; gap:8px; padding:5px 4px; font-size:13.5px; cursor:pointer;">
+      <input type="checkbox" class="us-daily-col" value="${c.colIdx}" data-name="${c.name.replace(/"/g,'&quot;')}" checked style="width:15px;height:15px;accent-color:var(--green)">
+      <span>${c.name} <span style="color:var(--ink-soft);font-size:12px">（${c.count} 筆成績）</span></span>
+    </label>`).join('');
+
+  usModeChange();
+  usRenderTargetCol();
+  usRenderClassMatch();
+}
+
+function usModeChange(){
+  const mode = document.querySelector('input[name="usMode"]:checked').value;
+  document.getElementById('usColPick').style.display    = mode==='exam'? '':'none';
+  document.getElementById('usExamTarget').style.display = mode==='exam'? '':'none';
+  document.getElementById('usDailyCols').style.display  = mode==='daily'? '':'none';
+  if(mode==='exam') usRenderTargetCol();
+}
+function usDailyColsCheckAll(v){
+  document.querySelectorAll('.us-daily-col').forEach(cb=>cb.checked=v);
+}
+
+// 段考模式：目標欄位用目前班級的欄位清單（期初考/期中考/期末考等）
+function usRenderTargetCol(){
+  const sel = document.getElementById('usTargetCol');
+  const c = cur();
+  if(!c){ sel.innerHTML='<option>（請先選擇班級）</option>'; return; }
+  const examCols = c.columns.filter(x=>x.type==='manual');
+  sel.innerHTML = examCols.map(x=>`<option value="${x.name}">${x.group}｜${x.name}</option>`).join('');
+  const pref = examCols.find(x=>/期末/.test(x.name)) || examCols.find(x=>/期中/.test(x.name)) || examCols.find(x=>/期初/.test(x.name));
+  if(pref) sel.value = pref.name;
+}
+
+// 比對：把分頁班級號對應到系統現有班級（同學年學期），逐生比對座號姓名
+function usRenderClassMatch(){
+  const box = document.getElementById('usClassMatch');
+  const ref = cur();
+  const refYear = ref?ref.schoolYear:null, refSem = ref?ref.semester:null;
+  // 候選班級清單（同學年學期優先；若無則全部）
+  let pool = Object.keys(classes).filter(k=>!refYear || (classes[k].schoolYear===refYear && classes[k].semester===refSem));
+  if(!pool.length) pool = Object.keys(classes);
+
+  const html = _usData.sheets.map((sh,si)=>{
+    // 自動配對：優先「班名以分頁班號結尾」（203 結尾 03），其次完全相等，其次包含
+    const fnum = sh.classNo.replace(/\D/g,'');
+    let auto = pool.find(k=>classes[k].className===sh.classNo)
+            || pool.find(k=>{ const cn=classes[k].className.replace(/\D/g,''); return cn.endsWith(fnum) && cn.length>=fnum.length; })
+            || pool.find(k=>classes[k].className.includes(sh.classNo))
+            || '';
+
+    const opts = `<option value="">— 不匯入此分頁 —</option>` +
+      pool.map(k=>{
+        const c=classes[k];
+        return `<option value="${k}" ${k===auto?'selected':''}>${c.className}${c.subject?'・'+c.subject:''}（${c.students.length}人）</option>`;
+      }).join('');
+
+    return `<div class="us-match-item" id="usRow${si}" data-sheet="${si}">
+      <input type="checkbox" class="us-cls-chk" data-sheet="${si}" ${auto?'checked':''} onchange="usUpdateImportBtn()">
+      <div class="us-match-info">
+        <div class="us-match-title">分頁「${sh.sheetName}」　<span style="font-weight:400;color:var(--ink-soft)">班號 ${sh.classNo}・${sh.students.length}名學生</span></div>
+        <div style="margin:6px 0 4px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <span style="font-size:12.5px; color:var(--ink-soft)">匯入到：</span>
+          <select class="us-target-cls" data-sheet="${si}" onchange="usRecheck(${si})" style="font-size:13px; padding:4px 8px; min-width:180px;">${opts}</select>
+        </div>
+        <div class="us-match-cmp" id="usCmp${si}"></div>
+      </div>
+    </div>`;
+  }).join('');
+  box.innerHTML = html;
+  _usData.sheets.forEach((sh,si)=>usRecheck(si));
+  usUpdateImportBtn();
+}
+
+// 重新比對某分頁與其選定班級
+function usRecheck(si){
+  const sel = document.querySelector(`.us-target-cls[data-sheet="${si}"]`);
+  const cmpBox = document.getElementById('usCmp'+si);
+  const row = document.getElementById('usRow'+si);
+  const key = sel.value;
+  row.classList.remove('matched','partial','nomatch');
+  if(!key){ cmpBox.innerHTML='<span class="us-warn-list amber">未對應班級，將略過此分頁</span>'; row.classList.add('nomatch'); return; }
+  const sh = _usData.sheets[si];
+  const cmp = usCompareStudents(classes[key], sh);
+  const hasIssue = cmp.mismatch.length || cmp.missingInFile.length || cmp.extraInFile.length;
+  row.classList.add(hasIssue?'partial':'matched');
+  let h = '';
+  if(cmp.matched.length) h += `<div class="us-warn-list" style="color:var(--green-deep)">✓ ${cmp.matched.length} 名座號姓名一致，可正確匯入</div>`;
+  if(cmp.mismatch.length) h += `<div class="us-warn-list">✗ ${cmp.mismatch.length} 名座號相同但姓名不符（不會匯入）：${cmp.mismatch.slice(0,4).map(m=>`${m.seat} 檔「${m.fileName}」≠系統「${m.sysName}」`).join('；')}${cmp.mismatch.length>4?'…':''}</div>`;
+  if(cmp.missingInFile.length) h += `<div class="us-warn-list amber">⚠ ${cmp.missingInFile.length} 名系統有、檔案無（缺考保持空白）：${cmp.missingInFile.slice(0,6).map(s=>s.seat+s.name).join('、')}${cmp.missingInFile.length>6?'…':''}</div>`;
+  if(cmp.extraInFile.length) h += `<div class="us-warn-list">⚠ ${cmp.extraInFile.length} 名檔案有、系統無（不會匯入）：${cmp.extraInFile.slice(0,6).map(s=>s.seat+s.name).join('、')}${cmp.extraInFile.length>6?'…':''}</div>`;
+  cmpBox.innerHTML = h;
+}
+
+// 比對兩邊學生（以座號為主鍵，姓名須一致）
+function usCompareStudents(sysClass, sheet){
+  const sysMap = {}; sysClass.students.forEach(s=>sysMap[s.seat]=s.name);
+  const fileMap = {}; sheet.students.forEach(s=>fileMap[s.seat]=s.name);
+  const matched=[], mismatch=[], missingInFile=[], extraInFile=[];
+  sysClass.students.forEach(s=>{
+    if(fileMap[s.seat]==null){ missingInFile.push(s); }
+    else if(fileMap[s.seat]!==s.name){ mismatch.push({seat:s.seat, sysName:s.name, fileName:fileMap[s.seat]}); }
+    else matched.push(s);
+  });
+  sheet.students.forEach(s=>{ if(sysMap[s.seat]==null) extraInFile.push(s); });
+  return {matched, mismatch, missingInFile, extraInFile};
+}
+
+function usCheckAll(v){
+  document.querySelectorAll('.us-cls-chk:not(:disabled)').forEach(cb=>cb.checked=v);
+  usUpdateImportBtn();
+}
+function usUpdateImportBtn(){ /* 預留：可顯示已選數量 */ }
+
+function doUploadImport(){
+  const mode = document.querySelector('input[name="usMode"]:checked').value;
+  const isDaily = mode==='daily';
+  const checks = [...document.querySelectorAll('.us-cls-chk:checked')];
+  if(!checks.length){ toast('請至少勾選一個班級'); return; }
+
+  // 要匯入的來源欄位清單 [{colIdx, name}]
+  let sources = [];
+  if(isDaily){
+    sources = [...document.querySelectorAll('.us-daily-col:checked')].map(cb=>({
+      colIdx: parseInt(cb.value), name: cb.dataset.name
+    }));
+    if(!sources.length){ toast('請至少勾選一個要匯入的成績欄位'); return; }
+  } else {
+    const srcColIdx = parseInt(document.getElementById('usSourceCol').value);
+    const targetName = document.getElementById('usTargetCol').value;
+    if(!targetName){ toast('請選擇目標欄位'); return; }
+    sources = [{colIdx:srcColIdx, name:targetName}];   // 段考：目標名稱固定
+  }
+
+  let totalImported=0, totalSkipped=0, classCount=0, colCount=0;
+
+  checks.forEach(cb=>{
+    const sheetIdx = parseInt(cb.dataset.sheet);
+    const sel = document.querySelector(`.us-target-cls[data-sheet="${sheetIdx}"]`);
+    const key = sel? sel.value : '';
+    if(!key || !classes[key]) return;
+    const c = classes[key];
+    const sheet = _usData.sheets[sheetIdx];
+    let classTouched=false;
+
+    sources.forEach(src=>{
+      // 段考：用 src.name 當欄名對應現有欄；日常：用檔案欄名新建
+      let col = c.columns.find(x=>x.name===src.name && (isDaily? x.group==='日常考查' : true));
+      if(!col){
+        const group = isDaily? '日常考查'
+          : (/期末/.test(src.name)?'期末考': /期初/.test(src.name)?'期初考': /期中/.test(src.name)?'期中考':'其他');
+        col = {id:uid(), name:src.name, group, weight:0, type:'manual', sources:[], avgMode:'all'};
+        if(isDaily){
+          let idx=-1; c.columns.forEach((x,i)=>{ if(x.group==='日常考查') idx=i; });
+          if(idx>=0) c.columns.splice(idx+1,0,col); else c.columns.unshift(col);
+        } else c.columns.push(col);
+        colCount++;
+      }
+      // 逐生填入（嚴格比對：座號＋姓名一致才填）
+      c.students.forEach(st=>{
+        const fileRec = sheet.data[st.seat+'\u0001'+st.name];
+        if(!fileRec){ totalSkipped++; return; }
+        const v = fileRec[src.colIdx];
+        if(v==null || isNaN(v)){ totalSkipped++; return; }
+        if(!c.scores[st.seat+'_'+st.name]) c.scores[st.seat+'_'+st.name]={};
+        c.scores[st.seat+'_'+st.name][col.id] = v;
+        totalImported++; classTouched=true;
+      });
+    });
+    if(classTouched) classCount++;
+  });
+
+  // 排序所有受影響班級的欄位（日常→期初→期中→期末）
+  Object.values(classes).forEach(cc=>sortColumns(cc));
+  closeUploadScores();
+  refreshClassSelect(); renderTable(); saveAll();
+  let msg = `已匯入 ${classCount} 個班級`;
+  if(isDaily && sources.length>1) msg += `、${sources.length} 個欄位`;
+  msg += `，共 ${totalImported} 筆成績`;
+  if(totalSkipped) msg += `，略過 ${totalSkipped} 筆`;
+  toast(msg);
+}
+
+/* ═══════════════════ 班級管理 ═══════════════════ */
+function addClassManual(){
+  const name = document.getElementById('newClassName').value.trim();
+  if(!name){ toast('請輸入班級名稱'); return; }
+  const year = document.getElementById('newYear').value || String(new Date().getFullYear()-1911);
+  const sem = document.getElementById('newSemester').value;
+  const key = `${year}-${sem}-${name}`;
+  if(classes[key]){ toast('此班級已存在'); return; }
+  classes[key] = {
+    className:name, schoolYear:year, semester:sem, subject:'',
+    students:[], scores:{}, adjustments:{},
+    columns:[
+      {id:uid(), name:'小考1', group:'日常考查', weight:0, type:'manual', sources:[]},
+      {id:uid(), name:'小考2', group:'日常考查', weight:0, type:'manual', sources:[]},
+      {id:uid(), name:'期中考', group:'期中考', weight:30, type:'manual', sources:[]},
+      {id:uid(), name:'期末考', group:'期末考', weight:40, type:'manual', sources:[]}
+    ]
+  };
+  curKey = key; _cmKey=key; _cmYear=year; _cmSem=sem;
+  document.getElementById('newClassName').value='';
+  refreshClassSelect(); refreshClassPicker(); refreshClassMgrPicker(); renderTable(); renderClassPanel(); initLoadStore(); saveAll();
+  toast(`班級「${name}」已建立`);
+}
+function renderClassPanel(){
+  // 若 curKey 未設定，用 _cmKey 補上（班級管理頁才有此狀況）
+  if(!curKey && _cmKey && classes[_cmKey]) curKey=_cmKey;
+  const c = cur();
+  const tag = document.getElementById('classInfoTag');
+  const ta = document.getElementById('studentNames');
+  if(!c){ tag.textContent='（請選擇班級）'; ta.value=''; ta.placeholder='請先從上方選取班級'; return; }
+  tag.textContent = `${c.className}・${c.schoolYear}學年第${c.semester}學期・${c.students.length} 位學生`;
+  ta.value = c.students.map(s=>`${s.seat}\t${s.name}`).join('\n');
+  ta.placeholder = '01 王小明\n02 李小華\n或每行一個姓名';
+}
+function updateStudents(){
+  const c = cur(); if(!c){ toast('請先選擇班級'); return; }
+  const lines = document.getElementById('studentNames').value.split('\n').map(l=>l.trim()).filter(Boolean);
+  const old = c.scores;
+  c.students = lines.map((l,i)=>{
+    const m = l.split(/[\t\s]+/);
+    if(m.length>=2 && /^\d+$/.test(m[0].replace(/\.0$/,'')))
+      return {seat:m[0].replace(/\.0$/,'').padStart(2,'0'), gender:'', name:m.slice(1).join('')};
+    return {seat:String(i+1).padStart(2,'0'), gender:'', name:l};
+  });
+  const ns = {};
+  c.students.forEach(st=>{ const k=sid(st); if(old[k]) ns[k]=old[k]; });
+  c.scores = ns;
+  renderTable(); renderClassPanel(); saveAll();
+  toast(`「${c.className}」名單已更新（${c.students.length} 位學生）`);
+}
+function deleteCurrentClass(){
+  const c = cur(); if(!c){ toast('請先選擇班級'); return; }
+  if(!confirm(`確定刪除班級「${c.className}」？此操作無法復原。`)) return;
+  delete classes[curKey]; curKey = Object.keys(classes)[0] || null;
+  _cmKey = curKey;
+  refreshClassSelect(); refreshClassPicker(); refreshClassMgrPicker(); renderTable(); renderClassPanel(); initLoadStore(); saveAll();
+  toast('班級已刪除');
+}
+
+/* ═══════════════════ 成績表渲染 ═══════════════════ */
+function compactColWidth(text, min=46, max=78){
+  const chars = Array.from(String(text || ''));
+  const units = chars.reduce((sum, ch)=>sum + (/[A-Za-z0-9%'.]/.test(ch) ? .62 : 1), 0);
+  return Math.max(min, Math.min(max, Math.ceil(units * 12 + 18)));
+}
+function compactNameWidth(students){
+  const longest = students.reduce((max, st)=>Math.max(max, Array.from(st.name || '').length), 2);
+  return Math.max(68, Math.min(104, longest * 15 + 34));
+}
+function renderTable(){
+  const c = cur();
+  if(c) sortColumns(c);   // 確保欄位依群組順序排列（日常→期初→期中→期末）
+  const tbl = document.getElementById('scoreTable');
+  const msg = document.getElementById('noClassMsg');
+  document.getElementById('scoreClassTag').textContent = c? `${c.className}・${c.schoolYear}學年第${c.semester}學期`:'';
+  if(!c || !c.students.length){
+    tbl.style.display='none'; msg.style.display='block';
+    msg.textContent = c? '此班級尚無學生，請至「班級管理」輸入名單。':'尚未選擇班級——請先在上方「匯入 Excel」或「班級管理」建立班級。';
+    updateWeightPill(); refreshBatchSelect(); return;
+  }
+  msg.style.display='none'; tbl.style.display='table';
+  tbl.classList.toggle('select-mode', selectMode);
+  tbl.classList.toggle('edit-mode', editMode);
+
+  const grpRow = document.getElementById('grpRow');
+  const hdrRow = document.getElementById('hdrRow');
+  const body = document.getElementById('scoreBody');
+
+  // ── 群組列（合併相鄰相同群組）
+  const hasGender = c.students.some(s=>s.gender);
+  const fixedLeft = hasGender? 3:2;
+  let gHtml = `<th class="g-fixed sticky-l" colspan="${fixedLeft}" style="left:0"><span class="weight-pill table-weight" id="weightPill">總配分 0%</span></th>`;
+  let i=0;
+  while(i<c.columns.length){
+    let j=i; while(j<c.columns.length && c.columns[j].group===c.columns[i].group) j++;
+    gHtml += `<th class="${COL_GROUP_CLASS(c.columns[i].group)}" colspan="${j-i}">${c.columns[i].group}</th>`;
+    i=j;
+  }
+  gHtml += `<th class="g-fixed" colspan="3">學期成績計算</th>`;
+  grpRow.innerHTML = gHtml;
+
+  // ── 欄位列
+  const seatW = 48, genderW = 38, nameW = compactNameWidth(c.students);
+  let hHtml = `<th class="sticky-l" style="left:0;width:${seatW}px;min-width:${seatW}px"><div class="hdr-cell" style="min-width:36px">座號</div></th>`;
+  if(hasGender) hHtml += `<th class="sticky-l2" style="left:${seatW}px;width:${genderW}px;min-width:${genderW}px"><div class="hdr-cell" style="min-width:30px">性別</div></th>`;
+  hHtml += `<th class="sticky-l2" style="left:${seatW + (hasGender?genderW:0)}px;width:${nameW}px;min-width:${nameW}px"><div class="hdr-cell" style="min-width:58px">姓名</div></th>`;
+  c.columns.forEach(col=>{
+    const isAvg = col.type==='avg';
+    const colW = compactColWidth(col.name, isAvg ? 48 : 46, isAvg ? 72 : 78);
+    hHtml += `<th class="${isAvg?'avg-col':''}" style="width:${colW}px;min-width:${colW}px">
+      <div class="hdr-cell" style="width:${colW}px;min-width:${colW}px">
+        <label class="selbox"><input type="checkbox" data-sel="${col.id}" ${isAvg?'disabled':''}> 選取</label>
+        <input class="colname" style="width:${Math.max(38, colW - 10)}px" value="${col.name.replace(/"/g,'&quot;')}" onchange="renameCol('${col.id}',this.value)" title="${isAvg?'平均欄位：'+col.name:col.name}">
+        <span class="wline"><input class="colweight" type="number" min="0" max="100" value="${col.weight}" onchange="setWeight('${col.id}',this.value)" title="配分百分比">%${isAvg?' <span title="自動計算平均">Σ</span>':''}</span>
+        <button class="delcol" onclick="deleteCol('${col.id}')">✕ 刪除</button>
+      </div></th>`;
+  });
+  hHtml += `<th style="width:58px;min-width:58px"><div class="hdr-cell" style="min-width:52px">初步成績</div></th>
+            <th style="width:56px;min-width:56px"><div class="hdr-cell" style="min-width:50px">加減分<br><span style="font-size:9px;font-weight:400;opacity:.7">整數</span></div></th>
+            <th style="width:58px;min-width:58px"><div class="hdr-cell" style="min-width:52px">學期成績</div></th>`;
+  hdrRow.innerHTML = hHtml;
+
+  // ── 學生列
+  let bHtml = '';
+  c.students.forEach(st=>{
+    const k = sid(st);
+    let row = `<tr data-sid="${k}">
+      <td class="seat sticky-l" style="left:0">${st.seat}</td>`;
+    if(hasGender) row += `<td class="seat sticky-l2" style="left:${seatW}px">${st.gender||''}</td>`;
+    const hasPW = c.personalWeights && c.personalWeights[k] && Object.keys(c.personalWeights[k]).length;
+    row += `<td class="sname sticky-l2" style="left:${seatW + (hasGender?genderW:0)}px">${st.name}<button class="btn-personal ${hasPW?'active':''}" onclick="openPersonalWeights('${k}')" title="個別配分設定">${hasPW?'★':'⚙'}</button></td>`;
+    c.columns.forEach(col=>{
+      if(col.type==='avg'){
+        row += `<td class="avg-cell" data-avg="${col.id}">–</td>`;
+      }else{
+        const v = (c.scores[k]||{})[col.id];
+        const ci = c.columns.filter(x=>x.type!=='avg').indexOf(col);
+        row += `<td><input class="sc" type="number" min="0" max="100" step="any" value="${v??''}" data-col="${col.id}" data-sid="${k}" data-colidx="${ci}" oninput="onScoreInput('${k}','${col.id}',this.value)" onkeydown="scEnter(event,this)"></td>`;
+      }
+    });
+    const adj = c.adjustments[k] ?? '';
+    row += `<td class="calc total" data-total>–</td>
+            <td class="adj-cell"><input class="adj" type="number" step="1" min="-100" max="100" value="${adj===0||adj===''?'':adj}" oninput="onAdjInput('${k}',this.value)" placeholder="±" title="整數加減分"></td>
+            <td class="calc final" data-final>–</td></tr>`;
+    bHtml += row;
+  });
+  body.innerHTML = bHtml;
+
+  // 勾選監聽（顯示建立平均按鈕）
+  hdrRow.querySelectorAll('input[data-sel]').forEach(cb=>{
+    cb.addEventListener('change', updateAvgBtn);
+  });
+
+  recalcAll();
+  refreshBatchSelect();
+  applyZoom();
+  applyTableViewHeight();
+}
+
+/* ═══════════════════ 表格縮放 ═══════════════════ */
+let tableZoom = 1;
+let tableViewHeight = 80;
+function applyZoom(){
+  const tbl = document.getElementById('scoreTable');
+  if(tbl){
+    tbl.style.transform = 'none';
+    tbl.style.zoom = tableZoom;
+  }
+  const lbl = document.getElementById('zoomLabel');
+  if(lbl) lbl.textContent = Math.round(tableZoom*100) + '%';
+  // zoom 會參與版面計算，sticky 表頭可維持在捲動容器頂端
+  const wrap = document.getElementById('tableWrap');
+  if(wrap && tbl && tbl.style.display!=='none'){
+    wrap.style.height = '';
+  }
+}
+function applyTableViewHeight(){
+  const wrap = document.getElementById('tableWrap');
+  if(wrap) wrap.style.maxHeight = tableViewHeight + 'vh';
+  const lbl = document.getElementById('tableHeightLabel');
+  if(lbl) lbl.textContent = tableViewHeight + 'vh';
+}
+function zoomTable(dir){
+  tableZoom = Math.min(1.4, Math.max(0.4, Math.round((tableZoom + dir*0.1)*10)/10));
+  applyZoom();
+}
+function zoomReset(){ tableZoom = 1; applyZoom(); }
+function resizeTableView(dir){
+  tableViewHeight = Math.min(90, Math.max(50, tableViewHeight + dir * 5));
+  applyTableViewHeight();
+}
+function resetTableViewHeight(){
+  tableViewHeight = 80;
+  applyTableViewHeight();
+}
+function zoomFit(){
+  const tbl = document.getElementById('scoreTable');
+  const wrap = document.getElementById('tableWrap');
+  if(!tbl || !wrap || tbl.style.display==='none') return;
+  tableZoom = 1; applyZoom();
+  const need = tbl.scrollWidth, have = wrap.clientWidth - 4;
+  if(need > have){
+    tableZoom = Math.max(0.4, Math.floor((have/need)*100)/100);
+    applyZoom();
+    toast(`已縮放至 ${Math.round(tableZoom*100)}%，可見全部欄位`);
+  } else {
+    toast('表格已可完整顯示');
+  }
+}
+
+/* ═══════════════════ 計算 ═══════════════════ */
+function onScoreInput(k, colId, v){
+  const c = cur(); if(!c) return;
+  if(!c.scores[k]) c.scores[k] = {};
+  if(v==='' ) delete c.scores[k][colId];
+  else c.scores[k][colId] = parseFloat(v);
+  recalcRow(k); scheduleSave();
+}
+function onScoreInput(k, colId, v){
+  const c = cur(); if(!c) return;
+  if(!c.scores[k]) c.scores[k] = {};
+  if(v==='' ) delete c.scores[k][colId];
+  else c.scores[k][colId] = parseFloat(v);
+  recalcRow(k); scheduleSave();
+}
+function onAdjInput(k, v){
+  const c = cur(); if(!c) return;
+  // 加減分只取整數
+  const parsed = v==='' ? 0 : Math.round(parseFloat(v));
+  c.adjustments[k] = parsed;
+  // 同步輸入框顯示（避免保留小數）
+  const tr = document.querySelector(`tr[data-sid="${CSS.escape(k)}"]`);
+  const inp = tr?.querySelector('input.adj');
+  if(inp && v!=='' && inp.value !== String(parsed)) inp.value = parsed;
+  recalcRow(k); scheduleSave();
+}
+
+/* Enter 鍵跳至下一位學生同一欄位（跳過已有值，往下找第一個空格） */
+function scEnter(e, inp){
+  if(e.key !== 'Enter') return;
+  e.preventDefault();
+  const c = cur(); if(!c) return;
+  const colId = inp.dataset.col;
+  const colIdx = parseInt(inp.dataset.colidx);
+  const curSid = inp.dataset.sid;
+
+  // 取目前學生在 students 陣列中的位置
+  const sids = c.students.map(s=>sid(s));
+  const curPos = sids.indexOf(curSid);
+  if(curPos < 0) return;
+
+  // 從下一位起往後找第一個同欄位空白的學生（找完一圈就停）
+  const total = sids.length;
+  for(let d=1; d<=total; d++){
+    const nextPos = (curPos + d) % total;
+    const nextSid = sids[nextPos];
+    const val = (c.scores[nextSid]||{})[colId];
+    // 空白欄（沒有成績）才跳；若 d===total 代表全部已填，就跳下一個（不管是否空白）
+    if(val == null || isNaN(val) || d === total){
+      const nextInp = document.querySelector(
+        `tr[data-sid="${CSS.escape(nextSid)}"] input.sc[data-col="${colId}"]`);
+      if(nextInp){
+        nextInp.focus();
+        nextInp.select();
+        // 確保捲動到可見範圍
+        nextInp.closest('tr')?.scrollIntoView({block:'nearest', behavior:'smooth'});
+      }
+      break;
+    }
+  }
+}
+function computeAvg(c, col, k){
+  const vals = col.sources.map(s=>(c.scores[k]||{})[s]).filter(v=>v!=null && !isNaN(v));
+  if(!vals.length) return null;
+  let use = vals.slice().sort((a,b)=>a-b);
+  const drop = col.avgMode==='drop1'?1: col.avgMode==='drop2'?2:0;
+  if(drop>0 && use.length>drop) use = use.slice(drop);
+  return use.reduce((a,b)=>a+b,0)/use.length;
+}
+function recalcRow(k){
+  const c = cur(); if(!c) return;
+  const tr = document.querySelector(`tr[data-sid="${CSS.escape(k)}"]`);
+  if(!tr) return;
+  const pw = (c.personalWeights||{})[k] || {};
+  let total = 0;
+  c.columns.forEach(col=>{
+    let v;
+    if(col.type==='avg'){
+      v = computeAvg(c, col, k);
+      const td = tr.querySelector(`td[data-avg="${col.id}"]`);
+      if(td) td.textContent = v==null? '–' : v.toFixed(1);
+    }else{
+      v = (c.scores[k]||{})[col.id];
+    }
+    // 空白不算0，直接跳過
+    if(v==null || isNaN(v)) return;
+    // 個別配分優先，沒設定才用欄位配分
+    const wt = pw[col.id]!=null ? parseFloat(pw[col.id]) : col.weight;
+    if(wt>0) total += v * wt/100;
+  });
+  const adj = parseFloat(c.adjustments[k]) || 0;
+  const final = Math.max(0, Math.min(100, total + adj));
+  tr.querySelector('[data-total]').textContent = total.toFixed(1);
+  const fcell = tr.querySelector('[data-final]');
+  fcell.textContent = final.toFixed(1);
+  fcell.classList.toggle('fail', final < 60);
+}
+function recalcAll(){
+  const c = cur(); if(!c) return;
+  c.students.forEach(st=>recalcRow(sid(st)));
+  updateWeightPill();
+}
+function updateWeightPill(){
+  const c = cur();
+  const pill = document.getElementById('weightPill');
+  if(!pill) return;
+  if(!c){ pill.textContent='總配分 —'; pill.classList.remove('bad'); return; }
+  const tw = c.columns.reduce((s,col)=>s+(parseFloat(col.weight)||0),0);
+  pill.textContent = `總配分 ${Math.round(tw*100)/100}%`;
+  pill.classList.toggle('bad', Math.abs(tw-100) > 0.01);
+  pill.title = Math.abs(tw-100)>0.01 ? '提醒：各欄配分加總不是 100%' : '配分加總正確';
+}
+
+/* ═══════════════════ 欄位操作 ═══════════════════ */
+function setWeight(colId, v){
+  const c = cur(); const col = c.columns.find(x=>x.id===colId);
+  col.weight = parseFloat(v)||0;
+  recalcAll(); scheduleSave();
+}
+function renameCol(colId, v){
+  const c = cur(); const col = c.columns.find(x=>x.id===colId);
+  col.name = v.trim()||col.name;
+  refreshBatchSelect(); scheduleSave();
+}
+function deleteCol(colId){
+  const c = cur(); const col = c.columns.find(x=>x.id===colId);
+  if(!confirm(`刪除欄位「${col.name}」？該欄成績將一併移除。`)) return;
+  c.columns = c.columns.filter(x=>x.id!==colId);
+  // 從平均欄來源移除；來源空了就刪平均欄
+  c.columns = c.columns.filter(x=>{
+    if(x.type!=='avg') return true;
+    x.sources = x.sources.filter(s=>s!==colId);
+    return x.sources.length>0;
+  });
+  Object.values(c.scores).forEach(rec=>delete rec[colId]);
+  renderTable(); scheduleSave();
+}
+function openAddColumn(){
+  if(!cur()){ toast('請先選擇班級'); return; }
+  document.getElementById('addColPanel').classList.add('open');
+  document.getElementById('avgPanel').classList.remove('open');
+  document.getElementById('batchPanel').classList.remove('open');
+}
+function addColumn(){
+  const c = cur(); if(!c) return;
+  const name = document.getElementById('newColName').value.trim() || '新欄位';
+  const group = document.getElementById('newColGroup').value;
+  const weight = parseFloat(document.getElementById('newColWeight').value)||0;
+  // 插在同群組最後一欄之後，否則加在最後
+  const col = {id:uid(), name, group, weight, type:'manual', sources:[]};
+  let idx = -1;
+  c.columns.forEach((x,i)=>{ if(x.group===group) idx=i; });
+  if(idx>=0) c.columns.splice(idx+1,0,col); else c.columns.push(col);
+  document.getElementById('addColPanel').classList.remove('open');
+  document.getElementById('newColName').value='';
+  renderTable(); scheduleSave();
+  toast(`已新增欄位「${name}」`);
+}
+
+/* ── 選取模式與平均欄位 ── */
+function toggleSelectMode(){
+  if(!cur()){ toast('請先選擇班級'); return; }
+  selectMode = !selectMode;
+  document.getElementById('scoreTable').classList.toggle('select-mode', selectMode);
+  document.getElementById('btnSelectMode').textContent = selectMode? '✕ 結束選取':'☑ 選取欄位';
+  if(!selectMode){ document.getElementById('btnMakeAvg').style.display='none'; closeAvgPanel(); }
+  else toast('勾選要平均的欄位（如多筆小考），再按「建立平均欄位」');
+}
+function toggleEditMode(){
+  if(!cur()){ toast('請先選擇班級'); return; }
+  editMode = !editMode;
+  document.getElementById('scoreTable').classList.toggle('edit-mode', editMode);
+  document.getElementById('btnEditMode').textContent = editMode? '✓ 完成':'🗑 刪除欄位';
+}
+function selectedColIds(){
+  return [...document.querySelectorAll('input[data-sel]:checked')].map(cb=>cb.dataset.sel);
+}
+
+/* ═══════════════════ 複製配分到其他班 ═══════════════════ */
+function openCopyWeights(){
+  const c = cur();
+  if(!c){ toast('請先選擇來源班級'); return; }
+  if(Object.keys(classes).length<2){ toast('目前只有一個班級，無法複製到其他班'); return; }
+  // 來源下拉：預設為目前班級
+  const from = document.getElementById('copyFromSelect');
+  from.innerHTML = Object.keys(classes).sort().map(k=>{
+    const cc=classes[k];
+    return `<option value="${k}" ${k===curKey?'selected':''}>${cc.schoolYear}學年第${cc.semester}學期 ${cc.className}${cc.subject?'・'+cc.subject:''}</option>`;
+  }).join('');
+  from.onchange = renderCopyToChecks;
+  renderCopyToChecks();
+  document.getElementById('copyWtBg').classList.add('open');
+}
+function renderCopyToChecks(){
+  const fromKey = document.getElementById('copyFromSelect').value;
+  const box = document.getElementById('copyToChecks');
+  box.innerHTML = Object.keys(classes).sort().filter(k=>k!==fromKey).map(k=>{
+    const cc=classes[k];
+    return `<label><input type="checkbox" value="${k}"> ${cc.schoolYear}-${cc.semester} ${cc.className}${cc.subject?'・'+cc.subject:''}</label>`;
+  }).join('') || '<span class="hint">沒有其他班級</span>';
+}
+function copyToCheckAll(sameTermOnly){
+  const fromKey = document.getElementById('copyFromSelect').value;
+  const from = classes[fromKey];
+  document.querySelectorAll('#copyToChecks input').forEach(cb=>{
+    const c = classes[cb.value];
+    cb.checked = sameTermOnly ? (c.schoolYear===from.schoolYear && c.semester===from.semester) : false;
+  });
+}
+function closeCopyWeights(){ document.getElementById('copyWtBg').classList.remove('open'); }
+function doCopyWeights(){
+  const fromKey = document.getElementById('copyFromSelect').value;
+  const from = classes[fromKey];
+  const alsoAvg = document.getElementById('copyAlsoMakeAvg').checked;
+  const targets = [...document.querySelectorAll('#copyToChecks input:checked')].map(cb=>cb.value);
+  if(!targets.length){ toast('請至少勾選一個目標班級'); return; }
+
+  // 來源欄位：名稱 → {weight, type, avgMode, sourceNames(平均欄的來源欄名)}
+  const srcMap = {};
+  from.columns.forEach(col=>{
+    srcMap[col.name] = {
+      weight: col.weight, type: col.type, avgMode: col.avgMode,
+      sourceNames: col.type==='avg'? col.sources.map(id=>{const sc=from.columns.find(x=>x.id===id); return sc?sc.name:null;}).filter(Boolean):[]
+    };
+  });
+
+  let appliedClasses=0, appliedCols=0, createdAvg=0;
+  targets.forEach(tk=>{
+    const tgt = classes[tk];
+    let touched=false;
+    // 1) 既有同名欄位：套用配分
+    tgt.columns.forEach(col=>{
+      if(srcMap[col.name]!=null && col.type==='manual'){
+        col.weight = srcMap[col.name].weight; appliedCols++; touched=true;
+      }else if(srcMap[col.name]!=null && col.type==='avg'){
+        col.weight = srcMap[col.name].weight; appliedCols++; touched=true;
+      }
+    });
+    // 2) 選擇性建立平均欄位（目標班沒有、但來源有，且來源欄都能對應到）
+    if(alsoAvg){
+      Object.entries(srcMap).forEach(([name,info])=>{
+        if(info.type!=='avg') return;
+        if(tgt.columns.some(c=>c.name===name)) return;  // 已存在同名
+        const srcIds = info.sourceNames.map(sn=>{const m=tgt.columns.find(x=>x.name===sn); return m?m.id:null;});
+        if(srcIds.some(x=>x==null)) return;             // 目標班缺對應來源欄，略過
+        const lastIdx = Math.max(...srcIds.map(id=>tgt.columns.findIndex(x=>x.id===id)));
+        tgt.columns.splice(lastIdx+1, 0, {id:uid(), name, group:tgt.columns[lastIdx].group, weight:info.weight, type:'avg', sources:srcIds, avgMode:info.avgMode||'all'});
+        createdAvg++; touched=true;
+      });
+    }
+    if(touched) appliedClasses++;
+  });
+
+  closeCopyWeights();
+  if(curKey && targets.includes(curKey)) renderTable();
+  saveAll();
+  toast(`已套用配分到 ${appliedClasses} 個班級（${appliedCols} 個欄位${createdAvg?`、新增 ${createdAvg} 個平均欄`:''}）`);
+}
+
+function updateAvgBtn(){
+  document.getElementById('btnMakeAvg').style.display = selectedColIds().length>=2? 'inline-block':'none';
+}
+function openAvgPanel(){
+  const c = cur(); const ids = selectedColIds();
+  if(ids.length<2){ toast('請至少勾選 2 個欄位'); return; }
+  const names = ids.map(id=>c.columns.find(x=>x.id===id).name);
+  document.getElementById('avgSrcList').textContent = '來源欄位：' + names.join('、');
+  // 預設名稱猜測
+  const g = c.columns.find(x=>x.id===ids[0]).group;
+  document.getElementById('avgName').value =
+    g.includes('作業')||names[0].includes('作業') ? '作業平均' :
+    g.includes('期中')||g.includes('段考') ? '段考平均' : '小考平均';
+  document.getElementById('avgPanel').classList.add('open');
+  document.getElementById('addColPanel').classList.remove('open');
+  document.getElementById('batchPanel').classList.remove('open');
+}
+function closeAvgPanel(){ document.getElementById('avgPanel').classList.remove('open'); }
+
+/* ═══════════════════ 個別學生配分 ═══════════════════ */
+let _personalSid = null;
+function openPersonalWeights(k){
+  const c = cur(); if(!c) return;
+  const st = c.students.find(s=>sid(s)===k); if(!st) return;
+  _personalSid = k;
+  document.getElementById('personalStudentName').textContent = `${st.seat} ${st.name}`;
+  const pw = (c.personalWeights||{})[k] || {};
+  const tbody = document.getElementById('personalWtBody');
+  tbody.innerHTML = c.columns.map(col=>`
+    <tr>
+      <td style="text-align:left">${col.name}${col.type==='avg'?' (Σ)':''}</td>
+      <td style="text-align:left; font-size:12px; color:var(--ink-soft)">${col.group}</td>
+      <td>${col.weight}%</td>
+      <td style="padding:4px 6px">
+        <input type="number" min="0" max="200" step="any"
+          style="width:56px; border:1px solid var(--line-strong); border-radius:5px; padding:4px 5px; font-size:13px; text-align:center;"
+          data-col="${col.id}" value="${pw[col.id]!=null ? pw[col.id] : ''}"
+          placeholder="${col.weight}">
+      </td>
+    </tr>`).join('');
+  document.getElementById('personalWtBg').classList.add('open');
+}
+function savePersonalWeights(){
+  const c = cur(); if(!c || !_personalSid) return;
+  if(!c.personalWeights) c.personalWeights = {};
+  const rec = {};
+  document.querySelectorAll('#personalWtBody input[data-col]').forEach(inp=>{
+    const v = inp.value.trim();
+    if(v!=='') rec[inp.dataset.col] = parseFloat(v);
+  });
+  if(Object.keys(rec).length) c.personalWeights[_personalSid] = rec;
+  else delete c.personalWeights[_personalSid];
+  document.getElementById('personalWtBg').classList.remove('open');
+  recalcRow(_personalSid);
+  // 更新姓名格按鈕圖示
+  const tr = document.querySelector(`tr[data-sid="${CSS.escape(_personalSid)}"]`);
+  if(tr){
+    const btn = tr.querySelector('.btn-personal');
+    const hasPW = !!c.personalWeights[_personalSid];
+    if(btn){ btn.textContent = hasPW?'★':'⚙'; btn.classList.toggle('active', hasPW); }
+  }
+  scheduleSave();
+  toast('個別配分已儲存');
+}
+function clearPersonalWeights(){
+  const c = cur(); if(!c || !_personalSid) return;
+  if(c.personalWeights) delete c.personalWeights[_personalSid];
+  document.getElementById('personalWtBg').classList.remove('open');
+  recalcRow(_personalSid);
+  const tr = document.querySelector(`tr[data-sid="${CSS.escape(_personalSid)}"]`);
+  if(tr){ const btn=tr.querySelector('.btn-personal'); if(btn){btn.textContent='⚙';btn.classList.remove('active');} }
+  scheduleSave();
+  toast('已重設為班級預設配分');
+}
+
+function createAvgColumn(){
+  const c = cur(); const ids = selectedColIds();
+  if(ids.length<2){ toast('請至少勾選 2 個欄位'); return; }
+  const name = document.getElementById('avgName').value.trim()||'平均';
+  const weight = parseFloat(document.getElementById('avgWeight').value)||0;
+  const mode = document.getElementById('avgMode').value;
+  const lastIdx = Math.max(...ids.map(id=>c.columns.findIndex(x=>x.id===id)));
+  const col = {id:uid(), name, group:c.columns[lastIdx].group, weight, type:'avg', sources:ids, avgMode:mode};
+  c.columns.splice(lastIdx+1, 0, col);
+  selectMode = false;
+  document.getElementById('btnSelectMode').textContent='☑ 選取欄位';
+  document.getElementById('btnMakeAvg').style.display='none';
+  closeAvgPanel();
+  renderTable(); scheduleSave();
+  toast(`平均欄位「${name}」已建立（配分 ${weight}%）`);
+}
+
+/* ── 批次貼上 ── */
+function toggleBatch(){
+  if(!cur()){ toast('請先選擇班級'); return; }
+  const p = document.getElementById('batchPanel');
+  p.classList.toggle('open');
+  document.getElementById('avgPanel').classList.remove('open');
+  document.getElementById('addColPanel').classList.remove('open');
+}
+function refreshBatchSelect(){
+  const box = document.getElementById('batchColChecks');
+  if(!box) return;
+  box.innerHTML='';
+  const c = cur(); if(!c) return;
+  box.innerHTML = c.columns.filter(x=>x.type==='manual').map(col=>
+    `<label><input type="checkbox" class="batch-col-chk" value="${col.id}"> ${col.group}｜${col.name}</label>`
+  ).join('') || '<span class="hint">目前沒有可匯入的成績欄位</span>';
+}
+function selectedBatchColIds(){
+  return [...document.querySelectorAll('.batch-col-chk:checked')].map(cb=>cb.value);
+}
+function batchCheckAll(checked){
+  document.querySelectorAll('.batch-col-chk').forEach(cb=>{ cb.checked = checked; });
+}
+function parseBatchRows(raw, targetCount){
+  return raw.replace(/\r/g,'').split('\n').filter(line=>line.trim()!=='').map(line=>{
+    if(line.includes('\t')) return line.split('\t').map(cell=>cell.trim());
+    const trimmed = line.trim();
+    if(targetCount<=1) return [trimmed];
+    return trimmed.split(/\s+/);
+  });
+}
+function applyBatch(){
+  const c = cur(); if(!c) return;
+  const colIds = selectedBatchColIds();
+  if(!colIds.length){ toast('請至少勾選一個目標欄位'); return; }
+  const raw = document.getElementById('batchInput').value;
+  if(!raw.trim()){ toast('請貼上成績資料'); return; }
+  const rows = parseBatchRows(raw, colIds.length);
+  const maxCols = Math.max(...rows.map(r=>r.length), 0);
+  if(maxCols > colIds.length){
+    toast(`貼上了 ${maxCols} 欄資料，但只勾選了 ${colIds.length} 個目標欄位`);
+    return;
+  }
+  let n=0;
+  c.students.forEach((st,i)=>{
+    if(i>=rows.length) return;
+    const k = sid(st);
+    if(!c.scores[k]) c.scores[k]={};
+    colIds.forEach((colId, colIdx)=>{
+      const cell = (rows[i]?.[colIdx] ?? '').trim();
+      if(cell==='' || isNaN(parseFloat(cell))) delete c.scores[k][colId];
+      else { c.scores[k][colId] = parseFloat(cell); n++; }
+    });
+  });
+  renderTable(); scheduleSave();
+  toast(`已匯入 ${n} 筆成績（${Math.min(rows.length, c.students.length)} 位學生、${colIds.length} 個欄位）`);
+}
+
+/* ═══════════════════ 統計 ═══════════════════ */
+function semesterScores(c){
+  return c.students.map(st=>{
+    const k = sid(st);
+    const pw = (c.personalWeights||{})[k] || {};
+    let total=0;
+    c.columns.forEach(col=>{
+      const v = col.type==='avg'? computeAvg(c,col,k) : (c.scores[k]||{})[col.id];
+      if(v==null || isNaN(v)) return;
+      const wt = pw[col.id]!=null ? parseFloat(pw[col.id]) : col.weight;
+      if(wt>0) total += v*wt/100;
+    });
+    return Math.round((Math.max(0,Math.min(100, total+(parseFloat(c.adjustments[k])||0)))*10))/10;
+  });
+}
+/* ═══════════════════ 統計：共用工具 ═══════════════════ */
+// 取某班某「項目」的成績陣列（__FINAL__ 為加權學期成績，否則為某欄位 id）
+function itemScores(c, basis){
+  if(basis==='__FINAL__') return semesterScores(c);
+  return c.students.map(st=>{
+    const k = sid(st);
+    const col = c.columns.find(x=>x.id===basis);
+    if(!col) return null;
+    const v = col.type==='avg'? computeAvg(c,col,k) : (c.scores[k]||{})[col.id];
+    return (v==null||isNaN(v))? null : v;
+  });
+}
+function describe(arr){
+  const v = arr.filter(x=>x!=null && !isNaN(x));
+  const n = v.length;
+  if(!n) return {n:0};
+  const s = v.slice().sort((a,b)=>a-b);
+  const sum = v.reduce((a,b)=>a+b,0);
+  const avg = sum/n;
+  const sd = Math.sqrt(v.reduce((a,x)=>a+(x-avg)**2,0)/n);
+  const med = n%2? s[(n-1)/2] : (s[n/2-1]+s[n/2])/2;
+  const pct = p => s[Math.min(n-1, Math.max(0, Math.ceil(p*n)-1))];
+  const fail = v.filter(x=>x<60).length;
+  // toFixed(4) 再轉回 Number 消除浮點累積誤差（如 51.19999999…）
+  const range = +(s[n-1]-s[0]).toFixed(4);
+  return {n, avg, sd, med, min:+s[0].toFixed(4), max:+s[n-1].toFixed(4),
+          q1:pct(.25), q3:pct(.75), range, fail, pass:n-fail, passRate:(n-fail)/n*100};
+}
+const STAT_LABEL = {n:'人數', avg:'平均', sd:'標準差', med:'中位數', min:'最低', max:'最高',
+                    q1:'25分位', q3:'75分位', range:'全距', fail:'不及格', passRate:'及格率'};
+// 班級可選的統計項目（學期成績 + 各成績欄位）
+function basisOptions(c){
+  const opts = [['__FINAL__','學期成績（加權後）']];
+  c.columns.forEach(col=> opts.push([col.id, `${col.group}｜${col.name}${col.type==='avg'?'（平均）':''}`]));
+  return opts;
+}
+
+/* ═══════════════════ 統計子分頁切換 ═══════════════════ */
+function openStatTab(btn){
+  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.stat-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(btn.dataset.stab).classList.add('active');
+  if(btn.dataset.stab==='st-single') renderSingleStats();
+  if(btn.dataset.stab==='st-compare') initCompare();
+  if(btn.dataset.stab==='st-track') initTrack();
+}
+// 進入統計分頁的進入點（沿用舊呼叫名 renderStats）
+function renderStats(){
+  fillStatYearSelect();
+  fillStatSemSelect();
+  fillStatClassSelect();
+  const active = document.querySelector('.stab.active');
+  if(active) openStatTab(active);
+  else renderSingleStats();
+}
+function fillYearOptions(selId, includeAll=false){
+  const sel = document.getElementById(selId);
+  if(!sel) return;
+  const prev = sel.value;
+  const years = [...new Set(orderedClassKeys().map(k=>classes[k].schoolYear))];
+  sel.innerHTML = (includeAll ? '<option value="">全部學年</option>' : '') +
+    years.map(y=>`<option value="${htmlEsc(y)}">${htmlEsc(y)} 學年</option>`).join('');
+  const preferred = (prev && years.includes(prev)) ? prev : (curKey && classes[curKey] ? classes[curKey].schoolYear : years[0]);
+  sel.value = preferred || (includeAll ? '' : '');
+}
+function fillSemOptions(selId, yearValue, includeAll=false){
+  const sel = document.getElementById(selId);
+  if(!sel) return;
+  const prev = sel.value;
+  const keys = orderedClassKeys().filter(k=>!yearValue || classes[k].schoolYear===yearValue);
+  const sems = [...new Set(keys.map(k=>classes[k].semester))];
+  sel.innerHTML = (includeAll ? '<option value="">全部學期</option>' : '') +
+    sems.map(s=>`<option value="${htmlEsc(s)}">第 ${htmlEsc(s)} 學期</option>`).join('');
+  const preferred = (prev && sems.includes(prev)) ? prev : (curKey && classes[curKey] && (!yearValue || classes[curKey].schoolYear===yearValue) ? classes[curKey].semester : sems[0]);
+  sel.value = preferred || (includeAll ? '' : '');
+}
+function statFilteredKeys(year, sem){
+  return orderedClassKeys().filter(k=>{
+    const c = classes[k];
+    return (!year || c.schoolYear===year) && (!sem || c.semester===sem);
+  });
+}
+function fillStatYearSelect(){
+  fillYearOptions('statYearSelect');
+}
+function fillStatSemSelect(){
+  const year = document.getElementById('statYearSelect')?.value || '';
+  fillSemOptions('statSemSelect', year);
+}
+function fillStatClassSelect(){
+  const sel = document.getElementById('statClassSelect');
+  if(!sel) return;
+  const prev = sel.value || curKey;
+  sel.innerHTML='';
+  const year = document.getElementById('statYearSelect')?.value || '';
+  const sem = document.getElementById('statSemSelect')?.value || '';
+  statFilteredKeys(year, sem).forEach(k=>{
+    const c=classes[k]; const o=document.createElement('option');
+    o.value=k; o.textContent=`${c.className}${c.subject?'（'+c.subject+'）':''}`;
+    sel.appendChild(o);
+  });
+  const keys = [...sel.options].map(o=>o.value);
+  sel.value = (prev && keys.includes(prev)) ? prev : ((curKey && keys.includes(curKey)) ? curKey : (keys[0] || ''));
+}
+
+/* ═══════════════════ 單一班級統計 ═══════════════════ */
+let itemChart = null;
+function renderSingleStats(){
+  const key = document.getElementById('statClassSelect').value;
+  const c = classes[key];
+  const grid = document.getElementById('statGrid');
+  // 填統計依據選單
+  const bsel = document.getElementById('statBasisSelect');
+  const prevB = bsel.value;
+  if(c){
+    bsel.innerHTML = basisOptions(c).map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+    if([...bsel.options].some(o=>o.value===prevB)) bsel.value = prevB;
+  }
+  if(!c || !c.students.length){
+    grid.innerHTML='<div class="empty" style="grid-column:1/-1">請先選擇有學生的班級</div>';
+    [distChart,itemChart].forEach(ch=>ch&&ch.destroy()); distChart=itemChart=null; return;
+  }
+  const basis = bsel.value || '__FINAL__';
+  const scores = itemScores(c, basis);
+  const d = describe(scores);
+  if(!d.n){ grid.innerHTML='<div class="empty" style="grid-column:1/-1">此項目尚無成績資料</div>';
+    [distChart,itemChart].forEach(ch=>ch&&ch.destroy()); distChart=itemChart=null; return; }
+
+  const items = [
+    ['人數', d.n], ['平均', d.avg.toFixed(2)], ['中位數', d.med.toFixed(1)],
+    ['標準差', d.sd.toFixed(2)], ['最高分', d.max], ['最低分', d.min],
+    ['全距', d.range], ['75 分位', d.q3], ['25 分位', d.q1],
+    ['及格率', d.passRate.toFixed(1)+'%'], ['不及格人數', d.fail, d.fail>0]
+  ];
+  grid.innerHTML = items.map(([k,v,bad])=>`<div class="stat ${bad?'bad':''}"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+
+  // 分布圖
+  const ranges = ['0-9','10-19','20-29','30-39','40-49','50-59','60-69','70-79','80-89','90-100'];
+  const counts = ranges.map(r=>{const [lo,hi]=r.split('-').map(Number); return scores.filter(s=>s!=null&&s>=lo&&s<=hi).length;});
+  if(distChart) distChart.destroy();
+  distChart = new Chart(document.getElementById('distChart'),{
+    type:'bar',
+    data:{labels:ranges, datasets:[{label:'人數', data:counts,
+      backgroundColor:ranges.map((r,i)=>i<6?'rgba(181,68,60,.55)':'rgba(30,107,82,.6)'),
+      borderColor:ranges.map((r,i)=>i<6?'#B5443C':'#1E6B52'), borderWidth:1}]},
+    options:{responsive:true, maintainAspectRatio:false,
+      plugins:{title:{display:true,text:`${c.className} 成績分布`},legend:{display:false}},
+      scales:{y:{beginAtZero:true,ticks:{stepSize:1},title:{display:true,text:'人數'}},x:{title:{display:true,text:'分數區間'}}}}
+  });
+
+  // 各項目平均長條圖（總覽該班所有欄位的班平均）
+  const cols = c.columns.filter(col=>col.weight>0 || col.type==='avg');
+  const useCols = cols.length? cols : c.columns;
+  const labels = useCols.map(col=>col.name);
+  const avgs = useCols.map(col=>{ const dd=describe(itemScores(c,col.id)); return dd.n? +dd.avg.toFixed(1):0; });
+  const finalD = describe(semesterScores(c));
+  labels.push('學期成績'); avgs.push(finalD.n? +finalD.avg.toFixed(1):0);
+  if(itemChart) itemChart.destroy();
+  itemChart = new Chart(document.getElementById('itemChart'),{
+    type:'bar',
+    data:{labels, datasets:[{label:'班級平均', data:avgs,
+      backgroundColor:'rgba(45,95,138,.55)', borderColor:'#2D5F8A', borderWidth:1}]},
+    options:{responsive:true, maintainAspectRatio:false, indexAxis:'y',
+      plugins:{title:{display:true,text:`${c.className} 各項目班平均`},legend:{display:false}},
+      scales:{x:{beginAtZero:true,max:100,title:{display:true,text:'平均分'}}}}
+  });
+}
+
+/* ═══════════════════ 多班級比較 ═══════════════════ */
+let cmpChart = null;
+function sameTermClasses(){
+  const year = document.getElementById('cmpYearSelect')?.value || '';
+  const sem = document.getElementById('cmpSemSelect')?.value || '';
+  return statFilteredKeys(year, sem).map(key=>({key, c:classes[key]}));
+}
+function fillCmpYearSelect(){
+  fillYearOptions('cmpYearSelect');
+}
+function fillCmpSemSelect(){
+  const year = document.getElementById('cmpYearSelect')?.value || '';
+  fillSemOptions('cmpSemSelect', year);
+}
+function initCompare(){
+  const box = document.getElementById('cmpClassChecks');
+  fillCmpYearSelect();
+  fillCmpSemSelect();
+  const list = sameTermClasses();
+  if(!list.length){ box.innerHTML='<span class="hint">尚無班級資料</span>'; document.getElementById('cmpResult').innerHTML=''; return; }
+  box.innerHTML = list.map(({key,c})=>`<label><input type="checkbox" value="${key}" checked> ${c.className}</label>`).join('');
+  // 比較項目：以第一班欄位為準（同年段欄位通常一致）
+  const isel = document.getElementById('cmpItemSelect');
+  isel.innerHTML = '<option value="__FINAL__">學期成績（加權後）</option>' +
+    list[0].c.columns.map(col=>`<option value="name::${encodeURIComponent(col.name)}">${col.group}｜${col.name}</option>`).join('');
+  renderCompare();
+}
+function renderCompare(){
+  const keys = [...document.querySelectorAll('#cmpClassChecks input:checked')].map(cb=>cb.value);
+  const out = document.getElementById('cmpResult');
+  if(keys.length<1){ out.innerHTML='<div class="empty">請至少勾選一個班級</div>'; if(cmpChart){cmpChart.destroy();cmpChart=null;} return; }
+  const itemSel = document.getElementById('cmpItemSelect').value;
+  const isName = itemSel.startsWith('name::');
+  const itemName = isName? decodeURIComponent(itemSel.slice(6)) : null;
+
+  const rows = keys.map(k=>{
+    const c = classes[k];
+    let basis = '__FINAL__';
+    if(isName){ const col = c.columns.find(x=>x.name===itemName); basis = col? col.id : null; }
+    const scores = basis? itemScores(c, basis) : [];
+    return {key:k, c, d:describe(scores)};
+  }).filter(r=>r.d.n>0);
+
+  if(!rows.length){ out.innerHTML='<div class="empty">所選班級在此項目尚無成績</div>'; if(cmpChart){cmpChart.destroy();cmpChart=null;} return; }
+
+  const itemLabel = isName? itemName : '學期成績';
+  // 比較表
+  let html = `<h3 style="color:var(--green-deep); margin:6px 0 4px;">比較項目：${itemLabel}</h3>`;
+  html += `<div style="overflow:auto"><table class="stat-table"><thead><tr>
+    <th>班級</th><th>人數</th><th>平均</th><th>中位數</th><th>標準差</th><th>最高</th><th>最低</th><th>全距</th><th>及格率</th><th>不及格</th>
+    </tr></thead><tbody>`;
+  rows.forEach(({c,d})=>{
+    html += `<tr><td>${c.className}</td><td>${d.n}</td><td>${d.avg.toFixed(1)}</td><td>${d.med.toFixed(1)}</td>
+      <td>${d.sd.toFixed(2)}</td><td>${d.max.toFixed(1)}</td><td>${d.min.toFixed(1)}</td><td>${d.range.toFixed(1)}</td>
+      <td>${d.passRate.toFixed(1)}%</td><td class="${d.fail>0?'bad':''}">${d.fail}</td></tr>`;
+  });
+  // 全體合計列
+  const allScores = rows.flatMap(r=>{
+    const c=r.c; let basis='__FINAL__';
+    if(isName){const col=c.columns.find(x=>x.name===itemName); basis=col?col.id:null;}
+    return basis? itemScores(c,basis).filter(x=>x!=null):[];
+  });
+  const allD = describe(allScores);
+  html += `</tbody><tfoot><tr><td>全體合計</td><td>${allD.n}</td><td>${allD.avg.toFixed(1)}</td><td>${allD.med.toFixed(1)}</td>
+    <td>${allD.sd.toFixed(2)}</td><td>${allD.max.toFixed(1)}</td><td>${allD.min.toFixed(1)}</td><td>${allD.range.toFixed(1)}</td>
+    <td>${allD.passRate.toFixed(1)}%</td><td class="${allD.fail>0?'bad':''}">${allD.fail}</td></tr></tfoot></table></div>`;
+
+  // 圖：各班平均 + 及格率
+  html += `<div class="chart-box" style="height:360px; margin-top:6px;"><canvas id="cmpChart"></canvas></div>`;
+  out.innerHTML = html;
+
+  if(cmpChart) cmpChart.destroy();
+  cmpChart = new Chart(document.getElementById('cmpChart'),{
+    type:'bar',
+    data:{labels:rows.map(r=>r.c.className),
+      datasets:[
+        {label:'平均分 ± 1SD', data:rows.map(r=>+r.d.avg.toFixed(1)),
+         backgroundColor:'rgba(30,107,82,.55)', borderColor:'#1E6B52', borderWidth:1.5, yAxisID:'y',
+         // 誤差棒（±1 SD）透過 Chart.js error bar 或 afterDraw plugin 繪製
+         error: rows.map(r=>+r.d.sd.toFixed(2))},
+        {label:'及格率(%)', data:rows.map(r=>+r.d.passRate.toFixed(1)),
+         type:'line', borderColor:'#B97D14', backgroundColor:'#B97D14',
+         pointBackgroundColor:'#B97D14', pointRadius:5, yAxisID:'y1', tension:.2}
+      ]},
+    options:{responsive:true, maintainAspectRatio:false,
+      plugins:{
+        title:{display:true, text:`各班「${itemLabel}」比較`},
+        legend:{labels:{usePointStyle:true}},
+        tooltip:{callbacks:{label:ctx=>{
+          if(ctx.datasetIndex===0){
+            const sd = rows[ctx.dataIndex]?.d.sd;
+            return [`平均分: ${ctx.parsed.y}`, `標準差: ±${sd?.toFixed(2)||'—'}`,
+                    `範圍: ${rows[ctx.dataIndex]?.d.min.toFixed(1)} – ${rows[ctx.dataIndex]?.d.max.toFixed(1)}`];
+          }
+          return `及格率: ${ctx.parsed.y}%`;
+        }}}
+      },
+      scales:{
+        y:{beginAtZero:true,max:105,position:'left',title:{display:true,text:'平均分'}},
+        y1:{beginAtZero:true,max:105,position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'及格率(%)'}}
+      }
+    },
+    plugins:[{
+      id:'errorBars',
+      afterDatasetsDraw(chart){
+        const {ctx, data, chartArea:{top,bottom,left,right}, scales:{y}} = chart;
+        const ds = data.datasets[0];
+        if(!ds?.error) return;
+        ctx.save(); ctx.strokeStyle='#14503C'; ctx.lineWidth=2;
+        chart.getDatasetMeta(0).data.forEach((bar,i)=>{
+          const sd = ds.error[i]||0;
+          const avg = ds.data[i];
+          const yTop = y.getPixelForValue(Math.min(avg+sd, 100));
+          const yBot = y.getPixelForValue(Math.max(avg-sd, 0));
+          const cx = bar.x, hw = Math.min(bar.width*0.28, 14);
+          ctx.beginPath(); ctx.moveTo(cx,yTop); ctx.lineTo(cx,yBot); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(cx-hw,yTop); ctx.lineTo(cx+hw,yTop); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(cx-hw,yBot); ctx.lineTo(cx+hw,yBot); ctx.stroke();
+          // SD 標籤
+          ctx.fillStyle='#14503C'; ctx.font='bold 10px sans-serif'; ctx.textAlign='center';
+          ctx.fillText(`±${sd}`, cx, yTop-5);
+        });
+        ctx.restore();
+      }
+    }]
+  });
+}
+
+/* ═══════════════════ 長期追蹤 ═══════════════════ */
+let trackChart = null;
+let selectedTrackClassKeys = new Set();
+function initTrack(){
+  fillYearOptions('trackYearSelect', true);
+  fillTrackSemSelect();
+  renderTrackClassChecks();
+  document.getElementById('trackResult').innerHTML = '';
+}
+function fillTrackSemSelect(){
+  const year = document.getElementById('trackYearSelect')?.value || '';
+  fillSemOptions('trackSemSelect', year, true);
+}
+function renderTrackClassChecks(){
+  const box = document.getElementById('trackClassChecks');
+  if(!box) return;
+  const year = document.getElementById('trackYearSelect')?.value || '';
+  const sem = document.getElementById('trackSemSelect')?.value || '';
+  const keys = statFilteredKeys(year, sem);
+  if(!keys.length){
+    box.innerHTML = '<span class="hint">此範圍尚無班級資料</span>';
+    return;
+  }
+  box.innerHTML = keys.map(k=>{
+    const c = classes[k];
+    return `<label><input type="checkbox" class="track-class-chk" value="${k}" ${selectedTrackClassKeys.has(k)?'checked':''} onchange="toggleTrackClassSelection(this)"> ${c.schoolYear}-${c.semester} ${c.className}${c.subject?'・'+c.subject:''}</label>`;
+  }).join('');
+}
+function toggleTrackClassSelection(input){
+  if(!input?.value) return;
+  if(input.checked) selectedTrackClassKeys.add(input.value);
+  else selectedTrackClassKeys.delete(input.value);
+}
+function trackCheckVisible(checked){
+  document.querySelectorAll('.track-class-chk').forEach(cb=>{
+    cb.checked = checked;
+    toggleTrackClassSelection(cb);
+  });
+}
+function selectedTrackKeys(){
+  selectedTrackClassKeys = new Set([...selectedTrackClassKeys].filter(k=>classes[k]));
+  return [...selectedTrackClassKeys];
+}
+function compareStudentNames(base, other){
+  const baseNames = new Set(base.students.map(s=>s.name));
+  const otherNames = new Set(other.students.map(s=>s.name));
+  let overlap = 0;
+  baseNames.forEach(name=>{ if(otherNames.has(name)) overlap++; });
+  const union = new Set([...baseNames, ...otherNames]).size || 1;
+  return {
+    overlap,
+    baseCount: baseNames.size,
+    otherCount: otherNames.size,
+    ratio: overlap / union,
+    exact: overlap === baseNames.size && overlap === otherNames.size
+  };
+}
+function renderTrack(){
+  const out = document.getElementById('trackResult');
+  const keys = selectedTrackKeys();
+  if(keys.length < 2){
+    out.innerHTML = '<div class="empty">請至少勾選 2 個班級進行長期追蹤</div>';
+    if(trackChart){trackChart.destroy(); trackChart=null;}
+    return;
+  }
+  const insts = keys.map(k=>({key:k,c:classes[k], ord:+classes[k].schoolYear*10 + +classes[k].semester,
+    label:`${classes[k].schoolYear}-${classes[k].semester} ${classes[k].className}${classes[k].subject?'·'+classes[k].subject:''}`}))
+    .sort((a,b)=>a.ord-b.ord);
+  const base = insts[0].c;
+  const mismatches = insts.slice(1).map(it=>({it, cmp:compareStudentNames(base, it.c)})).filter(x=>!x.cmp.exact);
+  if(mismatches.length){
+    out.innerHTML = `<div class="empty">所選班級的學生姓名不完全一致，可能選錯班級。請重新選取同一批學生延續升班的班級後再分析。</div>
+      <div style="overflow:auto; margin-top:10px;"><table class="stat-table"><thead><tr><th>班級</th><th>相同姓名數</th><th>基準班學生數</th><th>比對班學生數</th><th>重疊率</th></tr></thead><tbody>
+      ${mismatches.map(({it,cmp})=>`<tr><td>${it.label}</td><td>${cmp.overlap}</td><td>${cmp.baseCount}</td><td>${cmp.otherCount}</td><td class="bad">${(cmp.ratio*100).toFixed(1)}%</td></tr>`).join('')}
+      </tbody></table></div>`;
+    if(trackChart){trackChart.destroy(); trackChart=null;}
+    return;
+  }
+  const rows = insts.map(it=>({it, d:describe(semesterScores(it.c))}));
+  let html = `<h3 style="color:var(--green-deep); margin:6px 0 4px;">指定班級長期追蹤</h3>`;
+  html += `<div style="overflow:auto"><table class="stat-table"><thead><tr>
+    <th>學年-學期</th><th>人數</th><th>平均</th><th>中位數</th><th>標準差</th><th>最高</th><th>最低</th><th>及格率</th><th>不及格</th><th>較前期</th>
+    </tr></thead><tbody>`;
+  let prevAvg = null;
+  rows.forEach(({it,d})=>{
+    let delta='—';
+    if(prevAvg!=null && d.n){ const diff=d.avg-prevAvg; delta=(diff>=0?'▲ +':'▼ ')+diff.toFixed(2); }
+    const dcolor = delta.startsWith('▲')?'color:var(--green)':delta.startsWith('▼')?'color:var(--red)':'';
+    html += `<tr><td>${it.label}</td><td>${d.n||0}</td><td>${d.n?d.avg.toFixed(2):'—'}</td>
+      <td>${d.n?d.med.toFixed(1):'—'}</td><td>${d.n?d.sd.toFixed(2):'—'}</td><td>${d.n?d.max:'—'}</td>
+      <td>${d.n?d.min:'—'}</td><td>${d.n?d.passRate.toFixed(1)+'%':'—'}</td>
+      <td class="${d.fail>0?'bad':''}">${d.n?d.fail:'—'}</td><td style="${dcolor};font-weight:700">${delta}</td></tr>`;
+    if(d.n) prevAvg = d.avg;
+  });
+  html += `</tbody></table></div>`;
+  if(insts.length>=2) html += `<div class="chart-box" style="height:340px; margin-top:6px;"><canvas id="trackChart"></canvas></div>`;
+  out.innerHTML = html;
+
+  if(insts.length>=2){
+    if(trackChart) trackChart.destroy();
+    trackChart = new Chart(document.getElementById('trackChart'),{
+      type:'line',
+      data:{labels:rows.map(r=>r.it.label),
+        datasets:[
+          {label:'平均分', data:rows.map(r=>r.d.n?+r.d.avg.toFixed(1):null), borderColor:'#1E6B52', backgroundColor:'rgba(30,107,82,.15)', fill:true, tension:.25, yAxisID:'y'},
+          {label:'及格率(%)', data:rows.map(r=>r.d.n?+r.d.passRate.toFixed(1):null), borderColor:'#B97D14', backgroundColor:'#B97D14', tension:.25, yAxisID:'y1'}
+        ]},
+      options:{responsive:true, maintainAspectRatio:false,
+        plugins:{title:{display:true, text:`指定班級跨學期趨勢`}},
+        scales:{y:{beginAtZero:true,max:100,position:'left',title:{display:true,text:'平均分'}},
+                y1:{beginAtZero:true,max:100,position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'及格率(%)'}}}}
+    });
+  }
+}
+
+/* ═══════════════════ 列印 PDF ═══════════════════ */
+function openPrintModal(){
+  if(!Object.keys(classes).length){ toast('尚無班級資料可列印'); return; }
+  populateRangeFilters('print');
+  renderClassRange('print');
+  document.getElementById('printModalBg').classList.add('open');
+}
+function closePrintModal(){ document.getElementById('printModalBg').classList.remove('open'); }
+
+function doPrint(){
+  const withScores = document.getElementById('prChkScores').checked;
+  const withStats  = document.getElementById('prChkStats').checked;
+  const withDist   = document.getElementById('prChkDist').checked;
+  const withRank   = document.getElementById('prChkRank').checked;
+  if(!withScores && !withStats && !withDist){ toast('請至少勾選一項列印內容'); return; }
+  const keys = selectedRangeKeys('print');
+  if(!keys.length){ toast('請先選擇要列印的班級'); return; }
+  const root = document.getElementById('printRoot');
+  const html = keys.map(k=> buildPrintPage(classes[k], k, {withScores, withStats, withDist, withRank})).filter(Boolean).join('');
+  if(!html){ toast('所選班級沒有可列印的成績資料'); return; }
+  root.innerHTML = html;
+  closePrintModal();
+  // 等待 DOM 更新與字型載入後再列印
+  setTimeout(()=>{
+    window.print();
+    setTimeout(()=>{ root.innerHTML=''; }, 500);
+  }, 200);
+}
+
+function buildPrintPage(c, key, opts){
+  if(!c || !c.students.length) return '';
+  const {withScores, withStats, withDist, withRank} = opts;
+  const now = new Date().toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit'});
+  const title = `${c.className} ${c.schoolYear}學年第${c.semester}學期${c.subject? '・'+c.subject:''} 成績單`;
+
+  // 計算學期成績與排名
+  const finals = semesterScores(c);
+  const ranked = finals.map((s,i)=>({i, s})).sort((a,b)=>b.s-a.s);
+  const rankArr = new Array(finals.length);
+  ranked.forEach((r,ri)=>{ rankArr[r.i]=ri+1; });
+
+  let html = `<div class="pr-page">
+    <div class="pr-title">${title}</div>
+    <div class="pr-sub">列印日期：${now}　　人數：${c.students.length} 人</div>`;
+
+  /* ── 統計摘要 ── */
+  if(withStats){
+    const sorted = finals.slice().sort((a,b)=>a-b);
+    const n = finals.length;
+    const avg = finals.reduce((a,b)=>a+b,0)/n;
+    const sd  = Math.sqrt(finals.reduce((s,x)=>s+(x-avg)**2,0)/n);
+    const fail= finals.filter(s=>s<60).length;
+    const items=[
+      ['人數',n], ['班級平均',avg.toFixed(2)], ['最高分',sorted[n-1]], ['最低分',sorted[0]],
+      ['標準差',sd.toFixed(2)], ['75分位',sorted[Math.ceil(.75*n)-1]], ['25分位',sorted[Math.max(0,Math.floor(.25*n)-1)]],
+      ['及格率',((1-fail/n)*100).toFixed(1)+'%'], ['不及格人數',fail,fail>0]
+    ];
+    html += `<div class="pr-section">成績統計摘要</div>
+      <div class="pr-stats">${items.map(([k,v,bad])=>`<div class="pr-stat ${bad?'bad':''}"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('')}</div>`;
+  }
+
+  /* ── 分布 ── */
+  if(withDist){
+    const ranges=[['0–9',0,9],['10–19',10,19],['20–29',20,29],['30–39',30,39],['40–49',40,49],
+                  ['50–59',50,59],['60–69',60,69],['70–79',70,79],['80–89',80,89],['90–100',90,100]];
+    html += `<div class="pr-section">成績分布</div><table class="pr-table" style="margin-bottom:4mm"><tr>`;
+    html += ranges.map(([r])=>`<th style="background:#8A958D">${r}</th>`).join('');
+    html += `</tr><tr>`;
+    html += ranges.map(([r,lo,hi])=>`<td>${finals.filter(s=>s>=lo&&s<=hi).length} 人</td>`).join('');
+    html += `</tr></table>`;
+  }
+
+  /* ── 成績資料表 ── */
+  if(withScores){
+    html += `<div class="pr-section">完整成績資料</div>`;
+    const hasGender = c.students.some(s=>s.gender);
+    // 欄位群組標頭
+    html += `<table class="pr-table"><thead>`;
+
+    // 群組列
+    html += `<tr><th class="g-fixed" ${hasGender?'colspan="3"':'colspan="2"'}>學生</th>`;
+    let gi=0;
+    while(gi<c.columns.length){
+      let gj=gi; while(gj<c.columns.length && c.columns[gj].group===c.columns[gi].group) gj++;
+      const gcls = COL_GROUP_CLASS(c.columns[gi].group);
+      html += `<th class="${gcls}" colspan="${gj-gi}">${c.columns[gi].group}</th>`;
+      gi=gj;
+    }
+    if(withRank) html += `<th class="g-fixed" colspan="4">計算結果</th>`;
+    else         html += `<th class="g-fixed" colspan="3">計算結果</th>`;
+    html += `</tr>`;
+
+    // 欄位名稱列
+    html += `<tr><th class="g-fixed">座號</th>${hasGender?'<th class="g-fixed">性別</th>':''}<th class="g-fixed">姓名</th>`;
+    c.columns.forEach(col=>{
+      const gcls = col.type==='avg' ? 'g-avg' : COL_GROUP_CLASS(col.group);
+      html += `<th class="${gcls}">${col.name}${col.weight>0? '<br><span style="font-size:6pt;font-weight:400">('+col.weight+'%)</span>':''}</th>`;
+    });
+    html += `<th class="g-fixed">加權總分</th><th class="g-fixed">加減分</th><th class="g-fixed">學期成績</th>`;
+    if(withRank) html += `<th class="g-fixed">排名</th>`;
+    html += `</tr></thead><tbody>`;
+
+    // 學生列
+    c.students.forEach((st,idx)=>{
+      const k = sid(st);
+      let total=0;
+      const vals = c.columns.map(col=>{
+        let v;
+        if(col.type==='avg'){ v = computeAvg(c,col,k); }
+        else{ v = (c.scores[k]||{})[col.id]; }
+        if(col.weight>0 && v!=null && !isNaN(v)) total += v*col.weight/100;
+        return v==null? '' : (col.type==='avg'? (Math.round(v*10)/10).toFixed(1) : v);
+      });
+      const adj = parseFloat(c.adjustments[k])||0;
+      const fin = finals[idx];
+      html += `<tr>
+        <td>${st.seat}</td>${hasGender?`<td>${st.gender||''}</td>`:''}
+        <td class="sname">${st.name}</td>`;
+      c.columns.forEach((col,ci)=>{
+        const cls = col.type==='avg' ? 'avg-v' : '';
+        html += `<td class="${cls}">${vals[ci]}</td>`;
+      });
+      html += `<td>${Math.round(total*100)/100}</td><td>${adj||''}</td>
+               <td class="final ${fin<60?'fail':''}">${fin}</td>`;
+      if(withRank) html += `<td>${rankArr[idx]}</td>`;
+      html += `</tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+
+  html += `<div class="pr-footer"><span>${title}</span><span>共 ${c.students.length} 人</span></div></div>`;
+  return html;
+}
+
+/* ═══════════════════ 匯出 ═══════════════════ */
+function htmlEsc(v){
+  return String(v ?? '').replace(/[&<>"']/g, ch=>({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
+}
+function orderedClassKeys(){
+  return Object.keys(classes).sort((a,b)=>{
+    const ca=classes[a], cb=classes[b];
+    return (+cb.schoolYear)-(+ca.schoolYear) || (+cb.semester)-(+ca.semester) || ca.className.localeCompare(cb.className);
+  });
+}
+function classRows(c){
+  // 回傳 [headerGroups, headers, ...dataRows]
+  const g = ['','', '姓名以下為成績欄位'];
+  const grpRow = ['座號','性別','姓名', ...c.columns.map(x=>x.group), '加權總分','加減分','學期成績'];
+  const hdrRow = ['','','', ...c.columns.map(x=>x.name + (x.weight>0? `（${x.weight}%）`:'')), '','',''];
+  const rows = [grpRow, hdrRow];
+  const finals = semesterScores(c);
+  c.students.forEach((st,i)=>{
+    const k = sid(st);
+    let total = 0;
+    const vals = c.columns.map(col=>{
+      const v = col.type==='avg'? computeAvg(c,col,k) : (c.scores[k]||{})[col.id];
+      if(col.weight>0 && v!=null && !isNaN(v)) total += v*col.weight/100;
+      return v==null? '' : (col.type==='avg'? Math.round(v*10)/10 : v);
+    });
+    rows.push([st.seat, st.gender||'', st.name, ...vals, Math.round(total*100)/100, c.adjustments[k]||0, finals[i]]);
+  });
+  return rows;
+}
+function fillTsvYearSelect(){
+  const sel = document.getElementById('tsvYearSelect');
+  if(!sel) return;
+  const prev = sel.value;
+  const years = [...new Set(orderedClassKeys().map(k=>classes[k].schoolYear))];
+  const preferred = (prev && years.includes(prev)) ? prev : (curKey && classes[curKey] ? classes[curKey].schoolYear : years[0]);
+  sel.innerHTML = years.map(y=>`<option value="${htmlEsc(y)}">${htmlEsc(y)} 學年</option>`).join('');
+  sel.value = preferred || '';
+}
+function fillTsvSemSelect(){
+  const yearSel = document.getElementById('tsvYearSelect');
+  const semSel = document.getElementById('tsvSemSelect');
+  if(!yearSel || !semSel) return;
+  const year = yearSel.value;
+  const prev = semSel.value;
+  const sems = [...new Set(orderedClassKeys().filter(k=>classes[k].schoolYear===year).map(k=>classes[k].semester))];
+  const preferred = (prev && sems.includes(prev)) ? prev : (curKey && classes[curKey] && classes[curKey].schoolYear===year ? classes[curKey].semester : sems[0]);
+  semSel.innerHTML = sems.map(s=>`<option value="${htmlEsc(s)}">第 ${htmlEsc(s)} 學期</option>`).join('');
+  semSel.value = preferred || '';
+}
+function fillTsvSelect(){
+  fillTsvYearSelect();
+  const sel = document.getElementById('tsvClassSelect');
+  const yearSel = document.getElementById('tsvYearSelect');
+  const semSel = document.getElementById('tsvSemSelect');
+  if(!sel || !yearSel || !semSel) return;
+  fillTsvSemSelect();
+  const prev = sel.value || curKey;
+  sel.innerHTML = '';
+  const year = yearSel.value;
+  const sem = semSel.value;
+  const keys = orderedClassKeys().filter(k=>classes[k].schoolYear===year && classes[k].semester===sem);
+  keys.forEach(k=>{
+    const c=classes[k]; const o=document.createElement('option');
+    o.value=k; o.textContent=`${c.className}${c.subject?'・'+c.subject:''}`;
+    sel.appendChild(o);
+  });
+  sel.value = (prev && keys.includes(prev)) ? prev : ((curKey && keys.includes(curKey)) ? curKey : (keys[0] || ''));
+}
+function renderTSV(){
+  fillTsvSelect();
+  const sel = document.getElementById('tsvClassSelect');
+  const key = sel? sel.value : curKey;
+  const c = classes[key];
+  const ta = document.getElementById('tsvOut');
+  if(!ta) return;
+  if(!c){ ta.value='（尚無班級資料）'; return; }
+  const rows = classRows(c);
+  ta.value = `班級：${c.className}　${c.schoolYear}學年第${c.semester}學期${c.subject?'　科目：'+c.subject:''}\n` +
+    rows.map(r=>r.join('\t')).join('\n');
+}
+function openExportModal(){
+  if(!Object.keys(classes).length){ toast('沒有可匯出的班級'); return; }
+  populateRangeFilters('export');
+  renderClassRange('export');
+  document.getElementById('exportModalBg').classList.add('open');
+}
+function closeExportModal(){ document.getElementById('exportModalBg').classList.remove('open'); }
+function populateRangeFilters(kind){
+  const ySel = document.getElementById(`${kind}YearFilter`);
+  const sSel = document.getElementById(`${kind}SemFilter`);
+  if(!ySel || !sSel) return;
+  const keys = orderedClassKeys();
+  const years = [...new Set(keys.map(k=>classes[k].schoolYear))];
+  const preferredYear = curKey && classes[curKey] ? classes[curKey].schoolYear : years[0];
+  ySel.innerHTML = `<option value="__ALL__">全部學年</option>` +
+    years.map(y=>`<option value="${htmlEsc(y)}">${htmlEsc(y)} 學年</option>`).join('');
+  ySel.value = preferredYear || '__ALL__';
+  onRangeYearChange(kind);
+}
+function onRangeYearChange(kind){
+  const ySel = document.getElementById(`${kind}YearFilter`);
+  const sSel = document.getElementById(`${kind}SemFilter`);
+  if(!ySel || !sSel) return;
+  const year = ySel.value;
+  const keys = orderedClassKeys().filter(k=>year==='__ALL__' || classes[k].schoolYear===year);
+  const sems = [...new Set(keys.map(k=>classes[k].semester))];
+  const preferredSem = curKey && classes[curKey] && (year==='__ALL__' || classes[curKey].schoolYear===year) ? classes[curKey].semester : sems[0];
+  sSel.innerHTML = `<option value="__ALL__">全部學期</option>` +
+    sems.map(s=>`<option value="${htmlEsc(s)}">第 ${htmlEsc(s)} 學期</option>`).join('');
+  sSel.value = preferredSem || '__ALL__';
+  renderClassRange(kind);
+}
+function rangeFilteredKeys(kind){
+  const ySel = document.getElementById(`${kind}YearFilter`);
+  const sSel = document.getElementById(`${kind}SemFilter`);
+  const year = ySel?.value || '__ALL__';
+  const sem = sSel?.value || '__ALL__';
+  return orderedClassKeys().filter(k=>{
+    const c = classes[k];
+    return (year==='__ALL__' || c.schoolYear===year) && (sem==='__ALL__' || c.semester===sem);
+  });
+}
+function renderClassRange(kind){
+  const box = document.getElementById(`${kind}ClassChecks`);
+  if(!box) return;
+  const keys = rangeFilteredKeys(kind);
+  if(!keys.length){
+    box.innerHTML = '<div class="empty" style="padding:18px">此範圍尚無班級資料</div>';
+    return;
+  }
+  const groups = {};
+  keys.forEach(k=>{
+    const c=classes[k];
+    const g=`${c.schoolYear}-${c.semester}`;
+    (groups[g]=groups[g]||[]).push(k);
+  });
+  box.innerHTML = Object.keys(groups).sort((a,b)=>{
+    const [ay,as]=a.split('-'), [by,bs]=b.split('-');
+    return (+by)-(+ay) || (+bs)-(+as);
+  }).map(g=>{
+    const [yr,sem] = g.split('-');
+    const ks = groups[g];
+    return `<div class="export-term">
+      <div class="export-term-head">
+        <div class="export-term-title">${htmlEsc(yr)}學年第${htmlEsc(sem)}學期 <span style="color:var(--ink-soft);font-weight:600">共 ${ks.length} 班</span></div>
+        <div class="export-actions">
+          <button class="ghost small" onclick="setRangeTerm('${kind}','${htmlEsc(g)}',true)">全選此學期</button>
+          <button class="ghost small" onclick="setRangeTerm('${kind}','${htmlEsc(g)}',false)">清除此學期</button>
+        </div>
+      </div>
+      <div class="chk-grid">
+        ${ks.map(k=>{
+          const c=classes[k];
+          return `<label><input type="checkbox" class="${kind}-class-chk" data-term="${htmlEsc(g)}" value="${htmlEsc(k)}" checked> ${htmlEsc(c.className)}${c.subject?'・'+htmlEsc(c.subject):''}</label>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+function setAllExportClasses(checked){
+  setRangeAll('export', checked);
+}
+function setExportTerm(term, checked){
+  setRangeTerm('export', term, checked);
+}
+function setRangeAll(kind, checked){
+  document.querySelectorAll(`.${kind}-class-chk`).forEach(cb=>{ cb.checked = checked; });
+}
+function setRangeTerm(kind, term, checked){
+  document.querySelectorAll(`.${kind}-class-chk`).forEach(cb=>{
+    if(cb.dataset.term === term) cb.checked = checked;
+  });
+}
+function selectedRangeKeys(kind){
+  const checked = [...document.querySelectorAll(`.${kind}-class-chk:checked`)].map(cb=>cb.value).filter(k=>classes[k]);
+  return checked.length ? checked : [];
+}
+function selectedExportKeys(){
+  return selectedRangeKeys('export');
+}
+function copyTSV(){
+  renderTSV();
+  const ta = document.getElementById('tsvOut');
+  ta.select(); ta.setSelectionRange(0,999999);
+  navigator.clipboard?.writeText(ta.value).then(()=>toast('已複製，可直接貼到 Excel'))
+    .catch(()=>{ document.execCommand('copy'); toast('已複製'); });
+}
+function exportXlsx(){
+  if(!Object.keys(classes).length){ toast('沒有可匯出的班級'); return; }
+  if(!document.getElementById('exportClassChecks')?.children.length) renderClassRange('export');
+  const keys = selectedExportKeys();
+  if(!keys.length){ toast('請先選擇要下載的班級'); return; }
+  const wb = XLSX.utils.book_new();
+  const summary = [['學年','學期','班級','座號','姓名','學期成績']];
+  const used = {};
+  keys.sort((a,b)=>{
+    const ca=classes[a], cb=classes[b];
+    return (+cb.schoolYear)-(+ca.schoolYear) || (+cb.semester)-(+ca.semester) || ca.className.localeCompare(cb.className);
+  }).forEach(k=>{
+    const c = classes[k];
+    const ws = XLSX.utils.aoa_to_sheet(classRows(c));
+    let nm = `${c.schoolYear}-${c.semester} ${c.className}`.slice(0,28);
+    while(used[nm]) nm = nm.slice(0,26)+'_'+(Math.random()*9|0);
+    used[nm]=1;
+    XLSX.utils.book_append_sheet(wb, ws, nm);
+    const finals = semesterScores(c);
+    c.students.forEach((st,i)=>summary.push([c.schoolYear, c.semester, c.className, st.seat, st.name, finals[i]]));
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summary), '學期成績總表');
+  const suffix = keys.length===1 ? classes[keys[0]].className : `${keys.length}班`;
+  XLSX.writeFile(wb, `成績冊_所選${suffix}_${new Date().toISOString().slice(0,10)}.xlsx`);
+  closeExportModal();
+  toast(`Excel 已下載（${keys.length} 個班級）`);
+}
+
+/* ── JSON 完整備份 / 還原 ── */
+function exportJSON(){
+  if(!Object.keys(classes).length){ toast('沒有可匯出的資料'); return; }
+  const payload = { app:'lssh-score-mgr', version:2, exportedAt:new Date().toISOString(), classes };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `成績系統備份_${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('JSON 備份已下載');
+}
+function importJSON(input){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const d = JSON.parse(e.target.result);
+      const incoming = d.classes || d;   // 容許直接是 classes 物件
+      if(typeof incoming!=='object') throw new Error('格式不符');
+      const nIn = Object.keys(incoming).length;
+      const mode = Object.keys(classes).length
+        ? (confirm(`備份含 ${nIn} 個班級。\n\n按「確定」＝合併到現有資料（同學年學期班級會被覆蓋）\n按「取消」＝完全取代現有所有資料`) ? 'merge':'replace')
+        : 'replace';
+      if(mode==='replace') classes = {};
+      Object.entries(incoming).forEach(([k,v])=>{ classes[k]=v; });
+      migrate();
+      curKey = curKey && classes[curKey]? curKey : Object.keys(classes)[0]||null;
+      refreshClassSelect(); renderTable(); renderClassPanel(); renderStorageOverview(); saveAll();
+      toast(`已${mode==='merge'?'合併':'還原'} ${nIn} 個班級`);
+    }catch(err){ toast('還原失敗：'+err.message); }
+    input.value='';
+  };
+  reader.readAsText(file);
+}
+
+/* ── 儲存總覽：列出已存的學年學期，可刪除 ── */
+function fillStoreSummaryTag(){
+  const tag = document.getElementById('storeSummaryTag');
+  if(tag) tag.textContent = Object.keys(classes).length? `共 ${Object.keys(classes).length} 個班級`:'';
+}
+function renderStorageOverview(){
+  fillStoreSummaryTag();
+  const box = document.getElementById('storeOverview');
+  if(!box) return;   // 匯出頁面已移除此 div，直接結束
+  const keys = Object.keys(classes);
+  if(tag) tag.textContent = keys.length? `共 ${keys.length} 個班級`:'';
+  if(!keys.length){ box.innerHTML='<div class="empty">尚無資料</div>'; return; }
+  // 依學年-學期分組
+  const groups = {};
+  keys.forEach(k=>{
+    const c=classes[k]; const g=`${c.schoolYear}-${c.semester}`;
+    (groups[g]=groups[g]||[]).push(k);
+  });
+  let html = `<table class="stat-table"><thead><tr>
+    <th>學年 / 學期</th><th>班級</th><th style="width:90px">學生數</th><th style="width:140px">操作</th></tr></thead><tbody>`;
+  Object.keys(groups).sort().forEach(g=>{
+    const [yr,sem] = g.split('-');
+    const ks = groups[g].sort((a,b)=>classes[a].className.localeCompare(classes[b].className));
+    ks.forEach((k,i)=>{
+      const c = classes[k];
+      html += `<tr>`;
+      if(i===0){
+        html += `<td rowspan="${ks.length}" style="vertical-align:top">
+          ${yr}學年 第${sem}學期<br>
+          <button class="small danger" style="margin-top:6px; font-size:11px; padding:3px 8px" onclick="deleteTerm('${g}')">刪除整個學期</button>
+        </td>`;
+      }
+      html += `<td style="text-align:left; font-family:inherit">${c.className}${c.subject? '・'+c.subject:''}</td>
+        <td>${c.students.length}</td>
+        <td><button class="small danger" style="font-size:11px; padding:3px 8px" onclick="deleteClassByKey('${k}')">刪除</button></td></tr>`;
+    });
+  });
+  html += `</tbody></table>`;
+  box.innerHTML = html;
+}
+function deleteClassByKey(key){
+  const c = classes[key]; if(!c) return;
+  if(!confirm(`確定刪除「${c.schoolYear}學年第${c.semester}學期 ${c.className}」？此操作無法復原。`)) return;
+  delete classes[key];
+  if(curKey===key) curKey = Object.keys(classes)[0]||null;
+  refreshClassSelect(); renderTable(); renderClassPanel(); renderStorageOverview(); renderTSV(); initLoadStore(); saveAll();
+  toast('班級已刪除');
+}
+function deleteTerm(g){
+  const [yr,sem] = g.split('-');
+  const ks = Object.keys(classes).filter(k=>classes[k].schoolYear===yr && classes[k].semester===sem);
+  if(!confirm(`確定刪除「${yr}學年第${sem}學期」的全部 ${ks.length} 個班級？此操作無法復原。`)) return;
+  ks.forEach(k=>delete classes[k]);
+  if(!classes[curKey]) curKey = Object.keys(classes)[0]||null;
+  refreshClassSelect(); renderTable(); renderClassPanel(); renderStorageOverview(); renderTSV(); initLoadStore(); saveAll();
+  toast(`已刪除 ${yr}-${sem} 全部班級`);
+}
+
+/* ═══════════════════ 儲存 ═══════════════════ */
+const STORE_KEY = 'lssh-score-mgr-v2';
+function saveAll(manual){
+  try{
+    localStorage.setItem(STORE_KEY, JSON.stringify({classes, curKey}));
+    const b = document.getElementById('saveBadge');
+    b.textContent = '已儲存 ' + new Date().toLocaleTimeString('zh-TW',{hour12:false});
+    if(manual) toast('所有資料已儲存');
+  }catch(e){ if(manual) toast('儲存失敗：'+e.message); }
+}
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>saveAll(false), 800);
+}
+function loadAll(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(!raw) return;
+    const d = JSON.parse(raw);
+    classes = d.classes||{}; curKey = d.curKey && classes[d.curKey]? d.curKey:Object.keys(classes)[0]||null;
+    migrate();
+  }catch(e){}
+}
+/* 舊版資料遷移：移除假期作業考試與第三次期中考欄位、日常考查改純數字標題 */
+function migrate(){
+  Object.values(classes).forEach(c=>{
+    if(!c.columns) return;
+    const removed = [];
+    c.columns = c.columns.filter(col=>{
+      const drop = col.type==='manual' &&
+        (col.name.includes('假期作業') || col.group.includes('假期作業') ||
+         (col.group.includes('期中') && /3$|第三次/.test(col.name)));
+      if(drop) removed.push(col.id);
+      return !drop;
+    });
+    c.columns = c.columns.filter(col=>{
+      if(col.type!=='avg') return true;
+      col.sources = col.sources.filter(s=>!removed.includes(s));
+      return col.sources.length>0;
+    });
+    c.columns.forEach(col=>{
+      const m = col.name.match(/^小考(\d+)$/);
+      if(m && (col.group.includes('日常')||col.group.includes('平時'))) col.name = m[1];
+      if(col.group==='期中考試') col.group='期中考';   // 群組名稱簡化
+    });
+    if(removed.length) Object.values(c.scores||{}).forEach(rec=>removed.forEach(id=>delete rec[id]));
+  });
+}
+function clearAll(){
+  if(!confirm('確定清除「所有班級」的全部資料？此操作無法復原。')) return;
+  classes = {}; curKey = null;
+  localStorage.removeItem(STORE_KEY);
+  refreshClassSelect(); renderTable(); renderStats(); renderTSV(); renderClassPanel();
+  toast('所有資料已清除');
+}
+
+/* ═══════════════════ 初始化 ═══════════════════ */
+loadAll();
+refreshClassSelect();
+renderTable();
+applyTableViewHeight();
+renderClassPanel();
+initLoadStore();
+refreshClassPicker();
+refreshClassMgrPicker();
+</script>
+</body>
+</html>

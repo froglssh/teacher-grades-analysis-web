@@ -1,0 +1,1574 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>教室座位抽籤程式｜Canva Code</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { color-scheme: light; }
+    body { font-family: 'Noto Sans TC', system-ui, -apple-system, Segoe UI, Roboto, 'Microsoft JhengHei', 'PingFang TC', 'Heiti TC', sans-serif; }
+    .glass {
+      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.14);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+    .seat {
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+      user-select: none;
+    }
+    .seat:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(0,0,0,0.12); }
+    .seat .name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      display: block;
+    }
+    .scroll-btn {
+      background: rgba(20, 20, 30, 0.75);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.22);
+      backdrop-filter: blur(8px);
+    }
+    .scroll-btn:hover { background: rgba(20,20,30,0.9); }
+    .badge { display:inline-flex; align-items:center; gap:.4rem; padding:.2rem .55rem; border-radius:999px; font-size:.8rem; }
+    .fade-in { animation: fade .25s ease; } @keyframes fade { from{opacity:0; transform: translateY(4px)} to{opacity:1; transform:none} }
+    .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 24px; z-index: 60; }
+    .cut-corner { clip-path: polygon(8px 0, 100% 0, 100% 100%, 0 100%, 0 8px); }
+    .panel-title { display:flex; align-items:center; gap:.55rem; font-weight:700; }
+    .icon-dot { width:.62rem; height:.62rem; border-radius:999px; display:inline-block; }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-indigo-900 via-sky-900 to-emerald-900 text-white">
+  <header class="sticky top-0 z-30 bg-gradient-to-r from-indigo-900/80 to-emerald-900/80 border-b border-white/10 backdrop-blur">
+    <div class="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-white/15 grid place-content-center shadow-inner"><span class="text-xl">🎒</span></div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold tracking-wide">教室座位抽籤程式</h1>
+          <p class="text-white/80 text-xs sm:text-sm">輸入名單、預覽布局、隨機或手動分配、教師視角、下載與儲存設定</p>
+        </div>
+      </div>
+      <a href="#" class="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/15 transition">
+        <span>臺北市麗山高中林獻升老師製作</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="max-w-screen-2xl mx-auto px-5 py-6">
+    <!-- Controls + Preview -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Left Controls -->
+      <section class="lg:col-span-4 glass rounded-2xl p-5 fade-in">
+        <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> 基本設定
+        </h2>
+
+        <!-- Basic Info -->
+        <div class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-sm text-white/80 mb-1">班級名稱</label>
+              <input id="className" type="text" class="w-full rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-emerald-400/60 px-3 py-2" placeholder="例如：三年二班">
+            </div>
+            <div>
+              <label class="block text-sm text-white/80 mb-1">教室名稱</label>
+              <input id="roomName" type="text" class="w-full rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-emerald-400/60 px-3 py-2" placeholder="例如：A-302">
+            </div>
+          </div>
+
+          <!-- Size -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-sm text-white/80 mb-1">橫行數（列／Row）</label>
+              <input id="rowsInput" type="number" min="1" max="20" value="5" class="w-full rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-emerald-400/60 px-3 py-2">
+            </div>
+            <div>
+              <label class="block text-sm text-white/80 mb-1">直列數（欄／Column）</label>
+              <input id="colsInput" type="number" min="1" max="20" value="6" class="w-full rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-emerald-400/60 px-3 py-2">
+            </div>
+          </div>
+
+          <!-- Names -->
+          <div>
+            <label class="block text-sm text-white/80 mb-1">學生名單（每行一位）</label>
+            <textarea id="namesInput" rows="8" class="w-full rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-emerald-400/60 px-3 py-2" placeholder="可輸入「座號 姓名」，例如：01 王小明；也可每行只輸入姓名"></textarea>
+            <p class="text-xs text-white/70 mt-2">提示：Excel 匯入會同步保留座號；手動輸入可用「座號 姓名」格式。</p>
+          </div>
+
+          <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
+            <h3 class="panel-title text-base mb-3"><span class="icon-dot bg-sky-300"></span>Excel 匯入名單</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-sm text-white/80 mb-1">選擇 Excel 檔案</label>
+                <input id="excelFile" type="file" accept=".xlsx,.xls,.csv" class="w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-sky-500 file:px-3 file:py-2 file:text-white file:font-semibold hover:file:bg-sky-600">
+              </div>
+              <div>
+                <label class="block text-sm text-white/80 mb-1">班級分頁</label>
+                <select id="sheetSelect" class="w-full rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-sky-400/60 px-3 py-2">
+                  <option value="">尚未匯入檔案</option>
+                </select>
+              </div>
+            </div>
+            <div class="mt-3 flex flex-wrap items-center gap-2">
+              <button id="importSheetBtn" class="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-semibold shadow">匯入此班名單</button>
+              <span id="excelHint" class="text-xs text-white/70">支援多分頁，會自動偵測「姓名、座號、學生」等欄位。</span>
+            </div>
+          </div>
+
+          <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
+            <h3 class="panel-title text-base mb-3"><span class="icon-dot bg-amber-300"></span>學生標籤設定</h3>
+            <div class="grid grid-cols-1 gap-3">
+              <select id="tagStudentSelect" class="rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-amber-400/60 px-3 py-2">
+                <option value="">請先匯入或輸入學生名單</option>
+              </select>
+              <select id="tagRoleSelect" class="rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-amber-400/60 px-3 py-2">
+                <option value="">選擇幹部或小老師</option>
+              </select>
+              <input id="studentTagInput" type="text" class="rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-amber-400/60 px-3 py-2" placeholder="或手動輸入學生備註">
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button id="saveStudentTagBtn" class="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 font-semibold">儲存學生標籤</button>
+              <button id="clearStudentTagBtn" class="px-3 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 font-semibold">清除此學生標籤</button>
+              <button id="clearAllStudentTagsBtn" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 font-semibold shadow">清除全班學生標籤</button>
+            </div>
+            <p class="text-xs text-white/70 mt-2">學生標籤會跟著學生移動，隨機或手動安排後仍會顯示在座號右側。</p>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="mt-5 border-t border-white/10 pt-4 space-y-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="previewBtn" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow">
+              預覽座位設定
+            </button>
+            <button id="randomBtn" class="px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-semibold shadow">
+              生成隨機座位
+            </button>
+            <button id="manualBtn" class="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-semibold shadow">
+              設定學生座位
+            </button>
+            <button id="editBtn" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold shadow">
+              編輯座位
+            </button>
+            <button id="teacherViewBtn" class="px-4 py-2 rounded-xl bg-fuchsia-500 hover:bg-fuchsia-600 text-white font-semibold shadow">
+              教師檢視
+            </button>
+            <button id="clearAssignmentsBtn" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold shadow-lg ring-2 ring-rose-200/40">
+              清除目前座位
+            </button>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="downloadStudentBtn" class="px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 font-semibold">
+              下載學生視角 PNG
+            </button>
+            <button id="downloadTeacherBtn" class="px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 font-semibold">
+              下載教師視角 PNG
+            </button>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3 text-xs text-white/80">
+            <span class="badge bg-emerald-400/20 border border-emerald-400/40"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> 可用座位</span>
+            <span class="badge bg-rose-400/20 border border-rose-400/40"><span class="w-2 h-2 rounded-full bg-rose-400"></span> 停用</span>
+            <span class="badge bg-indigo-400/20 border border-indigo-400/40"><span class="w-2 h-2 rounded-full bg-indigo-400"></span> 已指派</span>
+            <span class="ml-auto">模式：<strong id="modeLabel" class="text-emerald-300">預覽</strong></span>
+          </div>
+        </div>
+
+        <!-- Save / Load -->
+        <div class="mt-6 border-t border-white/10 pt-4">
+          <h3 class="text-base font-semibold mb-3">儲存 / 讀取 / 刪除 座位設定</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <input id="presetName" type="text" class="rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-emerald-400/60 px-3 py-2" placeholder="方案名稱">
+            <select id="presetList" class="rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-emerald-400/60 px-3 py-2">
+              <option value="">選擇已儲存方案</option>
+            </select>
+            <div class="flex gap-2">
+              <button id="saveBtn" class="flex-1 px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600">儲存</button>
+              <button id="loadBtn" class="flex-1 px-3 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-600">讀取</button>
+              <button id="deleteBtn" class="flex-1 px-3 py-2 rounded-xl bg-rose-500 hover:bg-rose-600">刪除</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 border-t border-white/10 pt-4">
+          <h3 class="text-base font-semibold mb-3">方案 JSON 備份 / 還原</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button id="exportJsonBtn" class="px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 font-semibold">下載方案 JSON</button>
+            <label class="px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 font-semibold text-center cursor-pointer">
+              匯入方案 JSON
+              <input id="importJsonFile" type="file" accept=".json,application/json" class="hidden">
+            </label>
+          </div>
+          <p class="text-xs text-white/70 mt-2">JSON 代表一個完整方案；方案內才包含該方案自己的安排紀錄。</p>
+        </div>
+      </section>
+
+      <!-- Right Preview -->
+      <section class="lg:col-span-8 glass rounded-2xl p-5 fade-in">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-white/80">班級：</span>
+              <span id="classNamePreview" class="text-base font-semibold">（尚未設定）</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-white/80">教室：</span>
+              <span id="roomNamePreview" class="text-base font-semibold">（尚未設定）</span>
+            </div>
+          </div>
+          <div class="text-right">
+            <p id="seatCountInfo" class="text-sm text-white/80"></p>
+            <p class="text-xs text-white/60">提示：在「預覽」可點擊座位切換可用 / 空位</p>
+          </div>
+        </div>
+
+        <div class="relative bg-white/5 rounded-2xl p-4 border border-white/10 cut-corner flex flex-col gap-4">
+          <div id="boardLabel" class="self-center px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs text-white/90">
+            講台 / 黑板
+          </div>
+
+          <div id="gridContainer" class="grid gap-2 min-h-[320px] place-items-stretch"></div>
+
+          <div id="viewSummaryBar" class="flex items-center justify-between text-sm text-white/80">
+            <span id="viewLabel">目前視角：學生視角</span>
+            <span id="summaryLabel">已指派 0 / 0</span>
+          </div>
+        </div>
+
+        <!-- Remaining students -->
+        <div id="remainingBox" class="mt-4 hidden">
+          <h4 class="text-sm font-semibold mb-2">待分配學生</h4>
+          <div id="remainingList" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <div class="mt-4 rounded-2xl bg-white/5 border border-white/10 p-4">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+            <h3 class="panel-title text-base"><span class="icon-dot bg-amber-300"></span>安排紀錄</h3>
+            <span id="historySummary" class="text-xs text-white/70">尚無紀錄</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <input id="historyName" type="text" class="sm:col-span-2 rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-amber-400/60 px-3 py-2" placeholder="例如：第一次座位、段考後座位、第二次座位">
+            <button id="recordHistoryBtn" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold shadow">紀錄目前結果</button>
+          </div>
+          <div class="mt-3 flex flex-wrap items-center gap-2">
+            <select id="historyList" class="min-w-[220px] flex-1 rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-amber-400/60 px-3 py-2">
+              <option value="">選擇歷史紀錄</option>
+            </select>
+            <button id="loadHistoryBtn" class="px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-600 font-semibold">讀取紀錄</button>
+            <button id="deleteHistoryBtn" class="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 font-semibold">刪除此筆</button>
+            <button id="clearHistoryBtn" class="px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 font-semibold">清除全部</button>
+          </div>
+          <div id="historyPreview" class="mt-3 text-xs text-white/75 leading-relaxed"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Floating Scroll Buttons -->
+  <div class="fixed right-4 bottom-24 flex flex-col gap-2 z-40">
+    <button id="scrollUp" class="scroll-btn w-12 h-12 rounded-full grid place-content-center hover:scale-105 transition" title="往上">
+      ↑
+    </button>
+    <button id="scrollDown" class="scroll-btn w-12 h-12 rounded-full grid place-content-center hover:scale-105 transition" title="往下">
+      ↓
+    </button>
+  </div>
+
+  <!-- Assign Modal -->
+  <div id="assignModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden">
+    <div class="max-w-lg mx-auto mt-24 glass rounded-2xl p-5">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-lg font-semibold">設定座位</h3>
+        <button id="closeModal" class="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20">關閉</button>
+      </div>
+      <p id="modalSeatLabel" class="text-sm text-white/80 mb-3">座位：</p>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="sm:col-span-2">
+          <input id="studentSearch" type="text" placeholder="搜尋學生…" class="w-full rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-emerald-400/60 px-3 py-2">
+          <div id="studentOptions" class="mt-3 max-h-64 overflow-y-auto p-2 bg-white/5 rounded-xl border border-white/10"></div>
+        </div>
+        <div class="space-y-2">
+          <button id="clearSeatBtn" class="w-full px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600">清除此座位</button>
+          <button id="toggleBlockBtn" class="w-full px-3 py-2 rounded-xl bg-rose-500 hover:bg-rose-600">切換空位/可用</button>
+          <button id="modalSaveBtn" class="w-full px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600">指派所選學生</button>
+        </div>
+      </div>
+      <div class="mt-4 border-t border-white/10 pt-4">
+        <h4 class="text-sm font-semibold mb-2">學生標籤 / 備註</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <select id="roleSelect" class="rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-amber-400/60 px-3 py-2">
+            <option value="">選擇幹部或小老師</option>
+          </select>
+          <input id="seatNoteInput" type="text" class="sm:col-span-2 rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-amber-400/60 px-3 py-2" placeholder="儲存到此學生資料，例如：班長、生物小老師">
+        </div>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button id="saveNoteBtn" class="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 font-semibold">儲存學生標籤</button>
+          <button id="clearNoteBtn" class="px-3 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 font-semibold">清除學生標籤</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast hidden">
+    <div class="glass rounded-full px-4 py-2 text-sm"></div>
+  </div>
+
+  <script>
+    // ---------- State ----------
+    const state = {
+      className: '',
+      roomName: '',
+      rows: 5,
+      cols: 6,
+      seats: [], // 2D: [r][c] => { r, c, blocked: false, student: null }
+      students: [], // { number, name }
+      mode: 'preview', // 'preview' | 'manual' | 'edit'
+      view: 'student', // 'student' | 'teacher' (teacher is mirrored)
+      modalTarget: null, // {r,c}
+      selectedStudent: null,
+      draggingFrom: null,
+      history: [],
+      currentRecordName: '',
+      currentPresetName: '',
+      excelWorkbook: null,
+    };
+    const roleOptions = [
+      '班長', '副班長',
+      '風紀股長', '副風紀股長',
+      '學藝股長', '副學藝股長',
+      '衛生股長', '副衛生股長',
+      '總務股長', '副總務股長',
+      '康樂股長', '副康樂股長',
+      '圖資股長', '副圖資股長',
+      '輔導股長', '保健股長',
+      '國文小老師', '英文小老師', '數學小老師',
+      '物理小老師', '化學小老師', '生物小老師', '地科小老師',
+      '地理小老師', '歷史小老師', '公民小老師',
+      '音樂小老師', '美術小老師', '資訊小老師',
+      '生科小老師', '體育小老師', '藝能小老師'
+    ];
+
+    // ---------- Helpers ----------
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+    const toast = (msg) => {
+      const box = $('#toast');
+      box.querySelector('.glass').textContent = msg;
+      box.classList.remove('hidden');
+      setTimeout(()=> box.classList.add('hidden'), 1800);
+    };
+
+    const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+    const cloneData = (value) => JSON.parse(JSON.stringify(value));
+    const normalizeStudent = (student) => {
+      if (!student) return null;
+      if (typeof student === 'string') return { number: '', name: student.trim() };
+      return {
+        number: String(student.number ?? student.no ?? student.seatNo ?? '').trim(),
+        name: String(student.name ?? student.student ?? '').trim(),
+        note: String(student.note ?? '').trim(),
+      };
+    };
+    const studentKey = (student) => {
+      const s = normalizeStudent(student);
+      return s ? `${s.number}::${s.name}` : '';
+    };
+    const studentDisplay = (student) => {
+      const s = normalizeStudent(student);
+      if (!s) return '';
+      return s.number ? `${s.number} ${s.name}` : s.name;
+    };
+    const studentsToInputText = (students) => students.map(studentDisplay).join('\n');
+    const normalizeNote = (note) => String(note ?? '').trim();
+    const getStudentRecord = (student) => {
+      const key = studentKey(student);
+      return state.students.find(s => studentKey(s) === key) || null;
+    };
+    const getStudentNote = (student, fallback = '') => {
+      const record = getStudentRecord(student);
+      return normalizeNote(record?.note || normalizeStudent(student)?.note || fallback);
+    };
+    function setStudentNote(student, note) {
+      const normalized = normalizeStudent(student);
+      if (!normalized?.name) return false;
+      const key = studentKey(normalized);
+      const target = state.students.find(s => studentKey(s) === key);
+      if (!target) return false;
+      target.note = normalizeNote(note);
+      getAllSeats().forEach(seat => {
+        if (studentKey(seat.student) === key) {
+          seat.student = { ...normalizeStudent(seat.student), note: target.note };
+          seat.note = '';
+        }
+      });
+      return true;
+    }
+    function syncAssignedStudentNotes() {
+      getAllSeats().forEach(seat => {
+        if (!seat.student) return;
+        const note = getStudentNote(seat.student, seat.note);
+        seat.student = { ...normalizeStudent(seat.student), note };
+        seat.note = '';
+      });
+    }
+    const sortByStudentNumber = (a, b) => {
+      const sa = normalizeStudent(a);
+      const sb = normalizeStudent(b);
+      const na = parseInt(sa?.number || '', 10);
+      const nb = parseInt(sb?.number || '', 10);
+      if (!Number.isNaN(na) && !Number.isNaN(nb) && na !== nb) return na - nb;
+      return studentDisplay(a).localeCompare(studentDisplay(b), 'zh-Hant');
+    };
+
+    function applyLayoutData(data, options = {}) {
+      const layout = data.current || data;
+      state.className = layout.className || '';
+      state.roomName = layout.roomName || '';
+      state.rows = clamp(parseInt(layout.rows || 5, 10), 1, 20);
+      state.cols = clamp(parseInt(layout.cols || 6, 10), 1, 20);
+      state.seats = Array.isArray(layout.seats) && layout.seats.length ? layout.seats : [];
+      state.students = Array.isArray(layout.students) ? layout.students.map(normalizeStudent).filter(s => s?.name) : [];
+      state.mode = layout.mode || 'edit';
+      state.view = layout.view || 'student';
+      state.currentRecordName = layout.currentRecordName || '';
+      state.currentPresetName = layout.currentPresetName || state.currentPresetName || '';
+      if (options.includeHistory) {
+        state.history = Array.isArray(layout.history) ? layout.history : (Array.isArray(data.history) ? data.history : []);
+      }
+      if (!state.seats.length) buildSeats(state.rows, state.cols);
+      $('#className').value = state.className;
+      $('#roomName').value = state.roomName;
+      $('#rowsInput').value = state.rows;
+      $('#colsInput').value = state.cols;
+      $('#namesInput').value = studentsToInputText(state.students);
+      syncAssignedStudentNotes();
+      renderAll();
+    }
+
+    function parseStudents() {
+      const raw = $('#namesInput').value || '';
+      const list = raw.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+      const previousByKey = new Map(state.students.map(student => [studentKey(student), normalizeStudent(student)]));
+      const previousByName = new Map(state.students.map(student => [normalizeStudent(student)?.name, normalizeStudent(student)]));
+      // 去除重複
+      const seen = new Set();
+      const unique = [];
+      for (const line of list) {
+        const match = line.match(/^(\d{1,3})[\s,，、.\-_\t]+(.+)$/);
+        const parsed = match
+          ? { number: match[1].padStart(2, '0'), name: match[2].trim() }
+          : { number: '', name: line };
+        const previous = previousByKey.get(studentKey(parsed)) || previousByName.get(parsed.name);
+        const student = { ...parsed, note: previous?.note || '' };
+        const key = studentKey(student);
+        if (student.name && !seen.has(key)) { unique.push(student); seen.add(key); }
+      }
+      state.students = unique;
+    }
+
+    function buildSeats(rows, cols) {
+      state.rows = rows; state.cols = cols;
+      state.seats = Array.from({ length: rows }, (_, r) =>
+        Array.from({ length: cols }, (_, c) => ({
+          r, c, blocked: false, student: null, note: ''
+        }))
+      );
+    }
+
+    function seatLabel(r, c) {
+      // Row A, B, C... + number
+      const letter = String.fromCharCode(65 + r); // A starts at row 0
+      return `${letter}${c + 1}`;
+    }
+
+    function getAllSeats() {
+      return state.seats.flat();
+    }
+
+    function getAssignableSeats() {
+      return getAllSeats().filter(s => !s.blocked);
+    }
+
+    function getAssignedCount() {
+      return getAllSeats().filter(s => !!s.student).length;
+    }
+
+    function getTotalSeats() {
+      return state.rows * state.cols;
+    }
+
+    function getRemainingStudents() {
+      const assigned = new Set(getAllSeats().map(s => studentKey(s.student)).filter(Boolean));
+      return state.students.filter(n => !assigned.has(studentKey(n))).sort(sortByStudentNumber);
+    }
+
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    // ---------- Rendering ----------
+    function renderHeaderInfo() {
+      $('#classNamePreview').textContent = state.className || '（尚未設定）';
+      $('#roomNamePreview').textContent = state.roomName || '（尚未設定）';
+      $('#viewLabel').textContent = `目前視角：${state.view === 'student' ? '學生視角' : '教師視角'}`;
+      $('#modeLabel').textContent = (state.mode === 'preview' ? '預覽' : state.mode === 'manual' ? '手動分配' : '編輯');
+      $('#seatCountInfo').textContent = `座位 ${state.rows} x ${state.cols}（共 ${getTotalSeats()} 位）｜名單 ${state.students.length} 人`;
+      $('#summaryLabel').textContent = `已指派 ${getAssignedCount()} / ${getTotalSeats()}`;
+      const recordHint = state.currentRecordName ? `目前載入：${state.currentRecordName}` : '';
+      $('#historyPreview').textContent = recordHint;
+      const boardLabel = $('#boardLabel');
+      const grid = $('#gridContainer');
+      const summaryBar = $('#viewSummaryBar');
+      if (boardLabel && grid && summaryBar) {
+        boardLabel.style.order = state.view === 'teacher' ? '3' : '1';
+        grid.style.order = state.view === 'teacher' ? '1' : '2';
+        summaryBar.style.order = '4';
+      }
+    }
+
+    function renderRemaining() {
+      const box = $('#remainingBox');
+      const list = $('#remainingList');
+      if (state.mode === 'manual' || state.mode === 'edit') {
+        const remaining = getRemainingStudents();
+        box.classList.remove('hidden');
+        list.innerHTML = '';
+        remaining.forEach(name => {
+          const tag = document.createElement('span');
+          tag.className = 'px-3 py-1 rounded-full bg-white/10 border border-white/15 text-sm';
+          tag.textContent = studentDisplay(name);
+          list.appendChild(tag);
+        });
+        if (remaining.length === 0) {
+          const hint = document.createElement('span');
+          hint.className = 'text-white/60 text-sm';
+          hint.textContent = '（無待分配學生）';
+          list.appendChild(hint);
+        }
+      } else {
+        box.classList.add('hidden');
+      }
+    }
+
+    function renderGrid() {
+      const container = $('#gridContainer');
+      container.innerHTML = '';
+      container.style.gridTemplateColumns = `repeat(${state.cols}, minmax(0, 1fr))`;
+
+      // 決定顯示順序：學生視角正常，教師視角上下左右反轉，講台在下方
+      const rowsIndices = [...Array(state.rows).keys()];
+      const colsIndices = [...Array(state.cols).keys()];
+      const displayRows = state.view === 'teacher' ? rowsIndices.slice().reverse() : rowsIndices;
+      const displayCols = state.view === 'teacher' ? colsIndices.slice().reverse() : colsIndices;
+
+      displayRows.forEach(r => {
+        displayCols.forEach(dc => {
+          const c = dc;
+          const s = state.seats[r][c];
+
+          const btn = document.createElement('button');
+          btn.className = [
+            'seat w-full min-h-[74px] rounded-xl p-2 sm:p-3 text-left border',
+            s.blocked
+            ? 'bg-rose-400/15 border-rose-400/30'
+            : s.student
+              ? 'bg-indigo-400/15 border-indigo-400/30'
+              : 'bg-emerald-400/15 border-emerald-400/30'
+          ].join(' ');
+
+          const label = document.createElement('div');
+          label.className = 'text-[11px] text-white/70';
+          label.textContent = seatLabel(r, c);
+
+          const student = normalizeStudent(s.student);
+          const metaRow = document.createElement('div');
+          metaRow.className = 'mt-1 flex items-center justify-between gap-2';
+
+          const number = document.createElement('span');
+          number.className = 'text-xs font-bold text-amber-200';
+          number.textContent = s.blocked ? '' : (student?.number ? `座號 ${student.number}` : '座號 --');
+
+          const note = document.createElement('span');
+          note.className = 'max-w-[52%] truncate rounded-md bg-amber-300/20 border border-amber-200/30 px-1.5 py-0.5 text-[11px] font-semibold text-amber-100';
+          note.textContent = getStudentNote(s.student, s.note);
+          if (!note.textContent || s.blocked || !s.student) note.classList.add('hidden');
+          note.title = note.textContent;
+
+          const name = document.createElement('div');
+          name.className = 'name text-sm sm:text-base font-semibold text-white/95 mt-0.5';
+          name.textContent = s.blocked ? '空位' : (student?.name || '（未指派）');
+
+          btn.appendChild(label);
+          metaRow.appendChild(number);
+          metaRow.appendChild(note);
+          btn.appendChild(metaRow);
+          btn.appendChild(name);
+
+          // 點擊：依模式執行
+          btn.addEventListener('click', () => {
+            if (state.mode === 'preview') {
+              s.blocked = !s.blocked;
+              if (s.blocked) {
+                s.student = null;
+                s.note = '';
+              }
+              renderAll();
+            } else if (state.mode === 'manual' || state.mode === 'edit') {
+              openAssignModal({ r, c });
+            }
+          });
+
+          // 拖曳交換：手動/編輯模式下，任何可用座位皆可拖曳（含未指派）
+          btn.draggable = (state.mode !== 'preview' && !s.blocked);
+          btn.addEventListener('dragstart', (ev) => {
+            if (state.mode === 'preview' || s.blocked) {
+              ev.preventDefault();
+              return;
+            }
+            state.draggingFrom = { r, c };
+            ev.dataTransfer.setData('text/plain', `${r},${c}`);
+            ev.dataTransfer.effectAllowed = 'move';
+            btn.classList.add('ring', 'ring-emerald-400/60');
+          });
+          btn.addEventListener('dragend', () => {
+            state.draggingFrom = null;
+            btn.classList.remove('ring', 'ring-emerald-400/60');
+          });
+          btn.addEventListener('dragover', (ev) => {
+            if (state.mode === 'preview' || s.blocked) {
+              ev.dataTransfer.dropEffect = 'none';
+              return;
+            }
+            ev.preventDefault();
+            ev.dataTransfer.dropEffect = 'move';
+            btn.classList.add('ring', 'ring-indigo-400/60');
+          });
+          btn.addEventListener('dragleave', () => {
+            btn.classList.remove('ring', 'ring-indigo-400/60');
+          });
+          btn.addEventListener('drop', (ev) => {
+            if (state.mode === 'preview') return;
+            ev.preventDefault();
+            btn.classList.remove('ring', 'ring-indigo-400/60');
+            const from = state.draggingFrom;
+            if (!from) return;
+            const a = state.seats[from.r][from.c];
+            const b = state.seats[r][c];
+            if (b.blocked) {
+              toast('此座位為停用，無法放置');
+              return;
+            }
+            // 交換或移動：來源與目標皆可為未指派或有學生，僅「停用」不可用
+            const tmp = a.student;
+            const tmpNote = a.note;
+            a.student = b.student;
+            a.note = b.note || '';
+            b.student = tmp;
+            b.note = tmpNote || '';
+            renderAll();
+            toast('已交換 / 移動座位');
+          });
+
+          container.appendChild(btn);
+        });
+      });
+
+      renderHeaderInfo();
+      renderRemaining();
+    }
+
+    function renderAll() {
+      renderHeaderInfo();
+      renderGrid();
+      renderHistory();
+      renderStudentTagSelect();
+    }
+
+    function renderHistory() {
+      const list = $('#historyList');
+      const summary = $('#historySummary');
+      if (!list || !summary) return;
+      const selected = list.value;
+      list.innerHTML = '<option value="">選擇歷史紀錄</option>';
+      state.history.forEach((item, index) => {
+        const op = document.createElement('option');
+        op.value = String(index);
+        op.textContent = `${item.name}（${item.className || '未命名班級'}）`;
+        list.appendChild(op);
+      });
+      if (selected && Number(selected) < state.history.length) list.value = selected;
+      const presetText = state.currentPresetName ? `方案「${state.currentPresetName}」` : '尚未載入方案';
+      summary.textContent = state.history.length ? `${presetText}已保留 ${state.history.length} 筆安排` : `${presetText}尚無紀錄`;
+    }
+
+    function renderStudentTagSelect() {
+      const select = $('#tagStudentSelect');
+      if (!select) return;
+      const selected = select.value;
+      select.innerHTML = '<option value="">選擇學生設定標籤</option>';
+      state.students.slice().sort(sortByStudentNumber).forEach(student => {
+        const op = document.createElement('option');
+        op.value = studentKey(student);
+        const note = normalizeNote(student.note);
+        op.textContent = `${studentDisplay(student)}${note ? `｜${note}` : ''}`;
+        select.appendChild(op);
+      });
+      if (selected && state.students.some(student => studentKey(student) === selected)) {
+        select.value = selected;
+      }
+    }
+
+    // ---------- Modal ----------
+    function openAssignModal(target) {
+      state.modalTarget = target;
+      const s = state.seats[target.r][target.c];
+      $('#modalSeatLabel').textContent = `座位：${seatLabel(target.r, target.c)}（目前：${s.blocked ? '空位' : (studentDisplay(s.student) || '未指派')}）`;
+      $('#studentSearch').value = '';
+      const currentNote = getStudentNote(s.student, s.note);
+      $('#roleSelect').value = roleOptions.includes(currentNote) ? currentNote : '';
+      $('#seatNoteInput').value = currentNote;
+      state.selectedStudent = null;
+      buildStudentOptions();
+      $('#assignModal').classList.remove('hidden');
+    }
+
+    function closeAssignModal() {
+      $('#assignModal').classList.add('hidden');
+      state.modalTarget = null;
+      state.selectedStudent = null;
+    }
+
+    function buildStudentOptions() {
+      const box = $('#studentOptions');
+      const query = ($('#studentSearch').value || '').trim();
+      const remaining = getRemainingStudents();
+      const filtered = remaining.filter(n => studentDisplay(n).includes(query));
+      box.innerHTML = '';
+      if (filtered.length === 0) {
+        box.innerHTML = `<div class="text-white/60 text-sm px-2 py-1">（沒有可指派學生）</div>`;
+        return;
+      }
+      filtered.forEach(name => {
+        const opt = document.createElement('button');
+        opt.className = 'w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 border border-white/10 my-1';
+        opt.textContent = studentDisplay(name);
+        opt.addEventListener('click', () => {
+          state.selectedStudent = name;
+          // 高亮已選
+          $$('#studentOptions button').forEach(b => b.classList.remove('ring', 'ring-emerald-400/60'));
+          opt.classList.add('ring', 'ring-emerald-400/60');
+        });
+        box.appendChild(opt);
+      });
+    }
+
+    function populateRoleSelect() {
+      ['#roleSelect', '#tagRoleSelect'].forEach(selector => {
+        const select = $(selector);
+        if (!select) return;
+        roleOptions.forEach(role => {
+          const op = document.createElement('option');
+          op.value = role;
+          op.textContent = role;
+          select.appendChild(op);
+        });
+      });
+    }
+
+    function saveSeatNoteFromModal() {
+      if (!state.modalTarget) return;
+      const { r, c } = state.modalTarget;
+      const seat = state.seats[r][c];
+      if (seat.blocked) { toast('停用座位不需備註'); return; }
+      if (!seat.student) { toast('請先指派學生，再加入備註'); return; }
+      const note = normalizeNote($('#seatNoteInput').value || $('#roleSelect').value);
+      setStudentNote(seat.student, note);
+      persistCurrentPreset();
+      renderAll();
+      toast(note ? '已儲存學生標籤' : '已清除學生標籤');
+    }
+
+    function selectedTagStudent() {
+      const key = $('#tagStudentSelect').value;
+      return state.students.find(student => studentKey(student) === key) || null;
+    }
+
+    function loadSelectedStudentTag() {
+      const student = selectedTagStudent();
+      const note = normalizeNote(student?.note);
+      $('#tagRoleSelect').value = roleOptions.includes(note) ? note : '';
+      $('#studentTagInput').value = note;
+    }
+
+    function saveSelectedStudentTag() {
+      updateFromInputs();
+      const student = selectedTagStudent();
+      if (!student) { toast('請先選擇學生'); return; }
+      const note = normalizeNote($('#studentTagInput').value || $('#tagRoleSelect').value);
+      setStudentNote(student, note);
+      persistCurrentPreset();
+      renderAll();
+      $('#tagStudentSelect').value = studentKey(student);
+      toast(note ? `已儲存 ${studentDisplay(student)} 的標籤` : `已清除 ${studentDisplay(student)} 的標籤`);
+    }
+
+    function clearAllStudentTags() {
+      if (!state.students.length) { toast('目前沒有學生資料'); return; }
+      const ok = confirm('確定要清除全班學生的幹部、小老師與備註標籤？學生姓名、座號與座位安排會保留。');
+      if (!ok) return;
+      state.students.forEach(student => { student.note = ''; });
+      getAllSeats().forEach(seat => {
+        if (seat.student) seat.student = { ...normalizeStudent(seat.student), note: '' };
+        seat.note = '';
+      });
+      $('#tagRoleSelect').value = '';
+      $('#studentTagInput').value = '';
+      $('#roleSelect').value = '';
+      $('#seatNoteInput').value = '';
+      persistCurrentPreset();
+      renderAll();
+      toast('已清除全班學生標籤，學生姓名與座號已保留');
+    }
+
+    // ---------- Actions ----------
+    function updateFromInputs() {
+      state.className = ($('#className').value || '').trim();
+      state.roomName = ($('#roomName').value || '').trim();
+      const r = clamp(parseInt($('#rowsInput').value || '5', 10), 1, 20);
+      const c = clamp(parseInt($('#colsInput').value || '6', 10), 1, 20);
+      $('#rowsInput').value = r; $('#colsInput').value = c;
+      parseStudents();
+      return { rows: r, cols: c };
+    }
+
+    function ensureGridInitialized() {
+      if (!state.seats || state.seats.length === 0) {
+        buildSeats(state.rows, state.cols);
+      }
+    }
+
+    function previewLayout() {
+      const { rows, cols } = updateFromInputs();
+      buildSeats(rows, cols);
+      state.mode = 'preview';
+      state.view = 'student';
+      renderAll();
+      toast('已生成預覽座位，可點擊切換空位');
+    }
+
+    function randomAssign() {
+      updateFromInputs();
+      ensureGridInitialized();
+      // 清除原分配
+      getAllSeats().forEach(s => {
+        if (!s.blocked) {
+          s.student = null;
+          s.note = '';
+        }
+      });
+      const assignable = getAssignableSeats();
+      const names = shuffle(state.students);
+      if (names.length > assignable.length) {
+        toast(`名單 ${names.length} 人，超過可用座位 ${assignable.length}！僅前 ${assignable.length} 位將被指派`);
+      }
+      const toAssign = Math.min(names.length, assignable.length);
+      const seatsOrder = shuffle(assignable); // 隨機分布空位
+      for (let i = 0; i < toAssign; i++) {
+        seatsOrder[i].student = names[i];
+      }
+      syncAssignedStudentNotes();
+      state.mode = 'edit';
+      renderAll();
+      toast('已隨機分配座位');
+    }
+
+    function enterManual() {
+      updateFromInputs();
+      ensureGridInitialized();
+      state.mode = 'manual';
+      state.view = 'student';
+      renderAll();
+      toast('進入手動分配：點座位指派學生');
+    }
+
+    function enterEdit() {
+      updateFromInputs();
+      ensureGridInitialized();
+      state.mode = 'edit';
+      renderAll();
+      toast('進入編輯模式：點座位可重新調整');
+    }
+
+    function toggleTeacherView() {
+      state.view = state.view === 'student' ? 'teacher' : 'student';
+      renderAll();
+      toast(state.view === 'teacher' ? '已切換為教師視角（講台在下方）' : '已切換為學生視角（講台在上方）');
+    }
+
+    function clearCurrentAssignments() {
+      ensureGridInitialized();
+      const assigned = getAssignedCount();
+      if (!assigned) { toast('目前沒有已指派座位'); return; }
+      const ok = confirm('確定要清除目前座位安排？座位格局與歷史紀錄會保留。');
+      if (!ok) return;
+      getAllSeats().forEach(seat => {
+        seat.student = null;
+        seat.note = '';
+      });
+      state.currentRecordName = '';
+      state.mode = 'edit';
+      renderAll();
+      toast('已清除目前座位安排');
+    }
+
+    // ---------- Excel Import ----------
+    function normalizeCell(value) {
+      return String(value ?? '').trim();
+    }
+
+    function extractStudentsFromSheet(sheet) {
+      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+      const meaningfulRows = rows
+        .map(row => row.map(normalizeCell))
+        .filter(row => row.some(Boolean));
+      if (!meaningfulRows.length) return [];
+
+      const headerWords = ['姓名', '學生', '名字', 'name', 'student'];
+      const numberWords = ['座號', '號碼', '編號', '學號', 'no', 'number', '座次'];
+      let headerRowIndex = meaningfulRows.findIndex(row =>
+        row.some(cell => headerWords.some(word => cell.toLowerCase().includes(word)))
+      );
+      let nameColIndex = -1;
+      let numberColIndex = -1;
+
+      if (headerRowIndex >= 0) {
+        nameColIndex = meaningfulRows[headerRowIndex].findIndex(cell =>
+          headerWords.some(word => cell.toLowerCase().includes(word))
+        );
+        numberColIndex = meaningfulRows[headerRowIndex].findIndex(cell =>
+          numberWords.some(word => cell.toLowerCase().includes(word))
+        );
+      }
+
+      if (nameColIndex < 0) {
+        const colScores = [];
+        const maxCols = Math.max(...meaningfulRows.map(row => row.length));
+        for (let c = 0; c < maxCols; c++) {
+          let score = 0;
+          for (const row of meaningfulRows) {
+            const cell = normalizeCell(row[c]);
+            if (cell && !/^\d+$/.test(cell) && cell.length <= 12) score++;
+          }
+          colScores.push({ c, score });
+        }
+        nameColIndex = colScores.sort((a, b) => b.score - a.score)[0]?.c ?? 0;
+        headerRowIndex = -1;
+      }
+
+      if (numberColIndex < 0) {
+        const maxCols = Math.max(...meaningfulRows.map(row => row.length));
+        let best = { c: -1, score: 0 };
+        for (let c = 0; c < maxCols; c++) {
+          if (c === nameColIndex) continue;
+          let score = 0;
+          for (const row of meaningfulRows.slice(headerRowIndex >= 0 ? headerRowIndex + 1 : 0)) {
+            const cell = normalizeCell(row[c]);
+            if (/^\d{1,3}$/.test(cell)) score++;
+          }
+          if (score > best.score) best = { c, score };
+        }
+        numberColIndex = best.score > 0 ? best.c : -1;
+      }
+
+      const start = headerRowIndex >= 0 ? headerRowIndex + 1 : 0;
+      const students = [];
+      const seen = new Set();
+      const previousByKey = new Map(state.students.map(student => [studentKey(student), normalizeStudent(student)]));
+      const previousByName = new Map(state.students.map(student => [normalizeStudent(student)?.name, normalizeStudent(student)]));
+      for (let i = start; i < meaningfulRows.length; i++) {
+        let name = normalizeCell(meaningfulRows[i][nameColIndex]);
+        if (!name && meaningfulRows[i].length === 1) name = normalizeCell(meaningfulRows[i][0]);
+        if (!name || /^\d+$/.test(name)) continue;
+        if (['姓名', '學生', '名字', '座號'].some(word => name.includes(word))) continue;
+        const rawNumber = numberColIndex >= 0 ? normalizeCell(meaningfulRows[i][numberColIndex]) : '';
+        const number = /^\d{1,3}$/.test(rawNumber) ? rawNumber.padStart(2, '0') : rawNumber;
+        const parsed = { number, name };
+        const previous = previousByKey.get(studentKey(parsed)) || previousByName.get(name);
+        const student = { ...parsed, note: previous?.note || '' };
+        const key = studentKey(student);
+        if (!seen.has(key)) {
+          seen.add(key);
+          students.push(student);
+        }
+      }
+      return students.sort(sortByStudentNumber);
+    }
+
+    function handleExcelFile(file) {
+      if (!file) return;
+      if (!window.XLSX) {
+        toast('Excel 解析套件尚未載入，請確認網路後重試');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = new Uint8Array(event.target.result);
+          state.excelWorkbook = XLSX.read(data, { type: 'array' });
+          const select = $('#sheetSelect');
+          select.innerHTML = '';
+          state.excelWorkbook.SheetNames.forEach(name => {
+            const op = document.createElement('option');
+            op.value = name;
+            op.textContent = name;
+            select.appendChild(op);
+          });
+          $('#excelHint').textContent = `已讀取 ${state.excelWorkbook.SheetNames.length} 個分頁，請選擇班級後匯入。`;
+          toast('Excel 檔案已讀取');
+        } catch (err) {
+          toast('Excel 讀取失敗，請確認檔案格式');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function importSelectedSheet() {
+      if (!state.excelWorkbook) { toast('請先選擇 Excel 檔案'); return; }
+      const sheetName = $('#sheetSelect').value;
+      if (!sheetName) { toast('請先選擇班級分頁'); return; }
+      const sheet = state.excelWorkbook.Sheets[sheetName];
+      const students = extractStudentsFromSheet(sheet);
+      if (!students.length) { toast('此分頁找不到可匯入的姓名欄位'); return; }
+      state.students = students;
+      state.className = sheetName;
+      $('#namesInput').value = studentsToInputText(students);
+      $('#className').value = sheetName;
+      updateFromInputs();
+      renderAll();
+      toast(`已匯入 ${sheetName}：${students.length} 位學生，座號已同步載入`);
+    }
+
+    // ---------- Download (Canvas Rendering) ----------
+    function drawToCanvas(view = 'student') {
+      const scale = 3;
+      const pad = 40;
+      const cellW = 150;
+      const cellH = 82;
+      const gap = 14;
+
+      const cols = state.cols;
+      const rows = state.rows;
+      const width = pad*2 + cols*cellW + (cols-1)*gap;
+      const headerH = 150;
+      const boardH = 30;
+      const boardGap = 20;
+      const contentY = headerH + 8;
+      const seatBlockH = rows*cellH + (rows-1)*gap;
+      const boardY = view === 'teacher' ? contentY + seatBlockH + boardGap : contentY;
+      const startY = view === 'teacher' ? contentY : boardY + boardH + boardGap;
+      const height = Math.max(boardY + boardH, startY + seatBlockH) + pad;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width * scale;
+      canvas.height = height * scale;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(scale, scale);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+
+      // Print-friendly background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0,0,width,height);
+
+      // Title
+      ctx.fillStyle = '#111827';
+      ctx.font = 'bold 22px "Noto Sans TC", sans-serif';
+      ctx.fillText('教室座位表', pad, pad + 22);
+      ctx.font = '16px "Noto Sans TC", sans-serif';
+      const cls = state.className || '（未設定）';
+      const room = state.roomName || '（未設定）';
+      const dateStr = new Date().toLocaleString('zh-TW');
+      ctx.fillText(`班級：${cls}`, pad, pad + 50);
+      ctx.fillText(`教室：${room}`, pad, pad + 76);
+      ctx.fillText(`視角：${view === 'teacher' ? '教師視角' : '學生視角'}　日期：${dateStr}`, pad, pad + 104);
+
+      const drawBoard = () => {
+        ctx.fillStyle = '#f3f4f6';
+        ctx.fillRect(pad, boardY, width - pad*2, boardH);
+        ctx.strokeStyle = '#111827';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(pad, boardY, width - pad*2, boardH);
+        ctx.fillStyle = '#111827';
+        ctx.font = '14px "Noto Sans TC", sans-serif';
+        const boardText = '講台 / 黑板';
+        ctx.fillText(boardText, (width - ctx.measureText(boardText).width)/2, boardY + 20);
+      };
+      if (view !== 'teacher') drawBoard();
+
+      // Seats
+      const rowIndexList = [...Array(rows).keys()];
+      const colIndexList = [...Array(cols).keys()];
+      const displayRows = view === 'teacher' ? rowIndexList.slice().reverse() : rowIndexList;
+      const displayCols = view === 'teacher' ? colIndexList.slice().reverse() : colIndexList;
+
+      for (let rowIdx = 0; rowIdx < displayRows.length; rowIdx++) {
+        const r = displayRows[rowIdx];
+        for (let idx = 0; idx < displayCols.length; idx++) {
+          const c = displayCols[idx];
+          const s = state.seats[r][c];
+
+          const x = pad + idx*(cellW + gap);
+          const y = startY + rowIdx*(cellH + gap);
+
+          // seat box
+          const isBlocked = s.blocked;
+          const hasStudent = !!s.student;
+          const color = isBlocked ? '#f3f4f6' : hasStudent ? '#ffffff' : '#fafafa';
+          const border = isBlocked ? '#6b7280' : hasStudent ? '#111827' : '#9ca3af';
+
+          // rounded rect
+          roundRect(ctx, x, y, cellW, cellH, 12, color, border);
+
+          // label
+          ctx.fillStyle = '#4b5563';
+          ctx.font = '12px "Noto Sans TC", sans-serif';
+          ctx.fillText(seatLabel(r,c), x + 10, y + 18);
+
+          const student = normalizeStudent(s.student);
+          ctx.font = 'bold 13px "Noto Sans TC", sans-serif';
+          ctx.fillStyle = '#111827';
+          const numberText = isBlocked ? '' : (student?.number ? `座號 ${student.number}` : '座號 --');
+          drawClampedText(ctx, numberText, x + 10, y + 42, cellW - 78);
+          const noteText = !isBlocked && hasStudent ? getStudentNote(s.student, s.note) : '';
+          if (noteText) {
+            ctx.font = 'bold 11px "Noto Sans TC", sans-serif';
+            ctx.fillStyle = '#374151';
+            drawClampedText(ctx, noteText, x + cellW - 68, y + 42, 58);
+          }
+
+          ctx.font = 'bold 17px "Noto Sans TC", sans-serif';
+          ctx.fillStyle = '#000000';
+          const text = isBlocked ? '空位' : (student?.name || '（未指派）');
+          drawClampedText(ctx, text, x + 10, y + 64, cellW - 20);
+        }
+      }
+      if (view === 'teacher') drawBoard();
+
+      return canvas;
+    }
+
+    function roundRect(ctx, x, y, w, h, r, fill, stroke) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+      ctx.fillStyle = fill;
+      ctx.fill();
+      ctx.strokeStyle = stroke;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    function drawClampedText(ctx, text, x, y, maxWidth) {
+      // clamp by ellipsis
+      let t = text;
+      while (ctx.measureText(t).width > maxWidth && t.length > 0) {
+        t = t.slice(0, -1);
+      }
+      if (t !== text) {
+        t = t.slice(0, -1) + '…';
+      }
+      ctx.fillText(t, x, y);
+    }
+
+    function downloadPNG(view) {
+      const canvas = drawToCanvas(view);
+      const a = document.createElement('a');
+      const cls = state.className || '未設定班級';
+      const room = state.roomName || '未設定教室';
+      a.download = `${cls}-${room}-${view === 'teacher' ? '教師視角' : '學生視角'}.png`;
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    }
+
+    // ---------- Save / Load ----------
+    const STORAGE_KEY = 'seat_layout_presets_v1';
+
+    function readAllPresets() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return {};
+        return JSON.parse(raw);
+      } catch {
+        return {};
+      }
+    }
+
+    function writeAllPresets(obj) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+    }
+
+    function refreshPresetList() {
+      const list = $('#presetList');
+      const all = readAllPresets();
+      const names = Object.keys(all);
+      list.innerHTML = '<option value="">選擇已儲存方案</option>';
+      names.forEach(n => {
+        const op = document.createElement('option');
+        op.value = n; op.textContent = n;
+        list.appendChild(op);
+      });
+    }
+
+    function buildPresetData() {
+      return {
+        version: 3,
+        presetName: state.currentPresetName || ($('#presetName').value || '').trim() || state.className || '未命名方案',
+        savedAt: new Date().toISOString(),
+        className: state.className,
+        roomName: state.roomName,
+        rows: state.rows,
+        cols: state.cols,
+        seats: cloneData(state.seats),
+        students: cloneData(state.students),
+        history: cloneData(state.history),
+        currentRecordName: state.currentRecordName,
+      };
+    }
+
+    function persistCurrentPreset() {
+      if (!state.currentPresetName) return false;
+      const all = readAllPresets();
+      all[state.currentPresetName] = buildPresetData();
+      writeAllPresets(all);
+      refreshPresetList();
+      $('#presetList').value = state.currentPresetName;
+      return true;
+    }
+
+    function savePreset() {
+      updateFromInputs();
+      ensureGridInitialized();
+      const name = ($('#presetName').value || '').trim();
+      if (!name) { toast('請先輸入方案名稱'); return; }
+      const all = readAllPresets();
+      state.currentPresetName = name;
+      all[name] = buildPresetData();
+      writeAllPresets(all);
+      refreshPresetList();
+      $('#presetList').value = name;
+      renderAll();
+      toast(`已儲存方案：${name}`);
+    }
+
+    function loadPreset() {
+      const sel = $('#presetList').value;
+      if (!sel) { toast('請先選擇方案'); return; }
+      const all = readAllPresets();
+      const data = all[sel];
+      if (!data) { toast('找不到方案'); return; }
+      state.className = data.className || '';
+      state.roomName = data.roomName || '';
+      state.rows = data.rows || 5;
+      state.cols = data.cols || 6;
+      state.seats = data.seats || [];
+      state.students = Array.isArray(data.students) ? data.students.map(normalizeStudent).filter(s => s?.name) : [];
+      state.history = Array.isArray(data.history) ? data.history : [];
+      state.currentRecordName = data.currentRecordName || '';
+      state.currentPresetName = sel;
+      // 反映到輸入框
+      $('#className').value = state.className;
+      $('#roomName').value = state.roomName;
+      $('#rowsInput').value = state.rows;
+      $('#colsInput').value = state.cols;
+      $('#namesInput').value = studentsToInputText(state.students);
+      $('#presetName').value = sel;
+      state.mode = 'edit';
+      state.view = 'student';
+      syncAssignedStudentNotes();
+      renderAll();
+      toast(`已讀取方案：${sel}`);
+    }
+
+    function deletePreset() {
+      const sel = $('#presetList').value;
+      if (!sel) { toast('請先選擇方案'); return; }
+      const all = readAllPresets();
+      if (all[sel]) {
+        delete all[sel];
+        writeAllPresets(all);
+        if (state.currentPresetName === sel) {
+          state.currentPresetName = '';
+          state.history = [];
+          state.currentRecordName = '';
+        }
+        refreshPresetList();
+        renderAll();
+        toast('已刪除座位設定');
+      }
+    }
+
+    // ---------- History + JSON ----------
+    function makeHistoryRecord(name) {
+      return {
+        id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        name,
+        createdAt: new Date().toISOString(),
+        className: state.className,
+        roomName: state.roomName,
+        rows: state.rows,
+        cols: state.cols,
+        seats: cloneData(state.seats),
+        students: cloneData(state.students),
+        assignedCount: getAssignedCount(),
+        assignableCount: getAssignableSeats().length,
+      };
+    }
+
+    function recordHistory() {
+      updateFromInputs();
+      ensureGridInitialized();
+      if (!state.currentPresetName) {
+        toast('請先儲存或讀取方案，再紀錄安排結果');
+        return;
+      }
+      const assigned = getAssignedCount();
+      if (!assigned) { toast('目前沒有已安排座位可紀錄'); return; }
+      const fallback = `第 ${state.history.length + 1} 次座位`;
+      const name = ($('#historyName').value || '').trim() || fallback;
+      const record = makeHistoryRecord(name);
+      state.history.unshift(record);
+      state.currentRecordName = name;
+      persistCurrentPreset();
+      $('#historyName').value = '';
+      renderAll();
+      toast(`已紀錄：${name}`);
+    }
+
+    function loadHistoryRecord() {
+      const index = parseInt($('#historyList').value, 10);
+      if (Number.isNaN(index) || !state.history[index]) { toast('請先選擇歷史紀錄'); return; }
+      const record = state.history[index];
+      applyLayoutData(record);
+      state.mode = 'edit';
+      state.currentRecordName = record.name;
+      renderAll();
+      toast(`已讀取紀錄：${record.name}`);
+    }
+
+    function deleteHistoryRecord() {
+      const index = parseInt($('#historyList').value, 10);
+      if (Number.isNaN(index) || !state.history[index]) { toast('請先選擇歷史紀錄'); return; }
+      const removed = state.history.splice(index, 1)[0];
+      persistCurrentPreset();
+      renderAll();
+      toast(`已刪除紀錄：${removed.name}`);
+    }
+
+    function clearHistory() {
+      if (!state.history.length) { toast('目前沒有歷史紀錄'); return; }
+      const ok = confirm('確定要清除全部安排紀錄？目前座位表不會被清除。');
+      if (!ok) return;
+      state.history = [];
+      state.currentRecordName = '';
+      persistCurrentPreset();
+      renderAll();
+      toast('已清除全部安排紀錄');
+    }
+
+    function exportJSON() {
+      updateFromInputs();
+      ensureGridInitialized();
+      const presetName = state.currentPresetName || ($('#presetName').value || '').trim();
+      if (!presetName) { toast('請先儲存或輸入方案名稱，再下載方案 JSON'); return; }
+      state.currentPresetName = presetName;
+      const presetData = buildPresetData();
+      const blob = new Blob([JSON.stringify(presetData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const safeName = presetName || state.className || '未命名方案';
+      const date = new Date().toISOString().slice(0, 10);
+      a.download = `${safeName}-方案備份-${date}.json`;
+      a.href = url;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('已下載方案 JSON');
+    }
+
+    function importJSONFile(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = JSON.parse(event.target.result);
+          const presetData = data.current ? { ...data.current, history: data.history || [] } : data;
+          const fallbackName = file.name.replace(/\.json$/i, '').replace(/-方案備份-\d{4}-\d{2}-\d{2}$/u, '');
+          const presetName = (presetData.presetName || presetData.className || fallbackName || '匯入方案').trim();
+          applyLayoutData(data, { includeHistory: true });
+          state.currentPresetName = presetName;
+          $('#presetName').value = presetName;
+          const all = readAllPresets();
+          all[presetName] = buildPresetData();
+          writeAllPresets(all);
+          refreshPresetList();
+          $('#presetList').value = presetName;
+          renderAll();
+          toast(`已匯入方案 JSON：${presetName}`);
+        } catch (err) {
+          toast('方案 JSON 匯入失敗，請確認檔案內容');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // ---------- Scroll Buttons ----------
+    $('#scrollUp').addEventListener('click', () => {
+      window.scrollBy({ top: -window.innerHeight * 0.9, behavior: 'smooth' });
+    });
+    $('#scrollDown').addEventListener('click', () => {
+      window.scrollBy({ top: window.innerHeight * 0.9, behavior: 'smooth' });
+    });
+
+    // ---------- Events ----------
+    $('#previewBtn').addEventListener('click', previewLayout);
+    $('#randomBtn').addEventListener('click', () => {
+      if (!state.seats.length) previewLayout();
+      randomAssign();
+    });
+    $('#manualBtn').addEventListener('click', () => {
+      if (!state.seats.length) previewLayout();
+      enterManual();
+    });
+    $('#editBtn').addEventListener('click', () => {
+      if (!state.seats.length) previewLayout();
+      enterEdit();
+    });
+    $('#teacherViewBtn').addEventListener('click', toggleTeacherView);
+    $('#clearAssignmentsBtn').addEventListener('click', clearCurrentAssignments);
+
+    $('#downloadStudentBtn').addEventListener('click', () => downloadPNG('student'));
+    $('#downloadTeacherBtn').addEventListener('click', () => downloadPNG('teacher'));
+
+    $('#excelFile').addEventListener('change', (ev) => handleExcelFile(ev.target.files[0]));
+    $('#importSheetBtn').addEventListener('click', importSelectedSheet);
+
+    $('#saveBtn').addEventListener('click', savePreset);
+    $('#loadBtn').addEventListener('click', loadPreset);
+    $('#deleteBtn').addEventListener('click', deletePreset);
+
+    $('#exportJsonBtn').addEventListener('click', exportJSON);
+    $('#importJsonFile').addEventListener('change', (ev) => {
+      importJSONFile(ev.target.files[0]);
+      ev.target.value = '';
+    });
+
+    $('#recordHistoryBtn').addEventListener('click', recordHistory);
+    $('#loadHistoryBtn').addEventListener('click', loadHistoryRecord);
+    $('#deleteHistoryBtn').addEventListener('click', deleteHistoryRecord);
+    $('#clearHistoryBtn').addEventListener('click', clearHistory);
+    $('#historyList').addEventListener('change', () => {
+      const index = parseInt($('#historyList').value, 10);
+      const record = state.history[index];
+      $('#historyPreview').textContent = record
+        ? `${record.name}｜${record.className || '未命名班級'}｜已安排 ${record.assignedCount || 0} / ${record.assignableCount || record.rows * record.cols}｜${new Date(record.createdAt).toLocaleString('zh-TW')}`
+        : (state.currentRecordName ? `目前載入：${state.currentRecordName}` : '');
+    });
+
+    $('#studentSearch').addEventListener('input', buildStudentOptions);
+    $('#closeModal').addEventListener('click', closeAssignModal);
+    $('#tagStudentSelect').addEventListener('change', loadSelectedStudentTag);
+    $('#tagRoleSelect').addEventListener('change', () => {
+      $('#studentTagInput').value = $('#tagRoleSelect').value;
+    });
+    $('#saveStudentTagBtn').addEventListener('click', saveSelectedStudentTag);
+    $('#clearAllStudentTagsBtn').addEventListener('click', clearAllStudentTags);
+    $('#clearStudentTagBtn').addEventListener('click', () => {
+      const student = selectedTagStudent();
+      if (!student) { toast('請先選擇學生'); return; }
+      setStudentNote(student, '');
+      $('#tagRoleSelect').value = '';
+      $('#studentTagInput').value = '';
+      persistCurrentPreset();
+      renderAll();
+      $('#tagStudentSelect').value = studentKey(student);
+      toast(`已清除 ${studentDisplay(student)} 的標籤`);
+    });
+    $('#roleSelect').addEventListener('change', () => {
+      $('#seatNoteInput').value = $('#roleSelect').value;
+    });
+    $('#saveNoteBtn').addEventListener('click', saveSeatNoteFromModal);
+    $('#clearNoteBtn').addEventListener('click', () => {
+      if (!state.modalTarget) return;
+      const { r, c } = state.modalTarget;
+      if (state.seats[r][c].student) setStudentNote(state.seats[r][c].student, '');
+      state.seats[r][c].note = '';
+      $('#roleSelect').value = '';
+      $('#seatNoteInput').value = '';
+      persistCurrentPreset();
+      renderAll();
+      toast('已清除座位備註');
+    });
+    $('#modalSaveBtn').addEventListener('click', () => {
+      if (!state.modalTarget) return;
+      const { r, c } = state.modalTarget;
+      if (!state.selectedStudent) { toast('請先選擇學生'); return; }
+      const seat = state.seats[r][c];
+      if (seat.blocked) { toast('此座位為空位，請先切換為可用'); return; }
+      seat.student = state.selectedStudent;
+      setStudentNote(seat.student, normalizeNote($('#seatNoteInput').value || $('#roleSelect').value));
+      seat.note = '';
+      persistCurrentPreset();
+      state.selectedStudent = null;
+      closeAssignModal();
+      renderAll();
+    });
+    $('#toggleBlockBtn').addEventListener('click', () => {
+      if (!state.modalTarget) return;
+      const { r, c } = state.modalTarget;
+      const seat = state.seats[r][c];
+      seat.blocked = !seat.blocked;
+      if (seat.blocked) {
+        seat.student = null;
+        seat.note = '';
+      }
+      closeAssignModal();
+      renderAll();
+    });
+    $('#clearSeatBtn').addEventListener('click', () => {
+      if (!state.modalTarget) return;
+      const { r, c } = state.modalTarget;
+      const seat = state.seats[r][c];
+      seat.student = null;
+      seat.note = '';
+      closeAssignModal();
+      renderAll();
+    });
+
+    // ---------- Initial ----------
+    function init() {
+      populateRoleSelect();
+      refreshPresetList();
+      buildSeats(state.rows, state.cols);
+      renderAll();
+    }
+    init();
+  </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96bfb79e8030846a',t:'MTc1NDY2MzQ4NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

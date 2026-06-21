@@ -1,0 +1,3101 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>學生選取、分組與紀錄程式</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #059669;
+            --danger-color: #dc2626;
+            --warning-color: #d97706;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-500: #6b7280;
+            --gray-700: #374151;
+            --gray-900: #111827;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --border-radius: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            min-height: 100vh;
+            color: var(--gray-900);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #3b82f6 100%);
+            color: white;
+            padding: 32px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="white" opacity="0.1"><path d="M421.9,6.5c22.6-2.5,51.5,0.4,75.5,5.3c23.6,4.9,70.9,23.5,100.5,35.7c75.8,32.2,133.7,44.5,192.6,49.7c23.6,2.1,48.7,3.5,103.4-2.5c54.7-6,106.2-25.6,106.2-25.6V0H0v30.3c0,0,72,32.6,158.4,30.5c39.2-0.7,92.8-6.7,133-24.9C337.9,11.1,383.7,10.8,421.9,6.5z"/></svg>') center/cover;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-meta {
+            position: relative;
+            z-index: 1;
+            margin-top: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px 18px;
+            font-size: 0.95rem;
+            opacity: 0.95;
+        }
+
+        .header-meta a {
+            color: white;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .content {
+            padding: 32px;
+        }
+
+        .workflow-strip {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .workflow-step {
+            font: inherit;
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-left: 4px solid var(--primary-color);
+            border-radius: var(--border-radius);
+            padding: 12px 14px;
+            box-shadow: var(--shadow-sm);
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+        }
+
+        .workflow-step:hover,
+        .workflow-step.active {
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+
+        .workflow-step.active {
+            background: #eff6ff;
+        }
+
+        .workflow-step strong {
+            display: block;
+            color: var(--gray-900);
+            margin-bottom: 2px;
+        }
+
+        .workflow-step span {
+            color: var(--gray-500);
+            font-size: 0.85rem;
+        }
+
+        .section {
+            margin-bottom: 32px;
+            background: var(--gray-50);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            border: 1px solid var(--gray-200);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .section.compact-section {
+            margin-bottom: 18px;
+            padding: 16px 18px;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin: 0 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--primary-color);
+            display: inline-block;
+        }
+
+        .compact-section .section-title {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .compact-settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 10px;
+            align-items: end;
+        }
+
+        .compact-tools-row {
+            display: grid;
+            grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) auto auto;
+            gap: 10px;
+            align-items: end;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .compact-group-label {
+            color: var(--gray-500);
+            font-size: 0.78rem;
+            font-weight: 700;
+            margin: 10px 0 4px;
+            text-transform: uppercase;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 6px;
+            font-size: 0.875rem;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            padding: 12px 16px;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #047857;
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn-warning {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #b45309;
+        }
+
+        .btn-outline {
+            background: white;
+            color: var(--gray-700);
+            border: 2px solid var(--gray-300);
+        }
+
+        .btn-outline:hover {
+            background: var(--gray-50);
+            border-color: var(--gray-400);
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .danger-zone {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed #fecaca;
+        }
+
+        .danger-zone .btn {
+            width: auto;
+            min-height: 36px;
+            padding: 8px 14px;
+            font-size: 0.82rem;
+        }
+
+        .action-hint {
+            color: var(--gray-500);
+            font-size: 0.82rem;
+            margin-top: 8px;
+        }
+
+        .guide-toggle {
+            margin-bottom: 24px;
+        }
+
+        .guide-content {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 1px solid #f59e0b;
+            border-radius: var(--border-radius);
+            padding: 24px;
+            margin-top: 16px;
+        }
+
+        .guide-content h3 {
+            margin-top: 0;
+            color: #92400e;
+        }
+
+        .guide-content ol {
+            color: #78350f;
+        }
+
+        .guide-content li {
+            margin-bottom: 8px;
+        }
+
+        .student-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .student-item {
+            background: white;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--border-radius);
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            font-weight: 500;
+            position: relative;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .student-item:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .student-item.selected {
+            background: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+
+        .student-item.selected:hover {
+            background: #047857;
+            border-color: #047857;
+        }
+
+        .student-delete {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 24px;
+            height: 24px;
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .selection-controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px;
+            background: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--gray-200);
+        }
+
+        .counter-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--gray-100);
+            padding: 8px;
+            border-radius: var(--border-radius);
+        }
+
+        .counter-input {
+            width: 60px;
+            text-align: center;
+            border: 1px solid var(--gray-300);
+            border-radius: 4px;
+            padding: 6px;
+        }
+
+        .counter-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .results-section {
+            margin-top: 32px;
+        }
+
+        .result-card {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .result-header {
+            background: var(--gray-50);
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .result-note {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .result-table th {
+            background: var(--gray-100);
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .result-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .result-table tr:hover {
+            background: var(--gray-50);
+        }
+
+        .compact-section .form-input,
+        .compact-section .form-select,
+        .compact-section .file-input {
+            padding: 8px 10px;
+            font-size: 0.92rem;
+            min-height: 40px;
+        }
+
+        .compact-section .btn {
+            padding: 9px 14px;
+            min-height: 40px;
+            width: 100%;
+        }
+
+        .points-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .points-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .points-input {
+            width: 60px;
+            text-align: center;
+            border: 1px solid var(--gray-300);
+            border-radius: 4px;
+            padding: 6px;
+        }
+
+        .note-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .note-input {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .voice-btn {
+            width: 32px;
+            height: 32px;
+            background: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .voice-btn:hover {
+            background: #3367d6;
+            transform: scale(1.1);
+        }
+
+        .voice-btn.recording {
+            animation: pulse 1.5s infinite;
+            background: #ea4335;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(234, 67, 53, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(234, 67, 53, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(234, 67, 53, 0); }
+        }
+
+        .data-filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .tool-panel {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--border-radius);
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .inline-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: end;
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed var(--gray-300);
+            border-radius: var(--border-radius);
+            background: var(--gray-50);
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--border-radius);
+            padding: 14px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .stat-label {
+            color: var(--gray-500);
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            color: var(--gray-900);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            background: white;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--gray-200);
+        }
+
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .stats-table th {
+            background: var(--gray-100);
+            color: var(--gray-700);
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .stats-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .score-positive {
+            color: var(--secondary-color);
+            font-weight: 700;
+        }
+
+        .score-negative {
+            color: var(--danger-color);
+            font-weight: 700;
+        }
+
+        .group-results {
+            display: grid;
+            gap: 16px;
+        }
+
+        .group-student-preview {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--border-radius);
+            padding: 16px;
+            margin-bottom: 18px;
+        }
+
+        .group-student-preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .mini-student-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 8px;
+            max-height: 220px;
+            overflow: auto;
+            padding-right: 4px;
+        }
+
+        .mini-student-chip {
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-weight: 600;
+            color: var(--gray-700);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .mini-student-chip:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .mini-student-chip.selected {
+            background: var(--secondary-color);
+            border-color: var(--secondary-color);
+            color: white;
+        }
+
+        .form-group.is-active-choice .form-label {
+            color: var(--primary-color);
+        }
+
+        .form-group.is-active-choice .form-input {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+        }
+
+        .group-record {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--border-radius);
+            padding: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .group-record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .group-card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+        }
+
+        .group-card {
+            border: 1px solid var(--gray-200);
+            border-radius: var(--border-radius);
+            padding: 12px;
+            background: var(--gray-50);
+        }
+
+        .group-card h4 {
+            margin: 0 0 8px;
+            color: var(--gray-700);
+        }
+
+        .group-member-list {
+            margin: 0 0 10px;
+            padding-left: 20px;
+        }
+
+        .group-member-list li {
+            margin-bottom: 2px;
+        }
+
+        .saved-data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .saved-data-table th {
+            background: var(--primary-color);
+            color: white;
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .saved-data-table td {
+            padding: 16px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .saved-data-table tr:hover {
+            background: var(--gray-50);
+        }
+
+        .footer {
+            background: var(--gray-900);
+            color: white;
+            padding: 24px 32px;
+            text-align: center;
+        }
+
+        .footer a {
+            color: #60a5fa;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .success-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--secondary-color);
+            color: white;
+            padding: 16px 24px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .error-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--danger-color);
+            color: white;
+            padding: 16px 24px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            .header { padding: 24px 20px; }
+            .header h1 { font-size: 2rem; }
+            .content { padding: 20px; }
+            .section { padding: 16px; }
+            .section.compact-section { padding: 14px; }
+            .workflow-strip { grid-template-columns: 1fr; }
+            .form-grid { grid-template-columns: 1fr; }
+            .compact-settings-grid,
+            .compact-tools-row { grid-template-columns: 1fr; }
+            .btn-group { flex-direction: column; align-items: stretch; }
+            .btn-group .btn { justify-content: center; }
+            .selection-controls { flex-direction: column; align-items: stretch; }
+            .result-header { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>學生選取、分組與紀錄程式</h1>
+            <div class="header-meta">
+                <span>製作者：臺北市立麗山高中 林獻升老師</span>
+                <span>聯絡信箱：<a href="mailto:frog@lssh.tp.edu.tw">frog@lssh.tp.edu.tw</a></span>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="workflow-strip">
+                <button class="workflow-step active" data-tab="import">
+                    <strong>1. 匯入班級</strong>
+                    <span>讀取 Excel 分頁或載入示範資料</span>
+                </button>
+                <button class="workflow-step" data-tab="class">
+                    <strong>2. 選擇班級</strong>
+                    <span>不同班級名單與紀錄分開保存</span>
+                </button>
+                <button class="workflow-step" data-tab="select">
+                    <strong>3. 上課選取</strong>
+                    <span>隨機或手動選學生並加註表現</span>
+                </button>
+                <button class="workflow-step" data-tab="groups">
+                    <strong>4. 分組安排</strong>
+                    <span>依目前班級名單建立小組</span>
+                </button>
+                <button class="workflow-step" data-tab="export">
+                    <strong>5. 統計輸出</strong>
+                    <span>查看加減分並下載報表</span>
+                </button>
+            </div>
+
+            <!-- 使用說明區域 -->
+            <div class="guide-toggle">
+                <button id="toggleGuide" class="btn btn-outline">📖 顯示使用說明</button>
+                <div id="userGuide" class="guide-content" style="display: none;">
+                    <h3>📝 使用說明</h3>
+                    <ol>
+                        <li><strong>匯入班級：</strong>在「匯入班級」分頁選擇 Excel 檔案，可先開啟指定分頁，也可將目前分頁儲存為班級；若檔案有多個班級分頁，可使用「匯入全部班級」一次建立多個班級資料。</li>
+                        <li><strong>選擇班級：</strong>在「選擇班級」分頁切換目前上課班級。每個班級的學生名單、上課選取紀錄、加減分統計與分組紀錄都會分開保存，切換班級時會自動保存目前班級資料。</li>
+                        <li><strong>備份與還原：</strong>可用「備份 JSON」下載目前狀態，包含學生名單、選取紀錄、分組紀錄與統計資料；日後可用「還原 JSON」回復。也可載入練習示範資料，或用刪除按鈕清除指定班級與全部匯入班級。</li>
+                        <li><strong>上課選取：</strong>在「上課選取」分頁可手動更新學生名單、刪除學生或清空畫面。學生卡片可以直接點選；也可設定選取人數與選取次數後按「開始隨機選取」。</li>
+                        <li><strong>加減分與備註：</strong>每次選取後會建立一筆紀錄，可對學生加分、扣分、輸入個人備註，也可替整次選取加入說明。快速備註選單與語音按鈕可協助課堂中快速記錄學生表現。</li>
+                        <li><strong>分組安排：</strong>在「分組安排」分頁會顯示目前班級學生名單，可先點選學生，再選擇以全班或已選取學生分組。分組方式可選「依每組人數」或「依組數」，產生後可儲存分組紀錄、清除分組結果或只列印分組名單。</li>
+                        <li><strong>統計輸出：</strong>在「統計輸出」分頁可用「資料顯示」選擇查看上課選取資料或分組安排資料，避免資料混在一起。上課選取資料可下載 Excel、PDF 或列印報表；分組安排資料會顯示已儲存的分組紀錄。</li>
+                        <li><strong>建議流程：</strong>第一次使用先匯入或載入示範班級，再到「選擇班級」確認目前班級；上課時使用「上課選取」紀錄表現，需要小組活動時切到「分組安排」，課後再到「統計輸出」下載或列印資料。</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div id="tab-class" class="tab-panel">
+            <!-- 資料與班級設定 -->
+            <div class="section compact-section">
+                <div class="section-title">📊 班級資料管理</div>
+                <div class="compact-settings-grid">
+                    <div class="form-group">
+                        <label class="form-label">選擇班級</label>
+                        <select id="activeClassSelector" class="form-select" disabled>
+                            <option value="">請先匯入或載入班級資料</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">目前顯示班級</label>
+                        <input type="text" id="activeClassStatus" class="form-input" value="尚未載入班級" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">選擇要刪除的班級</label>
+                        <select id="deleteClassSelector" class="form-select" disabled>
+                            <option value="">請先匯入班級資料</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">JSON 備份檔</label>
+                        <input type="file" id="importJsonFile" class="file-input" accept=".json,application/json">
+                    </div>
+                    <button id="exportJson" class="btn btn-secondary">⬇️ 備份 JSON</button>
+                    <button id="importJson" class="btn btn-primary">⬆️ 還原 JSON</button>
+                    <button id="loadDemoData" class="btn btn-outline">✨ 練習示範資料</button>
+                </div>
+                <div class="btn-group danger-zone">
+                    <button id="deleteSelectedClass" class="btn btn-danger">🗑️ 刪除選取班級</button>
+                    <button id="deleteAllImportedClasses" class="btn btn-danger">🗑️ 刪除所有匯入班級</button>
+                </div>
+                <div class="action-hint">切換班級時會自動保存目前班級的選取紀錄。</div>
+            </div>
+            </div>
+
+            <div id="tab-import" class="tab-panel active">
+            <!-- 學生資料輸入 -->
+            <div class="section">
+                <div class="section-title">📥 匯入班級資料</div>
+                <div class="tool-panel" style="margin-top: 0; margin-bottom: 16px;">
+                    <div class="section-title">📥 Excel 班級匯入</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">選擇 Excel 檔案（支援多個班級分頁）</label>
+                            <input type="file" id="excelFile" class="file-input" accept=".xlsx,.xls,.csv">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">選擇班級分頁</label>
+                            <select id="sheetSelector" class="form-select" disabled>
+                                <option value="">請先選擇 Excel 檔案</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">匯入格式</label>
+                            <select id="importMode" class="form-select">
+                                <option value="auto">自動判斷座號與姓名</option>
+                                <option value="firstTwoColumns">前兩欄為座號、姓名</option>
+                                <option value="nameOnly">只匯入姓名欄位</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button id="importExcelStudents" class="btn btn-primary">📋 開啟選取分頁</button>
+                        <button id="saveImportedSheet" class="btn btn-secondary">💾 儲存此分頁為班級</button>
+                        <button id="saveAllImportedSheets" class="btn btn-outline">📚 匯入全部班級</button>
+                    </div>
+                    <div class="action-hint">若同一分頁含多班座號，系統會自動拆成不同班級，再由上方班級選單開啟。</div>
+                </div>
+            </div>
+            </div>
+
+            <div id="tab-select" class="tab-panel">
+            <div class="section">
+                <div class="section-title">👥 學生名單與上課選取</div>
+                <div class="form-group">
+                    <label class="form-label">學生名單（每行一個學生）</label>
+                    <textarea id="studentData" class="form-textarea" placeholder="請輸入學生姓名，每行一個；若有座號可寫成「01 張三」&#10;例：&#10;01 張三&#10;02 李四&#10;03 王五"></textarea>
+                </div>
+                <div class="btn-group">
+                    <button id="previewStudents" class="btn btn-primary">👀 更新學生預覽</button>
+                    <button id="deleteIndividualStudent" class="btn btn-warning">✂️ 刪除學生模式</button>
+                    <button id="clearStudents" class="btn btn-danger">🗑️ 清空目前畫面</button>
+                </div>
+            </div>
+
+            <!-- 學生顯示區域 -->
+            <div id="studentList" class="student-grid"></div>
+
+            <!-- 選取控制 -->
+            <div class="section">
+                <div class="section-title">🎯 選取設定</div>
+                <div class="selection-controls">
+                    <div class="form-group">
+                        <label class="form-label">選取學生人數</label>
+                        <select id="selectCount" class="form-select">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="other">其他</option>
+                        </select>
+                        <input type="number" id="customCount" class="form-input" style="display: none; margin-top: 8px;" min="1" placeholder="輸入數量">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">選取次數</label>
+                        <div class="counter-control">
+                            <button id="decreaseSelectionCount" class="counter-btn">−</button>
+                            <input type="number" id="selectionCountNumber" class="counter-input" value="1" min="1">
+                            <button id="increaseSelectionCount" class="counter-btn">+</button>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button id="randomSelect" class="btn btn-primary">🎲 開始隨機選取</button>
+                        <button id="clearSelection" class="btn btn-warning">🔄 清除選取</button>
+                    </div>
+
+                    <div class="btn-group">
+                        <button id="saveData" class="btn btn-secondary">💾 儲存目前班級紀錄</button>
+                        <button id="deleteData" class="btn btn-danger">🗑️ 刪除目前班級</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 結果顯示區域 -->
+            <div id="results" class="results-section"></div>
+            </div>
+
+            <div id="tab-groups" class="tab-panel">
+            <div class="section">
+                <div class="section-title">🧩 分組安排</div>
+                <div class="group-student-preview">
+                    <div class="group-student-preview-header">
+                        <strong>目前班級學生名單</strong>
+                        <span id="groupStudentCount" class="action-hint">尚未載入班級</span>
+                    </div>
+                    <div id="groupStudentPreview" class="mini-student-grid">
+                        <div style="color: #6b7280;">請先在「選擇班級」分頁載入班級。</div>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">分組名稱</label>
+                        <input type="text" id="groupPlanName" class="form-input" placeholder="例：第 1 次小組討論">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">分組方式</label>
+                        <select id="groupMode" class="form-select">
+                            <option value="size">依每組人數</option>
+                            <option value="count">依組數</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="groupSizeField">
+                        <label class="form-label">每組人數</label>
+                        <input type="number" id="groupSizeNumber" class="form-input" min="1" value="4">
+                        <div id="groupSizeHint" class="action-hint">請輸入每一組要安排幾位學生。</div>
+                    </div>
+                    <div class="form-group" id="groupCountField">
+                        <label class="form-label">組數</label>
+                        <input type="number" id="groupCountNumber" class="form-input" min="1" value="4">
+                        <div id="groupCountHint" class="action-hint">請輸入要分成幾組。</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">分組來源</label>
+                        <select id="groupSource" class="form-select">
+                            <option value="all">目前班級全部學生</option>
+                            <option value="selected">目前已選取學生</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button id="randomGroupStudents" class="btn btn-primary">🎲 產生隨機分組</button>
+                    <button id="saveGroupData" class="btn btn-secondary">💾 儲存分組紀錄</button>
+                    <button id="printGroupList" class="btn btn-outline">🖨️ 列印分組名單</button>
+                    <button id="clearGroupResults" class="btn btn-danger">🗑️ 清除分組結果</button>
+                </div>
+                <div class="action-hint">分組結果會跟目前班級一起保存；切換班級時會自動儲存。</div>
+            </div>
+            <div id="groupResults" class="group-results"></div>
+            </div>
+
+            <div id="tab-export" class="tab-panel">
+            <!-- 統計與輸出 -->
+            <div class="section compact-section">
+                <div class="section-title">📤 統計輸出設定</div>
+                <div class="compact-settings-grid">
+                    <div class="form-group">
+                        <label class="form-label">資料顯示</label>
+                        <select id="exportDataView" class="form-select">
+                            <option value="selection">上課選取資料</option>
+                            <option value="groups">分組安排資料</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div id="selectionExportPanel" class="section">
+                <div class="section-title">🎯 上課選取統計與輸出</div>
+                <div id="statsSummary" class="stats-summary"></div>
+                <div class="btn-group" style="margin-bottom: 16px;">
+                    <button id="exportExcel" class="btn btn-secondary">📊 下載 Excel 紀錄</button>
+                    <button id="exportPdf" class="btn btn-primary">📄 下載 PDF 報表</button>
+                    <button id="printReport" class="btn btn-outline">🖨️ 列印報表</button>
+                </div>
+                <div class="table-wrap">
+                    <table id="scoreStatsTable" class="stats-table">
+                        <thead>
+                            <tr>
+                                <th>座號/姓名</th>
+                                <th>被選取次數</th>
+                                <th>加分合計</th>
+                                <th>扣分合計</th>
+                                <th>總分</th>
+                                <th>最近紀錄</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: #6b7280;">尚無紀錄</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="groupExportPanel" class="section">
+                <div class="section-title">🧩 分組紀錄輸出</div>
+                <div class="table-wrap">
+                    <table id="groupExportTable" class="stats-table">
+                        <thead>
+                            <tr>
+                                <th>分組名稱</th>
+                                <th>時間</th>
+                                <th>組別</th>
+                                <th>學生名單</th>
+                                <th>組分數</th>
+                                <th>備註</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: #6b7280;">尚無分組紀錄</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 獲取所有必要元素
+            const toggleGuide = document.getElementById('toggleGuide');
+            const userGuide = document.getElementById('userGuide');
+            const studentData = document.getElementById('studentData');
+            const activeClassSelector = document.getElementById('activeClassSelector');
+            const activeClassStatus = document.getElementById('activeClassStatus');
+            const deleteClassSelector = document.getElementById('deleteClassSelector');
+            const previewStudents = document.getElementById('previewStudents');
+            const deleteIndividualStudent = document.getElementById('deleteIndividualStudent');
+            const clearStudents = document.getElementById('clearStudents');
+            const studentList = document.getElementById('studentList');
+            const selectCount = document.getElementById('selectCount');
+            const customCount = document.getElementById('customCount');
+            const randomSelect = document.getElementById('randomSelect');
+            const clearSelection = document.getElementById('clearSelection');
+            const results = document.getElementById('results');
+            const saveData = document.getElementById('saveData');
+            const deleteData = document.getElementById('deleteData');
+            const increaseSelectionCount = document.getElementById('increaseSelectionCount');
+            const decreaseSelectionCount = document.getElementById('decreaseSelectionCount');
+            const selectionCountNumber = document.getElementById('selectionCountNumber');
+            const excelFile = document.getElementById('excelFile');
+            const sheetSelector = document.getElementById('sheetSelector');
+            const importMode = document.getElementById('importMode');
+            const importExcelStudents = document.getElementById('importExcelStudents');
+            const saveImportedSheet = document.getElementById('saveImportedSheet');
+            const saveAllImportedSheets = document.getElementById('saveAllImportedSheets');
+            const exportJson = document.getElementById('exportJson');
+            const importJsonFile = document.getElementById('importJsonFile');
+            const importJson = document.getElementById('importJson');
+            const loadDemoData = document.getElementById('loadDemoData');
+            const deleteSelectedClass = document.getElementById('deleteSelectedClass');
+            const deleteAllImportedClasses = document.getElementById('deleteAllImportedClasses');
+            const exportExcel = document.getElementById('exportExcel');
+            const exportPdf = document.getElementById('exportPdf');
+            const printReport = document.getElementById('printReport');
+            const exportDataView = document.getElementById('exportDataView');
+            const selectionExportPanel = document.getElementById('selectionExportPanel');
+            const groupExportPanel = document.getElementById('groupExportPanel');
+            const statsSummary = document.getElementById('statsSummary');
+            const scoreStatsTable = document.getElementById('scoreStatsTable');
+            const groupExportTable = document.getElementById('groupExportTable');
+            const groupPlanName = document.getElementById('groupPlanName');
+            const groupMode = document.getElementById('groupMode');
+            const groupSizeNumber = document.getElementById('groupSizeNumber');
+            const groupCountNumber = document.getElementById('groupCountNumber');
+            const groupSource = document.getElementById('groupSource');
+            const randomGroupStudents = document.getElementById('randomGroupStudents');
+            const saveGroupData = document.getElementById('saveGroupData');
+            const printGroupList = document.getElementById('printGroupList');
+            const clearGroupResults = document.getElementById('clearGroupResults');
+            const groupResults = document.getElementById('groupResults');
+            const groupStudentCount = document.getElementById('groupStudentCount');
+            const groupStudentPreview = document.getElementById('groupStudentPreview');
+            const groupSizeField = document.getElementById('groupSizeField');
+            const groupCountField = document.getElementById('groupCountField');
+            const tabButtons = Array.from(document.querySelectorAll('.workflow-step[data-tab]'));
+            const tabPanels = Array.from(document.querySelectorAll('.tab-panel'));
+
+            let students = [];
+            let selectedStudents = [];
+            let selectionCount = 0;
+            let isDeleteMode = false;
+            let importedWorkbook = null;
+            let activeClassKey = '';
+            let groupHistory = [];
+
+            const APP_PREFIX = 'StudentPicker_';
+            const DEFAULT_SCHOOL_YEAR = '匯入資料';
+            const DEFAULT_SEMESTER = '班級資料';
+
+            // 顯示提示訊息
+            function showToast(message, type = 'success') {
+                const toast = document.createElement('div');
+                toast.className = type === 'success' ? 'success-toast' : 'error-toast';
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 3000);
+            }
+
+            function switchTab(tabName) {
+                tabButtons.forEach(button => {
+                    button.classList.toggle('active', button.dataset.tab === tabName);
+                });
+                tabPanels.forEach(panel => {
+                    panel.classList.toggle('active', panel.id === `tab-${tabName}`);
+                });
+            }
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => switchTab(button.dataset.tab));
+            });
+
+            function escapeHtml(value) {
+                return String(value ?? '').replace(/[&<>"']/g, char => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                }[char]));
+            }
+
+            function sanitizeFileName(value) {
+                return String(value || '學生選取分組紀錄')
+                    .replace(/[\\/:*?"<>|]/g, '_')
+                    .replace(/\s+/g, '_');
+            }
+
+            function getCurrentBaseName() {
+                const className = getCurrentClassName() || '未選班級';
+                return sanitizeFileName(`${className}_學生選取分組紀錄`);
+            }
+
+            function getCurrentClassName() {
+                const selectedOption = activeClassSelector?.selectedOptions?.[0];
+                return selectedOption?.dataset?.className ||
+                    activeClassStatus.value.replace(/^.*｜/, '').replace(/^.*\|/, '').replace(/^暫時匯入｜/, '').replace(/^已儲存｜/, '') ||
+                    '';
+            }
+
+            function downloadBlob(content, fileName, mimeType) {
+                const blob = new Blob([content], { type: mimeType });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
+
+            function getAppSnapshot() {
+                return {
+                    version: '2026.06.codex-enhanced',
+                    exportedAt: new Date().toISOString(),
+                    schoolYear: DEFAULT_SCHOOL_YEAR,
+                    semester: DEFAULT_SEMESTER,
+                    className: getCurrentClassName(),
+                    students,
+                    selectedStudents,
+                    results: getResultsData(),
+                    groupHistory,
+                    scoreStats: calculateScoreStats()
+                };
+            }
+
+            function applyAppSnapshot(data) {
+                activeClassStatus.value = data.className ? `JSON 還原｜${data.className}` : 'JSON 還原資料';
+                students = Array.isArray(data.students) ? data.students : [];
+                selectedStudents = Array.isArray(data.selectedStudents) ? data.selectedStudents : [];
+                studentData.value = students.join('\n');
+                displayStudents();
+                results.innerHTML = '';
+                groupHistory = Array.isArray(data.groupHistory) ? data.groupHistory : [];
+
+                const loadedResults = Array.isArray(data.results) ? data.results : [];
+                loadedResults.slice().reverse().forEach(result => {
+                    displayResults((result.students || []).map(s => s.name), result);
+                });
+                selectionCount = loadedResults.length;
+                renderGroupResults();
+                updateScoreStats();
+            }
+
+            function calculateScoreStats() {
+                const statsMap = new Map();
+                getResultsData().forEach(result => {
+                    result.students.forEach(student => {
+                        const current = statsMap.get(student.name) || {
+                            name: student.name,
+                            selectedCount: 0,
+                            bonus: 0,
+                            penalty: 0,
+                            total: 0,
+                            latestRecord: ''
+                        };
+                        const points = Number(student.points) || 0;
+                        current.selectedCount += 1;
+                        current.bonus += Math.max(points, 0);
+                        current.penalty += Math.min(points, 0);
+                        current.total += points;
+                        current.latestRecord = [result.date, student.note || result.resultNote || ''].filter(Boolean).join('：');
+                        statsMap.set(student.name, current);
+                    });
+                });
+                return Array.from(statsMap.values()).sort((a, b) => {
+                    if (b.total !== a.total) return b.total - a.total;
+                    return a.name.localeCompare(b.name, 'zh-Hant');
+                });
+            }
+
+            function updateScoreStats() {
+                const stats = calculateScoreStats();
+                const totalRecords = getResultsData().reduce((sum, result) => sum + result.students.length, 0);
+                const totalScore = stats.reduce((sum, item) => sum + item.total, 0);
+                const topStudent = stats[0] ? `${stats[0].name}（${stats[0].total}）` : '尚無';
+                statsSummary.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-label">目前學生數</div>
+                        <div class="stat-value">${students.length}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">紀錄筆數</div>
+                        <div class="stat-value">${totalRecords}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">全班總分</div>
+                        <div class="stat-value">${totalScore}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">目前最高</div>
+                        <div class="stat-value" style="font-size: 1rem;">${escapeHtml(topStudent)}</div>
+                    </div>
+                `;
+
+                const tbody = scoreStatsTable.querySelector('tbody');
+                if (stats.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #6b7280;">尚無紀錄</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = stats.map(item => `
+                    <tr>
+                        <td><strong>${escapeHtml(item.name)}</strong></td>
+                        <td>${item.selectedCount}</td>
+                        <td class="score-positive">${item.bonus}</td>
+                        <td class="score-negative">${item.penalty}</td>
+                        <td class="${item.total >= 0 ? 'score-positive' : 'score-negative'}">${item.total}</td>
+                        <td>${escapeHtml(item.latestRecord)}</td>
+                    </tr>
+                `).join('');
+            }
+
+            function updateExportDataView() {
+                const view = exportDataView?.value || 'selection';
+                if (selectionExportPanel) {
+                    selectionExportPanel.style.display = view === 'selection' ? 'block' : 'none';
+                }
+                if (groupExportPanel) {
+                    groupExportPanel.style.display = view === 'groups' ? 'block' : 'none';
+                }
+            }
+
+            // 使用說明切換
+            toggleGuide.addEventListener('click', function() {
+                if (userGuide.style.display === 'none') {
+                    userGuide.style.display = 'block';
+                    toggleGuide.textContent = '📖 隱藏使用說明';
+                } else {
+                    userGuide.style.display = 'none';
+                    toggleGuide.textContent = '📖 顯示使用說明';
+                }
+            });
+
+            // 選取次數控制
+            increaseSelectionCount.addEventListener('click', () => {
+                let count = parseInt(selectionCountNumber.value);
+                selectionCountNumber.value = count + 1;
+            });
+
+            decreaseSelectionCount.addEventListener('click', () => {
+                let count = parseInt(selectionCountNumber.value);
+                if (count > 1) {
+                    selectionCountNumber.value = count - 1;
+                }
+            });
+
+            // 選取人數控制
+            selectCount.addEventListener('change', () => {
+                customCount.style.display = selectCount.value === 'other' ? 'block' : 'none';
+            });
+
+            excelFile.addEventListener('change', async () => {
+                const file = excelFile.files[0];
+                if (!file) return;
+                if (typeof XLSX === 'undefined') {
+                    showToast('Excel 匯入元件尚未載入，請確認網路連線後重新整理頁面', 'error');
+                    return;
+                }
+
+                try {
+                    const buffer = await file.arrayBuffer();
+                    importedWorkbook = XLSX.read(buffer, { type: 'array' });
+                    sheetSelector.innerHTML = '<option value="">請選擇班級分頁</option>';
+                    importedWorkbook.SheetNames.forEach(sheetName => {
+                        const option = document.createElement('option');
+                        option.value = sheetName;
+                        option.textContent = sheetName;
+                        sheetSelector.appendChild(option);
+                    });
+                    sheetSelector.disabled = false;
+                    if (importedWorkbook.SheetNames.length === 1) {
+                        sheetSelector.value = importedWorkbook.SheetNames[0];
+                    }
+                    showToast(`已讀取 ${importedWorkbook.SheetNames.length} 個分頁`);
+                } catch (error) {
+                    console.error(error);
+                    showToast('Excel 檔案讀取失敗，請確認檔案格式', 'error');
+                }
+            });
+
+            importExcelStudents.addEventListener('click', () => {
+                if (!importedWorkbook || !sheetSelector.value) {
+                    showToast('請先選擇 Excel 檔案與班級分頁', 'error');
+                    return;
+                }
+
+                const classGroups = parseClassGroupsFromSheet(sheetSelector.value);
+                if (classGroups.length === 0) {
+                    showToast('此分頁找不到可匯入的座號與姓名資料', 'error');
+                    return;
+                }
+
+                if (classGroups.length > 1) {
+                    const context = getSchoolContext();
+                    classGroups.forEach(group => {
+                        saveClassDataset({
+                            schoolYear: context.schoolYear,
+                            semester: context.semester,
+                            className: group.className,
+                            students: group.students,
+                            source: sheetSelector.value
+                        });
+                    });
+                    clearCurrentClassView();
+                    updateSavedDataList();
+                    updateActiveClassSelector();
+                    displayFilteredData();
+                    switchTab('class');
+                    showToast(`已偵測並建立 ${classGroups.length} 個班級，請從「開啟已儲存班級」選單選擇班級`);
+                    return;
+                }
+
+                autoSaveCurrentClass();
+                const context = getSchoolContext();
+                const storageName = saveClassDataset({
+                    schoolYear: context.schoolYear,
+                    semester: context.semester,
+                    className: classGroups[0].className,
+                    students: classGroups[0].students,
+                    source: sheetSelector.value
+                });
+                updateSavedDataList();
+                updateActiveClassSelector();
+                loadData(storageName);
+                showToast(`已從「${classGroups[0].className}」匯入 ${classGroups[0].students.length} 位學生`);
+            });
+
+            saveImportedSheet.addEventListener('click', () => {
+                if (!importedWorkbook || !sheetSelector.value) {
+                    showToast('請先選擇 Excel 檔案與班級分頁', 'error');
+                    return;
+                }
+
+                const savedCount = saveImportedSheetData(sheetSelector.value, { overwritePrompt: true });
+                if (savedCount) {
+                    const classGroups = parseClassGroupsFromSheet(sheetSelector.value);
+                    if (classGroups.length === 1) {
+                        autoSaveCurrentClass();
+                        const savedKey = findSavedDataKey(DEFAULT_SCHOOL_YEAR, DEFAULT_SEMESTER, classGroups[0].className);
+                        if (savedKey) {
+                            loadData(savedKey.slice(APP_PREFIX.length));
+                        } else {
+                            setTemporaryClassView(classGroups[0].className, classGroups[0].students, '已儲存');
+                        }
+                    } else {
+                        clearCurrentClassView();
+                        switchTab('class');
+                    }
+                    updateActiveClassSelector();
+                    showToast(`已儲存 ${savedCount} 個班級資料`);
+                }
+            });
+
+            saveAllImportedSheets.addEventListener('click', () => {
+                if (!importedWorkbook) {
+                    showToast('請先選擇 Excel 檔案', 'error');
+                    return;
+                }
+
+                const context = getSchoolContext();
+
+                const existingMatches = importedWorkbook.SheetNames.flatMap(sheetName =>
+                    parseClassGroupsFromSheet(sheetName)
+                        .map(group => group.className)
+                        .filter(className => findSavedDataKey(context.schoolYear, context.semester, className))
+                );
+                if (existingMatches.length > 0) {
+                    const confirmed = confirm(`已有 ${existingMatches.length} 個班級資料存在，是否覆蓋同名班級？`);
+                    if (!confirmed) return;
+                }
+
+                let savedCount = 0;
+                let skippedCount = 0;
+                importedWorkbook.SheetNames.forEach(sheetName => {
+                    const sheetSavedCount = saveImportedSheetData(sheetName, {
+                        overwritePrompt: false,
+                        silent: true,
+                        context
+                    });
+                    if (sheetSavedCount) savedCount += sheetSavedCount;
+                    else skippedCount += 1;
+                });
+
+                updateSavedDataList();
+                clearCurrentClassView();
+                updateActiveClassSelector();
+                displayFilteredData();
+                switchTab('class');
+                showToast(`已儲存 ${savedCount} 個班級分頁${skippedCount ? `，略過 ${skippedCount} 個空白或無效分頁` : ''}`);
+            });
+
+            exportJson.addEventListener('click', () => {
+                const snapshot = getAppSnapshot();
+                downloadBlob(
+                    JSON.stringify(snapshot, null, 2),
+                    `${getCurrentBaseName()}.json`,
+                    'application/json;charset=utf-8'
+                );
+                showToast('JSON 備份已下載');
+            });
+
+            importJson.addEventListener('click', async () => {
+                const file = importJsonFile.files[0];
+                if (!file) {
+                    showToast('請先選擇 JSON 備份檔', 'error');
+                    return;
+                }
+
+                try {
+                    const data = JSON.parse(await file.text());
+                    if (!Array.isArray(data.students) || !Array.isArray(data.results)) {
+                        showToast('JSON 格式不符合本程式備份資料', 'error');
+                        return;
+                    }
+                    if (confirm('確定要用這份 JSON 備份覆蓋目前畫面資料嗎？')) {
+                        applyAppSnapshot(data);
+                        showToast('JSON 備份已還原');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    showToast('JSON 讀取失敗，請確認檔案內容', 'error');
+                }
+            });
+
+            loadDemoData.addEventListener('click', () => {
+                const schoolYear = DEFAULT_SCHOOL_YEAR;
+                const semester = DEFAULT_SEMESTER;
+                const demoClasses = [
+                    {
+                        className: '示範一班',
+                        students: [
+                            '01 王品安', '02 李承恩', '03 林佳穎', '04 張家睿',
+                            '05 陳怡臻', '06 黃柏翰', '07 吳庭瑄', '08 劉冠宇',
+                            '09 蔡昀珊', '10 楊子謙', '11 鄭又寧', '12 蕭宇翔'
+                        ]
+                    },
+                    {
+                        className: '示範二班',
+                        students: [
+                            '01 周若晴', '02 徐浩然', '03 孫語彤', '04 朱冠廷',
+                            '05 何欣妤', '06 高子翔', '07 郭庭安', '08 馬宥辰',
+                            '09 梁采潔', '10 謝承祐', '11 曾品萱', '12 許哲維'
+                        ]
+                    }
+                ];
+
+                const existingDemoClasses = demoClasses.filter(demo =>
+                    findSavedDataKey(schoolYear, semester, demo.className)
+                );
+                if (existingDemoClasses.length > 0) {
+                    const confirmed = confirm('示範資料已存在，是否覆蓋重新載入？');
+                    if (!confirmed) return;
+                }
+
+                demoClasses.forEach(demo => {
+                    saveClassDataset({
+                        schoolYear,
+                        semester,
+                        className: demo.className,
+                        students: demo.students,
+                        source: 'demo'
+                    });
+                });
+
+                updateSavedDataList();
+                updateActiveClassSelector();
+                displayFilteredData();
+                const firstDemoKey = findSavedDataKey(schoolYear, semester, demoClasses[0].className);
+                if (firstDemoKey) {
+                    loadData(firstDemoKey.slice(APP_PREFIX.length));
+                }
+                showToast('已載入兩個示範班級，可用篩選器切換練習');
+            });
+
+            deleteAllImportedClasses.addEventListener('click', () => {
+                const keys = Object.keys(localStorage).filter(key => key.startsWith(APP_PREFIX));
+                if (keys.length === 0) {
+                    showToast('目前沒有可刪除的班級資料', 'error');
+                    return;
+                }
+                if (!confirm(`確定要刪除所有 ${keys.length} 筆匯入班級資料嗎？此動作無法復原。`)) {
+                    return;
+                }
+                keys.forEach(key => localStorage.removeItem(key));
+                clearCurrentClassView();
+                updateSavedDataList();
+                updateActiveClassSelector();
+                displayFilteredData();
+                showToast('已刪除所有匯入班級資料');
+            });
+
+            deleteSelectedClass.addEventListener('click', () => {
+                if (!deleteClassSelector.value) {
+                    showToast('請先選擇要刪除的班級', 'error');
+                    return;
+                }
+                const className = deleteClassSelector.selectedOptions[0]?.dataset?.className || '此班級';
+                if (!confirm(`確定要刪除「${className}」的所有資料嗎？`)) return;
+                deleteDataFromStorage(deleteClassSelector.value);
+            });
+
+            exportExcel.addEventListener('click', exportReportToExcel);
+            exportPdf.addEventListener('click', exportReportToPdf);
+            printReport.addEventListener('click', printCurrentReport);
+            exportDataView.addEventListener('change', updateExportDataView);
+
+            randomGroupStudents.addEventListener('click', () => {
+                createGroupRecord();
+            });
+
+            groupMode.addEventListener('change', () => {
+                updateGroupingModeFields();
+            });
+
+            saveGroupData.addEventListener('click', () => {
+                autoSaveCurrentClass();
+                showToast('分組紀錄已儲存');
+            });
+
+            printGroupList.addEventListener('click', printGroupListOnly);
+
+            clearGroupResults.addEventListener('click', () => {
+                if (groupHistory.length === 0) {
+                    showToast('目前沒有分組結果', 'error');
+                    return;
+                }
+                if (!confirm('確定要清除目前班級的所有分組結果嗎？')) return;
+                groupHistory = [];
+                renderGroupResults();
+                autoSaveCurrentClass();
+                showToast('分組結果已清除');
+            });
+
+            groupResults.addEventListener('click', (event) => {
+                const recordIndex = Number(event.target.dataset.recordIndex);
+                const groupIndex = Number(event.target.dataset.groupIndex);
+                if (event.target.classList.contains('delete-group-record')) {
+                    if (!confirm('確定要刪除這筆分組紀錄嗎？')) return;
+                    groupHistory.splice(recordIndex, 1);
+                    renderGroupResults();
+                    autoSaveCurrentClass();
+                    return;
+                }
+                if (event.target.classList.contains('group-score-plus') || event.target.classList.contains('group-score-minus')) {
+                    const change = event.target.classList.contains('group-score-plus') ? 1 : -1;
+                    groupHistory[recordIndex].scores[groupIndex] = (groupHistory[recordIndex].scores[groupIndex] || 0) + change;
+                    renderGroupResults();
+                    autoSaveCurrentClass();
+                }
+            });
+
+            groupResults.addEventListener('input', (event) => {
+                const recordIndex = Number(event.target.dataset.recordIndex);
+                const groupIndex = Number(event.target.dataset.groupIndex);
+                if (event.target.classList.contains('group-score-input')) {
+                    groupHistory[recordIndex].scores[groupIndex] = parseInt(event.target.value || 0, 10);
+                    autoSaveCurrentClass();
+                }
+                if (event.target.classList.contains('group-note-input')) {
+                    groupHistory[recordIndex].notes[groupIndex] = event.target.value;
+                    autoSaveCurrentClass();
+                }
+            });
+
+            groupStudentPreview.addEventListener('click', (event) => {
+                const chip = event.target.closest('.mini-student-chip');
+                if (!chip) return;
+                toggleGroupingStudentSelection(chip.dataset.student);
+            });
+
+            activeClassSelector.addEventListener('change', () => {
+                if (!activeClassSelector.value) return;
+                autoSaveCurrentClass();
+                loadData(activeClassSelector.value);
+            });
+
+            window.addEventListener('beforeunload', () => {
+                autoSaveCurrentClass();
+            });
+
+            // 預覽學生資料
+            previewStudents.addEventListener('click', () => {
+                students = studentData.value.split('\n').map(data => data.trim()).filter(Boolean);
+                if (students.length === 0) {
+                    showToast('請先輸入學生資料！', 'error');
+                    return;
+                }
+                displayStudents();
+                updateScoreStats();
+                showToast(`成功載入 ${students.length} 位學生資料`);
+            });
+
+            // 刪除學生模式切換
+            deleteIndividualStudent.addEventListener('click', () => {
+                isDeleteMode = !isDeleteMode;
+                deleteIndividualStudent.textContent = isDeleteMode ? '✅ 完成刪除學生' : '✂️ 刪除學生模式';
+                deleteIndividualStudent.className = isDeleteMode ? 'btn btn-secondary' : 'btn btn-warning';
+                displayStudents();
+            });
+
+            // 清除學生資料
+            clearStudents.addEventListener('click', () => {
+                if (confirm('確定要清除所有學生資料嗎？')) {
+                    studentData.value = '';
+                    students = [];
+                    selectedStudents = [];
+                    displayStudents();
+                    results.innerHTML = '';
+                    selectionCount = 0;
+                    activeClassStatus.value = '尚未載入班級';
+                    activeClassSelector.value = '';
+                    updateScoreStats();
+                    showToast('學生資料已清除');
+                }
+            });
+
+            // 隨機選取
+            randomSelect.addEventListener('click', () => {
+                if (students.length === 0) {
+                    showToast('請先預覽學生資料！', 'error');
+                    return;
+                }
+
+                const count = getSelectCount();
+                const totalSelections = parseInt(selectionCountNumber.value);
+                
+                for (let i = 0; i < totalSelections; i++) {
+                    const availableStudents = students.filter(student => !selectedStudents.includes(student));
+                    if (availableStudents.length < count) {
+                        showToast('選取人數超過剩餘學生人數！', 'error');
+                        break;
+                    }
+                    const randomlySelected = [];
+                    for (let j = 0; j < count; j++) {
+                        if (availableStudents.length === 0) break;
+                        const index = Math.floor(Math.random() * availableStudents.length);
+                        randomlySelected.push(availableStudents.splice(index, 1)[0]);
+                    }
+                    selectedStudents = selectedStudents.concat(randomlySelected);
+                    displayStudents();
+                    displayResults(randomlySelected);
+                }
+                if (totalSelections > 0) {
+                    updateScoreStats();
+                    showToast(`完成 ${totalSelections} 次選取`);
+                }
+            });
+
+            // 清除選取
+            clearSelection.addEventListener('click', () => {
+                selectedStudents = [];
+                displayStudents();
+                showToast('選取已清除');
+            });
+
+            // 儲存資料
+            saveData.addEventListener('click', () => {
+                const schoolYear = DEFAULT_SCHOOL_YEAR;
+                const semester = DEFAULT_SEMESTER;
+                const className = getCurrentClassName();
+                
+                if (!className) {
+                    showToast('請先選擇或匯入班級資料！', 'error');
+                    return;
+                }
+                
+                if (students.length === 0) {
+                    showToast('請先輸入學生資料！', 'error');
+                    return;
+                }
+                
+                const existingKey = Object.keys(localStorage).find(key => 
+                    key.startsWith(APP_PREFIX) && 
+                    JSON.parse(localStorage.getItem(key)).schoolYear === schoolYear &&
+                    JSON.parse(localStorage.getItem(key)).semester === semester &&
+                    JSON.parse(localStorage.getItem(key)).className === className
+                );
+
+                if (existingKey) {
+                    if (confirm('此班級資料已存在，是否覆蓋？')) {
+                        saveDataWithName(existingKey.slice(APP_PREFIX.length));
+                    }
+                } else {
+                    const name = `${schoolYear}_${semester}_${className}_${Date.now()}`;
+                    saveDataWithName(name);
+                }
+            });
+
+            // 刪除資料
+            deleteData.addEventListener('click', () => {
+                const schoolYear = DEFAULT_SCHOOL_YEAR;
+                const semester = DEFAULT_SEMESTER;
+                const className = getCurrentClassName();
+                
+                if (!className) {
+                    showToast('請先選擇要刪除的班級！', 'error');
+                    return;
+                }
+                
+                const existingKey = Object.keys(localStorage).find(key => 
+                    key.startsWith(APP_PREFIX) && 
+                    JSON.parse(localStorage.getItem(key)).schoolYear === schoolYear &&
+                    JSON.parse(localStorage.getItem(key)).semester === semester &&
+                    JSON.parse(localStorage.getItem(key)).className === className
+                );
+
+                if (existingKey) {
+                    if (confirm('確定要刪除此班級的所有資料嗎？')) {
+                        deleteDataFromStorage(existingKey.slice(APP_PREFIX.length));
+                    }
+                } else {
+                    showToast('找不到對應的班級資料', 'error');
+                }
+            });
+
+            function getSchoolContext() {
+                return { schoolYear: DEFAULT_SCHOOL_YEAR, semester: DEFAULT_SEMESTER };
+            }
+
+            function findSavedDataKey(schoolYear, semester, className) {
+                return Object.keys(localStorage).find(key => {
+                    if (!key.startsWith(APP_PREFIX)) return false;
+                    try {
+                        const data = JSON.parse(localStorage.getItem(key));
+                        return data.schoolYear === schoolYear &&
+                            data.semester === semester &&
+                            data.className === className;
+                    } catch (error) {
+                        return false;
+                    }
+                });
+            }
+
+            function getSavedDataRecords() {
+                return Object.keys(localStorage)
+                    .filter(key => key.startsWith(APP_PREFIX))
+                    .map(key => {
+                        try {
+                            const data = JSON.parse(localStorage.getItem(key));
+                            return {
+                                key: key.slice(APP_PREFIX.length),
+                                schoolYear: data.schoolYear,
+                                semester: data.semester,
+                                className: data.className,
+                                studentsCount: Array.isArray(data.students) ? data.students.length : 0
+                            };
+                        } catch (error) {
+                            return null;
+                        }
+                    })
+                    .filter(Boolean)
+                    .sort((a, b) =>
+                        `${a.schoolYear}_${a.semester}_${a.className}`.localeCompare(
+                            `${b.schoolYear}_${b.semester}_${b.className}`,
+                            'zh-Hant'
+                        )
+                    );
+            }
+
+            function updateActiveClassSelector() {
+                const records = getSavedDataRecords();
+                const currentKey = activeClassSelector.value;
+                const classRecords = records;
+
+                activeClassSelector.innerHTML = '';
+                deleteClassSelector.innerHTML = '';
+                if (classRecords.length === 0) {
+                    activeClassSelector.disabled = true;
+                    activeClassSelector.innerHTML = '<option value="">請先儲存或載入班級資料</option>';
+                    deleteClassSelector.disabled = true;
+                    deleteClassSelector.innerHTML = '<option value="">請先匯入班級資料</option>';
+                    return;
+                }
+
+                activeClassSelector.disabled = false;
+                deleteClassSelector.disabled = false;
+                activeClassSelector.innerHTML = '<option value="">選擇要開啟的班級</option>';
+                deleteClassSelector.innerHTML = '<option value="">選擇要刪除的班級</option>';
+                classRecords.forEach(record => {
+                    const option = document.createElement('option');
+                    option.value = record.key;
+                    option.textContent = `${record.className}（${record.studentsCount}人）`;
+                    option.dataset.className = record.className;
+                    activeClassSelector.appendChild(option);
+
+                    const deleteOption = option.cloneNode(true);
+                    deleteClassSelector.appendChild(deleteOption);
+                });
+
+                if (classRecords.some(record => record.key === currentKey)) {
+                    activeClassSelector.value = currentKey;
+                }
+            }
+
+            function clearCurrentClassView() {
+                activeClassKey = '';
+                students = [];
+                selectedStudents = [];
+                groupHistory = [];
+                selectionCount = 0;
+                studentData.value = '';
+                results.innerHTML = '';
+                activeClassStatus.value = '請從班級選單開啟特定班級';
+                activeClassSelector.value = '';
+                displayStudents();
+                updateGroupStudentPreview();
+                renderGroupResults();
+                updateScoreStats();
+            }
+
+            function setTemporaryClassView(className, classStudents, statusPrefix = '暫時匯入') {
+                activeClassKey = '';
+                students = classStudents || [];
+                selectedStudents = [];
+                groupHistory = [];
+                selectionCount = 0;
+                studentData.value = students.join('\n');
+                results.innerHTML = '';
+                activeClassStatus.value = `${statusPrefix}｜${className}`;
+                activeClassSelector.value = '';
+                displayStudents();
+                updateGroupStudentPreview();
+                renderGroupResults();
+                updateScoreStats();
+            }
+
+            function autoSaveCurrentClass() {
+                if (!activeClassKey || students.length === 0) return;
+                const existingRaw = localStorage.getItem(APP_PREFIX + activeClassKey);
+                if (!existingRaw) return;
+                const existingData = JSON.parse(existingRaw);
+                const data = {
+                    ...existingData,
+                    students,
+                    selectedStudents,
+                    results: getResultsData(),
+                    groupHistory,
+                    scoreStats: calculateScoreStats(),
+                    updatedAt: new Date().toISOString()
+                };
+                localStorage.setItem(APP_PREFIX + activeClassKey, JSON.stringify(data));
+            }
+
+            function getGroupingStudents() {
+                if (groupSource.value === 'selected') {
+                    return selectedStudents.filter(student => students.includes(student));
+                }
+                return [...students];
+            }
+
+            function shuffleList(list) {
+                const shuffled = [...list];
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                return shuffled;
+            }
+
+            function buildGroups(sourceStudents) {
+                const shuffled = shuffleList(sourceStudents);
+                if (groupMode.value === 'count') {
+                    const count = Math.max(1, parseInt(groupCountNumber.value, 10) || 1);
+                    const groups = Array.from({ length: Math.min(count, shuffled.length) }, () => []);
+                    shuffled.forEach((student, index) => {
+                        groups[index % groups.length].push(student);
+                    });
+                    return groups;
+                }
+
+                const size = Math.max(1, parseInt(groupSizeNumber.value, 10) || 1);
+                const groups = [];
+                for (let i = 0; i < shuffled.length; i += size) {
+                    groups.push(shuffled.slice(i, i + size));
+                }
+                return groups;
+            }
+
+            function createGroupRecord() {
+                const sourceStudents = getGroupingStudents();
+                if (sourceStudents.length === 0) {
+                    showToast(groupSource.value === 'selected' ? '目前沒有已選取學生可分組' : '請先載入班級學生名單', 'error');
+                    return;
+                }
+
+                const groupName = groupPlanName.value.trim() || `分組 ${new Date().toLocaleString('zh-TW')}`;
+                const groups = buildGroups(sourceStudents);
+                groupHistory.unshift({
+                    groupName,
+                    timestamp: new Date().toLocaleString('zh-TW'),
+                    groups,
+                    scores: groups.map(() => 0),
+                    notes: groups.map(() => '')
+                });
+                renderGroupResults();
+                autoSaveCurrentClass();
+                showToast(`已建立 ${groups.length} 組`);
+            }
+
+            function renderGroupResults() {
+                if (!groupResults) return;
+                if (groupHistory.length === 0) {
+                    groupResults.innerHTML = '<div class="section"><p style="color: #6b7280; text-align: center;">尚無分組結果</p></div>';
+                    updateGroupExportTable();
+                    return;
+                }
+
+                groupResults.innerHTML = '';
+                groupHistory.forEach((record, recordIndex) => {
+                    const container = document.createElement('div');
+                    container.className = 'group-record';
+                    container.innerHTML = `
+                        <div class="group-record-header">
+                            <div>
+                                <strong>${escapeHtml(record.groupName)}</strong>
+                                <span style="color: #6b7280; margin-left: 8px;">${escapeHtml(record.timestamp || '')}</span>
+                            </div>
+                            <button class="btn btn-danger btn-sm delete-group-record" data-record-index="${recordIndex}">🗑️ 刪除分組</button>
+                        </div>
+                        <div class="group-card-grid"></div>
+                    `;
+
+                    const grid = container.querySelector('.group-card-grid');
+                    record.groups.forEach((group, groupIndex) => {
+                        const score = record.scores?.[groupIndex] || 0;
+                        const note = record.notes?.[groupIndex] || '';
+                        const card = document.createElement('div');
+                        card.className = 'group-card';
+                        card.innerHTML = `
+                            <h4>第 ${groupIndex + 1} 組（${group.length}人）</h4>
+                            <ol class="group-member-list">
+                                ${group.map(student => `<li>${escapeHtml(student)}</li>`).join('')}
+                            </ol>
+                            <div class="points-control" style="margin-bottom: 8px;">
+                                <button class="points-btn btn-danger group-score-minus" data-record-index="${recordIndex}" data-group-index="${groupIndex}">−</button>
+                                <input type="number" class="points-input group-score-input" data-record-index="${recordIndex}" data-group-index="${groupIndex}" value="${score}">
+                                <button class="points-btn btn-secondary group-score-plus" data-record-index="${recordIndex}" data-group-index="${groupIndex}">+</button>
+                            </div>
+                            <input type="text" class="form-input group-note-input" data-record-index="${recordIndex}" data-group-index="${groupIndex}" value="${escapeHtml(note)}" placeholder="輸入本組備註...">
+                        `;
+                        grid.appendChild(card);
+                    });
+
+                    groupResults.appendChild(container);
+                });
+                updateGroupExportTable();
+            }
+
+            function getGroupListRows() {
+                const rows = [];
+                groupHistory.forEach(record => {
+                    (record.groups || []).forEach((group, groupIndex) => {
+                        rows.push({
+                            分組名稱: record.groupName || '',
+                            組別: `第 ${groupIndex + 1} 組`,
+                            學生名單: group.join('、'),
+                            人數: group.length
+                        });
+                    });
+                });
+                return rows;
+            }
+
+            function printGroupListOnly() {
+                if (groupHistory.length === 0) {
+                    showToast('目前沒有分組名單可列印', 'error');
+                    return;
+                }
+
+                const rows = getGroupListRows();
+                const printWindow = window.open('', '_blank');
+                if (!printWindow) {
+                    showToast('瀏覽器封鎖了列印視窗，請允許彈出視窗後再試', 'error');
+                    return;
+                }
+
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html lang="zh-TW">
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>${escapeHtml(getCurrentClassName())} 分組名單</title>
+                        <style>
+                            body { font-family: Arial, "Microsoft JhengHei", sans-serif; padding: 24px; color: #111827; }
+                            h1 { margin: 0 0 8px; font-size: 24px; }
+                            .meta { color: #4b5563; margin-bottom: 18px; }
+                            table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+                            th, td { border: 1px solid #d1d5db; padding: 10px; text-align: left; font-size: 13px; vertical-align: top; }
+                            th { background: #f3f4f6; }
+                            .group-name { width: 20%; }
+                            .group-number { width: 12%; text-align: center; }
+                            .student-list { line-height: 1.8; }
+                            .count { width: 10%; text-align: center; }
+                            @media print {
+                                body { padding: 12mm; }
+                                table { page-break-inside: auto; }
+                                tr { page-break-inside: avoid; page-break-after: auto; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>${escapeHtml(getCurrentClassName())} 分組名單</h1>
+                        <div class="meta">列印時間：${new Date().toLocaleString('zh-TW')}</div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th class="group-name">分組名稱</th>
+                                    <th class="group-number">組別</th>
+                                    <th class="student-list">學生名單</th>
+                                    <th class="count">人數</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rows.map(row => `
+                                    <tr>
+                                        <td class="group-name">${escapeHtml(row.分組名稱)}</td>
+                                        <td class="group-number">${escapeHtml(row.組別)}</td>
+                                        <td class="student-list">${escapeHtml(row.學生名單)}</td>
+                                        <td class="count">${escapeHtml(row.人數)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </body>
+                    </html>
+                `);
+                printWindow.document.close();
+                printWindow.focus();
+                setTimeout(() => printWindow.print(), 300);
+            }
+
+            function updateGroupStudentPreview() {
+                if (!groupStudentPreview || !groupStudentCount) return;
+                if (students.length === 0) {
+                    groupStudentCount.textContent = '尚未載入班級';
+                    groupStudentPreview.innerHTML = '<div style="color: #6b7280;">請先在「選擇班級」分頁載入班級。</div>';
+                    return;
+                }
+                groupStudentCount.textContent = `目前共 ${students.length} 位學生，已選取 ${selectedStudents.length} 位`;
+                groupStudentPreview.innerHTML = students
+                    .map(student => `
+                        <button type="button" class="mini-student-chip ${selectedStudents.includes(student) ? 'selected' : ''}" data-student="${escapeHtml(student)}">
+                            ${escapeHtml(student)}
+                        </button>
+                    `)
+                    .join('');
+            }
+
+            function updateGroupingModeFields() {
+                const bySize = groupMode.value === 'size';
+                groupSizeField.style.display = bySize ? 'flex' : 'none';
+                groupCountField.style.display = bySize ? 'none' : 'flex';
+                groupSizeField.classList.toggle('is-active-choice', bySize);
+                groupCountField.classList.toggle('is-active-choice', !bySize);
+            }
+
+            function toggleGroupingStudentSelection(student) {
+                if (selectedStudents.includes(student)) {
+                    selectedStudents = selectedStudents.filter(item => item !== student);
+                } else {
+                    selectedStudents.push(student);
+                }
+                displayStudents();
+                updateGroupStudentPreview();
+                autoSaveCurrentClass();
+            }
+
+            function saveClassDataset({ schoolYear, semester, className, students: classStudents, source = 'manual' }) {
+                const existingKey = findSavedDataKey(schoolYear, semester, className);
+                const existingData = existingKey ? JSON.parse(localStorage.getItem(existingKey) || '{}') : {};
+                const existingSelected = Array.isArray(existingData.selectedStudents) ? existingData.selectedStudents : [];
+                const data = {
+                    version: '2026.06.codex-enhanced',
+                    importedAt: existingData.importedAt || new Date().toISOString(),
+                    sourceSheet: source,
+                    schoolYear,
+                    semester,
+                    className,
+                    students: classStudents,
+                    selectedStudents: existingSelected.filter(student => classStudents.includes(student)),
+                    results: Array.isArray(existingData.results) ? existingData.results : [],
+                    groupHistory: Array.isArray(existingData.groupHistory) ? existingData.groupHistory : [],
+                    scoreStats: Array.isArray(existingData.scoreStats) ? existingData.scoreStats : [],
+                    updatedAt: new Date().toISOString()
+                };
+                const storageName = existingKey ? existingKey.slice(APP_PREFIX.length) :
+                    `${schoolYear}_${semester}_${className}_${Date.now()}`;
+                localStorage.setItem(APP_PREFIX + storageName, JSON.stringify(data));
+                return storageName;
+            }
+
+            function saveImportedSheetData(sheetName, options = {}) {
+                const context = options.context || getSchoolContext();
+                if (!context) return 0;
+
+                const classGroups = parseClassGroupsFromSheet(sheetName);
+                if (classGroups.length === 0) return 0;
+
+                const existingGroups = classGroups.filter(group =>
+                    findSavedDataKey(context.schoolYear, context.semester, group.className)
+                );
+                if (existingGroups.length > 0 && options.overwritePrompt !== false) {
+                    const confirmed = confirm(`已有 ${existingGroups.length} 個同名班級資料存在，是否覆蓋原有學生名單與紀錄？`);
+                    if (!confirmed) return 0;
+                }
+
+                classGroups.forEach(group => {
+                    saveClassDataset({
+                        schoolYear: context.schoolYear,
+                        semester: context.semester,
+                        className: group.className,
+                        students: group.students,
+                        source: sheetName
+                    });
+                });
+                if (!options.silent) {
+                    updateSavedDataList();
+                    updateActiveClassSelector();
+                    displayFilteredData();
+                }
+                return classGroups.length;
+            }
+
+            function parseStudentsFromSheet(sheetName) {
+                return parseClassGroupsFromSheet(sheetName).flatMap(group => group.students);
+            }
+
+            function getCleanedSheetRows(sheetName) {
+                const worksheet = importedWorkbook.Sheets[sheetName];
+                const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+                return rows
+                    .map(row => row.map(cell => String(cell).trim()))
+                    .filter(row => row.some(Boolean));
+            }
+
+            function detectStudentColumns(cleanedRows) {
+                const headerIndex = cleanedRows.findIndex(row =>
+                    row.some(cell => /座號|號碼|出席號|學號|no\.?/i.test(cell)) &&
+                    row.some(cell => /姓名|學生|名字|name/i.test(cell))
+                );
+                const headerRow = headerIndex >= 0 ? cleanedRows[headerIndex] : [];
+                const dataRows = headerIndex >= 0 ? cleanedRows.slice(headerIndex + 1) : cleanedRows;
+                const mode = importMode.value;
+
+                let seatIndex = -1;
+                let nameIndex = -1;
+
+                if (mode === 'auto' && headerRow.length > 0) {
+                    seatIndex = headerRow.findIndex(cell => /座號|號碼|出席號|學號|no\.?/i.test(cell));
+                    nameIndex = headerRow.findIndex(cell => /姓名|學生|名字|name/i.test(cell));
+                }
+
+                if (mode === 'firstTwoColumns') {
+                    seatIndex = 0;
+                    nameIndex = 1;
+                } else if (seatIndex < 0 || nameIndex < 0) {
+                    const columnScores = [];
+                    const maxColumns = Math.max(...cleanedRows.map(row => row.length));
+                    for (let column = 0; column < maxColumns; column++) {
+                        const values = dataRows.map(row => row[column]).filter(Boolean);
+                        const numberLikeCount = values.filter(value => /^\d{1,3}$/.test(normalizeSeatNo(value))).length;
+                        const textLikeCount = values.filter(value => /[\u4e00-\u9fa5A-Za-z]/.test(value)).length;
+                        columnScores.push({ column, numberLikeCount, textLikeCount, valuesCount: values.length });
+                    }
+                    if (mode !== 'nameOnly') {
+                        seatIndex = columnScores.slice().sort((a, b) => b.numberLikeCount - a.numberLikeCount)[0]?.column ?? 0;
+                    }
+                    nameIndex = columnScores
+                        .filter(item => item.column !== seatIndex)
+                        .sort((a, b) => b.textLikeCount - a.textLikeCount)[0]?.column ?? (mode === 'nameOnly' ? 0 : 1);
+                }
+
+                if (mode === 'nameOnly') {
+                    seatIndex = -1;
+                    if (headerRow.length > 0) {
+                        nameIndex = headerRow.findIndex(cell => /姓名|學生|名字|name/i.test(cell));
+                    }
+                    if (nameIndex < 0) nameIndex = 0;
+                }
+
+                return { dataRows, seatIndex, nameIndex };
+            }
+
+            function normalizeSeatNo(value) {
+                const match = String(value || '').trim().match(/\d{1,3}/);
+                return match ? match[0] : '';
+            }
+
+            function formatStudentName(seatNo, name) {
+                const cleanSeatNo = normalizeSeatNo(seatNo);
+                const cleanName = String(name || '').trim();
+                if (!cleanName || /姓名|學生|名字|name/i.test(cleanName)) return '';
+                return cleanSeatNo ? `${cleanSeatNo.padStart(2, '0')} ${cleanName}` : cleanName;
+            }
+
+            function parseClassGroupsFromSheet(sheetName) {
+                const cleanedRows = getCleanedSheetRows(sheetName);
+
+                if (cleanedRows.length === 0) return [];
+
+                const { dataRows, seatIndex, nameIndex } = detectStudentColumns(cleanedRows);
+                const records = dataRows.map(row => {
+                    const seatNo = seatIndex >= 0 ? normalizeSeatNo(row[seatIndex]) : '';
+                    const name = row[nameIndex] || '';
+                    const student = formatStudentName(seatNo, name);
+                    return student ? {
+                        student,
+                        seatNumber: seatNo ? Number(seatNo) : null
+                    } : null;
+                }).filter(Boolean);
+
+                if (records.length === 0) return [];
+
+                const groups = [];
+                let current = [];
+                let seenSeats = new Set();
+                let previousSeat = null;
+
+                records.forEach(record => {
+                    const seat = record.seatNumber;
+                    const shouldSplit =
+                        current.length >= 10 &&
+                        seat !== null &&
+                        (
+                            (previousSeat !== null && previousSeat >= 10 && seat <= 3) ||
+                            (previousSeat !== null && previousSeat - seat >= 8) ||
+                            seenSeats.has(String(seat).padStart(2, '0'))
+                        );
+
+                    if (shouldSplit) {
+                        groups.push(current);
+                        current = [];
+                        seenSeats = new Set();
+                    }
+
+                    current.push(record.student);
+                    if (seat !== null) {
+                        seenSeats.add(String(seat).padStart(2, '0'));
+                        previousSeat = seat;
+                    }
+                });
+
+                if (current.length > 0) groups.push(current);
+
+                return groups
+                    .map((group, index) => ({
+                        className: groups.length === 1 ? sheetName : `${sheetName}-班級${index + 1}`,
+                        students: [...new Set(group)]
+                    }))
+                    .filter(group => group.students.length > 0);
+            }
+
+            function getExportRows() {
+                const rows = [];
+                getResultsData().forEach(result => {
+                    result.students.forEach(student => {
+                        rows.push({
+                            日期批次: result.date,
+                            本次備註: result.resultNote,
+                            學生: student.name,
+                            加減分: student.points,
+                            個人備註: student.note
+                        });
+                    });
+                });
+                return rows;
+            }
+
+            function getGroupExportRows() {
+                const rows = [];
+                groupHistory.forEach(record => {
+                    (record.groups || []).forEach((group, groupIndex) => {
+                        rows.push({
+                            分組名稱: record.groupName || '',
+                            時間: record.timestamp || '',
+                            組別: `第 ${groupIndex + 1} 組`,
+                            學生名單: group.join('、'),
+                            組分數: record.scores?.[groupIndex] || 0,
+                            備註: record.notes?.[groupIndex] || ''
+                        });
+                    });
+                });
+                return rows;
+            }
+
+            function updateGroupExportTable() {
+                if (!groupExportTable) return;
+                const rows = getGroupExportRows();
+                const tbody = groupExportTable.querySelector('tbody');
+                if (rows.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #6b7280;">尚無分組紀錄</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = rows.map(row => `
+                    <tr>
+                        <td>${escapeHtml(row.分組名稱)}</td>
+                        <td>${escapeHtml(row.時間)}</td>
+                        <td>${escapeHtml(row.組別)}</td>
+                        <td>${escapeHtml(row.學生名單)}</td>
+                        <td>${escapeHtml(row.組分數)}</td>
+                        <td>${escapeHtml(row.備註)}</td>
+                    </tr>
+                `).join('');
+            }
+
+            function exportReportToExcel() {
+                if (typeof XLSX === 'undefined') {
+                    showToast('Excel 輸出元件尚未載入，請確認網路連線後重新整理頁面', 'error');
+                    return;
+                }
+
+                const snapshot = getAppSnapshot();
+                const workbook = XLSX.utils.book_new();
+                const studentSheet = XLSX.utils.json_to_sheet(snapshot.students.map((student, index) => ({
+                    序號: index + 1,
+                    學生: student,
+                    已選取: snapshot.selectedStudents.includes(student) ? '是' : ''
+                })));
+                const resultRows = getExportRows();
+                const resultSheet = XLSX.utils.json_to_sheet(resultRows.length ? resultRows : [{ 日期批次: '', 本次備註: '', 學生: '', 加減分: '', 個人備註: '' }]);
+                const statsSheet = XLSX.utils.json_to_sheet(snapshot.scoreStats.map(item => ({
+                    學生: item.name,
+                    被選取次數: item.selectedCount,
+                    加分合計: item.bonus,
+                    扣分合計: item.penalty,
+                    總分: item.total,
+                    最近紀錄: item.latestRecord
+                })));
+                const groupRows = getGroupExportRows();
+                const groupSheet = XLSX.utils.json_to_sheet(groupRows.length ? groupRows : [{ 分組名稱: '', 時間: '', 組別: '', 學生名單: '', 組分數: '', 備註: '' }]);
+                XLSX.utils.book_append_sheet(workbook, studentSheet, '學生名單');
+                XLSX.utils.book_append_sheet(workbook, resultSheet, '選取與個人紀錄');
+                XLSX.utils.book_append_sheet(workbook, statsSheet, '加減分統計');
+                XLSX.utils.book_append_sheet(workbook, groupSheet, '分組紀錄');
+                XLSX.writeFile(workbook, `${getCurrentBaseName()}.xlsx`);
+                showToast('Excel 報表已下載');
+            }
+
+            async function exportReportToPdf() {
+                if (!window.jspdf || !window.jspdf.jsPDF || typeof html2canvas === 'undefined') {
+                    showToast('PDF 輸出元件尚未載入，請確認網路連線後重新整理頁面', 'error');
+                    return;
+                }
+
+                showToast('正在產生 PDF，請稍候...');
+                const snapshot = getAppSnapshot();
+                const resultRows = getExportRows().map(row => [row.日期批次, row.學生, row.加減分, row.個人備註, row.本次備註]);
+                const groupRows = getGroupExportRows();
+                const report = document.createElement('div');
+                report.style.cssText = 'position:absolute; left:-9999px; top:0; width:1120px; padding:32px; background:white; color:#111827; font-family:"Microsoft JhengHei", Arial, sans-serif;';
+                report.innerHTML = `
+                    <h1 style="margin:0 0 8px;">學生選取、分組與紀錄報表</h1>
+                    <div style="color:#4b5563; margin-bottom:20px;">${escapeHtml(snapshot.schoolYear)} ${escapeHtml(snapshot.semester)} ${escapeHtml(snapshot.className)}｜匯出時間：${new Date().toLocaleString('zh-TW')}</div>
+                    <h2>選取結果與個人紀錄</h2>
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:28px;">
+                        <thead><tr>${['日期批次', '學生', '加減分', '個人備註', '本次備註'].map(text => `<th style="border:1px solid #d1d5db; padding:8px; background:#f3f4f6; text-align:left;">${text}</th>`).join('')}</tr></thead>
+                        <tbody>
+                            ${(resultRows.length ? resultRows : [['', '', '', '', '']]).map(row => `
+                                <tr>${row.map(cell => `<td style="border:1px solid #d1d5db; padding:8px;">${escapeHtml(cell)}</td>`).join('')}</tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    <h2>加減分統計表</h2>
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead><tr>${['學生', '被選取次數', '加分合計', '扣分合計', '總分', '最近紀錄'].map(text => `<th style="border:1px solid #d1d5db; padding:8px; background:#f3f4f6; text-align:left;">${text}</th>`).join('')}</tr></thead>
+                        <tbody>
+                            ${(snapshot.scoreStats.length ? snapshot.scoreStats : [{ name: '', selectedCount: '', bonus: '', penalty: '', total: '', latestRecord: '' }]).map(item => `
+                                <tr>
+                                    <td style="border:1px solid #d1d5db; padding:8px;">${escapeHtml(item.name)}</td>
+                                    <td style="border:1px solid #d1d5db; padding:8px;">${escapeHtml(item.selectedCount)}</td>
+                                    <td style="border:1px solid #d1d5db; padding:8px;">${escapeHtml(item.bonus)}</td>
+                                    <td style="border:1px solid #d1d5db; padding:8px;">${escapeHtml(item.penalty)}</td>
+                                    <td style="border:1px solid #d1d5db; padding:8px;">${escapeHtml(item.total)}</td>
+                                    <td style="border:1px solid #d1d5db; padding:8px;">${escapeHtml(item.latestRecord)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    <h2>分組紀錄</h2>
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead><tr>${['分組名稱', '時間', '組別', '學生名單', '組分數', '備註'].map(text => `<th style="border:1px solid #d1d5db; padding:8px; background:#f3f4f6; text-align:left;">${text}</th>`).join('')}</tr></thead>
+                        <tbody>
+                            ${(groupRows.length ? groupRows : [{ 分組名稱: '', 時間: '', 組別: '', 學生名單: '', 組分數: '', 備註: '' }]).map(row => `
+                                <tr>
+                                    <td style="border:1px solid #d1d5db; padding:8px;">${escapeHtml(row.分組名稱)}</td>
+                                    <td style="border:1px solid #d1d5db; padding:8px;">${escapeHtml(row.時間)}</td>
+                                    <td style="border:1px solid #d1d5db; padding:8px;">${escapeHtml(row.組別)}</td>
+                                    <td style="border:1px solid #d1d5db; padding:8px;">${escapeHtml(row.學生名單)}</td>
+                                    <td style="border:1px solid #d1d5db; padding:8px;">${escapeHtml(row.組分數)}</td>
+                                    <td style="border:1px solid #d1d5db; padding:8px;">${escapeHtml(row.備註)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                document.body.appendChild(report);
+
+                try {
+                    const canvas = await html2canvas(report, { scale: 2, backgroundColor: '#ffffff' });
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
+                    const pageWidth = pdf.internal.pageSize.getWidth();
+                    const pageHeight = pdf.internal.pageSize.getHeight();
+                    const imgWidth = pageWidth;
+                    const imgHeight = canvas.height * imgWidth / canvas.width;
+                    let heightLeft = imgHeight;
+                    let position = 0;
+
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                    while (heightLeft > 0) {
+                        position = heightLeft - imgHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+                    }
+                    pdf.save(`${getCurrentBaseName()}.pdf`);
+                    showToast('PDF 報表已下載');
+                } catch (error) {
+                    console.error(error);
+                    showToast('PDF 產生失敗，請稍後再試', 'error');
+                } finally {
+                    document.body.removeChild(report);
+                }
+            }
+
+            function printCurrentReport() {
+                const snapshot = getAppSnapshot();
+                const resultRows = getExportRows();
+                const groupRows = getGroupExportRows();
+                const printWindow = window.open('', '_blank');
+                if (!printWindow) {
+                    showToast('瀏覽器封鎖了列印視窗，請允許彈出視窗後再試', 'error');
+                    return;
+                }
+
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html lang="zh-TW">
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>${escapeHtml(getCurrentBaseName())}</title>
+                        <style>
+                            body { font-family: Arial, "Microsoft JhengHei", sans-serif; padding: 24px; color: #111827; }
+                            h1, h2 { margin-bottom: 8px; }
+                            table { width: 100%; border-collapse: collapse; margin: 16px 0 28px; }
+                            th, td { border: 1px solid #d1d5db; padding: 8px; text-align: left; font-size: 12px; }
+                            th { background: #f3f4f6; }
+                            .meta { color: #4b5563; margin-bottom: 20px; }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>學生選取、分組與紀錄報表</h1>
+                        <div class="meta">${escapeHtml(snapshot.schoolYear)} ${escapeHtml(snapshot.semester)} ${escapeHtml(snapshot.className)}｜列印時間：${new Date().toLocaleString('zh-TW')}</div>
+                        <h2>選取結果與個人紀錄</h2>
+                        <table>
+                            <thead><tr><th>日期批次</th><th>學生</th><th>加減分</th><th>個人備註</th><th>本次備註</th></tr></thead>
+                            <tbody>
+                                ${(resultRows.length ? resultRows : [{ 日期批次: '', 學生: '', 加減分: '', 個人備註: '', 本次備註: '' }]).map(row => `
+                                    <tr>
+                                        <td>${escapeHtml(row.日期批次)}</td>
+                                        <td>${escapeHtml(row.學生)}</td>
+                                        <td>${escapeHtml(row.加減分)}</td>
+                                        <td>${escapeHtml(row.個人備註)}</td>
+                                        <td>${escapeHtml(row.本次備註)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                        <h2>加減分統計表</h2>
+                        <table>
+                            <thead><tr><th>學生</th><th>被選取次數</th><th>加分合計</th><th>扣分合計</th><th>總分</th><th>最近紀錄</th></tr></thead>
+                            <tbody>
+                                ${snapshot.scoreStats.map(item => `
+                                    <tr>
+                                        <td>${escapeHtml(item.name)}</td>
+                                        <td>${item.selectedCount}</td>
+                                        <td>${item.bonus}</td>
+                                        <td>${item.penalty}</td>
+                                        <td>${item.total}</td>
+                                        <td>${escapeHtml(item.latestRecord)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                        <h2>分組紀錄</h2>
+                        <table>
+                            <thead><tr><th>分組名稱</th><th>時間</th><th>組別</th><th>學生名單</th><th>組分數</th><th>備註</th></tr></thead>
+                            <tbody>
+                                ${(groupRows.length ? groupRows : [{ 分組名稱: '', 時間: '', 組別: '', 學生名單: '', 組分數: '', 備註: '' }]).map(row => `
+                                    <tr>
+                                        <td>${escapeHtml(row.分組名稱)}</td>
+                                        <td>${escapeHtml(row.時間)}</td>
+                                        <td>${escapeHtml(row.組別)}</td>
+                                        <td>${escapeHtml(row.學生名單)}</td>
+                                        <td>${escapeHtml(row.組分數)}</td>
+                                        <td>${escapeHtml(row.備註)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </body>
+                    </html>
+                `);
+                printWindow.document.close();
+                printWindow.focus();
+                setTimeout(() => printWindow.print(), 300);
+            }
+
+            // 顯示學生列表
+            function displayStudents() {
+                studentList.innerHTML = '';
+                if (students.length === 0) {
+                    studentList.innerHTML = '<p style="text-align: center; color: #6b7280; font-style: italic; padding: 40px;">尚未載入學生資料</p>';
+                    updateGroupStudentPreview();
+                    return;
+                }
+                
+                students.forEach(student => {
+                    const item = document.createElement('div');
+                    item.className = 'student-item';
+                    if (selectedStudents.includes(student)) {
+                        item.classList.add('selected');
+                    }
+                    
+                    item.innerHTML = `
+                        <span>${escapeHtml(student)}</span>
+                        ${isDeleteMode ? '<button class="student-delete">×</button>' : ''}
+                    `;
+                    
+                    item.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('student-delete')) {
+                            deleteStudent(student);
+                        } else if (!isDeleteMode) {
+                            toggleStudentSelection(student);
+                        }
+                    });
+                    
+                    studentList.appendChild(item);
+                });
+                updateGroupStudentPreview();
+            }
+
+            // 刪除單個學生
+            function deleteStudent(student) {
+                if (confirm(`確定要刪除學生「${student}」嗎？`)) {
+                    students = students.filter(s => s !== student);
+                    selectedStudents = selectedStudents.filter(s => s !== student);
+                    studentData.value = students.join('\n');
+                    displayStudents();
+                    updateScoreStats();
+                    showToast(`學生「${student}」已刪除`);
+                }
+            }
+
+            // 切換學生選取狀態
+            function toggleStudentSelection(student) {
+                if (selectedStudents.includes(student)) {
+                    selectedStudents = selectedStudents.filter(s => s !== student);
+                    showToast(`取消選取「${student}」`);
+                } else {
+                    selectedStudents.push(student);
+                    displayResults([student]);
+                    showToast(`選取「${student}」`);
+                }
+                displayStudents();
+                updateScoreStats();
+            }
+
+            // 獲取選取人數
+            function getSelectCount() {
+                if (selectCount.value === 'other') {
+                    const count = parseInt(customCount.value);
+                    return count > 0 ? count : 1;
+                }
+                return parseInt(selectCount.value);
+            }
+
+            // 顯示選取結果
+            function displayResults(newlySelectedStudents, loadedResult = null) {
+                selectionCount++;
+                const date = new Date();
+                const dateString = loadedResult ? loadedResult.date : 
+                    `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')} #${selectionCount}`;
+                
+                const resultCard = document.createElement('div');
+                resultCard.className = 'result-card';
+                
+                const resultHeader = document.createElement('div');
+                resultHeader.className = 'result-header';
+                resultHeader.innerHTML = `
+                    <div class="result-title">🎯 選取 ${escapeHtml(dateString)}</div>
+                    <div class="result-note">
+                        <input type="text" class="form-input" placeholder="輸入本次選取的備註..." 
+                               value="${escapeHtml(loadedResult ? loadedResult.resultNote || '' : '')}" 
+                               style="min-width: 250px;">
+                    </div>
+                    <button class="btn btn-danger btn-sm delete-result-card">🗑️ 刪除</button>
+                `;
+                resultCard.appendChild(resultHeader);
+                
+                const table = document.createElement('table');
+                table.className = 'result-table';
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>學生姓名</th>
+                            <th>加減分</th>
+                            <th>備註</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                `;
+                
+                const tbody = table.querySelector('tbody');
+                newlySelectedStudents.forEach(student => {
+                    const loadedStudent = loadedResult ? loadedResult.students.find(s => s.name === student) : null;
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><strong>${escapeHtml(student)}</strong></td>
+                        <td>
+                            <div class="points-control">
+                                <button class="points-btn btn-danger subtract-point">−</button>
+                                <input type="number" class="points-input" value="${escapeHtml(loadedStudent ? loadedStudent.points : 0)}">
+                                <button class="points-btn btn-secondary add-point">+</button>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="note-control">
+                                <input type="text" class="form-input note-input" value="${escapeHtml(loadedStudent ? loadedStudent.note : '')}" placeholder="輸入備註...">
+                                <select class="form-select note-select" style="min-width: 120px;">
+                                    <option value="">快速備註</option>
+                                    <option value="上課遲到">上課遲到</option>
+                                    <option value="曠課請假">曠課請假</option>
+                                    <option value="表現良好">表現良好</option>
+                                    <option value="睡覺吵鬧">睡覺吵鬧</option>
+                                    <option value="作業缺失">作業缺失</option>
+                                    <option value="積極發言">積極發言</option>
+                                    <option value="協助同學">協助同學</option>
+                                </select>
+                                <button class="voice-btn" title="語音輸入">🎤</button>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="btn btn-danger btn-sm remove-student">移除</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+                resultCard.appendChild(table);
+                results.insertBefore(resultCard, results.firstChild);
+
+                // 為結果卡片添加事件監聽器
+                resultCard.addEventListener('click', (event) => {
+                    if (event.target.classList.contains('add-point')) {
+                        const pointsInput = event.target.previousElementSibling;
+                        pointsInput.value = parseInt(pointsInput.value || 0) + 1;
+                        updateScoreStats();
+                    } else if (event.target.classList.contains('subtract-point')) {
+                        const pointsInput = event.target.nextElementSibling;
+                        pointsInput.value = parseInt(pointsInput.value || 0) - 1;
+                        updateScoreStats();
+                    } else if (event.target.classList.contains('delete-result-card')) {
+                        if (confirm('確定要刪除這一筆選取結果嗎？')) {
+                            resultCard.remove();
+                            updateScoreStats();
+                        }
+                    } else if (event.target.classList.contains('remove-student')) {
+                        const row = event.target.closest('tr');
+                        const table = row.closest('table');
+                        if (confirm('確定要移除這個學生嗎？')) {
+                            row.remove();
+                            if (table.querySelector('tbody').children.length === 0) {
+                                resultCard.remove();
+                            }
+                            updateScoreStats();
+                        }
+                    } else if (event.target.classList.contains('voice-btn')) {
+                        startVoiceInput(event.target);
+                    }
+                });
+
+                resultCard.addEventListener('change', (event) => {
+                    if (event.target.classList.contains('note-select')) {
+                        if (event.target.value) {
+                            const noteInput = event.target.parentElement.querySelector('.note-input');
+                            noteInput.value = event.target.value;
+                            event.target.value = '';
+                            updateScoreStats();
+                        }
+                    }
+                });
+
+                resultCard.addEventListener('input', (event) => {
+                    if (event.target.classList.contains('points-input') ||
+                        event.target.classList.contains('note-input') ||
+                        event.target.closest('.result-note')) {
+                        updateScoreStats();
+                    }
+                });
+
+                updateScoreStats();
+            }
+
+            // 語音輸入功能
+            function startVoiceInput(button) {
+                if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    const recognition = new SpeechRecognition();
+                    
+                    recognition.lang = 'zh-TW';
+                    recognition.interimResults = false;
+                    recognition.maxAlternatives = 1;
+
+                    button.classList.add('recording');
+                    button.textContent = '⏹️';
+                    
+                    recognition.start();
+
+                    recognition.onresult = function(event) {
+                        const speechResult = event.results[0][0].transcript;
+                        const noteInput = button.parentElement.querySelector('.note-input');
+                        noteInput.value += speechResult;
+                        updateScoreStats();
+                        showToast('語音輸入完成');
+                    };
+
+                    recognition.onerror = function(event) {
+                        console.error('語音識別錯誤：', event.error);
+                        showToast('語音識別失敗，請重試', 'error');
+                        button.classList.remove('recording');
+                        button.textContent = '🎤';
+                    };
+
+                    recognition.onend = function() {
+                        button.classList.remove('recording');
+                        button.textContent = '🎤';
+                    };
+                } else {
+                    showToast('您的瀏覽器不支援語音識別功能', 'error');
+                }
+            }
+
+            // 獲取結果資料
+            function getResultsData() {
+                return Array.from(results.querySelectorAll('.result-card')).map(container => {
+                    const titleElement = container.querySelector('.result-title');
+                    const date = titleElement.textContent.replace('🎯 選取 ', '');
+                    const resultNote = container.querySelector('.result-note input').value;
+                    const students = Array.from(container.querySelectorAll('tbody tr')).map(row => ({
+                        name: row.cells[0].textContent.trim(),
+                        points: parseInt(row.cells[1].querySelector('.points-input').value || 0),
+                        note: row.cells[2].querySelector('.note-input').value
+                    }));
+                    return { date, students, resultNote };
+                });
+            }
+
+            // 儲存資料
+            function saveDataWithName(name) {
+                const existingData = JSON.parse(localStorage.getItem(APP_PREFIX + name) || '{}');
+                const data = {
+                    ...existingData,
+                    schoolYear: existingData.schoolYear || DEFAULT_SCHOOL_YEAR,
+                    semester: existingData.semester || DEFAULT_SEMESTER,
+                    className: existingData.className || getCurrentClassName(),
+                    students,
+                    selectedStudents,
+                    results: getResultsData(),
+                    groupHistory,
+                    scoreStats: calculateScoreStats(),
+                    updatedAt: new Date().toISOString()
+                };
+                localStorage.setItem(APP_PREFIX + name, JSON.stringify(data));
+                activeClassKey = name;
+                showToast('資料儲存成功！');
+                updateSavedDataList();
+                updateActiveClassSelector();
+            }
+
+            // 載入資料
+            function loadData(name) {
+                const data = JSON.parse(localStorage.getItem(APP_PREFIX + name));
+                if (!data) {
+                    showToast('找不到該資料', 'error');
+                    return;
+                }
+                
+                activeClassKey = name;
+                activeClassStatus.value = data.className || '未命名班級';
+                students = data.students || [];
+                selectedStudents = data.selectedStudents || [];
+                groupHistory = Array.isArray(data.groupHistory) ? data.groupHistory : [];
+                studentData.value = students.join('\n');
+                displayStudents();
+                results.innerHTML = '';
+                selectionCount = 0;
+                
+                if (data.results) {
+                    data.results.slice().reverse().forEach(result => {
+                        displayResults(result.students.map(s => s.name), result);
+                    });
+                    selectionCount = data.results.length;
+                }
+                renderGroupResults();
+                updateScoreStats();
+                updateSavedDataList();
+                updateActiveClassSelector();
+                const loadedKey = findSavedDataKey(data.schoolYear, data.semester, data.className);
+                if (loadedKey) {
+                    activeClassSelector.value = loadedKey.slice(APP_PREFIX.length);
+                    displayFilteredData();
+                }
+                switchTab('select');
+                
+                showToast('資料載入成功！');
+            }
+
+            // 刪除儲存的資料
+            function deleteDataFromStorage(name) {
+                localStorage.removeItem(APP_PREFIX + name);
+                if (activeClassKey === name) {
+                    clearCurrentClassView();
+                }
+                showToast('資料刪除成功！');
+                updateSavedDataList();
+                updateActiveClassSelector();
+                displayFilteredData();
+            }
+
+            // 更新已儲存資料列表
+            function updateSavedDataList() {
+            }
+
+            // 更新篩選器選項
+            function updateFilterOptions(selectElement, options) {
+                const currentValue = selectElement.value;
+                selectElement.innerHTML = '<option value="">全部</option>';
+                options.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option;
+                    optionElement.textContent = option;
+                    selectElement.appendChild(optionElement);
+                });
+                if (options.includes(currentValue)) {
+                    selectElement.value = currentValue;
+                }
+            }
+
+            // 顯示篩選後的資料
+            function displayFilteredData() {
+                updateActiveClassSelector();
+            }
+
+            // 初始化
+            updateSavedDataList();
+            updateActiveClassSelector();
+            updateScoreStats();
+            updateExportDataView();
+            updateGroupingModeFields();
+            updateGroupStudentPreview();
+            renderGroupResults();
+
+            // 載入時顯示提示
+            if (localStorage.length === 0) {
+                showToast('歡迎使用學生選取、分組與紀錄程式！');
+            }
+        });
+    </script>
+</body>
+</html>
+                        

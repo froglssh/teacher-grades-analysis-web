@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b1020">
+<title>旅遊記帳 · 貨幣換算</title>
+<style>
+  :root{
+    --bg:#0b1020;
+    --bg2:#131a30;
+    --glass:rgba(255,255,255,0.07);
+    --glass-strong:rgba(255,255,255,0.12);
+    --stroke:rgba(255,255,255,0.14);
+    --txt:#eaf0ff;
+    --muted:#93a0c2;
+    --accent:#5b8cff;
+    --accent2:#22d3a6;
+    --danger:#ff6b6b;
+    --warn:#ffb84d;
+    --radius:18px;
+    --safe-b:env(safe-area-inset-bottom,0px);
+    --cat-food:#ff8a65; --cat-transport:#4dd0e1; --cat-lodging:#9575cd;
+    --cat-shopping:#f06292; --cat-entertainment:#ffd54f; --cat-grocery:#81c784; --cat-other:#90a4ae;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Noto Sans TC",Roboto,sans-serif;
+    color:var(--txt);
+    background:
+      radial-gradient(1200px 600px at 10% -10%,#1b2a55 0%,transparent 55%),
+      radial-gradient(1000px 600px at 110% 10%,#1d3a4d 0%,transparent 50%),
+      linear-gradient(160deg,var(--bg) 0%,var(--bg2) 100%);
+    background-attachment:fixed;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{max-width:540px;margin:0 auto;padding:14px 14px calc(96px + var(--safe-b));}
+  header.top{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:8px 4px 14px;
+  }
+  header.top .title{font-size:1.25rem;font-weight:800;letter-spacing:.5px;}
+  header.top .ledger-pill{
+    display:flex;align-items:center;gap:6px;
+    background:var(--glass);border:1px solid var(--stroke);
+    padding:7px 12px;border-radius:999px;font-size:.85rem;color:var(--muted);
+    cursor:pointer;backdrop-filter:blur(10px);
+  }
+  .ledger-pill b{color:var(--txt);font-weight:700;}
+
+  .card{
+    background:var(--glass);
+    border:1px solid var(--stroke);
+    border-radius:var(--radius);
+    padding:16px;
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    box-shadow:0 8px 30px rgba(0,0,0,.25);
+    margin-bottom:14px;
+  }
+  .card h2{margin:0 0 12px;font-size:1rem;font-weight:700;color:var(--txt);display:flex;align-items:center;gap:8px;}
+  .card h2 .sub{font-size:.75rem;color:var(--muted);font-weight:500;margin-left:auto;}
+
+  label{display:block;font-size:.82rem;color:var(--muted);margin:0 0 6px;font-weight:600;}
+  input,select,textarea{
+    width:100%;background:rgba(0,0,0,.25);color:var(--txt);
+    border:1.5px solid var(--stroke);border-radius:12px;
+    padding:13px 14px;font-size:1rem;outline:none;transition:border-color .2s,background .2s;
+    font-family:inherit;
+  }
+  input:focus,select:focus,textarea:focus{border-color:var(--accent);background:rgba(0,0,0,.35);}
+  select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2393a0c2' stroke-width='3'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px;}
+  .row{display:flex;gap:10px;}
+  .row>*{flex:1;min-width:0;}
+  .field{margin-bottom:12px;}
+
+  .stepper{display:flex;align-items:stretch;gap:8px;}
+  .stepper input{text-align:center;font-weight:700;font-size:1.15rem;}
+  .stepper button{
+    width:48px;flex:0 0 48px;border:1.5px solid var(--stroke);background:var(--glass-strong);
+    color:var(--txt);font-size:1.5rem;border-radius:12px;cursor:pointer;line-height:1;font-weight:600;
+  }
+  .stepper button:active{transform:scale(.95);}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+  .chip{
+    background:var(--glass);border:1.5px solid var(--stroke);color:var(--muted);
+    padding:8px 13px;border-radius:999px;font-size:.85rem;cursor:pointer;transition:.18s;font-weight:600;
+    display:flex;align-items:center;gap:5px;
+  }
+  .chip:active{transform:scale(.96);}
+  .chip.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .chip.cat.active{color:#0b1020;}
+
+  .swap-row{display:flex;align-items:flex-end;gap:8px;}
+  .swap-row .field{flex:1;margin-bottom:0;}
+  .swap-btn{
+    flex:0 0 46px;height:48px;border-radius:12px;border:1.5px solid var(--stroke);
+    background:var(--glass-strong);color:var(--accent);font-size:1.3rem;cursor:pointer;margin-bottom:0;
+  }
+  .swap-btn:active{transform:rotate(180deg);}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    border:none;border-radius:14px;padding:14px 16px;font-size:1.02rem;font-weight:700;
+    cursor:pointer;width:100%;transition:transform .1s,filter .2s;color:#fff;font-family:inherit;
+  }
+  .btn:active{transform:scale(.985);}
+  .btn-primary{background:linear-gradient(135deg,#5b8cff,#7a6bff);}
+  .btn-accent{background:linear-gradient(135deg,#22d3a6,#1aa37e);color:#04241b;}
+  .btn-ghost{background:var(--glass-strong);border:1.5px solid var(--stroke);color:var(--txt);}
+  .btn-danger{background:linear-gradient(135deg,#ff6b6b,#e04848);}
+  .btn-sm{padding:10px 12px;font-size:.9rem;border-radius:11px;width:auto;}
+  .btn-row{display:flex;gap:10px;}
+
+  .result{
+    text-align:center;padding:18px 12px;border-radius:16px;margin-top:14px;
+    background:linear-gradient(135deg,rgba(91,140,255,.18),rgba(34,211,166,.14));
+    border:1px solid var(--stroke);opacity:0;transform:translateY(8px);transition:.35s;
+  }
+  .result.show{opacity:1;transform:translateY(0);}
+  .result .from-amt{font-size:1.3rem;font-weight:700;color:var(--muted);}
+  .result .arrow{font-size:1.2rem;color:var(--muted);margin:4px 0;}
+  .result .to-amt{font-size:2.3rem;font-weight:850;background:linear-gradient(135deg,#7ee8c6,#5b8cff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+  .result .rate{font-size:.82rem;color:var(--muted);margin-top:8px;}
+  .result .meta{font-size:.9rem;color:var(--accent);margin-bottom:6px;font-weight:600;}
+
+  .rate-live{font-size:.82rem;color:var(--muted);text-align:center;margin-top:6px;min-height:1.1em;}
+  .rate-live .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent2);margin-right:5px;vertical-align:middle;}
+  .rate-live.offline .dot{background:var(--warn);}
+
+  /* records */
+  .budget-wrap{margin-top:4px;}
+  .budget-bar{height:10px;border-radius:999px;background:rgba(0,0,0,.3);overflow:hidden;margin:8px 0 6px;}
+  .budget-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#22d3a6,#5b8cff);transition:width .5s;}
+  .budget-fill.over{background:linear-gradient(90deg,#ffb84d,#ff6b6b);}
+  .budget-nums{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);}
+  .budget-nums b{color:var(--txt);}
+
+  .day-group{margin-bottom:14px;}
+  .day-head{display:flex;justify-content:space-between;align-items:baseline;padding:4px 2px 8px;font-size:.85rem;color:var(--muted);font-weight:600;}
+  .day-head .day-total{color:var(--txt);font-weight:700;}
+  .rec{
+    display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;
+    background:var(--glass);border:1px solid var(--stroke);margin-bottom:8px;
+  }
+  .rec .ic{width:42px;height:42px;flex:0 0 42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;background:rgba(255,255,255,.08);}
+  .rec .info{flex:1;min-width:0;}
+  .rec .info .name{font-weight:700;font-size:.98rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .rec .info .sub{font-size:.78rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .rec .amt{text-align:right;}
+  .rec .amt .home{font-weight:800;font-size:1.02rem;}
+  .rec .amt .orig{font-size:.76rem;color:var(--muted);}
+  .rec .del{flex:0 0 auto;background:none;border:none;color:var(--danger);font-size:1.2rem;cursor:pointer;padding:4px 2px;opacity:.7;}
+
+  .empty{text-align:center;color:var(--muted);padding:30px 10px;font-size:.92rem;}
+  .empty .big{font-size:2.4rem;display:block;margin-bottom:8px;opacity:.6;}
+
+  /* stats */
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .stat-box{background:var(--glass);border:1px solid var(--stroke);border-radius:14px;padding:13px;}
+  .stat-box .k{font-size:.76rem;color:var(--muted);}
+  .stat-box .v{font-size:1.35rem;font-weight:800;margin-top:3px;}
+  .donut-wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;}
+  .legend{flex:1;min-width:140px;}
+  .legend .li{display:flex;align-items:center;gap:8px;font-size:.85rem;padding:4px 0;}
+  .legend .sw{width:12px;height:12px;border-radius:4px;flex:0 0 12px;}
+  .legend .li .pct{margin-left:auto;color:var(--muted);font-weight:600;}
+  .bars{display:flex;align-items:flex-end;gap:6px;height:120px;padding-top:10px;}
+  .bars .b{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;height:100%;}
+  .bars .b .col{width:100%;max-width:26px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,#5b8cff,#22d3a6);min-height:3px;transition:height .4s;}
+  .bars .b .lab{font-size:.68rem;color:var(--muted);}
+
+  /* settings list */
+  .list-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--stroke);}
+  .list-item:last-child{border-bottom:none;}
+  .list-item .t{flex:1;}
+  .list-item .t .n{font-weight:600;}
+  .list-item .t .d{font-size:.78rem;color:var(--muted);}
+  .tag{font-size:.68rem;padding:2px 8px;border-radius:999px;background:var(--accent);color:#fff;font-weight:700;}
+
+  /* bottom nav */
+  nav.tabbar{
+    position:fixed;left:0;right:0;bottom:0;z-index:50;
+    display:flex;justify-content:space-around;
+    padding:8px 8px calc(8px + var(--safe-b));
+    background:rgba(11,16,32,.78);
+    border-top:1px solid var(--stroke);
+    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  }
+  nav.tabbar .tab{
+    flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+    background:none;border:none;color:var(--muted);font-size:.7rem;cursor:pointer;padding:6px 2px;font-family:inherit;font-weight:600;
+  }
+  nav.tabbar .tab .i{font-size:1.35rem;line-height:1;}
+  nav.tabbar .tab.active{color:var(--accent);}
+  nav.tabbar .tab.active .i{transform:translateY(-1px);}
+
+  .page{display:none;animation:fade .3s ease;}
+  .page.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  /* modal */
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:100;display:none;align-items:flex-end;justify-content:center;}
+  .modal-bg.show{display:flex;}
+  .modal{
+    width:100%;max-width:540px;background:linear-gradient(160deg,#161d33,#10162a);
+    border:1px solid var(--stroke);border-radius:22px 22px 0 0;padding:20px 16px calc(20px + var(--safe-b));
+    animation:slideup .3s ease;max-height:88vh;overflow-y:auto;
+  }
+  @keyframes slideup{from{transform:translateY(100%);}to{transform:translateY(0);}}
+  .modal h3{margin:0 0 14px;font-size:1.1rem;}
+  .modal .grab{width:40px;height:4px;border-radius:999px;background:var(--stroke);margin:0 auto 14px;}
+
+  .voice{flex:0 0 48px;width:48px;height:48px;border-radius:12px;border:1.5px solid var(--stroke);background:var(--glass-strong);color:var(--accent2);font-size:1.2rem;cursor:pointer;}
+  .voice.rec{background:var(--danger);color:#fff;}
+  .with-voice{display:flex;gap:8px;}
+  .with-voice input{flex:1;}
+
+  .toast{
+    position:fixed;left:50%;bottom:calc(96px + var(--safe-b));transform:translateX(-50%) translateY(20px);
+    background:rgba(20,28,50,.95);border:1px solid var(--stroke);color:var(--txt);
+    padding:11px 18px;border-radius:999px;font-size:.9rem;z-index:200;opacity:0;transition:.3s;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.4);
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .hint{font-size:.76rem;color:var(--muted);margin-top:6px;line-height:1.5;}
+  .photo-preview{position:relative;display:inline-block;}
+  .photo-preview img{width:100%;max-height:200px;object-fit:cover;border-radius:12px;border:1px solid var(--stroke);display:block;}
+  .photo-preview .rm{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:none;background:rgba(0,0,0,.6);color:#fff;font-size:1rem;cursor:pointer;}
+  .rec-thumb{width:40px;height:40px;flex:0 0 40px;border-radius:9px;object-fit:cover;cursor:pointer;border:1px solid var(--stroke);}
+  .split-out{margin-top:12px;padding:14px;border-radius:14px;background:var(--glass);border:1px solid var(--stroke);text-align:center;}
+  .split-out .per{font-size:2rem;font-weight:850;color:var(--accent2);}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="title">✈️ 旅遊記帳</div>
+    <div class="ledger-pill" onclick="openLedgerModal()">
+      <span>📒</span><b id="activeLedgerName">預設帳本</b><span>▾</span>
+    </div>
+  </header>
+
+  <!-- ============ 換算 ============ -->
+  <section class="page active" id="page-convert">
+    <div class="card">
+      <h2>💱 貨幣換算 <span class="sub" id="homeCurHint"></span></h2>
+
+      <div class="field">
+        <label>金額</label>
+        <div class="stepper">
+          <button onclick="adjustAmount(-1)">−</button>
+          <input type="number" id="amount" inputmode="decimal" min="0" step="0.01" value="100">
+          <button onclick="adjustAmount(1)">+</button>
+        </div>
+        <div class="chips">
+          <span class="chip" onclick="setAmount(10)">10</span>
+          <span class="chip" onclick="setAmount(50)">50</span>
+          <span class="chip" onclick="setAmount(100)">100</span>
+          <span class="chip" onclick="setAmount(500)">500</span>
+          <span class="chip" onclick="setAmount(1000)">1000</span>
+          <span class="chip" onclick="setAmount(5000)">5000</span>
+          <span class="chip" onclick="setAmount(10000)">10000</span>
+        </div>
+      </div>
+
+      <div class="swap-row">
+        <div class="field">
+          <label>從</label>
+          <select id="fromCurrency" onchange="updateLiveRate()"></select>
+        </div>
+        <button class="swap-btn" onclick="swapCurrencies()" title="對調">⇄</button>
+        <div class="field">
+          <label>到</label>
+          <select id="toCurrency" onchange="updateLiveRate()"></select>
+        </div>
+      </div>
+      <div class="rate-live" id="liveRate"></div>
+
+      <div class="result" id="resultBox">
+        <div class="meta" id="resultMeta"></div>
+        <div class="from-amt" id="resultFrom"></div>
+        <div class="arrow">↓</div>
+        <div class="to-amt" id="resultTo"></div>
+        <div class="rate" id="resultRate"></div>
+      </div>
+
+      <div class="btn-row" style="margin-top:14px;">
+        <button class="btn btn-primary" onclick="convertCurrency()">換算</button>
+        <button class="btn btn-accent" onclick="openRecordModal()">＋ 記下這筆</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🔎 快速工具</h2>
+      <div class="btn-row">
+        <button class="btn btn-ghost btn-sm" style="flex:1" onclick="searchRate()">Google 匯率</button>
+        <button class="btn btn-ghost btn-sm" style="flex:1" onclick="openTranslate()">翻譯</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 記帳 ============ -->
+  <section class="page" id="page-records">
+    <div class="card">
+      <h2>📊 預算 <span class="sub" id="budgetSub"></span></h2>
+      <div class="budget-wrap">
+        <div class="budget-bar"><div class="budget-fill" id="budgetFill" style="width:0%"></div></div>
+        <div class="budget-nums">
+          <span>已花 <b id="spentNum">0</b></span>
+          <span>剩餘 <b id="remainNum">—</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🧾 消費紀錄 <span class="sub" id="recCount"></span></h2>
+      <div class="chips" id="filterChips"></div>
+      <div id="recordList" style="margin-top:12px;"></div>
+    </div>
+  </section>
+
+  <!-- ============ 統計 ============ -->
+  <section class="page" id="page-stats">
+    <div class="card">
+      <h2>📈 總覽</h2>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="k">總支出</div><div class="v" id="stTotal">—</div></div>
+        <div class="stat-box"><div class="k">天數</div><div class="v" id="stDays">—</div></div>
+        <div class="stat-box"><div class="k">日均</div><div class="v" id="stAvg">—</div></div>
+        <div class="stat-box"><div class="k">筆數</div><div class="v" id="stCount">—</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>🍩 分類佔比</h2>
+      <div class="donut-wrap">
+        <svg id="donut" width="150" height="150" viewBox="0 0 42 42"></svg>
+        <div class="legend" id="donutLegend"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>📅 每日花費</h2>
+      <div class="bars" id="dailyBars"></div>
+    </div>
+  </section>
+
+  <!-- ============ 設定/工具 ============ -->
+  <section class="page" id="page-settings">
+    <div class="card">
+      <h2>🌐 本國貨幣</h2>
+      <label>記帳統一換算為</label>
+      <select id="homeCurrency" onchange="setHomeCurrency()"></select>
+      <div class="hint">所有紀錄會依當下匯率換算成本國貨幣，方便統計總支出。</div>
+    </div>
+
+    <div class="card">
+      <h2>💸 AA 分帳計算機</h2>
+      <div class="row">
+        <div class="field"><label>總金額</label><input type="number" id="splitTotal" inputmode="decimal" placeholder="0"></div>
+        <div class="field"><label>人數</label><input type="number" id="splitPeople" inputmode="numeric" min="1" value="2"></div>
+      </div>
+      <button class="btn btn-accent" onclick="calcSplit()">計算每人應付</button>
+      <div class="split-out" id="splitOut" style="display:none;">
+        <div>每人應付</div><div class="per" id="splitPer">—</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📒 帳本管理</h2>
+      <div id="ledgerList"></div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:10px;width:100%" onclick="addLedger()">＋ 新增旅程帳本</button>
+    </div>
+
+    <div class="card">
+      <h2>🏷️ 分類管理</h2>
+      <div id="categoryMgmtList"></div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:10px;width:100%" onclick="addCategory(false)">＋ 新增類別</button>
+    </div>
+
+    <div class="card">
+      <h2>💱 貨幣管理</h2>
+      <div id="currencyMgmtList"></div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:10px;width:100%" onclick="addCurrency()">＋ 新增貨幣</button>
+    </div>
+
+    <div class="card">
+      <h2>🔒 資料記憶狀態</h2>
+      <div id="storageStatus"></div>
+      <div class="hint">資料會在每次操作後自動儲存於此瀏覽器，關閉瀏覽器或手機後仍會保留，下次開啟自動還原。<br>
+      ⚠️ 注意：iOS Safari 若超過約 7～14 天完全沒開啟此頁面，系統可能清除資料；長期保存或換手機前，請用下方「備份 JSON」匯出。</div>
+    </div>
+
+    <div class="card">
+      <h2>💾 資料</h2>
+      <div class="btn-row" style="margin-bottom:10px;">
+        <button class="btn btn-ghost btn-sm" style="flex:1" onclick="exportCSV()">匯出 CSV</button>
+        <button class="btn btn-ghost btn-sm" style="flex:1" onclick="exportJSON()">備份 JSON</button>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="width:100%;margin-bottom:10px;" onclick="document.getElementById('importFile').click()">⤴️ 還原備份 (JSON)</button>
+      <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importJSON(event)">
+      <button class="btn btn-danger" onclick="clearAllData()">清除目前帳本紀錄</button>
+      <div class="hint">資料儲存在此瀏覽器（localStorage），不會上傳雲端。換手機請先備份。</div>
+    </div>
+  </section>
+</div>
+
+<!-- bottom nav -->
+<nav class="tabbar">
+  <button class="tab active" data-tab="convert" onclick="switchTab('convert')"><span class="i">💱</span>換算</button>
+  <button class="tab" data-tab="records" onclick="switchTab('records')"><span class="i">🧾</span>記帳</button>
+  <button class="tab" data-tab="stats" onclick="switchTab('stats')"><span class="i">📈</span>統計</button>
+  <button class="tab" data-tab="settings" onclick="switchTab('settings')"><span class="i">⚙️</span>設定</button>
+</nav>
+
+<!-- record modal -->
+<div class="modal-bg" id="recordModalBg">
+  <div class="modal">
+    <div class="grab"></div>
+    <h3>＋ 新增一筆消費</h3>
+    <div class="field">
+      <label>分類</label>
+      <div class="chips" id="catChips"></div>
+    </div>
+    <div class="field">
+      <label>名稱</label>
+      <div class="with-voice">
+        <input type="text" id="recName" placeholder="例如：拉麵、地鐵票">
+        <button class="voice" onclick="voice('recName',this)">🎤</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>地點（選填）</label>
+      <div class="with-voice">
+        <input type="text" id="recLocation" placeholder="例如：東京、新宿">
+        <button class="voice" onclick="voice('recLocation',this)">🎤</button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field"><label>金額</label><input type="number" id="recAmount" inputmode="decimal" step="0.01"></div>
+      <div class="field"><label>數量</label><input type="number" id="recQty" inputmode="numeric" min="1" value="1"></div>
+    </div>
+    <div class="field">
+      <label>幣別</label>
+      <select id="recCurrency"></select>
+    </div>
+    <div class="field">
+      <label>備註（選填）</label>
+      <input type="text" id="recNote" placeholder="想記下的細節">
+    </div>
+    <div class="field">
+      <label>照片（選填，例如收據／商品）</label>
+      <input type="file" id="recPhotoInput" accept="image/*" style="display:none" onchange="onPhotoSelected(event)">
+      <div id="photoArea"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="closeRecordModal()">取消</button>
+      <button class="btn btn-accent" onclick="saveRecord()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ledger switch modal -->
+<div class="modal-bg" id="ledgerModalBg">
+  <div class="modal">
+    <div class="grab"></div>
+    <h3>📒 切換帳本</h3>
+    <div id="ledgerSwitchList"></div>
+    <button class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%" onclick="addLedger()">＋ 新增旅程帳本</button>
+    <button class="btn btn-ghost" style="margin-top:10px" onclick="closeLedgerModal()">關閉</button>
+  </div>
+</div>
+
+<!-- photo viewer -->
+<div class="modal-bg" id="photoViewBg" style="align-items:center;z-index:150;" onclick="closePhotoView()">
+  <img id="photoViewImg" alt="照片" style="max-width:92%;max-height:86vh;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.6);">
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   旅遊記帳 · 貨幣換算  —  純前端，資料存 localStorage
+   ========================================================= */
+const STORE_KEY = 'travelExpenseApp_v2';
+const RATE_API = base => `https://open.er-api.com/v6/latest/${base}`;
+
+const DEFAULT_CATEGORIES = [
+  {id:'food',          name:'餐飲', icon:'🍜', color:'#ff8a65'},
+  {id:'transport',     name:'交通', icon:'🚆', color:'#4dd0e1'},
+  {id:'lodging',       name:'住宿', icon:'🏨', color:'#9575cd'},
+  {id:'shopping',      name:'購物', icon:'🛍️', color:'#f06292'},
+  {id:'entertainment', name:'娛樂', icon:'🎡', color:'#ffd54f'},
+  {id:'grocery',       name:'超市', icon:'🛒', color:'#81c784'},
+  {id:'other',         name:'其他', icon:'💡', color:'#90a4ae'}
+];
+const CAT_PALETTE = ['#5b8cff','#22d3a6','#ff6b6b','#ffb84d','#ba68c8','#4db6ac','#f48fb1','#aed581','#7986cb','#ffd54f'];
+const catById = id => state.categories.find(c=>c.id===id) || state.categories[state.categories.length-1];
+
+const DEFAULT_CURRENCIES = [
+  {code:'TWD',name:'新台幣',flag:'🇹🇼'},{code:'JPY',name:'日圓',flag:'🇯🇵'},
+  {code:'USD',name:'美元',flag:'🇺🇸'},{code:'KRW',name:'韓元',flag:'🇰🇷'},
+  {code:'EUR',name:'歐元',flag:'🇪🇺'},{code:'CNY',name:'人民幣',flag:'🇨🇳'},
+  {code:'GBP',name:'英鎊',flag:'🇬🇧'},{code:'THB',name:'泰銖',flag:'🇹🇭'},
+  {code:'HKD',name:'港幣',flag:'🇭🇰'},{code:'SGD',name:'新加坡幣',flag:'🇸🇬'},
+  {code:'AUD',name:'澳幣',flag:'🇦🇺'},{code:'VND',name:'越南盾',flag:'🇻🇳'}
+];
+
+/* ---------- state ---------- */
+let state = {
+  settings:{ homeCurrency:'TWD' },
+  categories: JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)),
+  currencies: JSON.parse(JSON.stringify(DEFAULT_CURRENCIES)),
+  ledgers:[],
+  activeLedgerId:null,
+  records:[],          // {id,ledgerId,catId,name,location,amount,currency,qty,note,homeAmount,rate,ts}
+  ratesCache:{}        // base -> {rates,ts}
+};
+let activeFilter = 'all';
+let selectedCat = 'food';
+
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+/* ---------- persistence (long-term browser memory) ---------- */
+let storageOK = true;        // 上次寫入是否成功
+let persistGranted = null;   // 瀏覽器是否授予持久化儲存
+
+function save(){
+  try{
+    state.settings.lastSaved = Date.now();
+    const json = JSON.stringify(state);
+    localStorage.setItem(STORE_KEY, json);
+    localStorage.setItem(STORE_KEY+'_bak', json); // 備援副本，防主鍵損毀
+    storageOK = true;
+  }catch(e){
+    storageOK = false;
+    console.error('save failed',e);
+    toast('⚠️ 儲存失敗：瀏覽器空間不足或停用了本機儲存');
+  }
+  if(document.getElementById('page-settings').classList.contains('active')) renderStorageStatus();
+}
+
+function parseSafe(raw){ try{ return raw?JSON.parse(raw):null; }catch(e){ return null; } }
+
+function load(){
+  // 先讀主鍵，失敗則用備援副本還原
+  let parsed = parseSafe(localStorage.getItem(STORE_KEY));
+  if(!parsed){
+    parsed = parseSafe(localStorage.getItem(STORE_KEY+'_bak'));
+    if(parsed){ console.warn('主資料損毀，已由備份還原'); }
+  }
+  if(parsed){
+    state = Object.assign(state, parsed);
+    if(!state.currencies||!state.currencies.length) state.currencies=JSON.parse(JSON.stringify(DEFAULT_CURRENCIES));
+    if(!state.categories||!state.categories.length) state.categories=JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+  }
+  if(!state.ledgers.length){
+    const id=uid();
+    state.ledgers=[{id,name:'預設帳本',budget:0,homeCurrency:state.settings.homeCurrency}];
+    state.activeLedgerId=id;
+  }
+  if(!state.activeLedgerId) state.activeLedgerId=state.ledgers[0].id;
+}
+function activeLedger(){ return state.ledgers.find(l=>l.id===state.activeLedgerId)||state.ledgers[0]; }
+function ledgerRecords(){ return state.records.filter(r=>r.ledgerId===state.activeLedgerId); }
+
+/* ---------- toast ---------- */
+let toastTimer;
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+/* ---------- tabs ---------- */
+function switchTab(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.tabbar .tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
+  if(name==='records') renderRecords();
+  if(name==='stats') renderStats();
+  if(name==='settings') renderSettings();
+  window.scrollTo(0,0);
+}
+
+/* ---------- currency dropdowns ---------- */
+function curLabel(c){ return `${c.flag} ${c.code} · ${c.name}`; }
+function fillSelect(sel, selected){
+  sel.innerHTML='';
+  state.currencies.forEach(c=> sel.add(new Option(curLabel(c), c.code)));
+  if(selected) sel.value=selected;
+}
+function populateAllSelects(){
+  fillSelect(document.getElementById('fromCurrency'),
+    document.getElementById('fromCurrency').value || state.settings.homeCurrency);
+  fillSelect(document.getElementById('toCurrency'),
+    document.getElementById('toCurrency').value || 'JPY');
+  fillSelect(document.getElementById('recCurrency'),
+    document.getElementById('recCurrency').value || 'JPY');
+  const hc=document.getElementById('homeCurrency');
+  fillSelect(hc, state.settings.homeCurrency);
+  document.getElementById('homeCurHint').textContent='本國：'+state.settings.homeCurrency;
+}
+
+/* ---------- amount steppers ---------- */
+function setAmount(v){ document.getElementById('amount').value=v; updateLiveRate(); }
+function adjustAmount(d){
+  const el=document.getElementById('amount');
+  let v=parseFloat(el.value)||0; v=Math.max(0,v+d); el.value=v%1===0?v:v.toFixed(2);
+}
+function swapCurrencies(){
+  const f=document.getElementById('fromCurrency'), t=document.getElementById('toCurrency');
+  const tmp=f.value; f.value=t.value; t.value=tmp; updateLiveRate(); convertCurrency(true);
+}
+
+/* ---------- exchange rates (live + offline cache) ---------- */
+async function getRates(base){
+  // try fresh fetch; fall back to cache
+  try{
+    const res = await fetch(RATE_API(base));
+    const data = await res.json();
+    if(data && data.rates){
+      state.ratesCache[base]={rates:data.rates, ts:Date.now()};
+      save();
+      return {rates:data.rates, live:true};
+    }
+  }catch(e){ /* offline */ }
+  if(state.ratesCache[base]) return {rates:state.ratesCache[base].rates, live:false, ts:state.ratesCache[base].ts};
+  return null;
+}
+async function getRate(from,to){
+  if(from===to) return {rate:1, live:true};
+  const r = await getRates(from);
+  if(r && r.rates[to]!=null) return {rate:r.rates[to], live:r.live, ts:r.ts};
+  // try inverse via cache of `to`
+  const r2 = state.ratesCache[to];
+  if(r2 && r2.rates[from]) return {rate:1/r2.rates[from], live:false, ts:r2.ts};
+  return null;
+}
+
+async function updateLiveRate(){
+  const from=document.getElementById('fromCurrency').value;
+  const to=document.getElementById('toCurrency').value;
+  const box=document.getElementById('liveRate');
+  box.textContent='讀取匯率中…';
+  const r=await getRate(from,to);
+  if(!r){ box.classList.add('offline'); box.innerHTML='<span class="dot"></span>無法取得匯率（離線且無快取）'; return; }
+  box.classList.toggle('offline',!r.live);
+  const tag = r.live ? '即時' : ('離線快取 · '+ (r.ts?new Date(r.ts).toLocaleDateString():'') );
+  box.innerHTML=`<span class="dot"></span>${tag}：1 ${from} = ${fmt(r.rate)} ${to}`;
+}
+
+function fmt(n){
+  if(n==null||isNaN(n)) return '—';
+  const a=Math.abs(n);
+  if(a>=100) return n.toLocaleString('en-US',{maximumFractionDigits:0});
+  if(a>=1)   return n.toLocaleString('en-US',{maximumFractionDigits:2});
+  return n.toLocaleString('en-US',{maximumFractionDigits:5});
+}
+
+/* ---------- convert ---------- */
+async function convertCurrency(silent){
+  const amount=parseFloat(document.getElementById('amount').value)||0;
+  const from=document.getElementById('fromCurrency').value;
+  const to=document.getElementById('toCurrency').value;
+  const r=await getRate(from,to);
+  if(!r){ toast('無法取得匯率，請連網後再試'); return; }
+  const result=amount*r.rate;
+  const fc=state.currencies.find(c=>c.code===from), tc=state.currencies.find(c=>c.code===to);
+  document.getElementById('resultMeta').textContent = r.live?'即時匯率':'離線快取匯率';
+  document.getElementById('resultFrom').textContent=`${fc.flag} ${fmt(amount)} ${from}`;
+  document.getElementById('resultTo').textContent=`${tc.flag} ${fmt(result)} ${to}`;
+  document.getElementById('resultRate').textContent=`1 ${from} = ${fmt(r.rate)} ${to}`;
+  const box=document.getElementById('resultBox'); box.classList.add('show');
+}
+
+/* ---------- record modal ---------- */
+function renderCatChips(){
+  const wrap=document.getElementById('catChips'); wrap.innerHTML='';
+  state.categories.forEach(c=>{
+    const el=document.createElement('span');
+    el.className='chip cat'+(c.id===selectedCat?' active':'');
+    el.style.cssText = c.id===selectedCat ? `background:${c.color};border-color:${c.color}` : '';
+    el.innerHTML=`${c.icon} ${c.name}`;
+    el.onclick=()=>{ selectedCat=c.id; renderCatChips(); };
+    wrap.appendChild(el);
+  });
+  const add=document.createElement('span');
+  add.className='chip'; add.style.borderStyle='dashed';
+  add.innerHTML='＋ 新增類別';
+  add.onclick=()=>addCategory(true);
+  wrap.appendChild(add);
+}
+
+function addCategory(selectAfter){
+  const name=prompt('新類別名稱（例如：景點門票）：');
+  if(!name||!name.trim()) return;
+  if(state.categories.some(c=>c.name===name.trim())){ toast('已有同名類別'); return; }
+  const icon=(prompt('類別圖示 emoji（可留空）：')||'🏷️').trim()||'🏷️';
+  const color=CAT_PALETTE[state.categories.length % CAT_PALETTE.length];
+  const cat={ id:'c_'+uid(), name:name.trim(), icon, color, custom:true };
+  state.categories.push(cat); save();
+  if(selectAfter){ selectedCat=cat.id; renderCatChips(); }
+  if(document.getElementById('page-settings').classList.contains('active')) renderSettings();
+  toast('已新增類別 '+icon+' '+cat.name);
+}
+function removeCategory(id){
+  const c=catById(id);
+  if(state.records.some(r=>r.catId===id)){ toast('此類別已有紀錄，無法刪除'); return; }
+  if(!confirm('刪除類別「'+c.name+'」？')) return;
+  state.categories=state.categories.filter(x=>x.id!==id);
+  if(selectedCat===id) selectedCat=state.categories[0].id;
+  save(); renderSettings();
+}
+let currentPhoto=null;  // 目前編輯中的照片 dataURL
+
+// 壓縮圖片：縮放至最長邊 1000px、JPEG 品質 0.65，控制體積以便存入瀏覽器
+function compressImage(file, maxDim=1000, quality=0.65){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        let w=img.width, h=img.height;
+        if(w>h && w>maxDim){ h=Math.round(h*maxDim/w); w=maxDim; }
+        else if(h>=w && h>maxDim){ w=Math.round(w*maxDim/h); h=maxDim; }
+        const canvas=document.createElement('canvas'); canvas.width=w; canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        try{ resolve(canvas.toDataURL('image/jpeg',quality)); }catch(e){ reject(e); }
+      };
+      img.onerror=reject; img.src=reader.result;
+    };
+    reader.onerror=reject; reader.readAsDataURL(file);
+  });
+}
+async function onPhotoSelected(ev){
+  const file=ev.target.files[0]; if(!file) return;
+  if(!file.type.startsWith('image/')){ toast('請選擇圖片檔'); return; }
+  toast('照片處理中…');
+  try{
+    currentPhoto=await compressImage(file);
+    renderPhotoArea();
+  }catch(e){ console.error(e); toast('照片讀取失敗'); }
+  ev.target.value='';
+}
+function removePhoto(){ currentPhoto=null; renderPhotoArea(); }
+function renderPhotoArea(){
+  const area=document.getElementById('photoArea');
+  if(currentPhoto){
+    const kb=Math.round(currentPhoto.length*0.73/1024);
+    area.innerHTML=`<div class="photo-preview"><img src="${currentPhoto}"><button type="button" class="rm" onclick="removePhoto()">✕</button></div>
+      <div class="hint">約 ${kb} KB，將隨此筆紀錄一起儲存。</div>`;
+  }else{
+    area.innerHTML=`<button type="button" class="btn btn-ghost" onclick="document.getElementById('recPhotoInput').click()">📷 上傳 / 拍照</button>`;
+  }
+}
+
+function openRecordModal(){
+  renderCatChips();
+  currentPhoto=null; renderPhotoArea();
+  // prefill from converter
+  document.getElementById('recAmount').value=document.getElementById('amount').value||'';
+  document.getElementById('recCurrency').value=document.getElementById('fromCurrency').value;
+  document.getElementById('recQty').value=1;
+  document.getElementById('recName').value='';
+  document.getElementById('recLocation').value='';
+  document.getElementById('recNote').value='';
+  document.getElementById('recordModalBg').classList.add('show');
+}
+function closeRecordModal(){ document.getElementById('recordModalBg').classList.remove('show'); }
+function viewPhoto(id){
+  const r=state.records.find(x=>x.id===id); if(!r||!r.photo) return;
+  document.getElementById('photoViewImg').src=r.photo;
+  document.getElementById('photoViewBg').classList.add('show');
+}
+function closePhotoView(){ document.getElementById('photoViewBg').classList.remove('show'); }
+
+async function saveRecord(){
+  const amount=parseFloat(document.getElementById('recAmount').value);
+  if(!amount||amount<=0){ toast('請輸入金額'); return; }
+  const qty=parseInt(document.getElementById('recQty').value)||1;
+  const currency=document.getElementById('recCurrency').value;
+  const total=amount*qty;
+  const home=state.settings.homeCurrency;
+  const r=await getRate(currency,home);
+  const rate = r?r.rate:1;
+  const rec={
+    id:uid(), ledgerId:state.activeLedgerId, catId:selectedCat,
+    name:document.getElementById('recName').value.trim()||catById(selectedCat).name,
+    location:document.getElementById('recLocation').value.trim(),
+    amount:amount, currency:currency, qty:qty,
+    note:document.getElementById('recNote').value.trim(),
+    photo: currentPhoto || null,
+    homeAmount: total*rate, rate:rate, ts:Date.now()
+  };
+  state.records.push(rec);
+  save();
+  if(!storageOK){
+    // 多半是照片過多導致空間不足：移除這筆的照片再存一次
+    rec.photo=null;
+    save();
+    if(storageOK) toast('⚠️ 儲存空間不足，已存紀錄但未含照片');
+  }else{
+    toast(r? '已記帳 ✓' : '已記帳（離線匯率）');
+  }
+  closeRecordModal();
+  switchTab('records');
+}
+
+function deleteRecord(id){
+  if(!confirm('刪除這筆紀錄？')) return;
+  state.records=state.records.filter(r=>r.id!==id); save(); renderRecords();
+}
+
+/* ---------- records page ---------- */
+function dayKey(ts){ const d=new Date(ts); return d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate(); }
+function renderFilterChips(){
+  const wrap=document.getElementById('filterChips'); wrap.innerHTML='';
+  const all=document.createElement('span');
+  all.className='chip'+(activeFilter==='all'?' active':''); all.textContent='全部';
+  all.onclick=()=>{activeFilter='all';renderRecords();}; wrap.appendChild(all);
+  state.categories.forEach(c=>{
+    const el=document.createElement('span');
+    el.className='chip'+(activeFilter===c.id?' active':'');
+    el.innerHTML=`${c.icon} ${c.name}`;
+    el.onclick=()=>{activeFilter=c.id;renderRecords();}; wrap.appendChild(el);
+  });
+}
+function renderRecords(){
+  const L=activeLedger();
+  document.getElementById('activeLedgerName').textContent=L.name;
+  renderFilterChips();
+  const home=state.settings.homeCurrency;
+  let recs=ledgerRecords().slice().sort((a,b)=>b.ts-a.ts);
+  if(activeFilter!=='all') recs=recs.filter(r=>r.catId===activeFilter);
+
+  document.getElementById('recCount').textContent=recs.length+' 筆';
+  // budget
+  const spent=ledgerRecords().reduce((s,r)=>s+r.homeAmount,0);
+  document.getElementById('spentNum').textContent=fmt(spent)+' '+home;
+  if(L.budget>0){
+    const pct=Math.min(100,spent/L.budget*100);
+    const fill=document.getElementById('budgetFill');
+    fill.style.width=pct+'%'; fill.classList.toggle('over',spent>L.budget);
+    document.getElementById('remainNum').textContent=fmt(L.budget-spent)+' '+home;
+    document.getElementById('budgetSub').textContent='預算 '+fmt(L.budget)+' '+home;
+  }else{
+    document.getElementById('budgetFill').style.width='0%';
+    document.getElementById('remainNum').textContent='未設預算';
+    document.getElementById('budgetSub').textContent='點設定可設預算';
+  }
+
+  const list=document.getElementById('recordList');
+  if(!recs.length){ list.innerHTML='<div class="empty"><span class="big">🧳</span>還沒有紀錄，到「換算」分頁按「記下這筆」開始吧！</div>'; return; }
+  // group by day
+  const groups={};
+  recs.forEach(r=>{ const k=dayKey(r.ts); (groups[k]=groups[k]||[]).push(r); });
+  let html='';
+  Object.keys(groups).forEach(day=>{
+    const dayTotal=groups[day].reduce((s,r)=>s+r.homeAmount,0);
+    html+=`<div class="day-group"><div class="day-head"><span>${day}</span><span class="day-total">${fmt(dayTotal)} ${home}</span></div>`;
+    groups[day].forEach(r=>{
+      const c=catById(r.catId);
+      const sub=[r.location, r.qty>1?('×'+r.qty):'', r.note].filter(Boolean).join(' · ');
+      const thumb = r.photo ? `<img class="rec-thumb" src="${r.photo}" onclick="viewPhoto('${r.id}')" alt="照片">` : '';
+      html+=`<div class="rec">
+        <div class="ic" style="background:${c.color}33">${c.icon}</div>
+        <div class="info"><div class="name">${esc(r.name)} ${r.photo?'📷':''}</div><div class="sub">${esc(sub)||c.name}</div></div>
+        ${thumb}
+        <div class="amt"><div class="home">${fmt(r.homeAmount)} ${home}</div>
+          <div class="orig">${fmt(r.amount*r.qty)} ${r.currency}</div></div>
+        <button class="del" onclick="deleteRecord('${r.id}')">🗑</button>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  list.innerHTML=html;
+}
+function esc(s){ return (s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+
+/* ---------- stats ---------- */
+function renderStats(){
+  const home=state.settings.homeCurrency;
+  const recs=ledgerRecords();
+  const total=recs.reduce((s,r)=>s+r.homeAmount,0);
+  const days=new Set(recs.map(r=>dayKey(r.ts)));
+  document.getElementById('stTotal').textContent=fmt(total)+' '+home;
+  document.getElementById('stDays').textContent=days.size||'—';
+  document.getElementById('stAvg').textContent=days.size?fmt(total/days.size)+' '+home:'—';
+  document.getElementById('stCount').textContent=recs.length;
+
+  // donut by category
+  const byCat={};
+  recs.forEach(r=> byCat[r.catId]=(byCat[r.catId]||0)+r.homeAmount);
+  const donut=document.getElementById('donut'), legend=document.getElementById('donutLegend');
+  donut.innerHTML=''; legend.innerHTML='';
+  if(total<=0){ legend.innerHTML='<div class="empty" style="padding:10px">尚無資料</div>';
+    donut.innerHTML='<circle cx="21" cy="21" r="15.9" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="6"/>'; return; }
+  let offset=25; // start at top
+  const entries=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  entries.forEach(([cid,val])=>{
+    const c=catById(cid); const pct=val/total*100; const color=c.color;
+    const circ=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circ.setAttribute('cx','21');circ.setAttribute('cy','21');circ.setAttribute('r','15.9');
+    circ.setAttribute('fill','none');circ.setAttribute('stroke',color);circ.setAttribute('stroke-width','6');
+    circ.setAttribute('stroke-dasharray',`${pct.toFixed(2)} ${(100-pct).toFixed(2)}`);
+    circ.setAttribute('stroke-dashoffset', offset.toFixed(2));
+    donut.appendChild(circ); offset = (offset - pct + 100)%100;
+    legend.innerHTML+=`<div class="li"><span class="sw" style="background:${color}"></span>${c.icon} ${c.name}<span class="pct">${pct.toFixed(0)}%</span></div>`;
+  });
+
+  // daily bars (last up to 10 days)
+  const byDay={};
+  recs.forEach(r=>{ const k=dayKey(r.ts); byDay[k]=(byDay[k]||0)+r.homeAmount; });
+  const dayKeys=Object.keys(byDay).sort((a,b)=>new Date(a)-new Date(b)).slice(-10);
+  const max=Math.max(...dayKeys.map(k=>byDay[k]),1);
+  const bars=document.getElementById('dailyBars');
+  bars.innerHTML = dayKeys.length? dayKeys.map(k=>{
+    const h=byDay[k]/max*100; const md=k.split('/').slice(1).join('/');
+    return `<div class="b" title="${k}: ${fmt(byDay[k])}"><div class="col" style="height:${h}%"></div><div class="lab">${md}</div></div>`;
+  }).join('') : '<div class="empty" style="width:100%">尚無資料</div>';
+}
+
+/* ---------- settings ---------- */
+function setHomeCurrency(){
+  state.settings.homeCurrency=document.getElementById('homeCurrency').value;
+  save(); populateAllSelects();
+  toast('本國貨幣已設為 '+state.settings.homeCurrency);
+}
+function renderSettings(){
+  populateAllSelects();
+  renderStorageStatus();
+  // ledgers
+  const ll=document.getElementById('ledgerList'); ll.innerHTML='';
+  state.ledgers.forEach(l=>{
+    const isActive=l.id===state.activeLedgerId;
+    const cnt=state.records.filter(r=>r.ledgerId===l.id).length;
+    const div=document.createElement('div'); div.className='list-item';
+    div.innerHTML=`<div class="t"><div class="n">${esc(l.name)} ${isActive?'<span class="tag">使用中</span>':''}</div>
+      <div class="d">${cnt} 筆 · 預算 ${l.budget>0?fmt(l.budget)+' '+state.settings.homeCurrency:'未設'}</div></div>`;
+    const b1=mkBtn('預算',()=>setBudget(l.id));
+    const b2=mkBtn('改名',()=>renameLedger(l.id));
+    const b3=mkBtn(isActive?'✓':'切換',()=>{state.activeLedgerId=l.id;save();renderSettings();renderRecords();});
+    [b1,b2,b3].forEach(b=>div.appendChild(b));
+    if(state.ledgers.length>1){ const b4=mkBtn('🗑',()=>delLedger(l.id),'danger'); div.appendChild(b4); }
+    ll.appendChild(div);
+  });
+  // categories
+  const catList=document.getElementById('categoryMgmtList'); catList.innerHTML='';
+  state.categories.forEach(c=>{
+    const used=state.records.filter(r=>r.catId===c.id).length;
+    const div=document.createElement('div'); div.className='list-item';
+    div.innerHTML=`<div class="ic" style="width:34px;height:34px;flex:0 0 34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;background:${c.color}33">${c.icon}</div>
+      <div class="t"><div class="n">${esc(c.name)} ${c.custom?'<span class="tag" style="background:#7a6bff">自訂</span>':''}</div><div class="d">${used} 筆</div></div>`;
+    div.appendChild(mkBtn('🗑',()=>removeCategory(c.id),'danger'));
+    catList.appendChild(div);
+  });
+  // currencies
+  const cl=document.getElementById('currencyMgmtList'); cl.innerHTML='';
+  state.currencies.forEach(c=>{
+    const div=document.createElement('div'); div.className='list-item';
+    div.innerHTML=`<div class="t"><div class="n">${c.flag} ${c.code}</div><div class="d">${esc(c.name)}</div></div>`;
+    if(state.currencies.length>2){ div.appendChild(mkBtn('移除',()=>removeCurrency(c.code),'danger')); }
+    cl.appendChild(div);
+  });
+}
+function mkBtn(label,fn,kind){
+  const b=document.createElement('button');
+  b.className='btn btn-sm '+(kind==='danger'?'btn-danger':'btn-ghost');
+  b.style.marginLeft='6px'; b.textContent=label; b.onclick=fn; return b;
+}
+function setBudget(id){
+  const l=state.ledgers.find(x=>x.id===id);
+  const v=prompt(`設定「${l.name}」總預算（${state.settings.homeCurrency}），輸入 0 取消：`, l.budget||'');
+  if(v===null) return; l.budget=Math.max(0,parseFloat(v)||0); save(); renderSettings(); toast('預算已更新');
+}
+function renameLedger(id){
+  const l=state.ledgers.find(x=>x.id===id);
+  const v=prompt('帳本名稱：', l.name); if(v&&v.trim()){ l.name=v.trim(); save(); renderSettings(); renderRecords(); }
+}
+function addLedger(){
+  const v=prompt('新旅程帳本名稱（例如：2026 東京）：');
+  if(v&&v.trim()){
+    const id=uid(); state.ledgers.push({id,name:v.trim(),budget:0,homeCurrency:state.settings.homeCurrency});
+    state.activeLedgerId=id; save(); closeLedgerModal(); renderSettings(); renderRecords(); toast('已建立帳本');
+  }
+}
+function delLedger(id){
+  if(!confirm('刪除此帳本與其所有紀錄？')) return;
+  state.records=state.records.filter(r=>r.ledgerId!==id);
+  state.ledgers=state.ledgers.filter(l=>l.id!==id);
+  if(state.activeLedgerId===id) state.activeLedgerId=state.ledgers[0].id;
+  save(); renderSettings(); renderRecords();
+}
+function addCurrency(){
+  const code=prompt('貨幣代碼（例如 KRW）：'); if(!code) return;
+  const cc=code.toUpperCase().trim();
+  if(state.currencies.some(c=>c.code===cc)){ toast('已存在'); return; }
+  const name=prompt('中文名稱：')||cc;
+  const flag=prompt('國旗 emoji（可留空）：')||'🏳️';
+  state.currencies.push({code:cc,name:name.trim(),flag:flag.trim()});
+  save(); populateAllSelects(); renderSettings(); toast('已新增 '+cc);
+}
+function removeCurrency(code){
+  state.currencies=state.currencies.filter(c=>c.code!==code);
+  if(state.settings.homeCurrency===code) state.settings.homeCurrency=state.currencies[0].code;
+  save(); populateAllSelects(); renderSettings();
+}
+
+/* ---------- ledger modal ---------- */
+function openLedgerModal(){
+  const wrap=document.getElementById('ledgerSwitchList'); wrap.innerHTML='';
+  state.ledgers.forEach(l=>{
+    const active=l.id===state.activeLedgerId;
+    const cnt=state.records.filter(r=>r.ledgerId===l.id).length;
+    const div=document.createElement('div'); div.className='list-item';
+    div.style.cursor='pointer';
+    div.innerHTML=`<div class="t"><div class="n">${esc(l.name)} ${active?'<span class="tag">使用中</span>':''}</div><div class="d">${cnt} 筆</div></div><div style="font-size:1.3rem">${active?'✓':'›'}</div>`;
+    div.onclick=()=>{ state.activeLedgerId=l.id; save(); closeLedgerModal(); renderRecords(); toast('已切換到 '+l.name); };
+    wrap.appendChild(div);
+  });
+  document.getElementById('ledgerModalBg').classList.add('show');
+}
+function closeLedgerModal(){ document.getElementById('ledgerModalBg').classList.remove('show'); }
+
+/* ---------- split bill ---------- */
+function calcSplit(){
+  const total=parseFloat(document.getElementById('splitTotal').value)||0;
+  const ppl=parseInt(document.getElementById('splitPeople').value)||1;
+  if(total<=0||ppl<1){ toast('請輸入金額與人數'); return; }
+  document.getElementById('splitOut').style.display='block';
+  document.getElementById('splitPer').textContent=fmt(total/ppl);
+}
+
+/* ---------- export ---------- */
+function download(filename, content, type){
+  const blob=new Blob(["﻿"+content],{type});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=filename; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function exportCSV(){
+  const recs=ledgerRecords().slice().sort((a,b)=>a.ts-b.ts);
+  if(!recs.length){ toast('此帳本沒有紀錄'); return; }
+  const home=state.settings.homeCurrency;
+  const head=['日期','分類','名稱','地點','數量','金額','幣別','換算('+home+')','備註'];
+  const rows=recs.map(r=>[
+    new Date(r.ts).toLocaleString(), catById(r.catId).name, r.name, r.location,
+    r.qty, r.amount, r.currency, r.homeAmount.toFixed(2), r.note
+  ].map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(','));
+  download(`${activeLedger().name}_記帳.csv`, [head.join(','),...rows].join('\n'), 'text/csv;charset=utf-8;');
+  toast('已匯出 CSV');
+}
+function exportJSON(){
+  download('travel_expense_backup.json', JSON.stringify(state,null,2), 'application/json');
+  toast('已匯出備份');
+}
+function importJSON(ev){
+  const file=ev.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+      if(!data || !Array.isArray(data.records) || !Array.isArray(data.ledgers)) throw new Error('格式不符');
+      if(!confirm('還原備份將覆蓋目前所有資料，確定？')){ ev.target.value=''; return; }
+      state=Object.assign({},state,data);
+      if(!state.categories||!state.categories.length) state.categories=JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+      if(!state.currencies||!state.currencies.length) state.currencies=JSON.parse(JSON.stringify(DEFAULT_CURRENCIES));
+      if(!state.activeLedgerId) state.activeLedgerId=state.ledgers[0].id;
+      save(); populateAllSelects(); renderSettings(); renderRecords();
+      document.getElementById('activeLedgerName').textContent=activeLedger().name;
+      toast('✅ 已還原備份');
+    }catch(e){ toast('還原失敗：檔案格式不正確'); }
+    ev.target.value='';
+  };
+  reader.readAsText(file);
+}
+function clearAllData(){
+  if(!confirm('清除「'+activeLedger().name+'」的所有紀錄？此動作無法復原。')) return;
+  state.records=state.records.filter(r=>r.ledgerId!==state.activeLedgerId);
+  save(); renderRecords(); toast('已清除此帳本紀錄');
+}
+
+/* ---------- external tools ---------- */
+function searchRate(){
+  const f=document.getElementById('fromCurrency').value, t=document.getElementById('toCurrency').value;
+  window.open(`https://www.google.com/search?q=${encodeURIComponent(f+' to '+t+' exchange rate')}`,'_blank');
+}
+function openTranslate(){ window.open('https://translate.google.com/','_blank'); }
+
+/* ---------- voice ---------- */
+function voice(inputId, btn){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ toast('此瀏覽器不支援語音輸入'); return; }
+  const rec=new SR(); rec.lang='zh-TW'; rec.interimResults=false; rec.continuous=false;
+  rec.onstart=()=>btn.classList.add('rec');
+  rec.onresult=e=>{ document.getElementById(inputId).value=e.results[0][0].transcript; };
+  rec.onerror=()=>btn.classList.remove('rec');
+  rec.onend=()=>btn.classList.remove('rec');
+  rec.start();
+}
+
+/* close modals on backdrop tap */
+document.querySelectorAll('.modal-bg').forEach(bg=>{
+  bg.addEventListener('click',e=>{ if(e.target===bg) bg.classList.remove('show'); });
+});
+
+/* ---------- persistent storage request + status ---------- */
+// 向瀏覽器申請「持久化儲存」，可降低 iOS/Safari 長時間未開啟而清除資料的機率
+async function requestPersistence(){
+  try{
+    if(navigator.storage && navigator.storage.persisted){
+      persistGranted = await navigator.storage.persisted();
+      if(!persistGranted && navigator.storage.persist){
+        persistGranted = await navigator.storage.persist();
+      }
+    }
+  }catch(e){ /* 不支援則略過 */ }
+  if(document.getElementById('page-settings').classList.contains('active')) renderStorageStatus();
+}
+
+function timeAgo(ts){
+  if(!ts) return '尚未儲存';
+  const d=new Date(ts), diff=(Date.now()-ts)/1000;
+  if(diff<60) return '剛剛';
+  if(diff<3600) return Math.floor(diff/60)+' 分鐘前';
+  return d.toLocaleString();
+}
+function renderStorageStatus(){
+  const el=document.getElementById('storageStatus'); if(!el) return;
+  const total=state.records.length;
+  const rows=[
+    ['儲存位置', '此瀏覽器本機 (localStorage)'],
+    ['總紀錄筆數', total+' 筆 · '+state.ledgers.length+' 個帳本'],
+    ['上次自動儲存', timeAgo(state.settings.lastSaved)],
+    ['寫入狀態', storageOK ? '✅ 正常' : '⚠️ 失敗（請檢查瀏覽器設定）'],
+    ['持久化保護', persistGranted===true ? '✅ 已啟用（不易被自動清除）'
+                  : persistGranted===false ? '⚠️ 未啟用（建議定期備份）'
+                  : '— 此瀏覽器不支援']
+  ];
+  el.innerHTML = rows.map(([k,v])=>
+    `<div class="list-item"><div class="t"><div class="d">${k}</div><div class="n">${v}</div></div></div>`
+  ).join('');
+}
+
+/* ---------- init ---------- */
+function init(){
+  load();
+  populateAllSelects();
+  document.getElementById('activeLedgerName').textContent=activeLedger().name;
+  save(); // 寫回一次，建立備份鍵並記錄時間
+  requestPersistence();
+  updateLiveRate();
+  // refresh live rate periodically
+  setInterval(()=>{ if(document.getElementById('page-convert').classList.contains('active')) updateLiveRate(); }, 90000);
+}
+init();
+</script>
+</body>
+</html>

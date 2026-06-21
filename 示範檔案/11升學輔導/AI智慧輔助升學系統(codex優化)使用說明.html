@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 智慧輔助升學系統 — 系統使用說明書</title>
+  <style>
+    :root {
+      --primary: #166b5c;
+      --primary-dark: #0f4f45;
+      --primary-soft: #e7f1ee;
+      --accent: #b45f3c;
+      --accent-dark: #81422b;
+      --accent-soft: #fbf0eb;
+      --ink: #1d2528;
+      --ink-soft: #425052;
+      --muted: #667174;
+      --bg: #f6f4ef;
+      --card: #ffffff;
+      --line: #d9ded9;
+      --line-strong: #a8bbb4;
+      --ok: #2f7b4f;
+      --ok-soft: #effaf3;
+      --warn: #9a6b00;
+      --warn-soft: #fff8df;
+      --danger: #a33a3a;
+      --radius: 12px;
+      --shadow: 0 10px 30px rgba(26, 39, 37, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
+      --font: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: var(--font);
+      background-color: #faf9f6;
+      color: var(--ink);
+      line-height: 1.75;
+    }
+
+    /* Hero Header */
+    .hero {
+      background: linear-gradient(135deg, #104f45 0%, #166b5c 100%);
+      color: #ffffff;
+      padding: 50px 20px;
+      text-align: center;
+      position: relative;
+      border-bottom: 4px solid var(--accent);
+    }
+    .hero-inner {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .hero h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin: 0 0 12px 0;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+    .hero p {
+      font-size: 1.1rem;
+      color: #cbdad5;
+      max-width: 700px;
+      margin: 0 auto 24px auto;
+      line-height: 1.6;
+    }
+    .btn-main-app {
+      display: inline-flex;
+      align-items: center;
+      background-color: var(--accent);
+      color: #ffffff;
+      text-decoration: none;
+      font-weight: 700;
+      padding: 12px 28px;
+      border-radius: 99px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(180, 95, 60, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .btn-main-app:hover {
+      background-color: var(--accent-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(180, 95, 60, 0.4);
+    }
+    .btn-main-app svg {
+      margin-right: 8px;
+      fill: currentColor;
+    }
+
+    /* Main Layout */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 32px;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      position: sticky;
+      top: 24px;
+      height: fit-content;
+    }
+    .nav-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+    .nav-card h3 {
+      margin: 0 0 14px 0;
+      font-size: 0.95rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 8px;
+    }
+    .sidebar-menu {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .sidebar-menu li {
+      margin-bottom: 6px;
+    }
+    .sidebar-menu a {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      color: var(--ink-soft);
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 8px;
+      transition: all 0.15s ease;
+    }
+    .sidebar-menu a:hover {
+      background-color: var(--primary-soft);
+      color: var(--primary);
+    }
+    .sidebar-menu a.active {
+      background-color: var(--primary);
+      color: #ffffff;
+    }
+    .sidebar-menu .num-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background-color: rgba(0,0,0,0.06);
+      font-size: 0.75rem;
+      margin-right: 8px;
+      font-weight: bold;
+    }
+    .sidebar-menu a.active .num-badge {
+      background-color: rgba(255, 255, 255, 0.25);
+    }
+
+    /* Main Content */
+    main {
+      min-width: 0;
+    }
+
+    .doc-section {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 32px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow);
+    }
+    .doc-section h2 {
+      margin: 0 0 20px 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      border-left: 5px solid var(--primary);
+      padding-left: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .doc-section h3 {
+      font-size: 1.15rem;
+      color: var(--ink);
+      margin: 28px 0 12px 0;
+      border-bottom: 1px dashed var(--line);
+      padding-bottom: 6px;
+    }
+
+    /* Alerts */
+    .alert {
+      padding: 16px;
+      border-radius: 8px;
+      margin: 16px 0;
+      font-size: 0.95rem;
+      border-left: 4px solid transparent;
+    }
+    .alert-info {
+      background-color: var(--primary-soft);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+    .alert-warning {
+      background-color: var(--warn-soft);
+      border-color: var(--warn);
+      color: #5d4300;
+    }
+    .alert-accent {
+      background-color: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent-dark);
+    }
+
+    /* Key-Value Tables */
+    .props-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 0.95rem;
+    }
+    .props-table th, .props-table td {
+      border: 1px solid var(--line);
+      padding: 12px;
+      text-align: left;
+    }
+    .props-table th {
+      background-color: #f8faf9;
+      color: var(--primary-dark);
+      width: 250px;
+    }
+    .props-table tr:hover {
+      background-color: #fafbfc;
+    }
+
+    /* Button Tag UI */
+    .btn-tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #fff;
+      background: var(--primary);
+      border: none;
+      vertical-align: middle;
+      margin: 0 4px;
+    }
+    .btn-tag.secondary { background-color: #596a70; }
+    .btn-tag.accent { background-color: var(--accent); }
+    .btn-tag.danger { background-color: var(--danger); }
+    .btn-tag.ghost {
+      color: var(--primary);
+      background-color: var(--primary-soft);
+      border: 1px solid var(--line-strong);
+    }
+
+    /* Steps Grid */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin: 20px 0;
+    }
+    .step-card {
+      background: #fafaf8;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      position: relative;
+    }
+    .step-num {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: rgba(22, 107, 92, 0.15);
+    }
+    .step-card h4 {
+      margin: 0 0 8px 0;
+      color: var(--primary);
+      font-size: 1rem;
+    }
+    .step-card p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--ink-soft);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      background-color: var(--primary-soft);
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        position: relative;
+        top: 0;
+        margin-bottom: 24px;
+      }
+      .steps-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="hero">
+    <div class="hero-inner">
+      <h1>AI 智慧輔助升學系統 — 使用說明書</h1>
+      <p>麗山高中開發之學習歷程與備審自述優化檢核工具，融合本機演算法與大語言模型（AI）協助學生進行發想、反思與模擬審查。</p>
+      <a class="btn-main-app" href="https://froglssh.github.io/ai-college-admission-assistant-online/" target="_blank" rel="noopener noreferrer">
+        <svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+        立即開啟 AI 智慧輔助升學系統
+      </a>
+    </div>
+  </header>
+
+  <div class="container">
+    <aside class="sidebar">
+      <nav class="nav-card">
+        <h3>目錄索引</h3>
+        <ul class="sidebar-menu">
+          <li><a href="#overview"><span class="num-badge">1</span>系統設計核心</a></li>
+          <li><a href="#toolbar"><span class="num-badge">2</span>學生檔案管理</a></li>
+          <li><a href="#page-settings"><span class="num-badge">3</span>申請與素材設定</a></li>
+          <li><a href="#page-workspace"><span class="num-badge">4</span>草稿工作區與診斷</a></li>
+          <li><a href="#page-reference"><span class="num-badge">5</span>參考資料與列印</a></li>
+          <li><a href="#ai-settings"><span class="num-badge">6</span>API 連接設定</a></li>
+          <li><a href="#best-practices"><span class="num-badge">7</span>誠信使用指引</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main>
+      <section id="overview" class="doc-section">
+        <h2>系統設計核心</h2>
+        <p>本系統旨在輔助高中學生整理<strong>課程學習成果、多元表現、自主學習計畫、升學自傳與讀書計畫</strong>。系統遵循大學招生審查之<strong>「三重二不」</strong>精神（重素養、重校內、重真實；不以數量取勝、不要求樣樣具備），以<strong>「學生真實經歷」</strong>為本，提供本機診斷及 AI 修飾建議。</p>
+
+        <div class="alert alert-info">
+          <strong>系統理念：</strong>AI 是教練與鷹架，不是代筆。工具用於引導發想、修辭建議、結構重建與模擬追問；核心的核心仍必須是學生自己的真實反思與實際經歷，如此才能在備審資料與面試時維持誠信與說服力。
+        </div>
+
+        <h3>核心運作模式</h3>
+        <div class="steps-grid">
+          <div class="step-card">
+            <span class="step-num">01</span>
+            <h4>本機快速診斷</h4>
+            <p>無須連網及 API Key，完全在學生本機端以關鍵字特徵與規則進行即時評分與缺口診斷，保護隱私。</p>
+          </div>
+          <div class="step-card">
+            <span class="step-num">02</span>
+            <h4>二階段深度分析</h4>
+            <p>透過 AI 對照「完整性、獨特性、關聯性、真實性、策展主軸、第二階段準備」進行六大面向之核心評估與策略引導。</p>
+          </div>
+          <div class="step-card">
+            <span class="step-num">03</span>
+            <h4>AI 提示詞生成</h4>
+            <p>為了解決直接叫 AI 寫文章容易流於罐頭氣息的缺點，系統會將學生的背景、申請校系、凸顯能力、佐證素材與原始草稿，編織成高客製化、避免虛構的「高階修飾提示詞」，讓學生貼往 ChatGPT 或 Gemini 取得精準成果。</p>
+          </div>
+          <div class="step-card">
+            <span class="step-num">04</span>
+            <h4>API 連線直呼</h4>
+            <p>輸入本機 API Key 後，可直接在網頁呼叫 OpenAI 或 Google Gemini API 快速生成回覆，加速迭代。</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="toolbar" class="doc-section">
+        <h2>學生檔案管理 (頂部工具列)</h2>
+        <p>此區塊位於網頁最上方，負責記錄多位學生的填寫狀況，將資料加密儲存於瀏覽器本機快取 (LocalStorage)，不儲存於伺服器，安全無個資外洩風險。</p>
+
+        <props-table class="props-table">
+          <thead>
+            <tr>
+              <th>按鈕或欄位名稱</th>
+              <th>功能操作說明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>學生姓名 (輸入框)</strong></td>
+              <td>在儲存前先在此欄位填入學生姓名或作品代號。本姓名將作為本機資料庫儲存與匯出 Word 檔時的檔名。</td>
+            </tr>
+            <tr>
+              <td><strong>選擇已儲存學生 (下拉選單)</strong></td>
+              <td>列出目前在瀏覽器中已經儲存過的所有學生紀錄。點選後可切換載入不同學生的資料。</td>
+            </tr>
+            <tr>
+              <td><span class="btn-tag">讀取</span></td>
+              <td>在下拉選單選擇好學生後，點選此按鈕載入對應之背景設定、草稿內容與過往診斷紀錄。</td>
+            </tr>
+            <tr>
+              <td><span class="btn-tag ghost">儲存</span></td>
+              <td>將目前畫面上所有設定與填寫內容，儲存至瀏覽器本地資料庫中。建議在修改各分頁資訊後，隨時點選此按鈕以防資料遺失。</td>
+            </tr>
+            <tr>
+              <td><span class="btn-tag danger">刪除</span></td>
+              <td>刪除目前在下拉選單選取學生的本機備份紀錄。動作執行前會有確定對話框提示。</td>
+            </tr>
+            <tr>
+              <td><span class="btn-tag secondary">下載 Word 檔</span></td>
+              <td>一鍵將目前學生的申請背景、原始草稿、本機快速診斷報告、AI提示詞及 AI 產出回覆，整合成一個排版美觀的 <code>.doc</code> 格式 Word 檔案，讓學生能印出或在單機進行深度修改與備份。</td>
+            </tr>
+            <tr>
+              <td><span class="btn-tag accent">AI 設定</span></td>
+              <td>點選後開啟浮動視窗，設定 OpenAI 或 Google Gemini API 的連線金鑰與模型選擇（詳見第 6 節說明）。</td>
+            </tr>
+          </tbody>
+        </props-table>
+      </section>
+
+      <section id="page-settings" class="doc-section">
+        <h2>分頁一：申請與素材設定</h2>
+        <p>此頁面是系統的起點。提供越具體、清晰的申請目標與佐證素材，系統產生的本機評估與 AI 提示詞便會越精準、越貼合校系需求。</p>
+
+        <h3>設定欄位詳細操作說明</h3>
+        <props-table class="props-table">
+          <thead>
+            <tr>
+              <th>設定項目</th>
+              <th>欄位類型</th>
+              <th>填寫與操作指南（降低難度指引）</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>檔案類型</strong></td>
+              <td>下拉選擇</td>
+              <td>
+                選擇本次欲優化的備審資料種類。包含：<br>
+                <ul>
+                  <li><code>課程學習成果</code> (如探究報告、課堂簡報)</li>
+                  <li><code>多元表現</code> (如幹部心得、競賽紀錄)</li>
+                  <li><code>升學自傳</code>、<code>學習歷程自述</code></li>
+                  <li><code>自主學習計畫與成果</code></li>
+                  <li><code>探究與實作成果</code>、<code>讀書計畫</code></li>
+                  <li><code>多元表現綜整心得</code> 等。</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>檔案名稱</strong></td>
+              <td>文字輸入</td>
+              <td>
+                填入這份成果或計畫的標題。<br>
+                <em>範例：水質檢測專題成果報告、麗山高中校慶攤位規劃心得。</em>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>申請大學</strong></td>
+              <td>文字輸入</td>
+              <td>
+                填入目標申請的大學校名。此資訊會用於 AI 連結分析。<br>
+                <em>範例：國立陽明交通大學、國立臺灣大學。</em>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>申請科系</strong></td>
+              <td>文字輸入</td>
+              <td>
+                填入目標科系。系統診斷會自動對比科系核心能力。<br>
+                <em>範例：生物科技學系、資訊工程學系。</em>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>想凸顯的能力</strong></td>
+              <td>多選核取方塊 + 自訂文字區</td>
+              <td>
+                請學生勾選此份檔案中最想讓教授看見的<strong>核心素養與特質</strong>（如自主學習、問題解決、反思修正等）。<br>
+                若有其他非勾選區特質，可在下方「其他能力補充」文字框中以逗號隔開輸入。
+              </td>
+            </tr>
+            <tr>
+              <td><strong>可佐證素材</strong></td>
+              <td>多選核取方塊 + 自訂文字區</td>
+              <td>
+                勾選在最終成果 PDF 檔案中已經包含的佐證材料（如數據表、實驗照片、教師回饋、修正前後對比等）。這能幫助本機診斷及 AI 評估證據的說服力強度。
+              </td>
+            </tr>
+          </tbody>
+        </props-table>
+      </section>
+
+      <section id="page-workspace" class="doc-section">
+        <h2>分頁二：學習歷稿工作區與診斷</h2>
+        <p>這是最核心的修改與互動空間。學生在此輸入原始草稿，並透過本機的多種演算法及 AI 提示詞，進行全方位的診斷與潤飾。</p>
+
+        <h3>1. 上傳檔案解析與圖文檢核區</h3>
+        <p>學生可以直接上傳 PDF 檔或 Word .docx 檔案。系統會嘗試抽取純文字至草稿區。</p>
+        <ul>
+          <li><span class="btn-tag ghost">讀取檔案到草稿區</span>：將上傳檔案的文字解析並自動填入下方原始草稿區。</li>
+          <li><span class="btn-tag ghost">開啟 PDF 原檔檢視</span>：開啟網頁內嵌式檢視器，讓學生可以一邊修改草稿、一邊對照原本 PDF 的排版與圖表。</li>
+          <li><span class="btn-tag ghost">PDF 圖文檢核</span>：對上傳 PDF 進行結構、圖表數量、表格、圖片密集度檢測，並在下方的「診斷」頁籤生成對照提醒。</li>
+        </ul>
+
+        <h3>2. 診斷與優化控制按鈕操作說明</h3>
+        <props-table class="props-table">
+          <thead>
+            <tr>
+              <th>診斷按鈕</th>
+              <th>適用對象與功能說明</th>
+              <th>點擊後的處理流程與預期結果</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="btn-tag">本機快速診斷</span></td>
+              <td><strong>初稿檢測。</strong> 快速掃描字數、段落分配、反思語彙（困難/修正）、佐證字彙與科系字彙。</td>
+              <td>
+                結果會呈現在下方 <code>診斷</code> 頁籤，包含<strong>結構、佐證、反思、科系連結、真實性</strong>五個面向的 0-100 分量化圖表與修正優缺點清單。
+              </td>
+            </tr>
+            <tr>
+              <td><span class="btn-tag ghost">第二階段深度分析</span></td>
+              <td><strong>送件前把關。</strong> 依據臺灣第二階段審查邏輯進行六大深度檢核。</td>
+              <td>提供優先補強順序，並在本機產生 8 題面試口試教授極可能追問的「備審真實性」問題。</td>
+            </tr>
+            <tr>
+              <td><span class="btn-tag ghost">面試準備診斷</span></td>
+              <td><strong>口試前準備。</strong> 評估經歷是否能轉化成口語說法。</td>
+              <td>分析是否具備一分鐘自我介紹、START敘事架構與壓力題應變策略，並生成 10 題高階面試追問題。</td>
+            </tr>
+            <tr>
+              <td><span class="btn-tag ghost">讀書計畫診斷</span></td>
+              <td><strong>讀書計畫專用。</strong> 檢查未來升學規劃。</td>
+              <td>檢測是否流於「努力讀書」等罐頭詞彙、是否客製化、是否具備可檢核指標，並列出地雷警示。</td>
+            </tr>
+            <tr>
+              <td><span class="btn-tag ghost">自傳優化診斷</span></td>
+              <td><strong>自傳專用。</strong> 評估自傳的品牌契合度。</td>
+              <td>檢查自傳是否有黃金開場、是否避開家庭背景流水帳，並提供優化架構藍圖。</td>
+            </tr>
+            <tr>
+              <td><span class="btn-tag accent">產生 AI 修飾提示詞</span></td>
+              <td><strong>無 API Key 或希望在外部發問者。</strong></td>
+              <td>
+                根據目前設定，在下方 <code>AI提示詞</code> 頁籤產生極詳細的高階 Prompt。可直接複製後點選下方 <span class="btn-tag">開啟 ChatGPT</span> 或 <span class="btn-tag">開啟 Gemini</span> 貼上。
+              </td>
+            </tr>
+            <tr>
+              <td><span class="btn-tag accent">用 API 產生回覆</span></td>
+              <td><strong>已填寫 API Key 的使用者。</strong></td>
+              <td>直接呼叫 API 獲取修潤、重建段落、產生摘要等成果，並在下方 <code>AI回覆</code> 頁籤中呈現。</td>
+            </tr>
+            <tr>
+              <td><span class="btn-tag secondary">清空</span></td>
+              <td>重置整個工作區。</td>
+              <td>清空所有暫存輸入與檔案（已手動儲存的學生檔不會被刪除）。</td>
+            </tr>
+          </tbody>
+        </props-table>
+
+        <h3>3. 下方結果頁籤 (Tabs) 操作說明</h3>
+        <p>點選各頁籤可查看對應按鈕所產生的不同產物：</p>
+        <ul>
+          <li><strong>診斷</strong>：查看本機評分、警告訊息、優點與下一步修改指引。</li>
+          <li><strong>摘要</strong>：顯示產生的精簡摘要（如為誠信聲明，點選「產生誠信聲明」按鈕後，會在此頁籤顯示 AI 使用聲明草稿）。</li>
+          <li><strong>AI提示詞</strong>：在此切換欲向 AI 詢問的任務任務（如：<code>修飾與優化草稿</code>、<code>模擬審查委員回饋</code>、<code>產生面試追問題</code>等），再點選下方複製按鈕或一鍵開啟外部 AI 平台。</li>
+          <li><strong>AI回覆</strong>：直連 API 回覆的內容，附有複製按鈕，方便將修飾後的文本帶回 Word 修改。</li>
+        </ul>
+      </section>
+
+      <section id="page-reference" class="doc-section">
+        <h2>分頁三：學生參考資料與列印</h2>
+        <p>此頁面整合了高中學習歷程檔案審查的各項寫作規範與檢核，建議提供給學生作為修改時的隨手核對清單。</p>
+        <ul>
+          <li><strong>一鍵列印設計</strong>：點選 <span class="btn-tag accent">列印本頁參考資料</span> 按鈕，系統會自動調整為適合 A4 列印的黑白排版版面，方便老師影印給班級學生或學生線下閱讀。</li>
+          <li><strong>資料卡片庫</strong>：包含整體審查精神、課程學習成果寫作結構、多元表現寫作重點、自傳 STAR 經歷寫作法、讀書計畫客製化防雷、面試自我介紹策略等。</li>
+        </ul>
+      </section>
+
+      <section id="ai-settings" class="doc-section">
+        <h2>AI 連接設定 (API 設定)</h2>
+        <p>點選頂部工具列的 <span class="btn-tag accent">AI 設定</span> 可設定 API 連線金鑰，本金鑰僅保存在使用者的瀏覽器，不回傳至伺服器。</p>
+
+        <div class="alert alert-warning">
+          <strong>安全提示：</strong>若是使用學校電腦教室等公用電腦，請在「API 設定儲存方式」中務必選擇「暫時儲存，關閉瀏覽器後清除」，以免個人 API Key 遭到後續使用者挪用。
+        </div>
+
+        <h3>設定選項解說</h3>
+        <ul>
+          <li><strong>AI 服務</strong>：選擇 <code>OpenAI Responses API</code> 或 <code>Google Gemini API</code>。</li>
+          <li><strong>模型</strong>：預設提供快速且省額度的模型（如 <code>gpt-5.4-mini</code>、<code>gemini-3.5-flash</code>）。高需求或遇到限額時，可按「改用快速模型」切換至備援。</li>
+          <li><strong>溫度 (Temperature)</strong>：數值越低（如 0.2~0.4）生成的內容越嚴謹、符合事實；數值越高（如 0.7~0.9）生成內容越有創意。本系統預設為 <strong>0.4</strong>，在修飾學生經歷時能維持高度真實性，避免 AI 胡言亂語。</li>
+          <li><strong>API Key 申請</strong>：浮動視窗中提供官方直連網址，點選即可跳轉至 OpenAI Platform 或 Google AI Studio 進行申請與付款管理。</li>
+        </ul>
+      </section>
+
+      <section id="best-practices" class="doc-section">
+        <h2>誠信使用指引與誠信聲明</h2>
+        <p>為避免學生過度依賴 AI 產生虛構經歷，或因使用了大量 AI 詞彙而使學習成果顯得虛假，請務必遵循以下使用指引：</p>
+        
+        <div class="alert alert-accent">
+          <strong>1. 移除個資：</strong>在送交 AI 診斷或修飾前，請確認草稿中已移除身分證字號、姓名、家長姓名、手機號碼與詳細住址等敏感個資，確保隱私安全。<br>
+          <strong>2. 內容查證：</strong>AI 生成的讀書計畫若提及該科系的特定課程、教授、研究中心或合作實習單位，學生必須親自前往該大學官網進行「二次查證」，確認該資源目前仍存在且適合自己。<br>
+          <strong>3. 二次改寫與熟練：</strong>AI 修改後的任何優美段落或面試追問題，學生都必須能用自己的口吻自然地講述出來。若面試時教授追問細節而學生答不上來，將會被判定為代筆，產生極大升學風險。
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer style="text-align: center; padding: 40px 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.9rem;">
+    臺北市立麗山高中 林獻升老師 | <a href="mailto:frog@lssh.tp.edu.tw" style="color: var(--primary); text-decoration: none;">frog@lssh.tp.edu.tw</a><br>
+    本說明書為 AI智慧輔助升學系統(codex優化) 專屬教學手冊
+  </footer>
+
+</body>
+</html>

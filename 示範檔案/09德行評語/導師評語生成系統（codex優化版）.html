@@ -1,0 +1,2152 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>導師評語生成系統（codex優化版）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Noto+Serif+TC:wght@400;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root {
+  --ink: #1a1a2e;
+  --ink-light: #3a3a5c;
+  --ink-muted: #7c7c9a;
+  --paper: #f8f6f1;
+  --paper-warm: #f3efe8;
+  --paper-dark: #eae5db;
+  --accent: #c0392b;
+  --accent-light: #e74c3c;
+  --accent-bg: #fdf2f0;
+  --teal: #16a085;
+  --teal-light: #1abc9c;
+  --teal-bg: #eafaf6;
+  --gold: #d4a017;
+  --gold-bg: #fdf8e8;
+  --blue: #2c3e7a;
+  --blue-light: #3b5998;
+  --blue-bg: #eef1f8;
+  --positive: #27ae60;
+  --positive-bg: #eafaf1;
+  --negative: #e67e22;
+  --negative-bg: #fef5ec;
+  --shadow-sm: 0 1px 3px rgba(26,26,46,0.08);
+  --shadow-md: 0 4px 12px rgba(26,26,46,0.1);
+  --shadow-lg: 0 8px 30px rgba(26,26,46,0.12);
+  --radius: 10px;
+  --radius-lg: 16px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Noto Sans TC', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+/* === HEADER === */
+.site-header {
+  background: var(--ink);
+  color: white;
+  padding: 24px 32px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+.header-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.header-brand h1 {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+.header-brand h1 span.accent-dot {
+  color: var(--accent-light);
+}
+.header-brand .subtitle {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.5);
+  font-weight: 300;
+  letter-spacing: 1px;
+  margin-top: 2px;
+}
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  font-family: 'Noto Sans TC', sans-serif;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+.btn-primary:hover { background: var(--accent-light); }
+.btn-secondary {
+  background: rgba(255,255,255,0.1);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.18); }
+.btn-teal { background: var(--teal); color: white; }
+.btn-teal:hover { background: var(--teal-light); }
+.btn-gold { background: var(--gold); color: white; }
+.btn-gold:hover { filter: brightness(1.1); }
+.btn-outline {
+  background: white;
+  color: var(--ink);
+  border: 1.5px solid var(--paper-dark);
+}
+.btn-outline:hover { border-color: var(--ink-muted); }
+.btn-lg { padding: 12px 28px; font-size: 0.95rem; font-weight: 700; border-radius: 12px; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* === LAYOUT === */
+.main-grid {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: calc(100vh - 80px);
+}
+@media (max-width: 1024px) {
+  .main-grid { grid-template-columns: 1fr; }
+}
+
+.panel {
+  padding: 28px;
+  overflow-y: auto;
+  max-height: calc(100vh - 80px);
+}
+.panel-left {
+  border-right: 1px solid var(--paper-dark);
+  background: white;
+}
+.panel-right {
+  background: var(--paper-warm);
+}
+
+/* === SECTIONS === */
+.section {
+  margin-bottom: 28px;
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--paper-dark);
+}
+.section-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.section-header h2 {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.section-header .badge {
+  font-size: 0.68rem;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+/* === FORM ELEMENTS === */
+.form-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.form-group {
+  flex: 1;
+  min-width: 140px;
+}
+.form-group label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ink-muted);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.form-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--paper-dark);
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-family: 'Noto Sans TC', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  transition: border-color 0.2s;
+  outline: none;
+}
+.form-input:focus {
+  border-color: var(--blue-light);
+  background: white;
+}
+select.form-input {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237c7c9a' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+textarea.form-input {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.8;
+}
+
+/* === TOGGLE BUTTONS (Gender / Tone) === */
+.toggle-group {
+  display: flex;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1.5px solid var(--paper-dark);
+  background: var(--paper);
+}
+.toggle-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-family: 'Noto Sans TC', sans-serif;
+  color: var(--ink-muted);
+  transition: all 0.2s;
+  font-weight: 500;
+}
+.toggle-btn.active {
+  background: var(--ink);
+  color: white;
+}
+.toggle-btn:not(.active):hover { background: var(--paper-dark); }
+
+/* === TAG INPUT (Cadres & Activities) === */
+.tag-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  animation: tagIn 0.2s ease;
+}
+@keyframes tagIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+.tag-blue { background: var(--blue-bg); color: var(--blue); border: 1px solid #c5cde8; }
+.tag-gold { background: var(--gold-bg); color: #8a6d0b; border: 1px solid #e8d88a; }
+.tag .remove-tag {
+  cursor: pointer;
+  opacity: 0.5;
+  font-size: 1rem;
+  line-height: 1;
+}
+.tag .remove-tag:hover { opacity: 1; color: var(--accent); }
+
+/* === SCHOOL CODE GRID === */
+.code-grid-container {
+  background: var(--paper);
+  border-radius: var(--radius);
+  padding: 16px;
+  border: 1.5px solid var(--paper-dark);
+}
+.code-category-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.code-tab {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--paper-dark);
+  background: white;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--ink-muted);
+  transition: all 0.15s;
+  font-family: 'Noto Sans TC', sans-serif;
+}
+.code-tab.active {
+  background: var(--ink);
+  color: white;
+  border-color: var(--ink);
+}
+.code-tab:hover:not(.active) { background: var(--paper-dark); }
+.code-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.code-items::-webkit-scrollbar { width: 4px; }
+.code-items::-webkit-scrollbar-thumb { background: var(--paper-dark); border-radius: 4px; }
+.code-item {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: white;
+  cursor: pointer;
+  font-size: 0.78rem;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.code-item:hover { border-color: var(--blue-light); background: var(--blue-bg); }
+.code-item.selected { border-color: var(--accent); background: var(--accent-bg); font-weight: 700; }
+.code-item .code-num {
+  font-size: 0.65rem;
+  color: var(--ink-muted);
+  font-family: monospace;
+  min-width: 28px;
+}
+
+/* === TRAIT SELECTOR === */
+.trait-category {
+  margin-bottom: 20px;
+}
+.trait-category-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--blue);
+}
+.trait-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+.trait-card {
+  background: white;
+  border: 1.5px solid var(--paper-dark);
+  border-radius: 10px;
+  padding: 12px;
+  transition: all 0.2s;
+}
+.trait-card:hover { box-shadow: var(--shadow-sm); }
+.trait-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+.trait-btns {
+  display: flex;
+  gap: 6px;
+}
+.trait-btn {
+  flex: 1;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1.5px solid var(--paper-dark);
+  background: var(--paper);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 500;
+  font-family: 'Noto Sans TC', sans-serif;
+  color: var(--ink-muted);
+  transition: all 0.15s;
+}
+.trait-btn:hover { background: white; }
+.trait-btn.pos-active {
+  background: var(--positive-bg);
+  border-color: var(--positive);
+  color: var(--positive);
+  font-weight: 700;
+}
+.trait-btn.neg-active {
+  background: var(--negative-bg);
+  border-color: var(--negative);
+  color: var(--negative);
+  font-weight: 700;
+}
+
+/* === SELF-EVAL SECTION (德行自評) === */
+.self-eval-group {
+  background: var(--gold-bg);
+  border: 1.5px solid #e8d88a;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.self-eval-group h4 {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #8a6d0b;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.import-tools,
+.ai-settings,
+.export-tools {
+  background: white;
+  border: 1.5px solid var(--paper-dark);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.tool-hint {
+  font-size: 0.76rem;
+  color: var(--ink-muted);
+  line-height: 1.7;
+  margin-top: 8px;
+}
+.file-input {
+  font-size: 0.8rem;
+  color: var(--ink-light);
+}
+.status-line {
+  font-size: 0.78rem;
+  color: var(--teal);
+  margin-top: 8px;
+  min-height: 20px;
+}
+.quick-role-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 6px;
+  margin-top: 10px;
+}
+.quick-role-btn {
+  padding: 7px 8px;
+  border: 1px solid var(--paper-dark);
+  border-radius: 6px;
+  background: white;
+  color: var(--ink-light);
+  cursor: pointer;
+  font-size: 0.76rem;
+  font-family: 'Noto Sans TC', sans-serif;
+  text-align: left;
+}
+.quick-role-btn:hover {
+  border-color: var(--gold);
+  background: var(--gold-bg);
+  color: #8a6d0b;
+}
+.role-filter-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.role-filter-tabs button {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--paper-dark);
+  background: var(--paper);
+  cursor: pointer;
+  color: var(--ink-muted);
+  font-size: 0.72rem;
+  font-family: 'Noto Sans TC', sans-serif;
+}
+.role-filter-tabs button.active {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: white;
+}
+.api-key-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 8px;
+}
+@media (max-width: 640px) {
+  .api-key-row { grid-template-columns: 1fr; }
+}
+
+/* === RIGHT PANEL - OUTPUT === */
+.output-step {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+  border: 1.5px solid var(--paper-dark);
+  transition: all 0.3s;
+}
+.output-step.highlight {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-md), 0 0 0 3px var(--accent-bg);
+}
+.step-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--ink-muted);
+  margin-bottom: 8px;
+}
+.step-title {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.output-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 16px;
+  border: 1.5px solid var(--paper-dark);
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-family: 'Noto Sans TC', sans-serif;
+  line-height: 1.9;
+  color: var(--ink);
+  background: var(--paper);
+  resize: vertical;
+  outline: none;
+  transition: all 0.2s;
+}
+.output-textarea:focus {
+  border-color: var(--blue-light);
+  background: white;
+}
+.output-textarea.final {
+  min-height: 180px;
+  font-size: 1rem;
+  background: white;
+  border-color: var(--ink-muted);
+}
+.btn-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.step-connector {
+  text-align: center;
+  padding: 8px 0;
+  color: var(--ink-muted);
+  font-size: 1.3rem;
+  opacity: 0.4;
+}
+
+/* === DAILY LIFE TABLE === */
+.daily-life-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1.5px solid var(--paper-dark);
+}
+.daily-life-table th {
+  background: var(--ink);
+  color: white;
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 1px;
+}
+.daily-life-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--paper-dark);
+  vertical-align: top;
+}
+.daily-life-table tr:last-child td { border-bottom: none; }
+.daily-life-table .row-label {
+  font-weight: 600;
+  color: var(--blue);
+  white-space: nowrap;
+  width: 120px;
+}
+.daily-life-table textarea {
+  width: 100%;
+  border: 1px solid var(--paper-dark);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  font-family: 'Noto Sans TC', sans-serif;
+  resize: vertical;
+  min-height: 36px;
+  outline: none;
+  background: var(--paper);
+  line-height: 1.6;
+}
+.daily-life-table textarea:focus {
+  border-color: var(--blue-light);
+  background: white;
+}
+
+/* char counter */
+.char-count {
+  text-align: right;
+  font-size: 0.7rem;
+  color: var(--ink-muted);
+  margin-top: 4px;
+}
+.char-count.warning { color: var(--accent); font-weight: 700; }
+
+/* Loading spinner */
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--ink);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  z-index: 999;
+  animation: toastIn 0.3s ease, toastOut 0.3s ease 1.7s forwards;
+}
+@keyframes toastIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes toastOut { from { opacity: 1; } to { opacity: 0; transform: translateY(20px); } }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .site-header { padding: 16px; }
+  .header-brand h1 { font-size: 1.15rem; }
+  .panel { padding: 16px; max-height: none; }
+  .code-items { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+  .trait-grid { grid-template-columns: 1fr; }
+}
+
+/* Scrollbar */
+.panel::-webkit-scrollbar { width: 6px; }
+.panel::-webkit-scrollbar-thumb { background: var(--paper-dark); border-radius: 6px; }
+.panel::-webkit-scrollbar-thumb:hover { background: var(--ink-muted); }
+
+/* Collapse */
+.collapse-toggle {
+  cursor: pointer;
+  user-select: none;
+}
+.collapse-toggle::after {
+  content: ' ▾';
+  font-size: 0.8em;
+}
+.collapse-toggle.collapsed::after {
+  content: ' ▸';
+}
+.collapse-body { transition: all 0.3s; }
+.collapse-body.hidden { display: none; }
+
+/* Print */
+@media print {
+  .site-header, .panel-left, .btn-row, .step-connector, .output-step:not(.highlight) { display: none; }
+  .main-grid { grid-template-columns: 1fr; }
+  .panel-right { max-height: none; background: white; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-brand">
+      <h1>導師評語生成系統<span class="accent-dot">｜</span>codex優化版</h1>
+      <div class="subtitle">德行評語 × 日常生活表現 ─ 結構化生成 + Gemini AI／本機規則智慧潤飾</div>
+      <div class="subtitle" style="margin-top:2px;">臺北市立麗山高中 生物科 林獻升老師製作 ─ <a href="mailto:frog@lssh.tp.edu.tw" style="color:var(--teal-light);text-decoration:none;">frog@lssh.tp.edu.tw</a></div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" onclick="clearAll()">🗑 重置</button>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<div class="main-grid">
+
+  <!-- ===== LEFT PANEL ===== -->
+  <div class="panel panel-left">
+
+    <!-- 1. 基本設定 -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background:var(--blue-bg);color:var(--blue);">👤</div>
+        <h2>基本設定</h2>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>學生姓名</label>
+          <input type="text" class="form-input" id="studentName" placeholder="輸入姓名">
+        </div>
+        <div class="form-group" style="min-width:100px;">
+          <label>性別</label>
+          <div class="toggle-group" id="genderToggle">
+            <button class="toggle-btn active" data-val="boy" onclick="setToggle('gender','boy',this)">男</button>
+            <button class="toggle-btn" data-val="girl" onclick="setToggle('gender','girl',this)">女</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>語氣風格</label>
+          <div class="toggle-group" id="toneToggle">
+            <button class="toggle-btn active" data-val="encouraging" onclick="setToggle('tone','encouraging',this)">溫暖鼓勵</button>
+            <button class="toggle-btn" data-val="neutral" onclick="setToggle('tone','neutral',this)">客觀中立</button>
+            <button class="toggle-btn" data-val="strict" onclick="setToggle('tone','strict',this)">委婉規勸</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 學校評語代碼 -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background:var(--accent-bg);color:var(--accent);">📋</div>
+        <h2>學校評語代碼</h2>
+        <span class="badge" style="background:var(--accent-bg);color:var(--accent);">可多選，點選插入</span>
+      </div>
+      <div class="code-grid-container">
+        <div class="code-category-tabs" id="codeTabs"></div>
+        <div class="code-items" id="codeItems"></div>
+      </div>
+      <div class="tag-list" id="selectedCodeTags" style="margin-top:10px;"></div>
+    </div>
+
+    <!-- 3. 職務與特殊表現 -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background:var(--gold-bg);color:var(--gold);">🏆</div>
+        <h2>職務與特殊表現</h2>
+      </div>
+      <!-- 幹部 -->
+      <div style="margin-bottom:16px;">
+        <label style="font-size:0.75rem;font-weight:700;color:var(--ink-muted);display:block;margin-bottom:6px;">擔任職務</label>
+        <div class="tag-input-row">
+          <input type="text" class="form-input" id="cadreRole" placeholder="職務名稱" style="flex:1;min-width:100px;">
+          <select class="form-input" id="cadrePerf" style="flex:1;min-width:100px;">
+            <option value="responsible">認真負責</option>
+            <option value="leadership">具領導力</option>
+            <option value="passive">較為被動</option>
+            <option value="improve">待加強</option>
+          </select>
+          <button class="btn btn-teal" onclick="addCadre()">＋</button>
+        </div>
+        <div class="role-filter-tabs" id="roleFilterTabs"></div>
+        <div class="quick-role-grid" id="quickRoleGrid"></div>
+        <div class="tag-list" id="cadreTags"></div>
+      </div>
+      <!-- 活動 -->
+      <div>
+        <label style="font-size:0.75rem;font-weight:700;color:var(--ink-muted);display:block;margin-bottom:6px;">校內外活動／競賽</label>
+        <div class="tag-input-row">
+          <input type="text" class="form-input" id="actName" placeholder="活動名稱" style="flex:2;min-width:100px;">
+          <input type="text" class="form-input" id="actResult" placeholder="成績 (選填)" style="flex:1;min-width:80px;">
+          <button class="btn btn-teal" onclick="addActivity()">＋</button>
+        </div>
+        <div class="tag-list" id="actTags"></div>
+      </div>
+    </div>
+
+    <!-- 4. 德行自評表資料 -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background:var(--gold-bg);color:var(--gold);">📝</div>
+        <h2 class="collapse-toggle" onclick="toggleCollapse(this,'selfEvalBody')">學生德行自評表資料</h2>
+        <span class="badge" style="background:var(--gold-bg);color:#8a6d0b;">選填，可由學生自評表抄錄</span>
+      </div>
+      <div id="selfEvalBody" class="collapse-body">
+        <div class="import-tools">
+          <div class="form-row" style="align-items:end;">
+            <div class="form-group">
+              <label>從 Excel 匯入學生德性自評</label>
+              <input type="file" class="file-input" id="selfEvalExcelFile" accept=".xlsx,.xls,.csv" onchange="importSelfEvalExcel(event)">
+            </div>
+            <div class="form-group">
+              <label>選擇學生列</label>
+              <select class="form-input" id="selfEvalStudentSelect" onchange="applySelectedSelfEvalRow()">
+                <option value="">尚未匯入</option>
+              </select>
+            </div>
+          </div>
+          <div class="btn-row" style="margin-top:0;">
+            <button class="btn btn-outline" onclick="applySelectedSelfEvalRow()">套用選取學生資料</button>
+            <button class="btn btn-outline" onclick="clearSelfEvalFields()">清空自評欄位</button>
+          </div>
+          <div class="tool-hint">匯入後會依「姓名／學生姓名」欄位自動比對目前學生；表單中沒有填寫的項目會保留空白，方便老師再補寫。</div>
+          <div class="status-line" id="selfEvalImportStatus"></div>
+        </div>
+        <div class="self-eval-group">
+          <h4>📌 校內表現</h4>
+          <div class="form-row">
+            <div class="form-group"><label>學校服務</label><input type="text" class="form-input" id="selfSchoolService" placeholder="如：圖書館志工"></div>
+            <div class="form-group"><label>社團表現</label><input type="text" class="form-input" id="selfClub" placeholder="如：籃球校隊"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>學業表現</label><input type="text" class="form-input" id="selfAcademic" placeholder="如：全班第三名"></div>
+            <div class="form-group"><label>生活常規</label><input type="text" class="form-input" id="selfDailyLife" placeholder="如：從未遲到"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>其他特殊表現</label><input type="text" class="form-input" id="selfSpecialIn" placeholder="如：科展入選"></div>
+          </div>
+        </div>
+        <div class="self-eval-group">
+          <h4>📌 校外表現</h4>
+          <div class="form-row">
+            <div class="form-group"><label>社會服務</label><input type="text" class="form-input" id="selfSocialService" placeholder="如：老人院志工"></div>
+            <div class="form-group"><label>活動表演</label><input type="text" class="form-input" id="selfPerformance" placeholder="如：社區音樂會演出"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>科學展覽</label><input type="text" class="form-input" id="selfScienceFair" placeholder="如：地方科展佳作"></div>
+            <div class="form-group"><label>其他特殊表現</label><input type="text" class="form-input" id="selfSpecialOut" placeholder="如：APCS 3級分"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. 智慧生成選項 -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background:var(--teal-bg);color:var(--teal);">⚡</div>
+        <h2>智慧生成選項</h2>
+        <span class="badge" style="background:var(--teal-bg);color:var(--teal);">點選「佳」或「待改進」</span>
+      </div>
+      <div id="traitContainer"></div>
+    </div>
+
+    <!-- 6. 導師勉勵 -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background:var(--accent-bg);color:var(--accent);">💬</div>
+        <h2>導師勉勵／結語</h2>
+      </div>
+      <input type="text" class="form-input" id="teacherEncouragement" placeholder="例：老師相信你一定做得到，加油！（留空則自動生成）">
+    </div>
+
+  </div><!-- /panel-left -->
+
+  <!-- ===== RIGHT PANEL ===== -->
+  <div class="panel panel-right">
+
+    <!-- Step 1: 基礎評語 -->
+    <div class="output-step" id="step1">
+      <div class="step-label">步驟一</div>
+      <div class="step-title">📝 結構化基礎評語</div>
+      <textarea class="output-textarea" id="baseComment" placeholder="請先於左側進行設定，再點擊「生成基礎評語」"></textarea>
+      <div class="char-count" id="baseCharCount"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary btn-lg" onclick="generateBase()" style="flex:1;">生成基礎評語</button>
+        <button class="btn btn-outline" onclick="copyText('baseComment')">📋 複製</button>
+      </div>
+    </div>
+
+    <div class="step-connector">⬇</div>
+
+    <!-- Step 2: 補充觀察 -->
+    <div class="output-step" id="step2">
+      <div class="step-label">步驟二</div>
+      <div class="step-title">✏️ 補充觀察 (自由輸入)</div>
+      <textarea class="output-textarea" id="freeInput" placeholder="輸入左側選單沒有的細節，例如：雖然成績有進步，但打掃工作常需要提醒..."></textarea>
+    </div>
+
+    <div class="step-connector">⬇</div>
+
+    <!-- AI Settings -->
+    <div class="output-step" id="aiSettings">
+      <div class="step-label">AI 設定</div>
+      <div class="step-title">⚙️ 潤飾模式與 API Key</div>
+      <div class="ai-settings">
+        <div class="form-row">
+          <div class="form-group">
+            <label>使用模式</label>
+            <select class="form-input" id="aiProvider" onchange="updateAiProviderUI()">
+              <option value="local">本機規則合併（免 API Key）</option>
+              <option value="gemini">Google Gemini（自行輸入 API Key）</option>
+            </select>
+          </div>
+        </div>
+        <div class="api-key-row" id="apiKeyRow" style="display:none;">
+          <input type="password" class="form-input" id="geminiApiKey" placeholder="輸入您的 Gemini API Key">
+          <button class="btn btn-gold" onclick="saveGeminiApiKey()">儲存 Key</button>
+          <button class="btn btn-teal" onclick="loadGeminiApiKey()">讀取 Key</button>
+          <button class="btn btn-outline" onclick="openGeminiApiKeyPage()">取得 API Key</button>
+        </div>
+        <div class="tool-hint" id="aiProviderHint">本機規則合併會直接在瀏覽器內完成，不會把文字送到雲端。</div>
+      </div>
+    </div>
+
+    <div class="step-connector">⬇</div>
+
+    <!-- Step 3: 最終評語 -->
+    <div class="output-step highlight" id="step3">
+      <div class="step-label">步驟三</div>
+      <div class="step-title" id="step3Title">✨ 最終德行評語 <span id="aiModeBadge" style="font-size:0.65rem;background:var(--teal-bg);color:var(--teal);padding:2px 8px;border-radius:12px;margin-left:6px;">本機規則／Gemini 潤飾</span></div>
+      <textarea class="output-textarea final" id="finalComment" placeholder="點擊下方按鈕進行合併與潤飾..."></textarea>
+      <div class="char-count" id="finalCharCount"></div>
+      <div class="btn-row">
+        <button class="btn btn-lg" id="mergeBtn" onclick="mergeAndPolish()" style="flex:1;background:linear-gradient(135deg, var(--accent), #8e44ad);color:white;">
+          ⚡ AI 智慧潤飾與合併
+        </button>
+        <button class="btn btn-outline btn-lg" onclick="copyText('finalComment')">📋 複製</button>
+      </div>
+    </div>
+
+    <div class="step-connector">⬇</div>
+
+    <!-- Step 4: 日常生活表現 -->
+    <div class="output-step" id="step4">
+      <div class="step-label">步驟四 (選用)</div>
+      <div class="step-title">📊 日常生活表現總表</div>
+      <table class="daily-life-table">
+        <thead><tr><th style="width:120px;">項目</th><th>內容</th></tr></thead>
+        <tbody>
+          <tr><td class="row-label">評語代碼</td><td><textarea id="dlCodes" rows="1" placeholder="自動帶入已選代碼" readonly style="background:#f0f0f0;"></textarea></td></tr>
+          <tr><td class="row-label">幹部經歷</td><td><textarea id="dlCadre" rows="1" placeholder="自動帶入"></textarea></td></tr>
+          <tr><td class="row-label">競賽與活動</td><td><textarea id="dlActivity" rows="1" placeholder="自動帶入"></textarea></td></tr>
+          <tr><td class="row-label">德行評語</td><td><textarea id="dlComment" rows="3" placeholder="由上方步驟三自動帶入" readonly style="background:#f0f0f0;"></textarea></td></tr>
+          <tr><td class="row-label">特殊優良表現</td><td><textarea id="dlSpecialPerformance" rows="3" placeholder="由校內表現與校外表現自動整理，可再手動微調"></textarea></td></tr>
+        </tbody>
+      </table>
+      <div class="btn-row" style="margin-top:12px;">
+        <button class="btn btn-gold" onclick="syncDailyLife()">🔄 同步所有資料至表格</button>
+        <button class="btn btn-outline" onclick="copyDailyLife()">📋 複製整張表格</button>
+      </div>
+    </div>
+
+    <!-- Step 5: Export -->
+    <div class="output-step" id="step5">
+      <div class="step-label">步驟五</div>
+      <div class="step-title">📤 匯出評語資料</div>
+      <div class="export-tools">
+        <div class="btn-row" style="margin-top:0;">
+          <button class="btn btn-teal btn-lg" onclick="exportExcel()">匯出 Excel</button>
+          <button class="btn btn-gold btn-lg" onclick="exportPdf()">匯出 PDF</button>
+        </div>
+        <div class="tool-hint">Excel 會依學生姓名、性別、評語代碼、幹部、活動、自評欄位、德行評語、特殊優良表現等項目分欄輸出；PDF 會產生可列印存檔的完整表格。</div>
+      </div>
+    </div>
+
+  </div><!-- /panel-right -->
+
+</div>
+
+<!-- Toast container -->
+<div id="toastContainer"></div>
+
+<script>
+// ============================
+// DATA
+// ============================
+const state = {
+  gender: 'boy',
+  tone: 'encouraging',
+  selectedCodes: [],
+  cadres: [],
+  activities: [],
+  traits: { academic: {}, social: {}, habit: {}, personality: {} },
+  importedSelfEvalRows: [],
+  roleFilter: 'all'
+};
+
+const cadreRoleGroups = {
+  cadre: {
+    label: '班級幹部',
+    roles: ['班長','副班長','風紀股長','副風紀股長','學藝股長','副學藝股長','衛生股長','副衛生股長','總務股長','副總務股長','康樂股長','副康樂股長','圖資股長','副圖資股長','輔導股長','保健股長']
+  },
+  teacher: {
+    label: '科目小老師',
+    roles: ['國文小老師','英文小老師','數學小老師','物理小老師','化學小老師','生物小老師','地科小老師','地理小老師','歷史小老師','公民小老師','音樂小老師','美術小老師','資訊小老師','生科小老師','體育小老師','藝能小老師']
+  }
+};
+
+const selfEvalFields = [
+  {id:'selfSchoolService', label:'學校服務', aliases:['學校服務','校內服務','服務學習','校內表現-學校服務','校內表現']},
+  {id:'selfClub', label:'社團表現', aliases:['社團表現','社團','社團活動']},
+  {id:'selfAcademic', label:'學業表現', aliases:['學業表現','學習表現','成績表現','課業表現']},
+  {id:'selfDailyLife', label:'生活常規', aliases:['生活常規','日常生活','生活表現','出缺席','守法表現']},
+  {id:'selfSpecialIn', label:'校內其他特殊表現', aliases:['其他特殊表現','校內其他特殊表現','校內特殊表現','特殊表現']},
+  {id:'selfSocialService', label:'社會服務', aliases:['社會服務','校外服務','志工服務']},
+  {id:'selfPerformance', label:'活動表演', aliases:['活動表演','校外活動','表演活動','活動參與']},
+  {id:'selfScienceFair', label:'科學展覽', aliases:['科學展覽','科展','科學競賽']},
+  {id:'selfSpecialOut', label:'校外其他特殊表現', aliases:['校外其他特殊表現','校外特殊表現','其他校外表現']}
+];
+
+const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+const GEMINI_API_KEY_URL = 'https://aistudio.google.com/app/apikey';
+
+const schoolCommentDB = {
+  nature1: {
+    label: '性情(正向)',
+    items: [
+      {code:'101',text:'端莊有禮'},{code:'102',text:'外圓內方'},{code:'103',text:'稟性善良'},
+      {code:'104',text:'溫文謙和'},{code:'105',text:'溫順忠厚'},{code:'106',text:'溫文爾雅'},
+      {code:'107',text:'溫和樸實'},{code:'108',text:'和善敦睦'},{code:'109',text:'勤勞儉樸'},
+      {code:'110',text:'誠正勤樸'},{code:'111',text:'熱誠正直'},{code:'112',text:'誠懇坦率'},
+      {code:'113',text:'沈靜溫和'},{code:'114',text:'沈著鎮靜'},{code:'115',text:'沈默負責'},
+      {code:'116',text:'沈默內向'},{code:'117',text:'剛毅木訥'},{code:'118',text:'文靜篤實'},
+      {code:'119',text:'文質彬彬'},{code:'120',text:'內向自律'},{code:'121',text:'不矜不伐'},
+      {code:'122',text:'持躬謹嚴'},{code:'123',text:'處世平和'},{code:'124',text:'舉止端莊'},
+      {code:'125',text:'舉止大方'},{code:'126',text:'胸襟開闊'},{code:'127',text:'穩健練達'},
+      {code:'128',text:'忠厚誠懇'},{code:'129',text:'剛毅渾厚'},{code:'130',text:'剛毅沈著'},
+      {code:'131',text:'活潑爽朗'},{code:'132',text:'活潑天真'},{code:'133',text:'活潑外向'},
+      {code:'134',text:'耿介直爽'},{code:'135',text:'樂天安閒'},{code:'136',text:'胸襟開闊'},
+      {code:'137',text:'胸襟豁達'},{code:'138',text:'慷慨直爽'},{code:'139',text:'坦白直爽'},
+      {code:'140',text:'博學正直'},{code:'141',text:'心地善良'},{code:'142',text:'能知自勉'},
+      {code:'143',text:'光明磊落'},{code:'144',text:'老成持重'},{code:'145',text:'才思敏捷'},
+      {code:'146',text:'能當重任'},{code:'147',text:'深具自信'},{code:'148',text:'精明能幹'},
+      {code:'149',text:'善體人意'},{code:'150',text:'靈敏急智'},{code:'151',text:'氣質不凡'},
+      {code:'152',text:'卓爾不群'}
+    ]
+  },
+  nature2: {
+    label: '性情(待改進)',
+    items: [
+      {code:'201',text:'稚氣未泯'},{code:'202',text:'玩世不恭'},{code:'203',text:'不拘小節'},
+      {code:'204',text:'恃才傲物'},{code:'205',text:'豪放不拘'},{code:'206',text:'憨直衝動'},
+      {code:'207',text:'安少躁多'},{code:'208',text:'心浮氣躁'},{code:'209',text:'心氣不定'},
+      {code:'210',text:'好動剛直'},{code:'211',text:'性急好動'},{code:'212',text:'舉止輕佻'},
+      {code:'213',text:'衝動易怒'},{code:'214',text:'心直口快'},{code:'215',text:'放蕩不羈'},
+      {code:'216',text:'倔強固執'},{code:'217',text:'處事主觀'},{code:'218',text:'我行我素'},
+      {code:'219',text:'自行其是'},{code:'220',text:'落落寡合'},{code:'221',text:'剛愎自用'},
+      {code:'222',text:'不善表達'},{code:'223',text:'閒話稍多'},{code:'224',text:'言多行少'},
+      {code:'225',text:'言多過實'},{code:'226',text:'言行隨便'},{code:'227',text:'好議多評'},
+      {code:'228',text:'強辭好辯'},{code:'229',text:'意志不堅'},{code:'230',text:'意志消沉'},
+      {code:'231',text:'少有主見'},{code:'232',text:'優柔寡斷'},{code:'233',text:'易受影響'},
+      {code:'234',text:'缺乏信心'},{code:'235',text:'自暴自棄'},{code:'236',text:'生活散漫'},
+      {code:'237',text:'敷衍草率'},{code:'238',text:'草率從事'},{code:'239',text:'浮華不實'},
+      {code:'240',text:'固執不通'},{code:'241',text:'嬉遊無度'},{code:'242',text:'聰明貪玩'},
+      {code:'243',text:'荒廢學業'},{code:'244',text:'舍本逐末'},{code:'245',text:'情緒不穩'},
+      {code:'246',text:'精神不振'},{code:'247',text:'神情慵倦'},{code:'248',text:'感情用事'},
+      {code:'249',text:'固執不通'},{code:'250',text:'輕率急躁'},{code:'251',text:'輕浮散慢'},
+      {code:'252',text:'孤僻成性'}
+    ]
+  },
+  learning: {
+    label: '向學(正向)',
+    items: [
+      {code:'301',text:'學業優良'},{code:'302',text:'品學兼優'},{code:'303',text:'敦品勵學'},
+      {code:'304',text:'學行俱佳'},{code:'305',text:'學習有方'},{code:'306',text:'學習專心'},
+      {code:'307',text:'學習認真'},{code:'308',text:'勤學用功'},{code:'309',text:'敏而好學'},
+      {code:'310',text:'多才多藝'},{code:'311',text:'好學多聞'},{code:'312',text:'好學靈敏'},
+      {code:'313',text:'博學慎思'},{code:'314',text:'涉獵廣博'},{code:'315',text:'求學踏實'},
+      {code:'316',text:'機敏好學'},{code:'317',text:'熟讀深思'},{code:'318',text:'理解力強'},
+      {code:'319',text:'博學多聞'},{code:'320',text:'天資聰穎'},{code:'321',text:'聰明伶俐'},
+      {code:'322',text:'求知慾強'},{code:'323',text:'專心致志'},{code:'324',text:'勤學有恒'},
+      {code:'325',text:'富於研究'},{code:'326',text:'好學不倦'},{code:'327',text:'敬業樂群'},
+      {code:'328',text:'勤勉有功'},{code:'329',text:'勤學多問'},{code:'330',text:'日有進步'}
+    ]
+  },
+  learning2: {
+    label: '向學(待改進)',
+    items: [
+      {code:'351',text:'尚知用功'},{code:'352',text:'學業尚可'},{code:'353',text:'勉能應付'},
+      {code:'354',text:'尚知認真'},{code:'355',text:'學行尚佳'},{code:'356',text:'須多努力'},
+      {code:'357',text:'加強學習'},{code:'358',text:'聽課不專'},{code:'359',text:'不求甚解'},
+      {code:'360',text:'粗心大意'},{code:'361',text:'輕忽學業'},{code:'362',text:'時學時輟'},
+      {code:'363',text:'貪玩怠學'},{code:'364',text:'心猿意馬'},{code:'365',text:'上課多言'},
+      {code:'366',text:'心不專一'},{code:'367',text:'作業草率'},{code:'368',text:'作業常缺'},
+      {code:'369',text:'經常遲到'},{code:'370',text:'缺曠過多'}
+    ]
+  },
+  ambition: {
+    label: '進取',
+    items: [
+      {code:'401',text:'樂觀進取'},{code:'402',text:'力行不倦'},{code:'403',text:'勉能應付'},
+      {code:'404',text:'積極奮勉'},{code:'405',text:'奮發向上'},{code:'406',text:'意志堅強'},
+      {code:'407',text:'堅毅有恒'},{code:'408',text:'聽課不專'},{code:'409',text:'刻苦耐勞'},
+      {code:'410',text:'刻苦自勵'},{code:'411',text:'茅塞頓開'},{code:'412',text:'循序漸進'},
+      {code:'451',text:'尚知進取'},{code:'452',text:'尚知奮勉'},{code:'453',text:'尚知振作'},
+      {code:'454',text:'尚能自勵'},{code:'455',text:'尚知上進'},{code:'456',text:'尚能耐勞'},
+      {code:'457',text:'須多上進'},{code:'458',text:'須多奮勉'},{code:'459',text:'須多自勉'},
+      {code:'460',text:'須多惕勵'},{code:'461',text:'須圖振作'},{code:'462',text:'須多主動'},
+      {code:'463',text:'加強恒心'},{code:'464',text:'加強毅力'},{code:'465',text:'加強信心'}
+    ]
+  },
+  discipline: {
+    label: '紀律',
+    items: [
+      {code:'501',text:'循規蹈矩'},{code:'502',text:'守正不阿'},{code:'503',text:'守法重紀'},
+      {code:'504',text:'安分守己'},{code:'505',text:'潔身自好'},{code:'506',text:'自重自愛'},
+      {code:'507',text:'有守有為'},{code:'508',text:'品行端正'},{code:'509',text:'須多自勉'},
+      {code:'510',text:'明辨是非'},{code:'511',text:'禮貌週到'},{code:'512',text:'擇善固執'},
+      {code:'513',text:'篤守信義'},{code:'514',text:'愛護團體'},{code:'515',text:'思想純正'},
+      {code:'516',text:'儀容整潔'},{code:'517',text:'能知進退'},{code:'518',text:'知錯能改'},
+      {code:'519',text:'勇於改過'},{code:'520',text:'知恥奮發'},{code:'521',text:'自勉自律'},
+      {code:'522',text:'慎思明辨'},
+      {code:'551',text:'尚守規矩'},{code:'552',text:'尚守禮儀'},{code:'553',text:'尚能自律'},
+      {code:'554',text:'尚能自愛'},{code:'555',text:'尚辨是非'},{code:'556',text:'不守規定'},
+      {code:'557',text:'閒話稍多'},{code:'558',text:'因循苟且'},{code:'559',text:'宜加強禮節'},
+      {code:'560',text:'宜加強儀容'},{code:'561',text:'宜加強倫理'},{code:'562',text:'宜加強德行'},
+      {code:'563',text:'宜加強孝行'},{code:'564',text:'屢勸不改'},{code:'565',text:'宜培養謙和'},
+      {code:'566',text:'得過且過'}
+    ]
+  },
+  social: {
+    label: '交友',
+    items: [
+      {code:'601',text:'隨和易處'},{code:'602',text:'待人謙和'},{code:'603',text:'待人真誠'},
+      {code:'604',text:'友愛同學'},{code:'605',text:'敬師睦友'},{code:'606',text:'善於交友'},
+      {code:'607',text:'樂群合作'},{code:'608',text:'談吐有度'},{code:'609',text:'謹言慎行'},
+      {code:'610',text:'幽默風趣'},{code:'611',text:'爽朗合群'},{code:'612',text:'友愛合群'},
+      {code:'613',text:'感情豐富'},{code:'614',text:'頗有人緣'},{code:'615',text:'悅己納人'},
+      {code:'616',text:'隨和從眾'},{code:'617',text:'能忍讓人'},{code:'618',text:'體恤諒人'},
+      {code:'619',text:'關心別人'},{code:'620',text:'為人解憂'},
+      {code:'651',text:'不善交友'},{code:'652',text:'多交益友'},{code:'653',text:'須多合群'},
+      {code:'654',text:'謹慎交友'},{code:'655',text:'交友稍雜'},{code:'656',text:'略顯孤傲'}
+    ]
+  },
+  service: {
+    label: '服務',
+    items: [
+      {code:'701',text:'熱心服務'},{code:'702',text:'熱心公益'},{code:'703',text:'熱心助人'},
+      {code:'704',text:'熱衷活動'},{code:'705',text:'急公好義'},{code:'706',text:'任勞任怨'},
+      {code:'707',text:'處世有方'},{code:'708',text:'服務盡責'},{code:'709',text:'領導力高'},
+      {code:'710',text:'表現卓越'},{code:'711',text:'熱心可嘉'},{code:'712',text:'熱心負責'},
+      {code:'713',text:'大公無私'},{code:'714',text:'敏捷伶俐'},{code:'715',text:'勤勉合作'},
+      {code:'716',text:'主動勤快'},{code:'717',text:'熱心班務'},{code:'718',text:'以身作則'},
+      {code:'719',text:'缺責任感'},{code:'720',text:'不重公務'}
+    ]
+  },
+  skills: {
+    label: '擅長',
+    items: [
+      {code:'801',text:'擅長文史'},{code:'802',text:'擅長數理'},{code:'803',text:'擅長運動'},
+      {code:'804',text:'擅長演說'},{code:'805',text:'擅長音樂'},{code:'806',text:'擅長美術'},
+      {code:'807',text:'擅長工藝'},{code:'808',text:'擅長書法'},{code:'809',text:'擅長寫作'},
+      {code:'810',text:'擅長舞蹈'},{code:'811',text:'擅長國術'},{code:'812',text:'擅長戲劇'},
+      {code:'813',text:'擅長民俗'},{code:'814',text:'拙於數理'},{code:'815',text:'不喜文史'},
+      {code:'816',text:'英文特佳'}
+    ]
+  }
+};
+
+const traitDatabase = {
+  academic: {
+    label: '📚 學習態度',
+    items: [
+      {id:'focus',text:'上課專注',pos:'上課時眼神總是專注於老師，能跟上教學節奏',neg:'上課時較容易分心，建議加強專注力，以免遺漏重點'},
+      {id:'homework',text:'作業繳交',pos:'作業皆能按時繳交且字跡工整',neg:'作業偶有缺交或遲交情形，需培養責任感，準時完成任務'},
+      {id:'question',text:'勇於發問',pos:'遇到不懂的問題會主動舉手發問，求知慾強',neg:'遇到問題較少主動提問，鼓勵多與老師討論，釐清觀念'},
+      {id:'participation',text:'課堂參與',pos:'課堂討論參與度高，樂於分享看法',neg:'課堂上較為安靜，希望能多聽到你的想法，增加互動'},
+      {id:'notes',text:'筆記習慣',pos:'能勤做筆記，重點整理清晰有條理',neg:'筆記較為零散，建議多練習歸納重點，提升學習效率'},
+      {id:'review',text:'課後複習',pos:'課後能主動複習，學習態度積極',neg:'課後複習較被動，建議擬定讀書計畫，養成規律習慣'}
+    ]
+  },
+  habit: {
+    label: '🏫 生活常規與守法',
+    items: [
+      {id:'clean',text:'整潔衛生',pos:'座位及抽屜總是保持整潔，衛生習慣良好',neg:'座位周遭常有雜物，需加強個人衛生習慣，維護環境'},
+      {id:'phone',text:'手機使用',pos:'能自律控制手機使用，遵守校內規定',neg:'手機使用頻率過高，建議上課期間應專注，遵守使用規範'},
+      {id:'attire',text:'服裝儀容',pos:'服裝儀容整潔合宜，符合學校規範',neg:'未依規定穿著校服，請務必遵守校規，注意儀容端莊'},
+      {id:'lateness',text:'遲到狀況',pos:'每日準時到校，從不遲到，展現守時美德',neg:'遲到次數過多，建議調整作息，養成守時觀念，準時上學'},
+      {id:'truancy',text:'出缺勤',pos:'出缺勤紀錄良好，請假皆依規定辦理',neg:'偶有曠課情形，缺席務必依規定辦理請假，不可無故未到'},
+      {id:'discipline',text:'獎懲紀錄',pos:'行為舉止合宜，無任何違規紀錄',neg:'曾有懲處紀錄，提醒務必積極改過銷過，並嚴格遵守校規'}
+    ]
+  },
+  social: {
+    label: '🤝 人際互動',
+    items: [
+      {id:'cooperation',text:'團隊合作',pos:'在小組活動中能與同學互助合作，展現團隊精神',neg:'團體活動時較堅持己見，建議多傾聽他人意見，學習配合'},
+      {id:'polite',text:'禮貌應對',pos:'對師長有禮，與同學相處融洽，人緣極佳',neg:'與同學相處時言語較為直接，宜學習說話的藝術，避免誤會'},
+      {id:'empathy',text:'同理心',pos:'富有同理心，常主動協助需要幫忙的同學',neg:'對於他人的感受較不敏銳，建議多換位思考，體貼他人'},
+      {id:'conflict',text:'衝突處理',pos:'遇衝突能理性溝通，化解誤會',neg:'遇衝突較易衝動，建議先冷靜思考，再尋求溝通解決'},
+      {id:'inclusive',text:'包容友善',pos:'能包容不同意見，友善對待每位同學',neg:'對於不同意見較排斥，鼓勵展現包容心，接納多元聲音'}
+    ]
+  },
+  personality: {
+    label: '💎 個人特質',
+    items: [
+      {id:'optimistic',text:'樂觀進取',pos:'個性開朗樂觀，遇到挫折能迅速調整心情',neg:'遇到挫折容易氣餒，相信自己能做得更好，保持正向'},
+      {id:'honest',text:'誠實正直',pos:'待人誠懇，個性正直，是個值得信賴的孩子',neg:'對於犯錯有時會選擇掩飾，誠實面對才是成長的開始'},
+      {id:'introvert',text:'內向沉穩',pos:'個性沉穩內斂，思考周慮，行事謹慎',neg:'個性較為害羞退縮，鼓勵多參與活動，展現自我長才'},
+      {id:'extrovert',text:'活潑外向',pos:'個性活潑大方，勇於表現，是班上的開心果',neg:'有時過於躁動，建議學習在適當場合保持安靜沉穩'},
+      {id:'resilience',text:'抗壓性',pos:'具備良好的抗壓性，能面對挑戰而不輕言放棄',neg:'面對壓力較易焦慮，建議尋求適當紓壓管道，增強韌性'},
+      {id:'emotion',text:'情緒穩定',pos:'情緒管理佳，遇事不慌亂，能理性應對',neg:'情緒起伏較大，建議學習自我察覺與調適，保持平和'},
+      {id:'leadership',text:'領導能力',pos:'具備領導潛力，能有效帶領同學完成任務',neg:'在團體中較缺乏主見，鼓勵多嘗試承擔責任，培養領導力'},
+      {id:'curiosity',text:'好奇心',pos:'對新事物充滿好奇，樂於探索未知領域',neg:'對周遭事物較無感，鼓勵多觀察世界，激發學習熱忱'}
+    ]
+  }
+};
+
+// ============================
+// INIT
+// ============================
+let currentCodeCategory = 'nature1';
+
+function init() {
+  renderCodeTabs();
+  renderCodeItems();
+  renderRoleFilters();
+  renderQuickRoles();
+  renderTraits();
+  loadGeminiApiKey(false);
+  updateAiProviderUI();
+  
+  // Char counts
+  document.getElementById('baseComment').addEventListener('input', () => updateCharCount('baseComment','baseCharCount'));
+  document.getElementById('finalComment').addEventListener('input', () => updateCharCount('finalComment','finalCharCount'));
+  document.getElementById('studentName').addEventListener('change', autoApplySelfEvalForCurrentStudent);
+}
+
+// ============================
+// SCHOOL CODES
+// ============================
+function renderCodeTabs() {
+  const container = document.getElementById('codeTabs');
+  container.innerHTML = '';
+  Object.keys(schoolCommentDB).forEach(key => {
+    const tab = document.createElement('button');
+    tab.className = 'code-tab' + (key === currentCodeCategory ? ' active' : '');
+    tab.textContent = schoolCommentDB[key].label;
+    tab.onclick = () => { currentCodeCategory = key; renderCodeTabs(); renderCodeItems(); };
+    container.appendChild(tab);
+  });
+}
+
+function renderCodeItems() {
+  const container = document.getElementById('codeItems');
+  const items = schoolCommentDB[currentCodeCategory].items;
+  container.innerHTML = '';
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'code-item' + (state.selectedCodes.includes(item.code) ? ' selected' : '');
+    div.innerHTML = `<span class="code-num">${item.code}</span>${item.text}`;
+    div.onclick = () => toggleCode(item.code, item.text);
+    container.appendChild(div);
+  });
+}
+
+function toggleCode(code, text) {
+  const idx = state.selectedCodes.findIndex(c => c === code);
+  if (idx >= 0) { state.selectedCodes.splice(idx, 1); }
+  else { state.selectedCodes.push(code); }
+  renderCodeItems();
+  renderCodeTags();
+}
+
+function renderCodeTags() {
+  const container = document.getElementById('selectedCodeTags');
+  container.innerHTML = '';
+  state.selectedCodes.forEach(code => {
+    let text = '';
+    Object.values(schoolCommentDB).forEach(cat => {
+      const found = cat.items.find(i => i.code === code);
+      if (found) text = found.text;
+    });
+    const tag = document.createElement('span');
+    tag.className = 'tag tag-blue';
+    tag.innerHTML = `${code} ${text} <span class="remove-tag" onclick="removeCode('${code}')">&times;</span>`;
+    container.appendChild(tag);
+  });
+}
+
+function removeCode(code) {
+  state.selectedCodes = state.selectedCodes.filter(c => c !== code);
+  renderCodeItems();
+  renderCodeTags();
+}
+
+// ============================
+// CADRES & ACTIVITIES
+// ============================
+function renderRoleFilters() {
+  const container = document.getElementById('roleFilterTabs');
+  const filters = [
+    {key:'all', label:'全部'},
+    {key:'cadre', label:cadreRoleGroups.cadre.label},
+    {key:'teacher', label:cadreRoleGroups.teacher.label}
+  ];
+  container.innerHTML = '';
+  filters.forEach(filter => {
+    const btn = document.createElement('button');
+    btn.className = state.roleFilter === filter.key ? 'active' : '';
+    btn.textContent = filter.label;
+    btn.onclick = () => {
+      state.roleFilter = filter.key;
+      renderRoleFilters();
+      renderQuickRoles();
+    };
+    container.appendChild(btn);
+  });
+}
+
+function renderQuickRoles() {
+  const container = document.getElementById('quickRoleGrid');
+  if (!container) return;
+  const groups = state.roleFilter === 'all'
+    ? Object.values(cadreRoleGroups)
+    : [cadreRoleGroups[state.roleFilter]];
+  const roles = groups.flatMap(group => group.roles);
+  container.innerHTML = '';
+  roles.forEach(role => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'quick-role-btn';
+    btn.textContent = role;
+    btn.onclick = () => {
+      document.getElementById('cadreRole').value = role;
+      document.getElementById('cadreRole').focus();
+    };
+    container.appendChild(btn);
+  });
+}
+
+function addCadre() {
+  const role = document.getElementById('cadreRole').value.trim();
+  if (!role) return;
+  const perf = document.getElementById('cadrePerf').value;
+  state.cadres.push({ id: Date.now(), role, perf });
+  document.getElementById('cadreRole').value = '';
+  renderCadreTags();
+}
+
+function renderCadreTags() {
+  const container = document.getElementById('cadreTags');
+  const perfMap = { responsible:'負責', leadership:'領導', passive:'被動', improve:'待強' };
+  container.innerHTML = '';
+  state.cadres.forEach(c => {
+    const tag = document.createElement('span');
+    tag.className = 'tag tag-gold';
+    tag.innerHTML = `${c.role}（${perfMap[c.perf]}）<span class="remove-tag" onclick="removeCadre(${c.id})">&times;</span>`;
+    container.appendChild(tag);
+  });
+}
+
+function removeCadre(id) {
+  state.cadres = state.cadres.filter(c => c.id !== id);
+  renderCadreTags();
+}
+
+function addActivity() {
+  const name = document.getElementById('actName').value.trim();
+  if (!name) return;
+  const result = document.getElementById('actResult').value.trim();
+  state.activities.push({ id: Date.now(), name, result });
+  document.getElementById('actName').value = '';
+  document.getElementById('actResult').value = '';
+  renderActTags();
+}
+
+function renderActTags() {
+  const container = document.getElementById('actTags');
+  container.innerHTML = '';
+  state.activities.forEach(a => {
+    const tag = document.createElement('span');
+    tag.className = 'tag tag-gold';
+    tag.innerHTML = `${a.name}${a.result ? '（' + a.result + '）' : ''} <span class="remove-tag" onclick="removeActivity(${a.id})">&times;</span>`;
+    container.appendChild(tag);
+  });
+}
+
+function removeActivity(id) {
+  state.activities = state.activities.filter(a => a.id !== id);
+  renderActTags();
+}
+
+// ============================
+// TRAITS
+// ============================
+function renderTraits() {
+  const container = document.getElementById('traitContainer');
+  container.innerHTML = '';
+  Object.keys(traitDatabase).forEach(catKey => {
+    const cat = traitDatabase[catKey];
+    const div = document.createElement('div');
+    div.className = 'trait-category';
+    div.innerHTML = `<div class="trait-category-header">${cat.label}</div><div class="trait-grid" id="traitGrid_${catKey}"></div>`;
+    container.appendChild(div);
+    
+    const grid = div.querySelector('.trait-grid');
+    cat.items.forEach(item => {
+      const current = state.traits[catKey][item.id] || null;
+      const card = document.createElement('div');
+      card.className = 'trait-card';
+      card.innerHTML = `
+        <div class="trait-name">${item.text}</div>
+        <div class="trait-btns">
+          <button class="trait-btn ${current === 'pos' ? 'pos-active' : ''}" onclick="toggleTrait('${catKey}','${item.id}','pos')">✓ 佳</button>
+          <button class="trait-btn ${current === 'neg' ? 'neg-active' : ''}" onclick="toggleTrait('${catKey}','${item.id}','neg')">△ 待改進</button>
+        </div>`;
+      grid.appendChild(card);
+    });
+  });
+}
+
+function toggleTrait(catKey, itemId, type) {
+  if (state.traits[catKey][itemId] === type) {
+    delete state.traits[catKey][itemId];
+  } else {
+    state.traits[catKey][itemId] = type;
+  }
+  renderTraits();
+}
+
+// ============================
+// TOGGLE BUTTONS
+// ============================
+function setToggle(field, val, btn) {
+  state[field] = val;
+  const group = btn.parentElement;
+  group.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ============================
+// COLLAPSE
+// ============================
+function toggleCollapse(header, bodyId) {
+  header.classList.toggle('collapsed');
+  document.getElementById(bodyId).classList.toggle('hidden');
+}
+
+// ============================
+// SELF-EVAL EXCEL IMPORT
+// ============================
+function normalizeHeader(text) {
+  return String(text || '').replace(/\s+/g, '').replace(/[：:]/g, '').toLowerCase();
+}
+
+function getRowValue(row, aliases) {
+  const normalizedMap = {};
+  Object.keys(row).forEach(key => {
+    normalizedMap[normalizeHeader(key)] = row[key];
+  });
+  for (const alias of aliases) {
+    const value = normalizedMap[normalizeHeader(alias)];
+    if (value !== undefined && value !== null && String(value).trim() !== '') return String(value).trim();
+  }
+  return '';
+}
+
+function getStudentNameFromRow(row) {
+  return getRowValue(row, ['學生姓名','姓名','學生','名字','name']);
+}
+
+function importSelfEvalExcel(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  if (!window.XLSX) {
+    showToast('⚠️ Excel 函式庫尚未載入，請確認網路後重新開啟檔案');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      state.importedSelfEvalRows = rows;
+      renderSelfEvalStudentOptions(rows);
+      autoApplySelfEvalForCurrentStudent();
+      document.getElementById('selfEvalImportStatus').textContent = `已匯入 ${rows.length} 筆資料，來源工作表：${workbook.SheetNames[0]}`;
+      showToast('✅ 學生德性自評資料已匯入');
+    } catch (err) {
+      console.error(err);
+      showToast('⚠️ 匯入失敗：' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function renderSelfEvalStudentOptions(rows) {
+  const select = document.getElementById('selfEvalStudentSelect');
+  select.innerHTML = '<option value="">請選擇學生</option>';
+  rows.forEach((row, index) => {
+    const name = getStudentNameFromRow(row) || `第 ${index + 1} 筆`;
+    const option = document.createElement('option');
+    option.value = String(index);
+    option.textContent = name;
+    select.appendChild(option);
+  });
+}
+
+function autoApplySelfEvalForCurrentStudent() {
+  const currentName = document.getElementById('studentName').value.trim();
+  const select = document.getElementById('selfEvalStudentSelect');
+  if (!currentName || !state.importedSelfEvalRows.length) return;
+  const idx = state.importedSelfEvalRows.findIndex(row => getStudentNameFromRow(row) === currentName);
+  if (idx >= 0) {
+    select.value = String(idx);
+    applySelectedSelfEvalRow();
+  }
+}
+
+function applySelectedSelfEvalRow() {
+  const select = document.getElementById('selfEvalStudentSelect');
+  const idx = Number(select.value);
+  if (!Number.isInteger(idx) || !state.importedSelfEvalRows[idx]) return;
+  const row = state.importedSelfEvalRows[idx];
+  const rowName = getStudentNameFromRow(row);
+  if (rowName && !document.getElementById('studentName').value.trim()) {
+    document.getElementById('studentName').value = rowName;
+  }
+  selfEvalFields.forEach(field => {
+    document.getElementById(field.id).value = getRowValue(row, field.aliases);
+  });
+  document.getElementById('selfEvalImportStatus').textContent = `已套用：${rowName || `第 ${idx + 1} 筆資料`}`;
+  showToast('✅ 已套用學生自評資料');
+}
+
+function clearSelfEvalFields() {
+  selfEvalFields.forEach(field => {
+    document.getElementById(field.id).value = '';
+  });
+  showToast('已清空自評欄位');
+}
+
+// ============================
+// GENERATE BASE COMMENT
+// ============================
+function generateBase() {
+  const parts = [];
+  const name = document.getElementById('studentName').value.trim() || '該生';
+  const pronouns = state.gender === 'boy' ? '他' : '她';
+
+  // Opening
+  if (state.tone === 'encouraging') parts.push(`${name}這學期在許多方面都有不錯的表現。`);
+  else if (state.tone === 'strict') parts.push(`關於${name}本學期的在校表現，有以下幾點觀察：`);
+  else parts.push(`${name}本學期的學習與生活表現如下：`);
+
+  // School codes
+  if (state.selectedCodes.length > 0) {
+    const codeTexts = [];
+    state.selectedCodes.forEach(code => {
+      Object.values(schoolCommentDB).forEach(cat => {
+        const found = cat.items.find(i => i.code === code);
+        if (found) codeTexts.push(found.text);
+      });
+    });
+    if (codeTexts.length > 0) parts.push('性情方面，' + codeTexts.join('、') + '。');
+  }
+
+  // Traits
+  Object.keys(traitDatabase).forEach(catKey => {
+    const selections = state.traits[catKey];
+    const sentences = [];
+    Object.keys(selections).forEach(itemId => {
+      const type = selections[itemId];
+      const itemData = traitDatabase[catKey].items.find(i => i.id === itemId);
+      if (itemData) sentences.push(type === 'pos' ? itemData.pos : itemData.neg);
+    });
+    if (sentences.length > 0) parts.push(sentences.join('；') + '。');
+  });
+
+  // Self-eval data
+  const selfFields = [
+    {id:'selfSchoolService',prefix:'校內服務方面，'},
+    {id:'selfClub',prefix:'社團表現方面，'},
+    {id:'selfAcademic',prefix:'學業表現方面，'},
+    {id:'selfDailyLife',prefix:'生活常規方面，'},
+    {id:'selfSpecialIn',prefix:''},
+    {id:'selfSocialService',prefix:'校外服務方面，'},
+    {id:'selfPerformance',prefix:''},
+    {id:'selfScienceFair',prefix:'科展方面，'},
+    {id:'selfSpecialOut',prefix:''}
+  ];
+  const selfParts = [];
+  selfFields.forEach(f => {
+    const v = document.getElementById(f.id)?.value?.trim();
+    if (v) selfParts.push(f.prefix + v);
+  });
+  if (selfParts.length > 0) parts.push(selfParts.join('；') + '。');
+
+  // Cadres
+  if (state.cadres.length > 0) {
+    const perfMap = {
+      responsible: '期間認真負責',
+      leadership: '展現出色領導力',
+      passive: '較為被動',
+      improve: '責任感待加強'
+    };
+    const cStrs = state.cadres.map(c => `擔任${c.role}${perfMap[c.perf]}`);
+    parts.push(cStrs.join('，') + '。');
+  }
+
+  // Activities
+  if (state.activities.length > 0) {
+    const aStrs = state.activities.map(a => a.result ? `參加${a.name}榮獲${a.result}` : `積極參與${a.name}`);
+    parts.push(aStrs.join('，') + '，表現亮眼。');
+  }
+
+  // Encouragement
+  const enc = document.getElementById('teacherEncouragement').value.trim();
+  if (enc) {
+    parts.push(enc);
+  } else {
+    if (state.tone === 'encouraging') parts.push(`期許${pronouns}能保持優點，繼續努力，老師看好你的潛力！`);
+    else if (state.tone === 'strict') parts.push(`希望${pronouns}能正視需要改進之處，下學期展現更成熟的態度。`);
+    else parts.push(`整體而言，期盼${pronouns}能持續進步，為未來打下良好基礎。`);
+  }
+
+  document.getElementById('baseComment').value = parts.join('');
+  document.getElementById('finalComment').value = '';
+  updateCharCount('baseComment','baseCharCount');
+  showToast('✅ 基礎評語已生成');
+}
+
+// ============================
+// MERGE & POLISH
+// ============================
+function updateAiProviderUI() {
+  const provider = document.getElementById('aiProvider')?.value || 'local';
+  const apiKeyRow = document.getElementById('apiKeyRow');
+  const hint = document.getElementById('aiProviderHint');
+  const badge = document.getElementById('aiModeBadge');
+  if (provider === 'gemini') {
+    apiKeyRow.style.display = 'grid';
+    hint.textContent = 'Gemini 模式會使用您輸入的 API Key 直接從瀏覽器送出文字，Key 僅儲存在本機瀏覽器。';
+    badge.textContent = 'Gemini AI 潤飾';
+  } else {
+    apiKeyRow.style.display = 'none';
+    hint.textContent = '本機規則合併會直接在瀏覽器內完成，不會把文字送到雲端。';
+    badge.textContent = '本機規則潤飾';
+  }
+}
+
+function saveGeminiApiKey() {
+  const key = document.getElementById('geminiApiKey').value.trim();
+  if (!key) { showToast('⚠️ 請先輸入 Gemini API Key'); return; }
+  localStorage.setItem('homeroomGeminiApiKey', key);
+  showToast('🔐 API Key 已儲存在本機瀏覽器');
+}
+
+function loadGeminiApiKey(showMessage = true) {
+  const key = localStorage.getItem('homeroomGeminiApiKey') || '';
+  const input = document.getElementById('geminiApiKey');
+  if (input) input.value = key;
+  if (showMessage) showToast(key ? '🔐 已讀取本機儲存的 API Key' : '目前沒有已儲存的 API Key');
+}
+
+function openGeminiApiKeyPage() {
+  window.open(GEMINI_API_KEY_URL, '_blank', 'noopener,noreferrer');
+}
+
+async function mergeAndPolish() {
+  const base = document.getElementById('baseComment').value.trim();
+  if (!base) { showToast('⚠️ 請先生成基礎評語'); return; }
+  
+  const btn = document.getElementById('mergeBtn');
+  const free = document.getElementById('freeInput').value.trim();
+  const name = document.getElementById('studentName').value.trim() || '該生';
+  const toneDesc = state.tone === 'strict' ? '委婉規勸但堅定' : state.tone === 'neutral' ? '客觀中立' : '溫暖鼓勵';
+  const provider = document.getElementById('aiProvider').value;
+  
+  btn.disabled = true;
+  btn.innerHTML = provider === 'gemini'
+    ? '<span class="spinner"></span> Gemini AI 潤飾中...'
+    : '<span class="spinner"></span> 本機合併中...';
+
+  const prompt = `角色：你是一位資深且溫暖的台灣高中班導師，熟悉台灣高中成績單德行評語寫法。
+任務：請將以下「基礎評語」與「導師補充筆記」合併，並改寫成一篇完整、流暢、具備教育專業語氣的期末德行評語。
+
+設定：
+1. 學生姓名：${name}
+2. 整體語氣：${toneDesc}
+3. 基礎評語：${base}
+4. 補充筆記：${free || '(無)'}
+
+要求：
+1. 內容需合併，不要遺漏重要訊息。
+2. 使用台灣繁體中文，避免翻譯腔。
+3. 不要只是複製原文或只把片語串起來，必須整理成完整段落。
+4. 若原始資料較少，可以根據已提供的事實轉化為學習態度、品格、人際互動與期許，但不得捏造未提供的具體得獎、名次或職務。
+5. 字數控制在 180-300 字之間，至少包含 4 個完整句子，結尾要有具體鼓勵或期許。
+6. 直接輸出最終評語內容，不要有標題、條列、開場白或解釋。`;
+
+  try {
+    if (provider === 'local') {
+      localMerge(base, free);
+      showToast('✨ 已完成本機規則合併');
+    } else if (provider === 'gemini') {
+      const result = await callGemini(prompt);
+      document.getElementById('finalComment').value = result;
+      updateCharCount('finalComment','finalCharCount');
+      showToast('✨ Gemini AI 潤飾完成');
+    }
+  } catch (e) {
+    console.error('AI polish error:', e);
+    showToast('⚠️ AI 處理失敗，改用本機合併：' + e.message);
+    localMerge(base, free);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '⚡ AI 智慧潤飾與合併';
+  }
+}
+
+async function callGemini(prompt) {
+  const key = document.getElementById('geminiApiKey').value.trim();
+  if (!key) throw new Error('請先輸入 Gemini API Key');
+
+  const errors = [];
+  for (const model of GEMINI_MODELS) {
+    try {
+      return await callGeminiModel(model, prompt);
+    } catch (err) {
+      errors.push(`${model}: ${err.message}`);
+    }
+  }
+  throw new Error(errors.join('；'));
+}
+
+async function callGeminiModel(model, prompt) {
+  const firstText = await requestGemini(model, prompt);
+  if (isPolishedCommentAcceptable(firstText)) return firstText;
+
+  const retryPrompt = `${prompt}
+
+注意：上一版回覆過短或太接近原文。請重新生成一段完整導師評語，務必達到 180-300 字、至少 4 個完整句子，並保留所有已提供事實。`;
+  const retryText = await requestGemini(model, retryPrompt);
+  if (isPolishedCommentAcceptable(retryText)) return retryText;
+  throw new Error(`Gemini 回覆過短或不完整（${retryText.length}字）`);
+}
+
+async function requestGemini(model, prompt) {
+  const key = document.getElementById('geminiApiKey').value.trim();
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-goog-api-key': key
+    },
+    body: JSON.stringify({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.45,
+        topP: 0.9,
+        maxOutputTokens: 2048,
+        thinkingConfig: { thinkingBudget: 0 }
+      }
+    })
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error?.message || 'Gemini API Error');
+  const candidate = data.candidates?.[0];
+  const text = candidate?.content?.parts?.map(part => part.text || '').join('').trim() || '';
+  if (!text) throw new Error(candidate?.finishReason ? `未取得文字回應（${candidate.finishReason}）` : '未取得有效回應');
+  if (candidate?.finishReason && !['STOP', 'FINISH_REASON_UNSPECIFIED'].includes(candidate.finishReason)) {
+    throw new Error(`回應未完整結束（${candidate.finishReason}）`);
+  }
+  return text;
+}
+
+function isPolishedCommentAcceptable(text) {
+  const clean = String(text || '').trim();
+  const sentenceCount = (clean.match(/[。！？]/g) || []).length;
+  return clean.length >= 120 && sentenceCount >= 3;
+}
+
+function localMerge(base, free) {
+  let combined = base;
+  if (!/[。！？]$/.test(combined)) combined += '。';
+  
+  if (free) {
+    const hasConn = /^(此外|另外|但是|不過|然而|值得一提|最後)/.test(free);
+    let conn = '';
+    if (!hasConn) {
+      const negKW = ['改進','加強','注意','缺點','不佳','散漫','粗心','愛講話','吵鬧','懲處'];
+      const isNeg = negKW.some(k => free.includes(k));
+      conn = isNeg ? '另外需要留意的是，' : '此外，';
+    }
+    combined += conn + free;
+    if (!/[。！？]$/.test(combined)) combined += '。';
+  }
+  
+  document.getElementById('finalComment').value = combined;
+  updateCharCount('finalComment','finalCharCount');
+}
+
+// ============================
+// DAILY LIFE SYNC
+// ============================
+function syncDailyLife() {
+  // Codes
+  document.getElementById('dlCodes').value = state.selectedCodes.join('、');
+  
+  // Cadres
+  const perfMap = { responsible:'認真負責', leadership:'具領導力', passive:'較被動', improve:'待加強' };
+  document.getElementById('dlCadre').value = state.cadres.map(c => `${c.role}（${perfMap[c.perf]}）`).join('、');
+  
+  // Activities
+  document.getElementById('dlActivity').value = state.activities.map(a => a.result ? `${a.name}（${a.result}）` : a.name).join('、');
+  
+  // Final comment
+  document.getElementById('dlComment').value = document.getElementById('finalComment').value;
+
+  // Special performance
+  document.getElementById('dlSpecialPerformance').value = buildSpecialPerformanceSummary();
+  
+  showToast('🔄 已同步至日常生活表現表');
+}
+
+function buildSpecialPerformanceSummary() {
+  const get = id => document.getElementById(id).value.trim();
+  const name = document.getElementById('studentName').value.trim() || '該生';
+  const activityEntries = state.activities.map(activity =>
+    summarizeActivityAchievement(activity)
+  );
+  const entries = [
+    summarizePerformanceItem(get('selfSchoolService')),
+    summarizePerformanceItem(get('selfClub')),
+    summarizePerformanceItem(get('selfAcademic')),
+    summarizePerformanceItem(get('selfDailyLife')),
+    summarizePerformanceItem(get('selfSpecialIn')),
+    summarizePerformanceItem(get('selfSocialService')),
+    summarizePerformanceItem(get('selfPerformance')),
+    summarizePerformanceItem(get('selfScienceFair')),
+    summarizePerformanceItem(get('selfSpecialOut')),
+    ...activityEntries
+  ].filter(Boolean);
+
+  const uniqueEntries = [...new Set(entries)];
+  if (!uniqueEntries.length) return '';
+  return `${name}特殊優良表現：${uniqueEntries.join('；')}。`;
+}
+
+function summarizePerformanceItem(text) {
+  const clean = cleanPerformanceText(text);
+  if (!clean) return '';
+  return clean.replace(/[。！？]$/, '');
+}
+
+function summarizeActivityAchievement(activity) {
+  const name = summarizePerformanceItem(activity.name);
+  const result = summarizePerformanceItem(activity.result);
+  if (!name) return '';
+  if (!result) return name;
+  if (/獲得|榮獲|取得|得到/.test(name)) return `${name}${result}`;
+  return `${name}獲得${result}`;
+}
+
+function cleanPerformanceText(text) {
+  return String(text || '')
+    .replace(/^(校內表現方面|校外表現方面|學校服務|校內服務|社團表現|學業表現|生活常規|社會服務|活動表演|科學展覽|其他特殊表現)[：:，,、\s]*/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function copyDailyLife() {
+  const rows = [
+    ['評語代碼', document.getElementById('dlCodes').value],
+    ['幹部經歷', document.getElementById('dlCadre').value],
+    ['競賽與活動', document.getElementById('dlActivity').value],
+    ['德行評語', document.getElementById('dlComment').value],
+    ['特殊優良表現', document.getElementById('dlSpecialPerformance').value]
+  ];
+  const text = rows.map(r => `【${r[0]}】${r[1]}`).join('\n');
+  copyToClipboard(text);
+}
+
+// ============================
+// EXPORT
+// ============================
+function getSelectedCodeTexts() {
+  return state.selectedCodes.map(code => {
+    for (const cat of Object.values(schoolCommentDB)) {
+      const found = cat.items.find(i => i.code === code);
+      if (found) return `${code} ${found.text}`;
+    }
+    return code;
+  });
+}
+
+function getCurrentExportRecord() {
+  syncDailyLife();
+  const perfMap = { responsible:'認真負責', leadership:'具領導力', passive:'較被動', improve:'待加強' };
+  const record = {
+    學生姓名: document.getElementById('studentName').value.trim(),
+    性別: state.gender === 'boy' ? '男' : '女',
+    語氣風格: state.tone === 'strict' ? '委婉規勸' : state.tone === 'neutral' ? '客觀中立' : '溫暖鼓勵',
+    評語代碼: state.selectedCodes.join('、'),
+    評語代碼文字: getSelectedCodeTexts().join('、'),
+    擔任職務: state.cadres.map(c => `${c.role}（${perfMap[c.perf]}）`).join('、'),
+    校內外活動競賽: state.activities.map(a => a.result ? `${a.name}（${a.result}）` : a.name).join('、')
+  };
+  selfEvalFields.forEach(field => {
+    record[field.label] = document.getElementById(field.id).value.trim();
+  });
+  Object.assign(record, {
+    基礎評語: document.getElementById('baseComment').value.trim(),
+    補充觀察: document.getElementById('freeInput').value.trim(),
+    最終德行評語: document.getElementById('finalComment').value.trim(),
+    特殊優良表現: document.getElementById('dlSpecialPerformance').value.trim()
+  });
+  return record;
+}
+
+function exportExcel() {
+  const record = getCurrentExportRecord();
+  const fileName = `${record.學生姓名 || '學生'}_導師評語資料.xlsx`;
+  if (window.XLSX) {
+    const rows = [['項目', '內容'], ...Object.entries(record).map(([key, value]) => [key, wrapExcelContent(value)])];
+    const worksheet = XLSX.utils.aoa_to_sheet(rows);
+    worksheet['!cols'] = [{ wch: 18 }, { wch: 58 }];
+    worksheet['!rows'] = rows.map((row, index) => ({
+      hpt: index === 0 ? 24 : Math.min(180, Math.max(28, String(row[1] || '').split('\n').length * 22))
+    }));
+    Object.keys(worksheet).forEach(cell => {
+      if (cell[0] === '!') return;
+      worksheet[cell].s = {
+        alignment: { vertical: 'top', wrapText: true },
+        font: cell === 'A1' || cell === 'B1' ? { bold: true } : undefined
+      };
+    });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, '導師評語資料');
+    XLSX.writeFile(workbook, fileName);
+    showToast('📤 Excel 已匯出');
+  } else {
+    downloadCsv(record, fileName.replace(/\.xlsx$/, '.csv'));
+  }
+}
+
+function downloadCsv(record, fileName) {
+  const rows = [['項目', '內容'], ...Object.entries(record).map(([key, value]) => [key, wrapExcelContent(value)])];
+  const csv = '\ufeff' + rows
+    .map(row => row.map(cell => `"${String(cell || '').replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  downloadBlob(blob, fileName);
+  showToast('📤 Excel 函式庫未載入，已改匯出 CSV');
+}
+
+function wrapExcelContent(value, maxChars = 34) {
+  const text = String(value || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+  if (!text) return '';
+  return text.split('\n').map(paragraph => {
+    const chunks = [];
+    let current = '';
+    Array.from(paragraph).forEach(char => {
+      current += char;
+      if (/[。！？；]/.test(char) || current.length >= maxChars) {
+        chunks.push(current.trim());
+        current = '';
+      }
+    });
+    if (current.trim()) chunks.push(current.trim());
+    return chunks.join('\n');
+  }).join('\n');
+}
+
+function exportPdf() {
+  const record = getCurrentExportRecord();
+  const rows = Object.entries(record).map(([key, value]) => `
+    <tr>
+      <th>${escapeHtml(key)}</th>
+      <td>${escapeHtml(value || '')}</td>
+    </tr>`).join('');
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    showToast('⚠️ 瀏覽器封鎖彈出視窗，請允許後再試一次');
+    return;
+  }
+  printWindow.document.write(`<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>${escapeHtml(record.學生姓名 || '學生')}_導師評語資料</title>
+<style>
+body { font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif; color:#1a1a2e; line-height:1.7; padding:28px; }
+h1 { font-size:24px; margin:0 0 6px; }
+.meta { color:#666; margin-bottom:20px; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th, td { border:1px solid #bbb; padding:9px 10px; vertical-align:top; }
+th { width:150px; background:#f3efe8; text-align:left; }
+td { white-space:pre-wrap; }
+@media print { body { padding:0; } }
+</style>
+</head>
+<body>
+<h1>麗山高中導師評語資料</h1>
+<div class="meta">學生：${escapeHtml(record.學生姓名 || '未填寫')}　匯出時間：${new Date().toLocaleString('zh-TW')}</div>
+<table>${rows}</table>
+<script>window.onload = () => { window.print(); }<\/script>
+</body>
+</html>`);
+  printWindow.document.close();
+  showToast('📤 PDF 列印視窗已開啟');
+}
+
+function downloadBlob(blob, fileName) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[char]));
+}
+
+// ============================
+// UTILITIES
+// ============================
+function updateCharCount(textareaId, countId) {
+  const len = document.getElementById(textareaId).value.length;
+  const el = document.getElementById(countId);
+  el.textContent = `${len} 字`;
+  el.className = len > 350 ? 'char-count warning' : 'char-count';
+}
+
+function copyText(id) {
+  const text = document.getElementById(id).value;
+  if (!text) { showToast('⚠️ 沒有內容可以複製'); return; }
+  copyToClipboard(text);
+}
+
+function copyToClipboard(text) {
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).then(() => showToast('📋 已複製到剪貼簿')).catch(() => fallbackCopy(text));
+  } else { fallbackCopy(text); }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;left:-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); showToast('📋 已複製到剪貼簿'); } catch { showToast('❌ 複製失敗'); }
+  document.body.removeChild(ta);
+}
+
+function showToast(msg) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 2200);
+}
+
+function clearAll() {
+  if (!confirm('確定要重置所有資料嗎？')) return;
+  document.getElementById('studentName').value = '';
+  document.getElementById('baseComment').value = '';
+  document.getElementById('freeInput').value = '';
+  document.getElementById('finalComment').value = '';
+  document.getElementById('teacherEncouragement').value = '';
+  document.getElementById('baseCharCount').textContent = '';
+  document.getElementById('finalCharCount').textContent = '';
+  
+  // Self eval
+  ['selfSchoolService','selfClub','selfAcademic','selfDailyLife','selfSpecialIn','selfSocialService','selfPerformance','selfScienceFair','selfSpecialOut'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('selfEvalExcelFile').value = '';
+  document.getElementById('selfEvalStudentSelect').innerHTML = '<option value="">尚未匯入</option>';
+  document.getElementById('selfEvalImportStatus').textContent = '';
+  
+  // Daily life
+  ['dlCodes','dlCadre','dlActivity','dlComment','dlSpecialPerformance'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  
+  state.selectedCodes = [];
+  state.cadres = [];
+  state.activities = [];
+  state.importedSelfEvalRows = [];
+  state.roleFilter = 'all';
+  state.traits = { academic:{}, social:{}, habit:{}, personality:{} };
+  state.gender = 'boy';
+  state.tone = 'encouraging';
+  
+  // Reset toggles
+  document.querySelectorAll('#genderToggle .toggle-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('#genderToggle [data-val="boy"]').classList.add('active');
+  document.querySelectorAll('#toneToggle .toggle-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('#toneToggle [data-val="encouraging"]').classList.add('active');
+  
+  renderCodeTags();
+  renderCodeItems();
+  renderRoleFilters();
+  renderQuickRoles();
+  renderCadreTags();
+  renderActTags();
+  renderTraits();
+  
+  showToast('🗑 已重置');
+}
+
+// Boot
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>

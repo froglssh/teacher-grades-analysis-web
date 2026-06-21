@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>學習歷程檔案輔助程式 2.0</title>
+<style>
+  :root{
+    --bg:#f0f7f7;
+    --panel:#ffffff;
+    --ink:#1f3a3d;
+    --muted:#5b7174;
+    --line:#dce8e8;
+    --teal:#0d9488;
+    --teal-d:#0f766e;
+    --teal-l:#ccfbf1;
+    --blue:#2563eb;
+    --blue-l:#dbeafe;
+    --amber:#d97706;
+    --amber-l:#fef3c7;
+    --red:#dc2626;
+    --violet:#7c3aed;
+    --violet-l:#ede9fe;
+    --shadow:0 4px 18px rgba(13,148,136,.10);
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    background:linear-gradient(160deg,#e7f4f3 0%,#f0f7f7 40%,#eef6fb 100%);
+    color:var(--ink);
+    line-height:1.7;
+    min-height:100vh;
+  }
+  a{color:var(--teal-d)}
+
+  /* ---------- Top bar ---------- */
+  header.topbar{
+    background:linear-gradient(110deg,var(--teal-d),var(--teal) 60%,#14b8a6);
+    color:#fff;
+    padding:18px 24px;
+    display:flex;align-items:center;justify-content:space-between;
+    gap:16px;flex-wrap:wrap;
+    box-shadow:0 4px 20px rgba(13,118,110,.25);
+    position:sticky;top:0;z-index:50;
+  }
+  .topbar h1{font-size:20px;margin:0;font-weight:800;letter-spacing:.5px;display:flex;align-items:center;gap:10px}
+  .topbar .sub{font-size:12.5px;opacity:.9;font-weight:400}
+  .topbar .tools{display:flex;gap:8px;flex-wrap:wrap}
+  .topbar button{
+    background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.35);
+    padding:8px 14px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;
+    transition:.18s;backdrop-filter:blur(4px);
+  }
+  .topbar button:hover{background:rgba(255,255,255,.30)}
+
+  /* ---------- Layout ---------- */
+  .layout{display:flex;max-width:1320px;margin:0 auto;padding:18px;gap:18px;align-items:flex-start}
+  nav.sidebar{
+    width:248px;flex-shrink:0;position:sticky;top:92px;
+    background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:12px;border:1px solid var(--line);
+  }
+  .nav-title{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:1px;padding:6px 10px 10px}
+  .nav-item{
+    display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;cursor:pointer;
+    font-size:14.5px;font-weight:600;color:var(--ink);transition:.15s;margin-bottom:3px;
+    border:1px solid transparent;
+  }
+  .nav-item .ico{font-size:18px;width:24px;text-align:center}
+  .nav-item .num{margin-left:auto;font-size:11px;background:var(--line);color:var(--muted);
+    border-radius:20px;padding:1px 8px;font-weight:700}
+  .nav-item:hover{background:var(--teal-l)}
+  .nav-item.active{background:linear-gradient(100deg,var(--teal),#14b8a6);color:#fff;box-shadow:0 4px 12px rgba(13,148,136,.3)}
+  .nav-item.active .num{background:rgba(255,255,255,.25);color:#fff}
+
+  main.content{flex:1;min-width:0}
+
+  /* ---------- Cards ---------- */
+  .card{background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow);
+    border:1px solid var(--line);padding:22px;margin-bottom:18px}
+  .page-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:4px}
+  .page-head .big-ico{font-size:34px;line-height:1}
+  .page-head h2{margin:0;font-size:23px;font-weight:800;color:var(--teal-d)}
+  .page-head .desc{margin:4px 0 0;color:var(--muted);font-size:14px}
+
+  /* principles panel */
+  .principles{
+    background:linear-gradient(135deg,#f0fdfa,#ecfeff);
+    border:1px solid var(--teal-l);border-left:5px solid var(--teal);
+    border-radius:12px;padding:16px 18px;margin:16px 0 22px;
+  }
+  .principles h3{margin:0 0 8px;font-size:15px;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+  .principles ul{margin:0;padding-left:4px;list-style:none}
+  .principles li{position:relative;padding:5px 0 5px 26px;font-size:13.8px;color:#2c4a4d}
+  .principles li::before{content:"✓";position:absolute;left:2px;top:5px;color:var(--teal);font-weight:800}
+  .principles .tip{margin-top:10px;font-size:12.5px;color:var(--amber);background:var(--amber-l);
+    padding:7px 12px;border-radius:8px;display:inline-block}
+
+  /* steps */
+  .step{margin-bottom:20px}
+  .step-label{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-weight:700;font-size:15px}
+  .step-num{background:var(--teal);color:#fff;width:25px;height:25px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+  .step-hint{font-size:12.8px;color:var(--muted);margin:0 0 8px 35px;font-weight:400}
+  .field-wrap{display:flex;gap:8px;align-items:flex-start}
+  textarea,input[type=text]{
+    width:100%;border:1.5px solid var(--line);border-radius:10px;padding:11px 13px;
+    font-family:inherit;font-size:14.5px;color:var(--ink);background:#fbfdfd;transition:.15s;resize:vertical;
+  }
+  textarea{min-height:96px;line-height:1.65}
+  textarea:focus,input[type=text]:focus{outline:none;border-color:var(--teal);background:#fff;box-shadow:0 0 0 3px var(--teal-l)}
+  .mini-btns{display:flex;flex-direction:column;gap:6px;flex-shrink:0}
+  .mini-btns button{width:40px;height:40px;border-radius:10px;border:none;cursor:pointer;font-size:16px;transition:.15s}
+  .b-mic{background:var(--blue-l);color:var(--blue)}
+  .b-mic:hover{background:var(--blue);color:#fff}
+  .b-ai{background:var(--violet-l);color:var(--violet)}
+  .b-ai:hover{background:var(--violet);color:#fff}
+  .b-clr{background:#fee2e2;color:var(--red)}
+  .b-clr:hover{background:var(--red);color:#fff}
+  .charcount{font-size:11.5px;color:var(--muted);text-align:right;margin-top:3px}
+  .charcount.over{color:var(--red);font-weight:700}
+
+  /* buttons */
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+  .btn{padding:10px 18px;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:700;
+    transition:.16s;display:inline-flex;align-items:center;gap:7px}
+  .btn-primary{background:linear-gradient(100deg,var(--teal),#14b8a6);color:#fff}
+  .btn-primary:hover{filter:brightness(1.07);box-shadow:0 4px 14px rgba(13,148,136,.35)}
+  .btn-violet{background:linear-gradient(100deg,var(--violet),#8b5cf6);color:#fff}
+  .btn-violet:hover{filter:brightness(1.08)}
+  .btn-amber{background:linear-gradient(100deg,var(--amber),#f59e0b);color:#fff}
+  .btn-ghost{background:#fff;color:var(--teal-d);border:1.5px solid var(--teal-l)}
+  .btn-ghost:hover{background:var(--teal-l)}
+
+  .merged{margin-top:18px}
+  .merged textarea{min-height:260px;background:#f8fafc}
+
+  /* evidence */
+  .ev-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+  .ev-row .step{flex:1;min-width:200px;margin-bottom:0}
+  .photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-top:14px}
+  .photo-item{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fbfdfd;position:relative}
+  .photo-item img{width:100%;max-height:170px;object-fit:contain;border-radius:8px;display:block}
+  .photo-item input{margin-top:8px;font-size:13px}
+  .photo-item .del{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;
+    border:none;background:rgba(220,38,38,.9);color:#fff;cursor:pointer;font-size:13px}
+  .filebox{border:2px dashed var(--teal-l);border-radius:12px;padding:18px;text-align:center;
+    background:#f7fdfc;color:var(--muted);font-size:13.5px}
+  .filebox input{margin-top:8px}
+
+  /* modal */
+  .overlay{position:fixed;inset:0;background:rgba(15,40,42,.55);z-index:200;display:none;
+    align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(2px)}
+  .overlay.show{display:flex}
+  .modal{background:#fff;border-radius:16px;max-width:640px;width:100%;max-height:88vh;overflow:auto;
+    box-shadow:0 20px 60px rgba(0,0,0,.3);padding:24px}
+  .modal h3{margin:0 0 4px;font-size:19px;color:var(--teal-d)}
+  .modal .mdesc{color:var(--muted);font-size:13px;margin:0 0 16px}
+  .modal label{display:block;font-weight:700;font-size:13.5px;margin:14px 0 6px}
+  .modal input[type=text],.modal input[type=password],.modal select,.modal textarea{
+    width:100%;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit}
+  .modal .modal-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
+  .mode-opt{border:1.5px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;transition:.15s}
+  .mode-opt:hover{border-color:var(--teal)}
+  .mode-opt.sel{border-color:var(--teal);background:var(--teal-l)}
+  .mode-opt .mt{font-weight:800;font-size:14.5px;display:flex;align-items:center;gap:8px}
+  .mode-opt .md{font-size:12.8px;color:var(--muted);margin-top:4px;margin-left:28px}
+  .file-row{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:9px;transition:.15s}
+  .file-row:hover{border-color:var(--teal);background:var(--teal-l)}
+  .file-row .fi-name{font-weight:800;font-size:15px}
+  .file-row .fi-meta{font-size:12px;color:var(--muted);margin-top:2px}
+  .file-row .fi-act{display:flex;gap:8px;flex-shrink:0}
+  .file-row .fi-act button{padding:7px 14px;border:none;border-radius:9px;cursor:pointer;font-size:13px;font-weight:700}
+  .fi-load{background:var(--teal);color:#fff}
+  .fi-del{background:#fee2e2;color:var(--red)}
+  .fi-del:hover{background:var(--red);color:#fff}
+  .file-empty{text-align:center;color:var(--muted);padding:24px;font-size:14px}
+  .ai-result{background:#f0fdfa;border:1px solid var(--teal-l);border-radius:10px;padding:14px;
+    margin-top:14px;white-space:pre-wrap;font-size:14px;max-height:300px;overflow:auto;display:none}
+  .ai-loading{display:none;text-align:center;padding:20px;color:var(--teal-d);font-weight:600}
+  .spin{display:inline-block;width:18px;height:18px;border:3px solid var(--teal-l);
+    border-top-color:var(--teal);border-radius:50%;animation:sp .8s linear infinite;vertical-align:-3px;margin-right:8px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;margin-left:6px}
+  .pill-local{background:var(--amber-l);color:var(--amber)}
+  .pill-copy{background:var(--blue-l);color:var(--blue)}
+  .pill-api{background:var(--violet-l);color:var(--violet)}
+
+  /* toast */
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);
+    background:var(--ink);color:#fff;padding:13px 22px;border-radius:12px;font-size:14px;font-weight:600;
+    z-index:300;transition:.35s;box-shadow:0 8px 30px rgba(0,0,0,.3);max-width:90vw}
+  #toast.show{transform:translateX(-50%) translateY(0)}
+
+  footer{text-align:center;padding:26px 16px;color:var(--muted);font-size:13px}
+  footer a{font-weight:600}
+
+  /* mobile nav toggle */
+  .nav-toggle{display:none}
+  @media(max-width:880px){
+    .layout{flex-direction:column;padding:12px}
+    nav.sidebar{width:100%;position:static}
+    .nav-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+    .nav-item .num{display:none}
+    .topbar h1{font-size:17px}
+    .page-head h2{font-size:20px}
+  }
+  @media(max-width:560px){
+    .field-wrap{flex-direction:column}
+    .mini-btns{flex-direction:row}
+    .mini-btns button{width:46px}
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script>
+  if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}
+</script>
+</head>
+<body>
+
+<header class="topbar">
+  <div>
+    <h1>🎓 學習歷程檔案輔助程式 <span style="font-size:12px;background:rgba(255,255,255,.22);padding:2px 9px;border-radius:20px">2.0</span></h1>
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:2px">
+      <div class="sub">108 課綱備審資料製作・九大檔案類型・AI 三模式優化</div>
+      <div class="author" style="font-size:11.5px;opacity:.85">
+        製作者：臺北市立麗山高中 林獻升老師　|　聯絡信箱：<a href="mailto:frog@lssh.tp.edu.tw" style="color:#fff;text-decoration:underline">frog@lssh.tp.edu.tw</a>
+      </div>
+    </div>
+  </div>
+  <div class="tools">
+    <button onclick="openSettings()">⚙️ AI 設定</button>
+    <button onclick="saveAll()">💾 儲存</button>
+    <button onclick="loadAll()">📂 讀取</button>
+    <button onclick="deleteAll()">🗑️ 刪除</button>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="sidebar">
+    <div class="nav-title">👤 基本資料</div>
+    <div style="padding:4px 6px;margin-bottom:6px">
+      <input type="text" id="studentName" placeholder="學生姓名" style="margin-bottom:8px">
+      <input type="text" id="targetDept" placeholder="目標校系（如：台大資工）">
+    </div>
+    <div class="nav-title">📁 檔案類型</div>
+    <div class="nav-grid" id="navList"></div>
+  </nav>
+
+  <main class="content" id="content"></main>
+</div>
+
+<footer>
+  <p style="font-size:11.5px;opacity:.75">所有資料僅儲存在您的瀏覽器本機（localStorage），不會上傳；AI 金鑰亦只存於本機。</p>
+</footer>
+
+<!-- AI optimize modal -->
+<div class="overlay" id="aiOverlay">
+  <div class="modal">
+    <h3>✨ AI 優化文字</h3>
+    <p class="mdesc" id="aiFieldName"></p>
+    <div id="aiModes">
+      <div class="mode-opt sel" data-mode="local" onclick="pickMode('local')">
+        <div class="mt">🛠️ 1. 本地系統優化 <span class="pill pill-local">免金鑰・離線</span></div>
+        <div class="md">程式內建規則：錯字/贅字清理、台灣用語校正、字數檢查、依架構套版、空洞語句偵測。即時完成。</div>
+      </div>
+      <div class="mode-opt" data-mode="copy" onclick="pickMode('copy')">
+        <div class="mt">📋 2. 產生提示詞並複製 <span class="pill pill-copy">手動貼上</span></div>
+        <div class="md">自動產生客製化優化提示詞＋你的原文，一鍵複製，並開啟 ChatGPT 或 Gemini 網頁貼上。</div>
+        <div style="margin-left:28px;margin-top:8px">
+          <label style="display:inline;font-size:12px">前往：</label>
+          <select id="copyTarget" style="width:auto;padding:5px 8px;display:inline-block">
+            <option value="chatgpt">ChatGPT</option>
+            <option value="gemini">Gemini</option>
+          </select>
+        </div>
+      </div>
+      <div class="mode-opt" data-mode="api" onclick="pickMode('api')">
+        <div class="mt">🤖 3. 直接呼叫 API <span class="pill pill-api">即時優化</span></div>
+        <div class="md">在程式內直接取得優化結果，可一鍵套用回欄位。需先在「⚙️ AI 設定」填入你的 API 金鑰。</div>
+        <div style="margin-left:28px;margin-top:8px">
+          <label style="display:inline;font-size:12px">模型：</label>
+          <select id="apiTarget" style="width:auto;padding:5px 8px;display:inline-block">
+            <option value="openai">OpenAI (ChatGPT)</option>
+            <option value="gemini">Google Gemini</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="ai-loading" id="aiLoading"><span class="spin"></span>AI 優化中，請稍候…</div>
+    <div class="ai-result" id="aiResult"></div>
+
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeAI()">取消</button>
+      <button class="btn btn-ghost" id="aiCopyBtn" style="display:none" onclick="copyAIResult()">📋 複製</button>
+      <button class="btn btn-amber" id="aiExportBtn" style="display:none" onclick="exportAIResult()">⬇️ 匯出到草稿下方</button>
+      <button class="btn btn-primary" id="aiApplyBtn" style="display:none" onclick="applyAIResult()">✓ 套用結果</button>
+      <button class="btn btn-violet" id="aiRunBtn" onclick="runAI()">執行優化</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings modal -->
+<div class="overlay" id="setOverlay">
+  <div class="modal">
+    <h3>⚙️ AI 設定</h3>
+    <p class="mdesc">金鑰只會儲存在你目前這台裝置的瀏覽器（localStorage），不會上傳到任何伺服器。</p>
+    <label>OpenAI API 金鑰（sk-...）</label>
+    <input type="password" id="openaiKey" placeholder="sk-...">
+    <label>OpenAI 模型</label>
+    <select id="openaiModel">
+      <option value="gpt-5.4-mini">gpt-5.4-mini（便宜快速，推薦）</option>
+      <option value="gpt-5.5">gpt-5.5（品質最佳）</option>
+      <option value="gpt-5.4-nano">gpt-5.4-nano（最省）</option>
+      <option value="gpt-4o-mini">gpt-4o-mini（舊版備用）</option>
+    </select>
+    <input type="text" id="openaiModelCustom" placeholder="或自行輸入模型名稱（填了優先使用）" style="margin-top:6px">
+    <label>Google Gemini API 金鑰</label>
+    <input type="password" id="geminiKey" placeholder="AIza...">
+    <label>Gemini 模型</label>
+    <select id="geminiModel">
+      <option value="gemini-3.5-flash">gemini-3.5-flash（推薦）</option>
+      <option value="gemini-3.1-pro">gemini-3.1-pro（品質最佳）</option>
+      <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite（最省）</option>
+      <option value="gemini-2.0-flash">gemini-2.0-flash（舊版備用）</option>
+    </select>
+    <input type="text" id="geminiModelCustom" placeholder="或自行輸入模型名稱（填了優先使用）" style="margin-top:6px">
+    <p style="font-size:12.5px;color:var(--muted);margin-top:14px;line-height:2">
+      🔑 取得金鑰：<br>
+      OpenAI → <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener" style="font-weight:700">platform.openai.com/api-keys ↗</a><br>
+      Gemini → <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="font-weight:700">aistudio.google.com/apikey ↗</a>
+    </p>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeSettings()">關閉</button>
+      <button class="btn btn-primary" onclick="saveSettings()">儲存設定</button>
+    </div>
+  </div>
+</div>
+
+<!-- File manager modal -->
+<div class="overlay" id="fileOverlay">
+  <div class="modal">
+    <h3 id="fileModalTitle">📂 讀取檔案</h3>
+    <p class="mdesc" id="fileModalDesc">點選下方檔案進行操作。</p>
+    <div id="fileList"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeFileModal()">關閉</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* =========================================================
+   檔案類型設定（內容萃取自四份升學指南 PDF）
+   ========================================================= */
+const TYPES = [
+  {
+    id:"course", icon:"📘", title:"課程學習成果",
+    desc:"修課產出的作品（B 項）。學術能力的直接證據，重質不重量。",
+    principles:[
+      "聚焦精煉：用最短篇幅呈現最好內容，超過 10 頁宜精簡。",
+      "展現核心素養：用具體事例證明問題解決、批判思考、團隊合作。",
+      "務必附摘要：開頭 1–2 頁交代動機、過程、方法、核心收穫。",
+      "交代脈絡：說明所屬課程、作業目的與個人動機，勿直接上傳原始作業。",
+      "凸顯獨特性：連結個人興趣、生活經驗或在地關懷。",
+      "確保真實性：註明資料來源，團體作品清楚標示個人貢獻。"
+    ],
+    tip:"百字簡述黃金公式：What（主題）＋ How（方法）＋ Result（成果亮點）。",
+    fields:[
+      {id:"title",label:"標題與主題",hint:"作品名稱＋你的姓名／所屬課程",rows:1},
+      {id:"summary100",label:"100 字簡述（教授的預告片）",hint:"What＋How＋Result，控制在 100 字內。例：以「大巨蛋對周邊房價影響」為題，透過實價登錄數據分析，發現正相關但有滯後效應，培養數據分析能力。",rows:3,limit:100},
+      {id:"abstract",label:"摘要",hint:"1–2 頁濃縮：製作動機、過程、方法與核心收穫。",rows:4},
+      {id:"context",label:"作品說明（脈絡與動機）",hint:"這是哪門課的作業？目的是什麼？你個人為何想做？",rows:3},
+      {id:"body",label:"正文（過程與成果）",hint:"展示而非陳述：事前準備→執行過程（含挑戰與解法）→事後整理。放數據與圖表。",rows:5},
+      {id:"reflect",label:"心得反思",hint:"回答「所以呢？」——這個作品如何改變你對該領域、對自己作為學習者的認識？",rows:4}
+    ]
+  },
+  {
+    id:"diverse", icon:"🌟", title:"多元表現",
+    desc:"校內外非修課成果（C 項）：社團、幹部、競賽、檢定、志工、自主學習等。",
+    principles:[
+      "戴上「科系濾鏡」篩選：重質不重量，挑與申請科系相關者。",
+      "每一項都要交代脈絡與你的個人角色，而非貼上活動照片了事。",
+      "強調你「解決了什麼」「帶領了什麼」，用量化數據佐證。",
+      "圖表勝於照片，並務必加上圖說（Annotation）。"
+    ],
+    tip:"理工重技術深度與探究精神；商管重人際互動與解決問題。",
+    fields:[
+      {id:"name",label:"項目名稱與類型",hint:"如：校隊社長／全國科展／多益 850／偏鄉志工",rows:1},
+      {id:"role",label:"你擔任的角色與職務",hint:"帶領幾人？負責什麼？避免只寫職稱。",rows:2},
+      {id:"process",label:"投入歷程",hint:"做了什麼具體行動？遇到什麼困難、如何解決？",rows:4},
+      {id:"result",label:"具體成果（量化）",hint:"如：募款達標 150%、參與人數創新高、獲獎名次。",rows:2},
+      {id:"link",label:"與申請科系的連結",hint:"這段經驗證明了你具備該科系看重的什麼特質？",rows:2}
+    ]
+  },
+  {
+    id:"diverse_summary", icon:"🧩", title:"多元表現綜整心得",
+    desc:"N 項，獨立上傳 PDF。多在 800 字＋3 張圖片內，將三年課外精華去蕪存菁。",
+    principles:[
+      "嚴格限制：約 800 字、3 張圖片，必須精選，切勿全部塞入。",
+      "科系濾鏡選材：只挑能呼應申請科系特質的 2–4 項。",
+      "主軸串聯法：設定一個「個人標籤」貫串不同活動，避免流水帳。",
+      "圖片即戰力：組圖規避張數限制、圖表勝於照片、每張都要圖說。"
+    ],
+    tip:"結尾要把所有經驗收斂回「因此我適合這個科系」。",
+    fields:[
+      {id:"label",label:"個人標籤／主軸",hint:"一句話定義自己，如：善於溝通的協調者／數據驅動的探究者。",rows:1},
+      {id:"selection",label:"選材清單",hint:"列出 2–4 項要寫的活動（戴科系眼鏡篩選）。",rows:2},
+      {id:"para1",label:"段落一（活動＋能力）",hint:"第一個活動如何體現你的主軸能力。",rows:3,limit:300},
+      {id:"para2",label:"段落二（活動＋能力）",hint:"第二個活動，從不同面向強化同一主軸。",rows:3,limit:300},
+      {id:"para3",label:"段落三（活動＋能力）",hint:"第三個活動，再補一個角度。",rows:3,limit:300},
+      {id:"conclusion",label:"結論（連結科系）",hint:"收斂主軸 → 因此具備就讀該系的基礎。",rows:3},
+      {id:"images",label:"三張圖片規劃與圖說",hint:"每張寫：放什麼圖（建議圖表）＋一句圖說（標出自己是哪位）。",rows:3}
+    ]
+  },
+  {
+    id:"self_statement", icon:"📖", title:"學習歷程自述",
+    desc:"D 項。把三年零散片段串成完整故事的「自我行銷提案書」，採 N-O-P-Q 架構。",
+    principles:[
+      "不是流水帳，而是有主軸的自我行銷提案書。",
+      "O 高中學習歷程反思：展現後設認知，主題式聚焦 2–3 個關鍵事件，善用 STAR、重視失敗的價值。",
+      "P 就讀動機：個人連結＋社會問題意識＋專業解決方案，三層遞進。",
+      "P 精準打擊：具體點出該系特色課程、實驗室或教授專長，展現你做過功課。",
+      "Q 未來學習計畫：具體、可行、有階段性（近／中／遠程）。"
+    ],
+    tip:"敘事鏈條：經歷(O) → 動機(P) → 計畫(Q)，前後必須扣合不斷裂。",
+    fields:[
+      {id:"reflect",label:"O. 高中學習歷程反思",hint:"用 STAR 描述 2–3 個關鍵學習事件（情境→任務→行動→結果與反思）。這過程改變了你對學科的什麼認知？",rows:5},
+      {id:"motive",label:"P. 就讀動機",hint:"層次一個人連結（生命經驗）→ 層次二問題意識（系統性問題）→ 層次三專業對接（這個系如何提供解方）。",rows:5},
+      {id:"target",label:"校系特色精準打擊",hint:"具體寫出該系哪門課／哪個實驗室／哪位教授的研究與你相關。",rows:3},
+      {id:"plan",label:"Q. 未來學習計畫",hint:"近程（入學前補強）／中程（具體課名、跨域、實驗室、交換）／遠程（職涯或深造）。",rows:4}
+    ]
+  },
+  {
+    id:"self_directed", icon:"🔍", title:"自主學習計畫與成果",
+    desc:"展現「自訂主題→找資源→執行→反思」的自主學習能力，常作為多元表現項目。",
+    principles:[
+      "計畫面：要有明確主題、動機、目標、方法與時程。",
+      "目標需具體且可檢核（避免「了解 OO」這類空泛說法）。",
+      "成果面：呈現學習歷程與後設反思，而非只放最終成品。",
+      "誠實記錄調整與困難，最能展現真實的自主學習力。"
+    ],
+    tip:"好的自主學習能延伸成課程學習成果或科系動機的素材。",
+    fields:[
+      {id:"topic",label:"學習主題與動機",hint:"我想學什麼？為什麼想學？跟我的興趣或科系有何關係？",rows:3},
+      {id:"goal",label:"學習目標（可檢核）",hint:"完成後我能做到什麼？如：能用 Python 寫出一個爬蟲並分析 500 筆資料。",rows:2},
+      {id:"method",label:"學習資源與方法",hint:"書單、線上課程（MOOCs）、實作、請教對象等。",rows:3},
+      {id:"schedule",label:"執行時程規劃",hint:"分週／分階段，每階段要達成的小目標。",rows:3},
+      {id:"process",label:"學習歷程記錄",hint:"實際執行了什麼？遇到什麼卡關、如何調整？（含失敗經驗）",rows:4},
+      {id:"result",label:"學習成果",hint:"產出了什麼？掌握了什麼能力？放成品、數據或截圖。",rows:3},
+      {id:"reflect",label:"反思與後續延伸",hint:"收穫、不足、接下來想延伸探究的方向。",rows:3}
+    ]
+  },
+  {
+    id:"inquiry", icon:"🧪", title:"探究與實作成果",
+    desc:"自然科／社會科探究，是大學教授最看重的項目之一。採 IMRD 論證結構。",
+    principles:[
+      "自然科重「論證與建模」：不要只放成功結果，誤差分析、變因檢討、修正假設更顯素養。",
+      "社會科重「多重觀點與社會關懷」：從不同利害關係人角度分析，提出可行建議。",
+      "完整呈現：研究問題、方法、數據、分析、討論與反思缺一不可。",
+      "失敗也有價值：詳述如何診斷問題、修正方法，展現科學韌性。"
+    ],
+    tip:"IMRD：Introduction 引言 → Methods 方法 → Results 結果 → Discussion 討論。",
+    fields:[
+      {id:"question",label:"研究問題與假設",hint:"你想探究什麼？提出可驗證的假設。",rows:2},
+      {id:"motive",label:"研究動機與背景",hint:"為什麼研究這個？相關背景或前人研究。",rows:3},
+      {id:"method",label:"研究方法",hint:"操縱變因／控制變因／材料／流程與步驟。",rows:4},
+      {id:"result",label:"結果與數據",hint:"客觀呈現數據，搭配圖表。",rows:3},
+      {id:"discuss",label:"分析與討論",hint:"自然科：誤差分析、變因檢討；社會科：多重觀點。解釋數據意義。",rows:4},
+      {id:"conclusion",label:"結論與反思",hint:"回答研究問題，這次探究帶給你的科學素養成長。",rows:3},
+      {id:"extend",label:"延伸探究",hint:"若再做一次會如何改進？下一步可探究什麼？",rows:2}
+    ]
+  },
+  {
+    id:"competition", icon:"🏆", title:"競賽成果",
+    desc:"科展、學科競賽、專題或實作競賽等成果。展現專業實力、抗壓力與解決問題的能力。",
+    principles:[
+      "戴上「科系濾鏡」篩選：挑與申請科系相關、最具代表性的競賽，重質不重量。",
+      "不要只列名次：呈現準備歷程、你的角色與所解決的問題，才看得出能力。",
+      "用 STAR 鋪陳：情境（競賽背景與難度）→任務→行動（挑戰與解法）→結果（名次／數據）。",
+      "團體賽務必說明個人分工與貢獻，確保真實性。",
+      "把競賽習得的能力與素養連結到未來就讀動機。",
+      "佐證：獎狀、作品、現場照片並加圖說（標出自己是哪位）。"
+    ],
+    tip:"名次是結果，過程中的「問題解決」才是教授真正想看的素養。",
+    fields:[
+      {id:"name",label:"競賽名稱與獲獎",hint:"如：全國科展生物科第一名／國際奧林匹亞銀牌／校內專題競賽佳作。註明層級（校內／全國／國際）。",rows:1},
+      {id:"context",label:"競賽背景與難度（情境）",hint:"競賽性質、規模、競爭程度，讓教授理解這份成果的份量。",rows:2},
+      {id:"role",label:"你的角色與任務",hint:"個人賽說明你負責什麼；團體賽務必清楚標示個人分工與貢獻比例。",rows:2},
+      {id:"process",label:"準備與參賽歷程（行動）",hint:"如何發想題目、準備了多久、遇到什麼瓶頸、如何突破？展示而非陳述。",rows:4},
+      {id:"result",label:"成果與名次（量化）",hint:"具體成績、評審回饋、作品亮點，用數據佐證。",rows:2},
+      {id:"skill",label:"習得能力與素養",hint:"從這次競賽真正學到什麼？問題解決、抗壓、團隊合作、專業技術等。",rows:3},
+      {id:"link",label:"與申請科系的連結",hint:"這份競賽經驗如何呼應你想就讀的科系與未來方向？",rows:2}
+    ]
+  },
+  {
+    id:"autobiography", icon:"✍️", title:"個人自傳",
+    desc:"個人品牌白皮書。價值提案而非自我揭露，建議 800–1200 字。",
+    principles:[
+      "黃金開場：用 3–5 句「自我摘要」破題——我是誰、有什麼關鍵能力、為何適合，可搭配創意小標題。",
+      "避免流水帳：家庭背景要轉化為「人格特質的來源」或「職涯啟蒙的契機」。",
+      "數據導向：用「業績提升 30%」取代「我很努力」這類形容詞堆砌。",
+      "STAR 原則：每段經歷用 情境→任務→行動→結果 包裝。",
+      "以終為始：先想目標受眾的需求，再回頭篩選與重組經歷。"
+    ],
+    tip:"善用強動詞（主導、優化、開發、達成），強調「你」做了什麼。",
+    fields:[
+      {id:"summary",label:"黃金開場（自我摘要）",hint:"3–5 句：目前身分＋核心優勢＋重要成就＋與目標的連結。可加創意小標題如【數據驅動的探究者】。",rows:4},
+      {id:"origin",label:"成長背景",hint:"不要列家族清單。寫家庭如何形塑你的關鍵特質或科系啟蒙。",rows:3},
+      {id:"academic",label:"求學歷程與專業能力",hint:"學到了什麼、產出了什麼、如何應用。策略性揭露成績與專題。",rows:4},
+      {id:"softskill",label:"社團／競賽／活動（軟實力）",hint:"用 STAR 寫一段領導或挫折克服經驗，展現韌性與協作。",rows:4},
+      {id:"highlight",label:"經歷亮點",hint:"最能證明能力的一段，動詞＋數據＋結果。",rows:3},
+      {id:"motive",label:"就讀／應徵動機與未來展望",hint:"為什麼是這個系／公司？為什麼是你？短中長期規劃。",rows:4}
+    ]
+  },
+  {
+    id:"study_plan", icon:"🗺️", title:"讀書計畫",
+    desc:"Q 項：未來學習計畫。驗證就讀動機可行性的試金石，展示執行藍圖。",
+    principles:[
+      "與動機(P)緊密扣合：P 回答 Why、Q 回答 How，避免內容重疊或斷裂。",
+      "切忌複製系網課表或寫「大一打基礎、大四實習」這種千篇一律的話。",
+      "近程（轉銜）／中程（大學四年素養地圖）／遠程（生涯願景）三階段。",
+      "要具體：列出課名、實驗室、教授、實習企業類型、交換學校。"
+    ],
+    tip:"把高中『未竟之業』延續到大學計畫，會讓計畫顯得有根有據。",
+    fields:[
+      {id:"near",label:"近程計畫（入學前轉銜）",hint:"放榜後到開學前：先修微積分／預讀系上聖經教科書／工具語言／學術英語／MOOCs。",rows:4},
+      {id:"mid1",label:"中程・大一大二（探索奠基）",hint:"重視哪些必修體系建立？有目的地參與社團、跨域選修第二專長。",rows:4},
+      {id:"mid2",label:"中程・大三大四（深化整合）",hint:"想加入哪位教授實驗室／專題方向？實習企業類型？交換學校與學術目標。",rows:4},
+      {id:"far",label:"遠程計畫（生涯願景）",hint:"進修方向／黃金證照與時程／職涯目標／如何運用所學回饋社會。",rows:4}
+    ]
+  },
+  {
+    id:"future", icon:"🚀", title:"未來發展",
+    desc:"展現清晰的生涯規劃與成長心態，連結所學與社會貢獻。",
+    principles:[
+      "目標要分短、中、長期，且具體可衡量。",
+      "展現「成長心態」：說明你打算如何持續精進。",
+      "把個人目標連結到對社會、產業的貢獻，提升格局。"
+    ],
+    tip:"未來發展應與你的就讀動機、讀書計畫前後呼應，形成完整論述閉環。",
+    fields:[
+      {id:"short",label:"大學／研究所階段規劃",hint:"在大學與研究所期間想達成的具體目標：專業能力養成、實驗室、競賽、實習、交換或深造方向。",rows:3},
+      {id:"mid",label:"畢業後未來十年規劃",hint:"畢業後 10 年內的職涯／進修藍圖：想進入的領域、想擔任的角色、想取得的證照或專業地位。",rows:3},
+      {id:"long",label:"人生終生志業規劃",hint:"你想投注一生追求的志業與價值：希望成為什麼樣的人、長期想解決的核心問題。",rows:3},
+      {id:"connect",label:"與科系／專業的連結",hint:"這個科系如何幫助你達成上述各階段目標？",rows:3},
+      {id:"impact",label:"社會回饋與影響",hint:"你希望運用所學解決什麼社會問題？",rows:3}
+    ]
+  }
+];
+
+let currentType = TYPES[0].id;
+
+/* ---------- 建立導覽 ---------- */
+function buildNav(){
+  const nav=document.getElementById('navList');
+  nav.innerHTML='';
+  TYPES.forEach((t,i)=>{
+    const d=document.createElement('div');
+    d.className='nav-item'+(t.id===currentType?' active':'');
+    d.onclick=()=>switchType(t.id);
+    d.innerHTML=`<span class="ico">${t.icon}</span><span>${t.title}</span><span class="num">${i+1}</span>`;
+    nav.appendChild(d);
+  });
+}
+
+/* ---------- 渲染分頁內容 ---------- */
+function renderPage(){
+  const t=TYPES.find(x=>x.id===currentType);
+  const c=document.getElementById('content');
+  let html=`
+    <div class="card">
+      <div class="page-head">
+        <div class="big-ico">${t.icon}</div>
+        <div>
+          <h2>${t.title}</h2>
+          <p class="desc">${t.desc}</p>
+        </div>
+      </div>
+      <div class="principles">
+        <h3>📌 製作重點與原則</h3>
+        <ul>${t.principles.map(p=>`<li>${p}</li>`).join('')}</ul>
+        ${t.tip?`<div class="tip">💡 ${t.tip}</div>`:''}
+      </div>
+  `;
+  t.fields.forEach((f,i)=>{
+    const limitAttr=f.limit?`data-limit="${f.limit}"`:'';
+    const input = f.rows===1
+      ? `<input type="text" id="f_${t.id}_${f.id}" oninput="updateCount('${t.id}','${f.id}')" ${limitAttr}>`
+      : `<textarea id="f_${t.id}_${f.id}" rows="${f.rows}" oninput="updateCount('${t.id}','${f.id}')" ${limitAttr}></textarea>`;
+    html+=`
+      <div class="step">
+        <div class="step-label"><span class="step-num">${i+1}</span>${f.label}</div>
+        <p class="step-hint">${f.hint}</p>
+        <div class="field-wrap">
+          ${input}
+          <div class="mini-btns">
+            <button class="b-mic" title="語音輸入" onclick="speak('f_${t.id}_${f.id}')">🎤</button>
+            <button class="b-ai" title="AI 優化此欄" onclick="openAI('${t.id}','${f.id}')">✨</button>
+            <button class="b-clr" title="清除" onclick="clearField('f_${t.id}_${f.id}')">✕</button>
+          </div>
+        </div>
+        ${f.limit?`<div class="charcount" id="cc_${t.id}_${f.id}">0 / ${f.limit} 字</div>`:''}
+      </div>`;
+  });
+  html+=`
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="mergeType()">🔗 合併本檔內容</button>
+        <button class="btn btn-violet" onclick="openAI('${t.id}','__merged__')">✨ AI 優化整份</button>
+        <button class="btn btn-ghost" onclick="exportWord()">📝 下載 Word</button>
+        <button class="btn btn-amber" onclick="printPDF()">🖨️ 列印／下載 PDF</button>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:8px">📝 Word：可再編輯的文件檔。🖨️ PDF：整合此頁所有文字與佐證圖片，於列印視窗選「儲存為 PDF」即可下載完整檔案。</p>
+      <div class="merged" id="merged_${t.id}"></div>
+    </div>`;
+
+  // 佐證資料卡（通用）
+  html+=`
+    <div class="card">
+      <div class="page-head"><div class="big-ico">📎</div><div>
+        <h2 style="font-size:20px">佐證資料</h2>
+        <p class="desc">上傳照片或圖表並加上圖說，輔助說明你的成果。</p>
+      </div></div>
+      <div class="ev-row">
+        <div class="step"><div class="step-label" style="font-size:14px">佐證主題</div>
+          <input type="text" id="ev_theme_${t.id}" placeholder="如：全國科展現場解說"></div>
+      </div>
+      <div class="filebox">📷 點擊選擇圖片（可多張）
+        <input type="file" id="ev_file_${t.id}" multiple accept="image/*" onchange="handlePhotos('${t.id}')">
+      </div>
+      <div class="photo-grid" id="photos_${t.id}"></div>
+    </div>`;
+
+  // 草稿分析卡
+  html+=`
+    <div class="card">
+      <div class="page-head"><div class="big-ico">🔎</div><div>
+        <h2 style="font-size:20px">上傳已完成草稿　AI 全面分析</h2>
+        <p class="desc">上傳你已寫好的 PDF / Word 檔，自動擷取文字成草稿，再由 AI 依「${t.title}」的製作原則，連同上方佐證圖片一起診斷並給改寫建議。</p>
+      </div></div>
+      <div class="filebox" id="draftBox_${t.id}">📄 點擊選擇你已完成的檔案（支援 PDF、Word .docx）
+        <input type="file" id="draft_file_${t.id}" accept=".pdf,.docx,.doc" onchange="handleDraftUpload('${t.id}')">
+        <div id="draftStatus_${t.id}" style="margin-top:8px;font-size:12.5px;color:var(--teal-d)"></div>
+      </div>
+      <div id="draftArea_${t.id}" style="display:none;margin-top:14px">
+        <div class="step-label" style="font-size:14px;justify-content:space-between">
+          <span>📝 草稿文字（可編輯）</span>
+          <button class="btn btn-ghost" style="padding:5px 12px;font-size:12.5px" onclick="toggleDraftView('${t.id}')" id="draftToggle_${t.id}">🔍 縮寫檢視全貌</button>
+        </div>
+        <div id="draftOutline_${t.id}" style="display:none;background:#f7fdfc;border:1px solid var(--teal-l);border-radius:10px;padding:14px;margin-bottom:10px;font-size:13px"></div>
+        <textarea id="draft_${t.id}" rows="8" placeholder="擷取的文字會出現在這裡，你也可以直接貼上草稿…" oninput="bigData['${t.id}']=bigData['${t.id}']||{};bigData['${t.id}'].__draft=this.value"></textarea>
+        <div class="btn-row" style="margin-top:10px">
+          <button class="btn btn-violet" onclick="openAI('${t.id}','__draft__')">🤖 AI 分析草稿（文字＋圖片）</button>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px">分析完成後，可在分析視窗按「📋 複製」或「⬇️ 匯出到草稿下方」，輸出文字會出現在下方輸出框，再依「分項重構藍圖」填入上方各步驟欄位逐欄優化。</p>
+        <div id="draftOutput_${t.id}"></div>
+      </div>
+    </div>`;
+
+  c.innerHTML=html;
+  restoreFields(t);
+  renderPhotos(t.id);
+  restoreDraft(t.id);
+}
+
+function switchType(id){
+  saveCurrentFields();
+  currentType=id;
+  buildNav();
+  renderPage();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ---------- 字數統計 ---------- */
+function updateCount(tid,fid){
+  const el=document.getElementById(`f_${tid}_${fid}`);
+  const cc=document.getElementById(`cc_${tid}_${fid}`);
+  if(!cc)return;
+  const limit=parseInt(el.dataset.limit||0);
+  const n=el.value.length;
+  cc.textContent=`${n} / ${limit} 字`;
+  cc.classList.toggle('over',n>limit);
+}
+
+function clearField(id){
+  if(confirm('確定清除此欄位？')) document.getElementById(id).value='';
+}
+
+/* ---------- 語音輸入 ---------- */
+function speak(id){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){toast('此瀏覽器不支援語音辨識（建議用 Chrome）');return;}
+  const r=new SR();r.lang='zh-TW';r.continuous=false;r.interimResults=false;
+  toast('🎤 請開始說話…');
+  r.onresult=e=>{
+    const txt=e.results[0][0].transcript;
+    const el=document.getElementById(id);
+    el.value=el.value?el.value+txt:txt;
+    el.dispatchEvent(new Event('input'));
+  };
+  r.onerror=()=>toast('語音辨識失敗，請再試一次');
+  r.start();
+}
+
+/* ---------- 合併 / 匯出 ---------- */
+function gatherType(t){
+  let out=`【${t.title}】\n`;
+  const name=val('studentName'), dept=val('targetDept');
+  if(name)out+=`學生：${name}　`;
+  if(dept)out+=`目標校系：${dept}`;
+  out+='\n\n';
+  t.fields.forEach(f=>{
+    const v=val(`f_${t.id}_${f.id}`);
+    if(v)out+=`▍${f.label}\n${v}\n\n`;
+  });
+  return out.trim();
+}
+function mergeType(){
+  const t=TYPES.find(x=>x.id===currentType);
+  const text=gatherType(t);
+  const box=document.getElementById('merged_'+t.id);
+  box.innerHTML=`<label style="font-weight:700;font-size:14px">合併結果（可再編輯）</label>
+    <textarea id="mergedText_${t.id}">${text}</textarea>`;
+  toast('已合併本檔內容');
+}
+/* 收集此頁「已修飾」內容（欄位值 = AI 套用後的最新文字）＋ 佐證圖片 */
+function collectContent(t){
+  const sections=t.fields.map(f=>({label:f.label,text:val(`f_${t.id}_${f.id}`)})).filter(s=>s.text.trim());
+  const photos=(photoStore[t.id]||[]).slice();
+  const evTheme=val('ev_theme_'+t.id);
+  return {sections,photos,evTheme,name:val('studentName')||'學生',dept:val('targetDept')};
+}
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* 產生整合 HTML（Word / PDF 共用），含文字與圖片 */
+async function buildDocHTML(t,forPrint){
+  const d=collectContent(t);
+  const today=new Date().toLocaleDateString('zh-TW');
+  let body=`<h1 style="text-align:center;color:#0f766e;border-bottom:3px solid #0d9488;padding-bottom:10px">${t.icon} ${t.title}</h1>
+    <p style="text-align:center;color:#555;font-size:14px">學生：${esc(d.name)}${d.dept?'　|　目標校系：'+esc(d.dept):''}　|　${today}</p>`;
+  d.sections.forEach((s,i)=>{
+    body+=`<h2 style="color:#0d9488;font-size:17px;border-left:5px solid #0d9488;padding-left:10px;margin-top:22px">${i+1}. ${esc(s.label)}</h2>
+      <p style="font-size:15px;line-height:1.9;white-space:pre-wrap;text-align:justify">${esc(s.text)}</p>`;
+  });
+  if(d.photos.length){
+    // 量測每張圖原始尺寸，寬度上限頁寬（不放大），讓 Word/PDF 不超出頁面
+    const PAGE_W=620; // 約等於 A4 內容寬度
+    const sizes=await Promise.all(d.photos.map(p=>measureImg(p.src)));
+    body+=`<h2 style="color:#0d9488;font-size:17px;border-left:5px solid #0d9488;padding-left:10px;margin-top:24px">📎 佐證資料${d.evTheme?'：'+esc(d.evTheme):''}</h2>`;
+    d.photos.forEach((p,i)=>{
+      const nat=sizes[i]||{w:PAGE_W};
+      const w=Math.min(nat.w||PAGE_W, PAGE_W);
+      body+=`<div style="margin:14px 0;text-align:center;page-break-inside:avoid">
+        <img src="${p.src}" width="${w}" style="width:${w}px;max-width:100%;height:auto;border:1px solid #ccc;border-radius:6px">
+        <div style="font-size:13px;color:#555;margin-top:6px">圖 ${i+1}：${esc(p.caption||'')}</div></div>`;
+    });
+  }
+  const head=`<meta charset="utf-8"><style>
+    body{font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;color:#1f3a3d;max-width:760px;margin:0 auto;padding:30px}
+    img{max-width:100%;height:auto}
+    @media print{body{padding:0}}</style>`;
+  return `<!DOCTYPE html><html><head>${head}<title>${esc(t.title)}_${esc(d.name)}</title></head><body>${body}${forPrint?'':''}</body></html>`;
+}
+/* 量測 base64 圖片原始尺寸 */
+function measureImg(src){
+  return new Promise(res=>{
+    try{ const im=new Image();
+      im.onload=()=>res({w:im.naturalWidth,h:im.naturalHeight});
+      im.onerror=()=>res(null); im.src=src;
+    }catch(e){res(null);}
+  });
+}
+
+/* 下載 Word（.doc，可在 Word 開啟並再編輯，支援中文與圖片） */
+async function exportWord(){
+  const t=TYPES.find(x=>x.id===currentType);
+  const d=collectContent(t);
+  if(!d.sections.length){toast('此頁尚無內容可匯出');return;}
+  const html=await buildDocHTML(t,false);
+  const pre='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">';
+  const doc=pre+html.replace(/^<!DOCTYPE html><html>/,'').replace(/<\/html>$/,'')+'</html>';
+  const blob=new Blob(['﻿',doc],{type:'application/msword'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`${t.title}_${d.name}.doc`;a.click();
+  toast('✓ 已下載 Word 檔');
+}
+
+/* 列印／下載 PDF：整合文字＋圖片，開列印視窗（可選「儲存為 PDF」） */
+async function printPDF(){
+  const t=TYPES.find(x=>x.id===currentType);
+  const d=collectContent(t);
+  if(!d.sections.length && !d.photos.length){toast('此頁尚無內容可列印');return;}
+  const w=window.open('','_blank');
+  if(!w){toast('請允許彈出視窗以列印 PDF');return;}
+  const docHtml=await buildDocHTML(t,true);
+  w.document.write(docHtml);
+  w.document.close();
+  // 等圖片載入完成再列印
+  w.onload=()=>{
+    const imgs=w.document.images;
+    let left=imgs.length;
+    const go=()=>{w.focus();w.print();};
+    if(!left)return setTimeout(go,300);
+    [...imgs].forEach(im=>{ if(im.complete){if(--left===0)setTimeout(go,300);}
+      else{im.onload=im.onerror=()=>{if(--left===0)setTimeout(go,300);};}});
+  };
+  toast('已開啟列印視窗，請選「儲存為 PDF」');
+}
+
+/* ---------- AI 優化 ---------- */
+let aiCtx={tid:null,fid:null,mode:'local'};
+function openAI(tid,fid){
+  aiCtx={tid,fid,mode:'local'};
+  const t=TYPES.find(x=>x.id===tid);
+  let label;
+  if(fid==='__merged__'){
+    label=`整份「${t.title}」`;
+    const mt=document.getElementById('mergedText_'+tid);
+    if(!mt||!mt.value.trim()){ mergeType(); }
+  }else if(fid==='__draft__'){
+    label=`分析「${t.title}」上傳草稿`;
+  }else{
+    label=t.fields.find(f=>f.id===fid).label;
+  }
+  const photoN=(photoStore[tid]||[]).length;
+  document.getElementById('aiFieldName').textContent=(fid==='__draft__'?'🔎 ':'優化目標：')+label+
+    (fid==='__draft__'&&photoN?`（將連同 ${photoN} 張佐證圖片一起分析）`:'');
+  document.querySelectorAll('.mode-opt').forEach(m=>m.classList.toggle('sel',m.dataset.mode==='local'));
+  document.getElementById('aiResult').style.display='none';
+  document.getElementById('aiResult').textContent='';
+  document.getElementById('aiApplyBtn').style.display='none';
+  document.getElementById('aiCopyBtn').style.display='none';
+  document.getElementById('aiExportBtn').style.display='none';
+  document.getElementById('aiLoading').style.display='none';
+  document.getElementById('aiRunBtn').style.display='inline-flex';
+  document.getElementById('aiOverlay').classList.add('show');
+}
+function closeAI(){document.getElementById('aiOverlay').classList.remove('show');}
+function pickMode(m){
+  aiCtx.mode=m;
+  document.querySelectorAll('.mode-opt').forEach(x=>x.classList.toggle('sel',x.dataset.mode===m));
+}
+function getAITargetText(){
+  const t=TYPES.find(x=>x.id===aiCtx.tid);
+  if(aiCtx.fid==='__merged__'){
+    const mt=document.getElementById('mergedText_'+aiCtx.tid);
+    return mt?mt.value:gatherType(t);
+  }
+  if(aiCtx.fid==='__draft__'){
+    const dr=document.getElementById('draft_'+aiCtx.tid);
+    return dr?dr.value:((bigData[aiCtx.tid]||{}).__draft||'');
+  }
+  return val(`f_${aiCtx.tid}_${aiCtx.fid}`);
+}
+function buildPrompt(){
+  const t=TYPES.find(x=>x.id===aiCtx.tid);
+  const dept=val('targetDept');
+  const principles=t.principles.map((p,i)=>`${i+1}. ${p}`).join('\n');
+  const photoN=(photoStore[t.id]||[]).length;
+  // 草稿分析模式：診斷 + 改寫建議 + 分項重構方向
+  if(aiCtx.fid==='__draft__'){
+    const sectionList=t.fields.map(f=>`「${f.label}」`).join('、');
+    return `你是台灣 108 課綱升學備審資料的資深指導老師。以下是學生為「${t.title}」所完成的草稿全文${photoN?`，另外附上 ${photoN} 張學生上傳的圖片／圖表／照片`:''}。
+${dept?`學生的目標校系是：${dept}。請依此科系所重視的特質給建議。\n`:''}
+請務必嚴格依據下列「${t.title}」的製作原則進行全面診斷${photoN?'，並一併評估圖片是否恰當、是否需要圖說或改用圖表':''}：
+【製作原則】
+${principles}
+
+【請依序輸出】
+一、整體評價：這份草稿目前最大的優點與最該改進的 2–3 個問題。
+二、逐項原則對照：逐條檢視草稿是否符合上述每一條原則，標示「✅符合／⚠️待加強／❌缺漏」並說明。
+${photoN?'三、圖片運用建議：每張圖是否切題、是否需要圖說或改成圖表、擺放建議。\n四':'三'}、文字改寫建議：點出空洞語句、流水帳、缺乏數據之處，給出具體改寫示範。
+${photoN?'五':'四'}、分項重構藍圖：請依此檔案類型應有的區塊（${sectionList}），把學生草稿的內容重新歸位，告訴學生每個區塊「目前有什麼、缺什麼、該怎麼補」，方便學生接下來一步一步分項優化。
+
+請用繁體中文（台灣用語），條理清晰、具體可執行，但不要捏造學生沒提供的事實或數據。
+
+【學生草稿全文】
+${getAITargetText()}`;
+  }
+  const fieldLabel = aiCtx.fid==='__merged__' ? '整份檔案' :
+    t.fields.find(f=>f.id===aiCtx.fid).label;
+  return `你是台灣升學備審資料的資深指導老師。請依下列原則，協助優化我在「${t.title}」中「${fieldLabel}」這個部分的文字。
+${dept?`我的目標校系是：${dept}。請讓內容更貼合此科系所重視的特質。\n`:''}
+【此檔案類型的撰寫原則】
+${principles}
+
+【優化要求】
+1. 修正錯字與台灣慣用語（如「程序」改「程式」、「信息」改「資訊」）。
+2. 改善語意邏輯，去除流水帳與空洞形容詞，改用具體事例與量化數據。
+3. 依上述原則強化結構與深度，但保持我本人的真實語氣，不要捏造不存在的事實或數據。
+4. 字數適中，符合該檔案類型的篇幅慣例。
+5. 直接輸出優化後的文字即可，必要時可附上 1–2 句修改說明。
+
+【我的原始文字】
+${getAITargetText()}`;
+}
+
+function runAI(){
+  const text=getAITargetText();
+  if(!text||!text.trim()){toast('請先輸入內容再優化');return;}
+  if(aiCtx.mode==='local') return runLocal(text);
+  if(aiCtx.mode==='copy') return runCopy();
+  if(aiCtx.mode==='api') return runApi();
+}
+
+/* 模式一：本地系統規則優化 */
+function runLocal(text){
+  const t=TYPES.find(x=>x.id===aiCtx.tid);
+  if(aiCtx.fid==='__draft__') return runLocalDraft(text,t);
+  let s=text;
+  // 台灣用語校正
+  const map={'程序':'程式','信息':'資訊','軟件':'軟體','硬件':'硬體','質量':'品質',
+    '網絡':'網路','數據庫':'資料庫','視頻':'影片','文件夾':'資料夾','激活':'啟用',
+    '優化':'優化','調研':'調查研究','項目':'專題','屏幕':'螢幕','打印':'列印',
+    '博客':'部落格','服務器':'伺服器','人工智能':'人工智慧','算法':'演算法'};
+  let fixes=[];
+  for(const k in map){ if(s.includes(k)){ s=s.split(k).join(map[k]); if(k!==map[k])fixes.push(`「${k}」→「${map[k]}」`);} }
+  // 清理贅字與空白
+  s=s.replace(/[ \t]{2,}/g,' ').replace(/\n{3,}/g,'\n\n').trim();
+  const fillers=['基本上','其實','真的','非常的','一個的'];
+  // 空洞語句偵測
+  const vague=['學到很多','收穫滿滿','獲益良多','很有趣','很有意義','增廣見聞','受益匪淺','成長很多'];
+  let vagueHits=vague.filter(v=>text.includes(v));
+  // 字數與篇幅建議
+  const len=text.replace(/\s/g,'').length;
+  let lenNote='';
+  const limfield = aiCtx.fid!=='__merged__' && t.fields.find(f=>f.id===aiCtx.fid)?.limit;
+  if(limfield){ lenNote = len>limfield?`⚠️ 目前約 ${len} 字，超過建議上限 ${limfield} 字，請精簡。`:`字數 ${len}（上限 ${limfield}）尚在範圍內。`; }
+  else if(aiCtx.tid==='diverse_summary'){ lenNote=`綜整心得建議 800 字內，目前約 ${len} 字。`; }
+  else if(aiCtx.tid==='autobiography'){ lenNote=`自傳建議 800–1200 字，目前約 ${len} 字。`; }
+
+  // 套版建議
+  let template='';
+  if(aiCtx.tid==='self_statement'||aiCtx.tid==='autobiography'){
+    template='\n\n📐 建議用 STAR 檢視：情境(S)→任務(T)→行動(A)→結果與反思(R)，確認每一段都有具體「行動」與「量化結果」。';
+  }else if(aiCtx.tid==='inquiry'){
+    template='\n\n📐 建議用 IMRD 檢視：引言→方法→結果→討論，並補上誤差分析或多重觀點。';
+  }else if(aiCtx.tid==='course'){
+    template='\n\n📐 建議補齊五要素：標題、摘要、作品說明(脈絡)、正文(過程與成果)、心得反思。';
+  }
+
+  let report='【🛠️ 本地系統優化報告】\n\n';
+  report+='① 台灣用語／格式校正：'+(fixes.length?fixes.join('、'):'未發現需校正之中國用語')+'\n';
+  report+='② 空洞語句偵測：'+(vagueHits.length?`發現「${vagueHits.join('」「')}」等空泛詞，建議改成具體事例＋數據`:'未發現明顯空洞語句 👍')+'\n';
+  report+='③ 篇幅檢查：'+(lenNote||`目前約 ${len} 字`)+template+'\n\n';
+  report+='──── 清理後文字（已校正用語與空白）────\n'+s;
+
+  showResult(report, s);
+}
+
+/* 本地草稿分析（離線啟發式檢查） */
+function runLocalDraft(text,t){
+  const len=text.replace(/\s/g,'').length;
+  const photoN=(photoStore[t.id]||[]).length;
+  const paras=text.split(/\n+/).filter(p=>p.trim());
+  const vague=['學到很多','收穫滿滿','獲益良多','很有趣','很有意義','增廣見聞','受益匪淺','成長很多','學習到很多','印象深刻'];
+  const vagueHits=vague.filter(v=>text.includes(v));
+  const hasNum=/\d/.test(text);
+  const cnMap={'程序':'程式','信息':'資訊','軟件':'軟體','質量':'品質','網絡':'網路','項目':'專題','算法':'演算法','人工智能':'人工智慧'};
+  const cnHits=Object.keys(cnMap).filter(k=>text.includes(k));
+  let r=`【🔎 本地草稿分析報告：${t.title}】\n\n`;
+  r+=`一、基本檢查\n`;
+  r+=`• 全文約 ${len} 字、${paras.length} 段、佐證圖片 ${photoN} 張。\n`;
+  if(t.id==='diverse_summary')r+=`• 綜整心得建議 800 字／3 張圖內，${len>800?'⚠️ 字數偏多需精簡':'字數適中'}；圖片${photoN>3?'⚠️ 超過 3 張':photoN?'已上傳':'尚未上傳'}。\n`;
+  if(t.id==='autobiography')r+=`• 自傳建議 800–1200 字，目前 ${len} 字${len<800?'（偏短，可再充實）':len>1200?'（偏長，可精簡）':'（適中）'}。\n`;
+  r+=`• 量化數據：${hasNum?'✅ 文中有數字，記得用來佐證成果':'⚠️ 幾乎沒有數字，建議加入量化成果（人數、百分比、名次等）'}。\n`;
+  r+=`• 空洞語句：${vagueHits.length?`⚠️ 發現「${vagueHits.join('」「')}」，請改成具體事例＋數據`:'✅ 未見明顯空泛詞'}。\n`;
+  r+=`• 台灣用語：${cnHits.length?`⚠️ 發現「${cnHits.join('」「')}」等用語建議改為台灣慣用語`:'✅ 用語正常'}。\n`;
+  r+=`\n二、逐項對照「${t.title}」製作原則\n`;
+  t.principles.forEach((p,i)=>{ r+=`${i+1}. ${p}\n   → 請自我檢查草稿是否做到此點。\n`; });
+  if(photoN)r+=`\n三、圖片運用\n• 共 ${photoN} 張，請確認每張都有圖說、且能對應原則中「圖表勝於照片、標出自己」的建議。\n`;
+  r+=`\n四、分項重構藍圖（接下來請逐區塊優化）\n`;
+  t.fields.forEach((f,i)=>{ r+=`${i+1}. ${f.label}：${f.hint}\n`; });
+  r+=`\n💡 想要更深入、連同圖片內容一起判讀的分析，請改用「模式 3 直接呼叫 API」（可讀圖的模型），或「模式 2」複製提示詞到 ChatGPT/Gemini。\n`;
+  r+=`完成分析後，請依上方「分項重構藍圖」把內容填入各步驟欄位，再逐欄用 ✨ 一步步優化。`;
+  showResult(r,null);
+}
+
+/* 模式二：複製提示詞並開啟網頁 */
+function runCopy(){
+  const prompt=buildPrompt();
+  const target=document.getElementById('copyTarget').value;
+  const url= target==='gemini' ? 'https://gemini.google.com/app' : 'https://chat.openai.com';
+  navigator.clipboard.writeText(prompt).then(()=>{
+    showResult('✅ 優化提示詞（含你的原文）已複製到剪貼簿！\n\n即將開啟 '+(target==='gemini'?'Gemini':'ChatGPT')+
+      '，請直接貼上(Ctrl/Cmd+V)送出，取得結果後再貼回欄位。\n\n──── 以下為已複製的內容預覽 ────\n\n'+prompt, null);
+    window.open(url,'_blank');
+  }).catch(()=>{
+    showResult('複製失敗，請手動複製下方提示詞：\n\n'+prompt, null);
+  });
+}
+
+/* 模式三：直接呼叫 API */
+async function runApi(){
+  const provider=document.getElementById('apiTarget').value;
+  const cfg=getSettings();
+  const prompt=buildPrompt();
+  if(provider==='openai' && !cfg.openaiKey){ toast('請先在 ⚙️ AI 設定 填入 OpenAI 金鑰');openSettings();return; }
+  if(provider==='gemini' && !cfg.geminiKey){ toast('請先在 ⚙️ AI 設定 填入 Gemini 金鑰');openSettings();return; }
+  document.getElementById('aiRunBtn').style.display='none';
+  document.getElementById('aiLoading').style.display='block';
+  document.getElementById('aiResult').style.display='none';
+  document.getElementById('aiApplyBtn').style.display='none';
+  // 草稿分析時附上佐證圖片（vision），且結果為建議不可直接套用
+  const imgs = (aiCtx.fid==='__draft__'||aiCtx.fid==='__merged__') ? (photoStore[aiCtx.tid]||[]).map(p=>p.src) : [];
+  const isAnalysis = aiCtx.fid==='__draft__';
+  try{
+    let out;
+    if(provider==='openai') out=await callOpenAI(prompt,cfg,imgs);
+    else out=await callGemini(prompt,cfg,imgs);
+    document.getElementById('aiLoading').style.display='none';
+    showResult(out, isAnalysis?null:out);
+  }catch(err){
+    document.getElementById('aiLoading').style.display='none';
+    document.getElementById('aiRunBtn').style.display='inline-flex';
+    showResult('❌ API 呼叫失敗：'+err.message+'\n\n請確認金鑰正確、額度足夠、模型支援讀圖（gpt-4o／gemini），或改用模式 1／2。', null);
+  }
+}
+async function callOpenAI(prompt,cfg,imgs){
+  const content=[{type:'text',text:prompt}];
+  (imgs||[]).slice(0,4).forEach(src=>content.push({type:'image_url',image_url:{url:src}}));
+  const res=await fetch('https://api.openai.com/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+cfg.openaiKey},
+    body:JSON.stringify({model:openaiModelName(cfg),
+      messages:[{role:'system',content:'你是台灣升學備審資料的資深指導老師，使用繁體中文（台灣用語）。'},
+                {role:'user',content:(imgs&&imgs.length)?content:prompt}],
+      temperature:0.7})
+  });
+  if(!res.ok){const e=await res.text();throw new Error('HTTP '+res.status+' '+e.slice(0,180));}
+  const d=await res.json();
+  return d.choices[0].message.content.trim();
+}
+async function callGemini(prompt,cfg,imgs){
+  const model=geminiModelName(cfg);
+  const parts=[{text:prompt}];
+  (imgs||[]).slice(0,4).forEach(src=>{
+    const m=/^data:(image\/\w+);base64,(.+)$/.exec(src);
+    if(m)parts.push({inline_data:{mime_type:m[1],data:m[2]}});
+  });
+  const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=`+cfg.geminiKey,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({contents:[{parts:parts}]})
+  });
+  if(!res.ok){const e=await res.text();throw new Error('HTTP '+res.status+' '+e.slice(0,180));}
+  const d=await res.json();
+  return d.candidates[0].content.parts[0].text.trim();
+}
+
+let aiApplyText=null, aiResultText='';
+function showResult(display, applyText){
+  const r=document.getElementById('aiResult');
+  r.textContent=display;r.style.display='block';
+  document.getElementById('aiRunBtn').style.display='inline-flex';
+  aiApplyText=applyText;
+  aiResultText=display||'';
+  const has=!!(display&&display.trim());
+  document.getElementById('aiApplyBtn').style.display=applyText?'inline-flex':'none';
+  document.getElementById('aiCopyBtn').style.display=has?'inline-flex':'none';
+  // 匯出到草稿下方：草稿分析或整份優化時提供
+  document.getElementById('aiExportBtn').style.display=(has&&(aiCtx.fid==='__draft__'||aiCtx.fid==='__merged__'))?'inline-flex':'none';
+}
+/* 複製分析視窗全部輸出文字（含排版/換行） */
+function copyAIResult(){
+  if(!aiResultText){toast('沒有可複製的內容');return;}
+  const done=()=>toast('✓ 已複製全部輸出文字');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(aiResultText).then(done).catch(()=>fallbackCopy(aiResultText,done));
+  }else fallbackCopy(aiResultText,done);
+}
+function fallbackCopy(text,cb){
+  const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');cb&&cb();}catch(e){toast('複製失敗，請手動選取');}
+  document.body.removeChild(ta);
+}
+/* 匯出優化文字到該頁草稿欄位下方的輸出對話框 */
+function exportAIResult(){
+  if(!aiResultText){toast('沒有可匯出的內容');return;}
+  const tid=aiCtx.tid;
+  const box=document.getElementById('draftOutput_'+tid);
+  if(!box){toast('找不到輸出區');return;}
+  renderDraftOutput(tid,aiResultText);
+  bigData[tid]=bigData[tid]||{}; bigData[tid].__draftOutput=aiResultText;
+  closeAI();
+  toast('✓ 已匯出到草稿下方的輸出框');
+  const el=document.getElementById('draftOutputText_'+tid);
+  if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
+}
+function renderDraftOutput(tid,text){
+  const box=document.getElementById('draftOutput_'+tid);
+  if(!box)return;
+  box.innerHTML=`<div class="merged" style="margin-top:16px">
+    <div class="step-label" style="font-size:14px;justify-content:space-between">
+      <span>📤 AI 優化輸出（可編輯）</span>
+      <span style="display:flex;gap:6px">
+        <button class="btn btn-ghost" style="padding:5px 12px;font-size:12.5px" onclick="copyDraftOutput('${tid}')">📋 複製</button>
+        <button class="btn btn-ghost" style="padding:5px 12px;font-size:12.5px;color:var(--red);border-color:#fecaca" onclick="clearDraftOutput('${tid}')">✕ 清除</button>
+      </span>
+    </div>
+    <textarea id="draftOutputText_${tid}" rows="12" oninput="bigData['${tid}']=bigData['${tid}']||{};bigData['${tid}'].__draftOutput=this.value"></textarea>
+  </div>`;
+  document.getElementById('draftOutputText_'+tid).value=text;
+}
+function copyDraftOutput(tid){
+  const el=document.getElementById('draftOutputText_'+tid);
+  if(!el||!el.value){toast('輸出框是空的');return;}
+  const done=()=>toast('✓ 已複製輸出框文字');
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(el.value).then(done).catch(()=>fallbackCopy(el.value,done));
+  else fallbackCopy(el.value,done);
+}
+function clearDraftOutput(tid){
+  if(!confirm('清除此輸出框？'))return;
+  document.getElementById('draftOutput_'+tid).innerHTML='';
+  if(bigData[tid])delete bigData[tid].__draftOutput;
+}
+function applyAIResult(){
+  if(aiApplyText==null)return;
+  if(aiCtx.fid==='__merged__'){
+    const mt=document.getElementById('mergedText_'+aiCtx.tid);
+    if(mt)mt.value=aiApplyText;
+  }else{
+    const el=document.getElementById(`f_${aiCtx.tid}_${aiCtx.fid}`);
+    if(el){el.value=aiApplyText;el.dispatchEvent(new Event('input'));}
+  }
+  toast('✓ 已套用優化結果');
+  closeAI();
+}
+
+/* ---------- 設定 ---------- */
+function getSettings(){ try{return JSON.parse(localStorage.getItem('lp_settings')||'{}');}catch{return{};} }
+function openSettings(){
+  const c=getSettings();
+  document.getElementById('openaiKey').value=c.openaiKey||'';
+  document.getElementById('openaiModel').value=c.openaiModel||'gpt-5.4-mini';
+  document.getElementById('openaiModelCustom').value=c.openaiModelCustom||'';
+  document.getElementById('geminiKey').value=c.geminiKey||'';
+  document.getElementById('geminiModel').value=c.geminiModel||'gemini-3.5-flash';
+  document.getElementById('geminiModelCustom').value=c.geminiModelCustom||'';
+  document.getElementById('setOverlay').classList.add('show');
+}
+function closeSettings(){document.getElementById('setOverlay').classList.remove('show');}
+function saveSettings(){
+  const c={openaiKey:val('openaiKey'),openaiModel:val('openaiModel'),openaiModelCustom:val('openaiModelCustom').trim(),
+    geminiKey:val('geminiKey'),geminiModel:val('geminiModel'),geminiModelCustom:val('geminiModelCustom').trim()};
+  localStorage.setItem('lp_settings',JSON.stringify(c));
+  toast('✓ AI 設定已儲存於本機');closeSettings();
+}
+function openaiModelName(c){return (c.openaiModelCustom&&c.openaiModelCustom.trim())||c.openaiModel||'gpt-5.4-mini';}
+function geminiModelName(c){return (c.geminiModelCustom&&c.geminiModelCustom.trim())||c.geminiModel||'gemini-3.5-flash';}
+
+/* ---------- 照片 ---------- */
+const photoStore={}; // {tid:[{src,caption}]}
+function handlePhotos(tid){
+  const files=document.getElementById('ev_file_'+tid).files;
+  if(!photoStore[tid])photoStore[tid]=[];
+  [...files].forEach(file=>{
+    if(!file.type.startsWith('image/'))return;
+    const r=new FileReader();
+    r.onload=e=>{photoStore[tid].push({src:e.target.result,caption:''});renderPhotos(tid);};
+    r.readAsDataURL(file);
+  });
+}
+function renderPhotos(tid){
+  const g=document.getElementById('photos_'+tid);
+  if(!g)return;
+  const arr=photoStore[tid]||[];
+  g.innerHTML=arr.map((p,i)=>`
+    <div class="photo-item">
+      <button class="del" onclick="delPhoto('${tid}',${i})">✕</button>
+      <img src="${p.src}">
+      <input type="text" placeholder="圖說（標出自己是哪位）" value="${(p.caption||'').replace(/"/g,'&quot;')}"
+        oninput="photoStore['${tid}'][${i}].caption=this.value">
+    </div>`).join('');
+}
+function delPhoto(tid,i){
+  if(confirm('刪除此圖片？')){photoStore[tid].splice(i,1);renderPhotos(tid);}
+}
+
+/* ---------- 草稿上傳 / 擷取 / 檢視 / 分項 ---------- */
+async function handleDraftUpload(tid){
+  const input=document.getElementById('draft_file_'+tid);
+  const file=input.files[0];
+  if(!file)return;
+  const status=document.getElementById('draftStatus_'+tid);
+  status.textContent='⏳ 正在擷取文字…';
+  try{
+    let text='';
+    const ext=(file.name.split('.').pop()||'').toLowerCase();
+    if(ext==='pdf'){
+      text=await extractPDF(file);
+    }else if(ext==='docx'||ext==='doc'){
+      if(!window.mammoth)throw new Error('Word 擷取元件未載入，請檢查網路');
+      const ab=await file.arrayBuffer();
+      const res=await window.mammoth.extractRawText({arrayBuffer:ab});
+      text=res.value;
+    }else{ text=await file.text(); }
+    text=(text||'').replace(/\n{3,}/g,'\n\n').trim();
+    if(!text){status.textContent='⚠️ 未擷取到文字（可能是掃描圖檔的 PDF），請手動貼上草稿。';}
+    else{status.textContent=`✅ 已擷取「${file.name}」約 ${text.replace(/\s/g,'').length} 字`;}
+    document.getElementById('draftArea_'+tid).style.display='block';
+    document.getElementById('draft_'+tid).value=text;
+    bigData[tid]=bigData[tid]||{}; bigData[tid].__draft=text; bigData[tid].__draftName=file.name;
+  }catch(e){
+    status.textContent='❌ 擷取失敗：'+e.message+'（可手動貼上草稿）';
+    document.getElementById('draftArea_'+tid).style.display='block';
+  }
+}
+async function extractPDF(file){
+  if(!window.pdfjsLib)throw new Error('PDF 擷取元件未載入，請檢查網路');
+  const ab=await file.arrayBuffer();
+  const pdf=await window.pdfjsLib.getDocument({data:ab}).promise;
+  let out='';
+  for(let i=1;i<=pdf.numPages;i++){
+    const page=await pdf.getPage(i);
+    const c=await page.getTextContent();
+    out+=c.items.map(it=>it.str).join(' ')+'\n\n';
+  }
+  return out;
+}
+let draftCollapsed={};
+function toggleDraftView(tid){
+  const ta=document.getElementById('draft_'+tid);
+  const outline=document.getElementById('draftOutline_'+tid);
+  const btn=document.getElementById('draftToggle_'+tid);
+  draftCollapsed[tid]=!draftCollapsed[tid];
+  if(draftCollapsed[tid]){
+    const text=ta.value;
+    const paras=text.split(/\n+/).filter(p=>p.trim());
+    const len=text.replace(/\s/g,'').length;
+    const photoN=(photoStore[tid]||[]).length;
+    let html=`<b>📊 檔案全貌（縮寫檢視）</b><br>全文約 ${len} 字、${paras.length} 段、佐證圖片 ${photoN} 張。<hr style="border:none;border-top:1px solid var(--teal-l);margin:8px 0"><b>段落綱要：</b><ol style="margin:6px 0;padding-left:20px">`;
+    paras.slice(0,12).forEach(p=>{ const lead=p.trim().replace(/\s+/g,' ').slice(0,40); html+=`<li style="margin:3px 0">${esc(lead)}${p.length>40?'…':''}</li>`; });
+    if(paras.length>12)html+=`<li>…（還有 ${paras.length-12} 段）</li>`;
+    html+='</ol>';
+    outline.innerHTML=html; outline.style.display='block';
+    ta.style.display='none'; btn.textContent='📄 展開完整草稿';
+  }else{
+    outline.style.display='none'; ta.style.display='block'; btn.textContent='🔍 縮寫檢視全貌';
+  }
+}
+function restoreDraft(tid){
+  const d=bigData[tid]||{};
+  if(d.__draft){
+    document.getElementById('draftArea_'+tid).style.display='block';
+    document.getElementById('draft_'+tid).value=d.__draft;
+    if(d.__draftName)document.getElementById('draftStatus_'+tid).textContent=`✅ 已載入「${d.__draftName}」`;
+  }
+  if(d.__draftOutput){
+    document.getElementById('draftArea_'+tid).style.display='block';
+    renderDraftOutput(tid,d.__draftOutput);
+  }
+}
+/* ---------- 儲存 / 讀取 ---------- */
+function val(id){const e=document.getElementById(id);return e?e.value:'';}
+let bigData={}; // 全部欄位資料 {tid:{fid:val}}
+
+function saveCurrentFields(){
+  const t=TYPES.find(x=>x.id===currentType);
+  if(!t)return;
+  bigData[t.id]=bigData[t.id]||{};
+  t.fields.forEach(f=>{ bigData[t.id][f.id]=val(`f_${t.id}_${f.id}`); });
+  bigData[t.id].__evtheme=val('ev_theme_'+t.id);
+  const mt=document.getElementById('mergedText_'+t.id);
+  if(mt)bigData[t.id].__merged=mt.value;
+  const dr=document.getElementById('draft_'+t.id);
+  if(dr)bigData[t.id].__draft=dr.value;
+  const dout=document.getElementById('draftOutputText_'+t.id);
+  if(dout)bigData[t.id].__draftOutput=dout.value;
+}
+function restoreFields(t){
+  const d=bigData[t.id]||{};
+  t.fields.forEach(f=>{
+    const el=document.getElementById(`f_${t.id}_${f.id}`);
+    if(el){el.value=d[f.id]||'';updateCount(t.id,f.id);}
+  });
+  const ev=document.getElementById('ev_theme_'+t.id);
+  if(ev)ev.value=d.__evtheme||'';
+  if(d.__merged){
+    document.getElementById('merged_'+t.id).innerHTML=
+      `<label style="font-weight:700;font-size:14px">合併結果（可再編輯）</label><textarea id="mergedText_${t.id}">${d.__merged}</textarea>`;
+  }
+}
+function snapshot(){
+  saveCurrentFields();
+  return {studentName:val('studentName'),targetDept:val('targetDept'),
+    data:bigData,photos:photoStore,ts:new Date().toISOString()};
+}
+function saveAll(){
+  const name=val('studentName');
+  if(!name){toast('請先輸入學生姓名再儲存');return;}
+  const key='lp_'+name;
+  try{
+    localStorage.setItem(key,JSON.stringify(snapshot()));
+    toast('✓ 已儲存「'+name+'」的所有檔案');
+  }catch(e){toast('儲存失敗：'+e.message);}
+}
+function listSaves(){return Object.keys(localStorage).filter(k=>k.startsWith('lp_')&&k!=='lp_settings');}
+
+/* 以表單列出所有已儲存檔案 */
+let fileModalMode='load';
+function loadAll(){openFileModal('load');}
+function deleteAll(){openFileModal('delete');}
+function openFileModal(mode){
+  fileModalMode=mode;
+  if(!listSaves().length){toast('目前沒有已儲存的檔案');return;}
+  document.getElementById('fileModalTitle').textContent= mode==='load'?'📂 讀取檔案':'🗑️ 刪除檔案';
+  document.getElementById('fileModalDesc').textContent= mode==='load'
+    ? '下方為所有已儲存的檔案，點「讀取」載入。' : '下方為所有已儲存的檔案，點「刪除」移除（無法復原）。';
+  renderFileList();
+  document.getElementById('fileOverlay').classList.add('show');
+}
+function closeFileModal(){document.getElementById('fileOverlay').classList.remove('show');}
+function renderFileList(){
+  const box=document.getElementById('fileList');
+  const keys=listSaves();
+  if(!keys.length){box.innerHTML='<div class="file-empty">目前沒有已儲存的檔案</div>';return;}
+  // 依儲存時間新到舊
+  const items=keys.map(k=>{ let ts=''; let dept='';
+    try{const s=JSON.parse(localStorage.getItem(k));ts=s.ts||'';dept=s.targetDept||'';}catch{}
+    return {key:k,name:k.slice(3),ts,dept};
+  }).sort((a,b)=>(b.ts||'').localeCompare(a.ts||''));
+  box.innerHTML=items.map(it=>{
+    const when=it.ts?new Date(it.ts).toLocaleString('zh-TW'):'';
+    return `<div class="file-row">
+      <div><div class="fi-name">${esc(it.name)}</div>
+        <div class="fi-meta">${it.dept?'目標校系：'+esc(it.dept)+'　|　':''}${when?'儲存：'+when:''}</div></div>
+      <div class="fi-act">
+        ${fileModalMode==='load'
+          ? `<button class="fi-load" onclick="doLoadFile('${encodeURIComponent(it.name)}')">讀取</button>`
+          : `<button class="fi-del" onclick="doDeleteFile('${encodeURIComponent(it.name)}')">刪除</button>`}
+      </div></div>`;
+  }).join('');
+}
+function doLoadFile(encName){
+  const name=decodeURIComponent(encName);
+  const raw=localStorage.getItem('lp_'+name);
+  if(!raw){toast('找不到「'+name+'」');return;}
+  const s=JSON.parse(raw);
+  document.getElementById('studentName').value=s.studentName||'';
+  document.getElementById('targetDept').value=s.targetDept||'';
+  bigData=s.data||{};
+  for(const k in photoStore)delete photoStore[k];
+  Object.assign(photoStore,s.photos||{});
+  renderPage();
+  closeFileModal();
+  toast('✓ 已讀取「'+name+'」');
+}
+function doDeleteFile(encName){
+  const name=decodeURIComponent(encName);
+  if(!confirm('確定刪除「'+name+'」的所有檔案？此動作無法復原。'))return;
+  localStorage.removeItem('lp_'+name);
+  toast('已刪除「'+name+'」');
+  renderFileList();
+  if(!listSaves().length)closeFileModal();
+}
+
+/* ---------- toast ---------- */
+let toastTimer;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+/* ---------- init ---------- */
+window.addEventListener('beforeunload',saveCurrentFields);
+buildNav();
+renderPage();
+</script>
+</body>
+</html>

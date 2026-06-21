@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>座位選取抽籤程式(canva優化版)｜使用說明</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #5f6b7a;
+      --line: #d9dee7;
+      --soft: #f5f7fb;
+      --brand: #0f766e;
+      --warn: #b45309;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+      color: var(--ink);
+      background: #ffffff;
+      line-height: 1.75;
+    }
+    header {
+      background: linear-gradient(135deg, #0f766e, #1d4ed8);
+      color: #ffffff;
+      padding: 42px 24px;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 24px 56px;
+    }
+    h1, h2, h3 { line-height: 1.35; margin: 0; }
+    h1 { font-size: 2rem; margin-bottom: 10px; }
+    h2 {
+      font-size: 1.35rem;
+      margin-top: 34px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--line);
+    }
+    h3 { font-size: 1.05rem; margin-top: 20px; }
+    p { margin: 10px 0; }
+    a { color: #0f766e; font-weight: 700; }
+    .subtitle { max-width: 760px; color: rgba(255,255,255,.9); }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.16);
+      border: 1px solid rgba(255,255,255,.25);
+      font-size: .92rem;
+    }
+    .notice {
+      padding: 14px 16px;
+      border: 1px solid #99f6e4;
+      border-left: 5px solid var(--brand);
+      background: #f0fdfa;
+      border-radius: 8px;
+      margin: 18px 0;
+    }
+    .warning {
+      padding: 14px 16px;
+      border: 1px solid #fed7aa;
+      border-left: 5px solid var(--warn);
+      background: #fff7ed;
+      border-radius: 8px;
+      margin: 18px 0;
+    }
+    ol, ul { padding-left: 1.45rem; }
+    li { margin: 6px 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 18px;
+      font-size: .96rem;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      vertical-align: top;
+      text-align: left;
+    }
+    th { background: var(--soft); }
+    code {
+      padding: 2px 6px;
+      border-radius: 5px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: .92em;
+    }
+    .checklist li::marker { color: var(--brand); }
+    footer {
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      margin-top: 40px;
+      padding-top: 18px;
+      font-size: .95rem;
+    }
+    @media print {
+      header { background: #ffffff; color: #000000; border-bottom: 2px solid #000000; }
+      .pill { color: #000000; border-color: #777777; background: #ffffff; }
+      a { color: #000000; }
+      main { max-width: none; padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>座位選取抽籤程式(canva優化版) 使用說明</h1>
+    <p class="subtitle">本文件協助導師快速完成班級名單匯入、座位抽籤、手動調整、學生職務標籤、歷史紀錄、方案備份與列印輸出。</p>
+    <div class="meta">
+      <span class="pill">臺北市麗山高中林獻升老師製作</span>
+      <span class="pill">適用：導師、班級經營、座位安排</span>
+      <span class="pill">文件日期：2026-06-09</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="notice">
+      <strong>線上版網址：</strong>
+      <a href="https://froglssh.github.io/classroom-seat-lottery/" target="_blank" rel="noopener">https://froglssh.github.io/classroom-seat-lottery/</a>
+    </section>
+
+    <h2>一、開始使用前</h2>
+    <p>本程式是單頁網頁工具，不需要安裝。老師可直接開啟線上版，或使用本機 HTML 檔。若要使用 Excel 匯入功能，開啟時需能連上網路，讓瀏覽器載入 Excel 解析套件。</p>
+    <ul class="checklist">
+      <li>建議使用 Chrome、Edge 或 Safari 最新版。</li>
+      <li>學生名單可手動輸入，也可由 Excel 匯入。</li>
+      <li>座位方案與歷史紀錄會儲存在同一個瀏覽器的本機資料中。</li>
+      <li>若要跨電腦使用，請用「下載方案 JSON」備份，再到另一台電腦匯入。</li>
+    </ul>
+
+    <h2>二、匯入或輸入學生名單</h2>
+    <h3>方式 A：手動輸入</h3>
+    <p>在「學生名單」欄位中，每行輸入一位學生。建議格式為 <code>座號 姓名</code>，例如：</p>
+    <p><code>01 王小明</code><br><code>02 李小華</code></p>
+
+    <h3>方式 B：Excel 匯入</h3>
+    <ol>
+      <li>在「Excel 匯入名單」中按「選擇 Excel 檔案」。</li>
+      <li>程式會讀取檔案內所有分頁，於「班級分頁」下拉選單中選擇班級。</li>
+      <li>按「匯入此班名單」。</li>
+    </ol>
+    <p>程式會自動偵測常見欄位，例如「座號、號碼、編號、學號、姓名、學生、名字」。匯入後會同步保留學生座號與姓名。</p>
+
+    <h2>三、設定座位格局</h2>
+    <ol>
+      <li>輸入「班級名稱」與「教室名稱」。</li>
+      <li>設定橫行數與直列數，例如 5 x 6。</li>
+      <li>按「預覽座位設定」。</li>
+      <li>在預覽模式中，可點擊座位切換「可用 / 停用」。停用座位會作為空位，不會安排學生。</li>
+    </ol>
+
+    <h2>四、學生標籤：幹部、小老師與備註</h2>
+    <p>學生每學期可能更換職務，因此本程式將職務與備註設計為「學生標籤」，而不是固定在某一個座位上。標籤會跟著學生移動；無論隨機或手動安排，座號右側都會顯示該學生的標籤。</p>
+    <ol>
+      <li>在「學生標籤設定」中選擇學生。</li>
+      <li>從下拉選單選擇幹部或小老師，例如班長、生物小老師。</li>
+      <li>也可以手動輸入其他備註。</li>
+      <li>按「儲存學生標籤」。</li>
+    </ol>
+    <p>若新學期要重新設定職務，可按「清除此學生標籤」清除單一學生，或按「清除全班學生標籤」一次清除全班職務與備註。這不會刪除學生姓名、座號或座位安排。</p>
+
+    <h2>五、產生與調整座位</h2>
+    <table>
+      <thead>
+        <tr><th>功能</th><th>用途</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>生成隨機座位</td><td>依目前名單與可用座位隨機安排。若人數少於座位數，空位會自然分散。</td></tr>
+        <tr><td>設定學生座位</td><td>進入手動分配，可點擊座位選擇學生。</td></tr>
+        <tr><td>編輯座位</td><td>可點擊座位重新指定學生，也可拖曳座位交換學生。</td></tr>
+        <tr><td>清除目前座位</td><td>清除目前座位上的學生，保留名單、座位格局與學生標籤。</td></tr>
+      </tbody>
+    </table>
+    <p>點擊某一個座位時，也可以在視窗中快速調整該學生的標籤。這些標籤會存回學生資料，下次重排仍會保留。</p>
+
+    <h2>六、學生視角與教師視角</h2>
+    <p>按「教師檢視」可在學生視角與教師視角之間切換。</p>
+    <ul>
+      <li>學生視角：講台 / 黑板在上方。</li>
+      <li>教師視角：講台 / 黑板在下方，座位上下左右反轉，符合老師站在講台看學生的方向。</li>
+    </ul>
+
+    <h2>七、儲存方案與安排紀錄</h2>
+    <h3>儲存方案</h3>
+    <p>在「方案名稱」輸入名稱後按「儲存」。一個方案會包含班級、教室、座位格局、學生名單、學生標籤，以及該方案底下的安排紀錄。</p>
+
+    <h3>安排紀錄</h3>
+    <p>安排好座位後，可在「安排紀錄」輸入名稱，例如「第一次座位」「段考後座位」，再按「紀錄目前結果」。每個方案可保存多筆安排紀錄；讀取不同方案時，只會看到該方案自己的紀錄。</p>
+
+    <h2>八、JSON 備份與還原</h2>
+    <p>JSON 檔案代表一個完整方案，而不是單一座位紀錄。</p>
+    <ol>
+      <li>按「下載方案 JSON」可備份目前方案。</li>
+      <li>按「匯入方案 JSON」可將備份方案還原到目前瀏覽器。</li>
+      <li>匯入後，方案內的安排紀錄也會一起恢復。</li>
+    </ol>
+    <div class="warning">
+      <strong>提醒：</strong>若換電腦或換瀏覽器使用，原本存在 localStorage 的方案不會自動出現。請先在原電腦下載方案 JSON，再到新電腦匯入。
+    </div>
+
+    <h2>九、下載與列印座位表</h2>
+    <p>按「下載學生視角 PNG」或「下載教師視角 PNG」可輸出白底黑字的列印友善座位表。圖片中會包含班級、教室、視角、日期、座位代碼、座號、姓名與學生標籤。</p>
+    <ul>
+      <li>學生張貼版通常使用學生視角。</li>
+      <li>導師講台使用可下載教師視角。</li>
+      <li>若圖片剛下載後預覽較大，列印時可選擇「符合頁面」或「縮放至一頁」。</li>
+    </ul>
+
+    <h2>十、常見問題</h2>
+    <h3>為什麼重新隨機後，幹部或小老師標籤還在？</h3>
+    <p>因為標籤是儲存在學生資料上，不是座位上。這樣每次換座位時，標籤會自動跟著學生移動。</p>
+
+    <h3>清除全班學生標籤會不會刪掉學生名單？</h3>
+    <p>不會。它只會清除幹部、小老師與備註欄位，學生姓名、座號、座位與方案資料都會保留。</p>
+
+    <h3>為什麼 Excel 匯入失敗？</h3>
+    <p>請確認檔案格式為 xlsx、xls 或 csv，且表格中至少有可辨識的姓名欄位。若使用線上版，請確認瀏覽器可連網。</p>
+
+    <footer>
+      <p>本使用說明適用於「座位選取抽籤程式(canva優化版)」。</p>
+      <p>線上版：<a href="https://froglssh.github.io/classroom-seat-lottery/" target="_blank" rel="noopener">https://froglssh.github.io/classroom-seat-lottery/</a></p>
+    </footer>
+  </main>
+</body>
+</html>

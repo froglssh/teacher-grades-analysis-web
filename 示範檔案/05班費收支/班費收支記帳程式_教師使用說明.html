@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>班費收支記帳程式教師使用說明</title>
+<style>
+body {
+  font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  color: #1f2937;
+  line-height: 1.85;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 36px 24px 72px;
+  background: #f7fbff;
+}
+h1, h2, h3 {
+  line-height: 1.35;
+  color: #102033;
+}
+h1 {
+  font-size: 2rem;
+  border-bottom: 4px solid #2196f3;
+  padding-bottom: 12px;
+}
+h2 {
+  font-size: 1.35rem;
+  margin-top: 36px;
+  border-left: 6px solid #4caf50;
+  padding-left: 12px;
+}
+h3 {
+  font-size: 1.08rem;
+  margin-top: 22px;
+}
+a {
+  color: #1769aa;
+}
+code {
+  background: #edf3f8;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+pre {
+  background: #ffffff;
+  border: 1px solid #d8e3ee;
+  border-radius: 8px;
+  padding: 12px 16px;
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  background: white;
+}
+th, td {
+  border: 1px solid #d7e2ec;
+  padding: 8px 10px;
+  vertical-align: top;
+}
+th {
+  background: #eaf5ff;
+  text-align: left;
+}
+.hero {
+  background: white;
+  border: 1px solid #dbe8f5;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 18px 0 28px;
+}
+.button {
+  display: inline-block;
+  background: #2196f3;
+  color: white;
+  text-decoration: none;
+  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+.note {
+  background: #eef9f1;
+  border-left: 5px solid #4caf50;
+  padding: 12px 16px;
+  margin: 14px 0;
+}
+.warning {
+  background: #fff7ed;
+  border-left: 5px solid #f59e0b;
+  padding: 12px 16px;
+  margin: 14px 0;
+}
+.example {
+  background: white;
+  border: 1px solid #dbe8f5;
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+@media print {
+  body { background: white; padding: 0; }
+  a { color: #1f2937; text-decoration: none; }
+  .button { border: 1px solid #1f2937; color: #1f2937; background: white; }
+}
+</style>
+</head>
+<body>
+<h1>班費收支記帳程式教師使用說明</h1>
+
+<div class="hero">
+  <p><strong>適用程式：</strong>班費收支記帳程式</p>
+  <p><strong>線上版網址：</strong><br>
+  <a href="https://froglssh.github.io/class-fee-accounting-online/">https://froglssh.github.io/class-fee-accounting-online/</a></p>
+  <p><strong>製作者：</strong>臺北市立麗山高中 林獻升老師</p>
+  <a class="button" href="https://froglssh.github.io/class-fee-accounting-online/">開啟班費收支記帳程式</a>
+</div>
+
+<h2>一、程式用途</h2>
+<p>本程式用於班級班費管理，協助導師或班級幹部記錄學生班費繳交情形、班費收入、班費支出與目前結餘。程式可在瀏覽器中直接使用，不需要安裝軟體，適合用於班會、幹部交接、期末結算與家長或學生查核。</p>
+
+<p>主要功能包含：</p>
+<ul>
+  <li>匯入班級學生名單。</li>
+  <li>記錄每位學生班費繳交日期與金額。</li>
+  <li>查看全班繳費狀況。</li>
+  <li>新增班費收入與支出。</li>
+  <li>附加收入或支出的照片憑證。</li>
+  <li>自動計算班費結餘。</li>
+  <li>儲存在瀏覽器本機。</li>
+  <li>匯出 PDF 報表。</li>
+  <li>匯出與還原 JSON 備份檔。</li>
+</ul>
+
+<h2>二、第一次使用</h2>
+<ol>
+  <li>使用 Chrome、Edge、Safari 等瀏覽器開啟線上版網址。</li>
+  <li>進入後預設會停在「班費繳交」頁面。</li>
+  <li>先建立學生名單，再開始記錄繳費、收入與支出。</li>
+</ol>
+
+<div class="warning">資料預設儲存在目前使用的瀏覽器中。例如在學校電腦 Chrome 記錄的資料，不會自動出現在家中電腦或另一台電腦。若需要換電腦使用，請務必先使用「匯出 JSON」備份，再到另一台電腦使用「還原 JSON」載入。</div>
+
+<h2>三、匯入學生名單</h2>
+<h3>方法一：手動輸入</h3>
+<ol>
+  <li>在「班費繳交」頁面找到「學生名單管理」。</li>
+  <li>在輸入框中每行輸入一位學生。</li>
+  <li>若有座號，建議輸入成「座號 姓名」格式。</li>
+  <li>按下「處理學生名單」。</li>
+  <li>下方會出現每位學生的繳費輸入列。</li>
+</ol>
+
+<pre><code>01 王小明
+02 李小華
+03 陳美玲</code></pre>
+
+<h3>方法二：從 Excel 或 CSV 匯入</h3>
+<ol>
+  <li>在「學生名單管理」區選擇 Excel 或 CSV 檔案。</li>
+  <li>若檔案中有多個班級分頁，請在「選擇班級分頁」中選擇要匯入的班級。</li>
+  <li>系統會預覽可辨識的學生數與前幾位學生姓名。</li>
+  <li>確認無誤後按「匯入名單」。</li>
+</ol>
+
+<p>建議 Excel 表格中包含「座號」與「姓名」欄位：</p>
+<table>
+  <thead><tr><th>座號</th><th>姓名</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>王小明</td></tr>
+    <tr><td>2</td><td>李小華</td></tr>
+    <tr><td>3</td><td>陳美玲</td></tr>
+  </tbody>
+</table>
+
+<div class="note">匯入後會自動整理成「01 王小明」、「02 李小華」這類格式。若 Excel 匯入失敗，可能是瀏覽器無法載入 Excel 解析套件，或檔案格式較特殊；此時可將 Excel 另存成 CSV 檔再重新匯入。</div>
+
+<h2>四、記錄學生班費繳交</h2>
+<ol>
+  <li>完成學生名單後，每位學生會出現一列繳費輸入欄位。</li>
+  <li>選擇「繳費日期」。</li>
+  <li>輸入「繳費金額」。</li>
+  <li>按下該學生右側的「記錄繳費」。</li>
+  <li>該筆繳費會出現在「繳費紀錄」表格中。</li>
+</ol>
+
+<p>金額顯示一律以整數呈現，不顯示小數點以下數字。若同一位學生分次繳費，可以重複新增多筆紀錄，系統會在「全班繳費狀況」中自動加總該學生的總繳費金額，並顯示最後繳費日期。</p>
+
+<h2>五、查看全班繳費狀況</h2>
+<p>「全班繳費狀況」表格會顯示學生姓名、總繳費金額、最後繳費日期與繳費狀態。若學生已有任一筆繳費紀錄，狀態會顯示為「已繳費」；若尚未繳費，狀態會顯示為「未繳費」。</p>
+
+<h2>六、記錄班費收入</h2>
+<p>班費收入指的是非個別學生繳費以外的收入，例如園遊會盈餘、校內補助、利息、退費等。</p>
+<ol>
+  <li>點選上方「班費收入」。</li>
+  <li>輸入日期、項目與金額。</li>
+  <li>可在備註欄補充說明。</li>
+  <li>若有收據、轉帳截圖或相關照片，可上傳相片附件。</li>
+  <li>按下「新增收入」。</li>
+</ol>
+
+<h2>七、記錄班費支出</h2>
+<p>班費支出指的是班級公共支出，例如班級用品、活動材料、獎品、影印、餐費等。</p>
+<ol>
+  <li>點選上方「班費支出」。</li>
+  <li>輸入日期、項目與金額。</li>
+  <li>可在備註欄補充說明。</li>
+  <li>若有發票、收據或購買照片，可上傳相片附件。</li>
+  <li>按下「新增支出」。</li>
+</ol>
+
+<h2>八、查看班費結餘</h2>
+<p>點選上方「班費結餘」，即可查看總收入、總支出、當前結餘與詳細結餘紀錄。詳細結餘紀錄會依日期整理收入與支出，協助老師快速檢查每一筆班費流向。</p>
+
+<h2>九、儲存與載入資料</h2>
+<p>在「文件操作」區可輸入檔案名稱，按下「儲存」。資料會保存於目前瀏覽器的 localStorage 中。</p>
+<p>此方式適合在同一台電腦、同一個瀏覽器持續記帳。限制是換電腦不會自動同步，清除瀏覽器資料可能會刪除紀錄，不同瀏覽器之間也不會互通。因此建議搭配 JSON 備份使用。</p>
+
+<h2>十、JSON 備份與還原</h2>
+<h3>匯出 JSON 備份</h3>
+<ol>
+  <li>在「文件操作」區按下「匯出 JSON」。</li>
+  <li>系統會下載一個 <code>.json</code> 檔案。</li>
+  <li>建議將檔案存到 Google Drive、隨身碟或班級資料夾。</li>
+</ol>
+
+<p>JSON 備份會包含學生名單、學生繳費紀錄、收入資料、支出資料與照片附件資料。</p>
+
+<h3>還原 JSON 備份</h3>
+<ol>
+  <li>在「從 JSON 還原資料」選擇先前下載的 <code>.json</code> 檔。</li>
+  <li>按下「還原 JSON」。</li>
+  <li>系統會詢問是否確定用這份資料取代目前畫面資料。</li>
+  <li>確認後，即可恢復先前的紀錄。</li>
+</ol>
+
+<div class="note">建議老師每次完成重要登錄後，都匯出一次 JSON 備份。若由班級幹部協助記帳，也可以要求幹部定期繳交 JSON 備份檔。</div>
+
+<h2>十一、匯出 PDF</h2>
+<p>若需要列印或存檔，可按下「匯出 PDF」。適合用於期末班費結算、班會公布收支、幹部交接或導師留存紀錄。</p>
+<div class="warning">PDF 會依目前畫面內容產生。若需要完整呈現某一頁資料，請先切換到對應頁面再匯出。</div>
+
+<h2>十二、資料安全與交接建議</h2>
+<ol>
+  <li>不要只依賴瀏覽器自動保存。</li>
+  <li>每次完成重要更新後，請匯出 JSON。</li>
+  <li>班級幹部交接時，請同時交接 PDF 報表與 JSON 備份。</li>
+  <li>若使用公用電腦，結束後請確認是否需要清除資料。</li>
+  <li>若資料涉及學生姓名與繳費狀況，請避免將 JSON 檔公開分享。</li>
+</ol>
+
+<h2>十三、常見問題</h2>
+<h3>匯入 Excel 後抓不到姓名怎麼辦？</h3>
+<p>請確認 Excel 中有清楚的「座號」與「姓名」欄位。若仍無法匯入，可將 Excel 另存成 CSV 檔，再使用 CSV 匯入。</p>
+
+<h3>換電腦後資料不見了怎麼辦？</h3>
+<p>資料預設存在原本使用的瀏覽器中。請回到原本電腦匯出 JSON，再到新電腦還原 JSON。</p>
+
+<h3>為什麼金額沒有小數點？</h3>
+<p>班費通常以整數記帳，為了讓表格更清楚，本程式所有金額都以整數顯示。</p>
+
+<h3>可以同一位學生分次繳費嗎？</h3>
+<p>可以。同一位學生可新增多筆繳費紀錄，系統會自動加總。</p>
+
+<h3>誤刪資料怎麼辦？</h3>
+<p>若已匯出 JSON 備份，可使用「還原 JSON」回復。若沒有備份，瀏覽器本機資料刪除後通常無法復原。</p>
+
+<h3>照片附件會一起備份嗎？</h3>
+<p>會。照片會以資料形式保存在記錄中，因此 JSON 檔可能變大。若照片很多，建議定期另存 PDF 或保留原始收據照片。</p>
+
+<h2>十四、建議使用流程</h2>
+<p>第一次使用時，先匯入或輸入學生名單，確認座號與姓名正確。每次收到班費時，在「班費繳交」中登錄該學生的繳費日期與金額。若有其他收入或支出，分別到「班費收入」與「班費支出」頁面新增紀錄，必要時附上照片憑證。每週或每次重大更新後，按「匯出 JSON」備份資料；期末或幹部交接時，按「匯出 PDF」留存正式紀錄，並一併交接 JSON 備份檔，確保日後仍可繼續修改與查核。</p>
+
+</body>
+</html>

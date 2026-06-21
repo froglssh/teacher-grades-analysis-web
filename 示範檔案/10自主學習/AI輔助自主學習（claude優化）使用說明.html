@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 輔助自主學習計畫系統 — 教師指導使用說明</title>
+  <style>
+    :root {
+      --primary: #2f5fe0;
+      --primary-dark: #1f3f9e;
+      --primary-soft: #eaf0ff;
+      --ink: #1f2733;
+      --ink-soft: #4a5568;
+      --muted: #7a8699;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --line: #e2e8f0;
+      --line-strong: #cbd5e1;
+      --ok: #1f9d6b;
+      --ok-soft: #e7f6ef;
+      --ai: #6b46c1;
+      --ai-soft: #f1ecfb;
+      --radius: 12px;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03), 0 10px 15px -3px rgba(0, 0, 0, 0.03);
+      --font: -apple-system, "Segoe UI", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: var(--font);
+      background-color: var(--bg);
+      color: var(--ink);
+      line-height: 1.7;
+    }
+
+    /* Hero Banner */
+    .hero {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      color: #ffffff;
+      padding: 60px 20px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(47, 95, 224, 0.15) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-inner {
+      max-width: 1000px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+    .hero h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin: 0 0 12px 0;
+      letter-spacing: -0.5px;
+      background: linear-gradient(to right, #ffffff, #93c5fd);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 1.1rem;
+      color: #94a3b8;
+      max-width: 700px;
+      margin: 0 auto 24px auto;
+    }
+    .btn-main-app {
+      display: inline-flex;
+      align-items: center;
+      background-color: var(--primary);
+      color: #ffffff;
+      text-decoration: none;
+      font-weight: 700;
+      padding: 12px 28px;
+      border-radius: 99px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(47, 95, 224, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .btn-main-app:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(47, 95, 224, 0.4);
+    }
+    .btn-main-app svg {
+      margin-right: 8px;
+      fill: currentColor;
+    }
+
+    /* Main Layout */
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 32px;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      position: sticky;
+      top: 24px;
+      height: fit-content;
+    }
+    .nav-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+    .nav-card h3 {
+      margin: 0 0 14px 0;
+      font-size: 0.95rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 8px;
+    }
+    .sidebar-menu {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .sidebar-menu li {
+      margin-bottom: 6px;
+    }
+    .sidebar-menu a {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      color: var(--ink-soft);
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 8px;
+      transition: all 0.15s ease;
+    }
+    .sidebar-menu a:hover {
+      background-color: var(--primary-soft);
+      color: var(--primary);
+    }
+    .sidebar-menu a.active {
+      background-color: var(--primary);
+      color: #ffffff;
+    }
+    .sidebar-menu .num-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background-color: rgba(0,0,0,0.06);
+      font-size: 0.75rem;
+      margin-right: 8px;
+      font-weight: bold;
+    }
+    .sidebar-menu a.active .num-badge {
+      background-color: rgba(255, 255, 255, 0.25);
+    }
+
+    /* Main Content */
+    main {
+      min-width: 0; /* Prevents flex/grid overflow */
+    }
+
+    .doc-section {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 32px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow);
+    }
+    .doc-section h2 {
+      margin: 0 0 20px 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--ink);
+      border-left: 5px solid var(--primary);
+      padding-left: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .doc-section h3 {
+      font-size: 1.2rem;
+      color: var(--ink);
+      margin: 28px 0 12px 0;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 6px;
+    }
+    
+    /* Alerts */
+    .alert {
+      padding: 16px;
+      border-radius: 8px;
+      margin: 18px 0;
+      font-size: 0.95rem;
+      border-left: 4px solid;
+    }
+    .alert-info {
+      background-color: var(--primary-soft);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+    .alert-success {
+      background-color: var(--ok-soft);
+      border-color: var(--ok);
+      color: #125e3e;
+    }
+    .alert-ai {
+      background-color: var(--ai-soft);
+      border-color: var(--ai);
+      color: #442687;
+    }
+
+    /* Interactive Table / Buttons */
+    .interactive-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      font-size: 0.92rem;
+    }
+    .interactive-table th, .interactive-table td {
+      border: 1px solid var(--line);
+      padding: 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .interactive-table th {
+      background-color: #f1f5f9;
+      font-weight: 700;
+    }
+    .btn-desc {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .btn-desc.accent { background-color: var(--primary); color: #fff; }
+    .btn-desc.sub { background-color: #eef1f6; color: var(--ink-soft); border: 1px solid var(--line-strong); }
+    .btn-desc.danger { background-color: #fff0f0; color: var(--danger); border: 1px solid var(--danger); }
+    .btn-desc.ai { background-color: var(--ai); color: #fff; }
+    .btn-desc.ghost { background-color: #fff; color: var(--primary); border: 1px solid var(--primary); }
+
+    /* Flow Steps Chart */
+    .flow-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin: 24px 0;
+    }
+    .flow-step {
+      display: flex;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .flow-step .step-number {
+      background: var(--primary);
+      color: white;
+      font-weight: bold;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .flow-step-body h4 {
+      margin: 0 0 6px 0;
+      font-size: 1.05rem;
+      color: var(--ink);
+    }
+    .flow-step-body p {
+      margin: 0;
+      font-size: 0.92rem;
+      color: var(--ink-soft);
+    }
+
+    footer {
+      background-color: #0f172a;
+      color: #94a3b8;
+      padding: 40px 20px;
+      text-align: center;
+      border-top: 1px solid #1e293b;
+      font-size: 0.9rem;
+    }
+    footer a {
+      color: #38bdf8;
+      text-decoration: none;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Print styling */
+    @media print {
+      .sidebar { display: none; }
+      .container { grid-template-columns: 1fr; }
+      .hero { background: #fff; color: #000; padding: 20px 0; }
+      .hero h1 { -webkit-text-fill-color: initial; background: none; color: #000; }
+      .btn-main-app { display: none; }
+      .doc-section { box-shadow: none; border: none; padding: 0; margin-bottom: 40px; page-break-inside: avoid; }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .hero h1 { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header Banner -->
+  <header class="hero">
+    <div class="hero-inner">
+      <h1>AI 輔助自主學習計畫書系統</h1>
+      <p>高中學生自主學習計畫「起草、排程、成效追蹤與匯出」一站式引導工具，結合 AI 提示詞工程，大幅降低學生起步門檻，減輕教師指導負擔。</p>
+      <a href="https://froglssh.github.io/ai-assisted-self-learning-online/" target="_blank" class="btn-main-app">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20">
+          <path d="M10 6V8H5V19H16V14H18V20C18 20.5523 17.5523 21 17 21H4C3.44772 21 3 20.5523 3 20V7C3 6.44772 3.44772 6 4 6H10ZM21 3V11H19V6.41421L12.9142 12.5L11.5 11.0858L17.5858 5H13V3H21Z"/>
+        </svg>
+        <span>開啟主程式網頁</span>
+      </a>
+      <div style="font-size: 0.85rem; color: #64748b; margin-top: 10px;">
+        線上版網址：https://froglssh.github.io/ai-assisted-self-learning-online/
+      </div>
+    </div>
+  </header>
+
+  <!-- Container -->
+  <div class="container">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <nav class="nav-card">
+        <h3>使用說明目錄</h3>
+        <ul class="sidebar-menu">
+          <li><a href="#intro" class="active">系統簡介與特色</a></li>
+          <li><a href="#student-bar">頂部學生存檔功能</a></li>
+          <li><a href="#ai-settings">⚙️ AI 輔助核心設定</a></li>
+          <li><a href="#tab-basic"><span class="num-badge">1</span>基本資料頁</a></li>
+          <li><a href="#tab-plan"><span class="num-badge">2</span>學習計畫頁</a></li>
+          <li><a href="#tab-schedule"><span class="num-badge">3</span>預計進度頁</a></li>
+          <li><a href="#tab-effect"><span class="num-badge">4</span>學習成效頁</a></li>
+          <li><a href="#tab-export"><span class="num-badge">5</span>匯出列印頁</a></li>
+          <li><a href="#teaching-scenario">💡 教師指導應用情境</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main>
+      
+      <!-- Section: Intro -->
+      <section id="intro" class="doc-section">
+        <h2>系統簡介與特色</h2>
+        <p>本系統是專為高中自主學習（彈性學習時間）設計的引導網頁。許多學生在規劃自主學習計畫時，常面臨「不知道要學什麼」、「動機太過空泛」、「目標無法具體檢核」等困境。本工具旨在以結構化的<b>五步流程</b>引導學生填寫，並配合 <b>AI 輔助生成技術</b>，化身為專屬學生的自主學習計畫起草教練。</p>
+        
+        <div class="alert alert-info">
+          <strong>💡 教師免責好處：</strong>
+          本程式完全運作於瀏覽器本機，不需註冊帳號，所有資料皆儲存在使用者本機瀏覽器中（localStorage）。學生換電腦或清除瀏覽器快取時，資料才會消失。這意味著學校不需架設伺服器，也無個資外洩的隱憂。
+        </div>
+
+        <h3>五大核心特色：</h3>
+        <ul>
+          <li><b>分步引導設計：</b>將繁瑣的官方計畫書拆解成五個簡潔的填寫分頁，循序漸進。</li>
+          <li><b>內建引導語與範例：</b>每個欄位皆附帶「引導思考角度」與「具體範例」，學生看著就能下筆。</li>
+          <li><b>雙重 AI 模式：</b>「外部模式」保護個資且完全免費；「即時模式」提供一鍵式生成體驗。</li>
+          <li><b>自動化日期與檢核：</b>輸入起始日期，自動代入週次日期；內建 A/B/C 自我檢核追蹤系統。</li>
+          <li><b>多元化匯出：</b>支援一鍵複製、下載微軟 Word 檔、或以 A4 紙本規格預覽列印（可另存 PDF）。</li>
+        </ul>
+      </section>
+
+      <!-- Section: Student Bar -->
+      <section id="student-bar" class="doc-section">
+        <h2>頂部學生存檔功能</h2>
+        <p>位於網頁最上方的「學生資料列」是本機端的資料暫存中心。由於沒有資料庫，本功能使用瀏覽器的 <code>localStorage</code> 來存取多個學生的進度，非常適合<b>同一台電腦由多位同學共用</b>，或<b>同一位同學多次修改</b>的情況。</p>
+        
+        <table class="interactive-table">
+          <thead>
+            <tr>
+              <th style="width: 25%;">按鈕/欄位</th>
+              <th style="width: 45%;">功能說明</th>
+              <th style="width: 30%;">操作提醒</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>學生下拉選單</b></td>
+              <td>顯示這台電腦上所有已儲存的學生姓名（以 <code>slp_[學生姓名]</code> 為 LocalStorage 的 key 保存）。</td>
+              <td>選擇後必須按「讀取」才會將資料載入表單。</td>
+            </tr>
+            <tr>
+              <td><span class="btn-desc sub">讀取</span></td>
+              <td>將下拉選單中選取學生的計畫書資料，完整載入到當前網頁中。</td>
+              <td>讀取會覆蓋目前畫面上已輸入的暫存內容，讀取前請確認目前內容已儲存。</td>
+            </tr>
+            <tr>
+              <td><span class="btn-desc accent">儲存</span></td>
+              <td>以<b>「申請人姓名」</b>為關鍵字，將畫面上所有欄位、週計畫表、學習成效紀錄與已上傳的圖片儲存至本機。</td>
+              <td><b>重要：</b>若未填寫第一頁的「申請人姓名」，將無法儲存。</td>
+            </tr>
+            <tr>
+              <td><span class="btn-desc danger">刪除</span></td>
+              <td>從本機瀏覽器中徹底刪除選定學生的資料。</td>
+              <td>此操作不可逆，請小心點選。系統會跳出二次確認視窗。</td>
+            </tr>
+            <tr>
+              <td><span class="btn-desc sub">清空表單</span></td>
+              <td>清除目前網頁畫面的所有填寫內容，還原為全新的空白表單。</td>
+              <td>不會影響到已經按「儲存」保存在本機的學生資料。</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Section: AI Settings -->
+      <section id="ai-settings" class="doc-section">
+        <h2>⚙️ AI 輔助核心設定</h2>
+        <p>點擊可展開「⚙️ AI 輔助設定」區塊。系統設計了極具彈性的 <b>AI 輔助模式</b>，降低老師與學生的使用障礙與費用壓力：</p>
+        
+        <div class="alert alert-ai">
+          <strong>🤖 外部模式 vs 即時模式</strong>
+          <ul>
+            <li><b>外部模式（預設 - 免費免設定）：</b>當「API 金鑰」欄位留空時，即啟用此模式。當學生點擊任何欄位旁的「AI 協助」時，系統會自動在剪貼簿中產生<b>量身打造的 Prompt（指令）</b>，並自動在新分頁開啟指定的 AI 網站。學生只需按 <code>Ctrl+V</code>（Mac 用 <code>Cmd+V</code>）貼上，即可在官方網站中獲得解答。</li>
+            <li><b>即時模式（免跳轉 - 需填寫 API Key）：</b>若學生或老師填入 API 金鑰，則會在網頁內直接呼叫 API。生成內容會呈現在欄位下方，並提供「套用到欄位」按鈕，實現在同一網頁內一鍵優化。</li>
+          </ul>
+        </div>
+
+        <h3>設定欄位與操作按鈕：</h3>
+        <ul>
+          <li><b>使用的 AI 服務：</b>可選擇 <b>ChatGPT</b>、<b>Claude</b> 或 <b>Gemini</b>。外部模式下會開啟對應的對話連結；即時模式下會發送 API 到對應平台。
+            <ul>
+              <li><i>註：ChatGPT 選項已客製化 GPT Link，會直接導向特化版本的專用 GPT。</i></li>
+            </ul>
+          </li>
+          <li><b>即時模式 API 金鑰：</b>填入 OpenAI API 金鑰 (<code>sk-...</code>)、Anthropic 金鑰或 Gemini 金鑰。金鑰只會保存在本機瀏覽器，無洩漏風險。</li>
+          <li><b>模型名稱：</b>若留空，系統會以當前性價比最高的預設模型呼叫（ChatGPT: <code>gpt-4o-mini</code>，Claude: <code>claude-3-5-sonnet-latest</code>，Gemini: <code>gemini-2.5-flash</code>）。</li>
+          <li><span class="btn-desc accent">儲存設定</span>：將金鑰與服務商設定儲存在本機。儲存成功後，狀態標籤會由灰色的「外部模式」變為綠色的「即時模式」。</li>
+          <li><span class="btn-desc sub">清除金鑰</span>：一鍵清除瀏覽器暫存的金鑰，立刻切回安全的外部模式。</li>
+        </ul>
+      </section>
+
+      <!-- Section: Tab 1 Basic -->
+      <section id="tab-basic" class="doc-section">
+        <h2>1. 基本資料頁</h2>
+        <p>此頁主要對應自主學習計畫書的<b>封面資訊</b>。必須在起草階段優先完成，以利後續 AI 順利讀取背景脈絡。</p>
+        
+        <h3>欄位與功能操作：</h3>
+        <ul>
+          <li><b>申請人姓名（必填）：</b>輸入學生姓名。此姓名也是本機「儲存功能」的主索引，請務必填寫。</li>
+          <li><b>班級、座號：</b>輸入班級座號（例如：高二3班、15號），將自動帶入最終計畫書。</li>
+          <li><b>計畫主題（必填）：</b>用一句話描述自主學習大方向。網頁附有引導提示與範例。</li>
+          <li><b>計畫類型（必填）：</b>點選單選按鈕。
+            <ul>
+              <li>當點選<b>「7 專題研討」</b>時，系統會自動<b>連動展開「專題研討領域」</b>的複選方塊（國文、英文、數學、物理、化學、生物、地科、資訊等），學生可依學科多選。</li>
+            </ul>
+          </li>
+          <li><b>實施方式（必填）：</b>個人學習、小組學習。
+            <ul>
+              <li>當點選<b>「小組學習」</b>時，系統會自動<b>連動展開「小組成員」</b>輸入框，供填寫同組組員姓名（上限 3 人）。</li>
+            </ul>
+          </li>
+          <li><b>計畫名稱（必填）：</b>更具體的正式計畫名稱（例如主題是「固碳能力」，計畫名稱可為「校園喬木與灌木固碳量之比較與綠化建議」）。</li>
+          <li><b>詳細主題 / 簡短說明：</b>補充計畫的探究範圍、遇到的痛點或好奇的細節。</li>
+        </ul>
+
+        <h3>本頁按鈕：</h3>
+        <p><span class="btn-desc ai">🤖 AI 協助：把主題想得更清楚</span></p>
+        <blockquote>
+          <b>AI 後台運作邏輯（Prompt）：</b>讀取上述所有欄位，幫學生評估此主題是否太大或太小、給出 2-3 個更聚焦的建議題目、指出可探究的核心問題，並提醒可行性與資源上的注意事項。
+        </blockquote>
+      </section>
+
+      <!-- Section: Tab 2 Plan -->
+      <section id="tab-plan" class="doc-section">
+        <h2>2. 學習計畫頁（內容概述）</h2>
+        <p>本分頁為整份計畫書的「靈魂核心」，對應官方格式中的動機、資源、方法與目標四大部分。</p>
+
+        <div class="alert alert-success">
+          <strong>💡 指導策略：</strong>
+          老師可要求學生先在欄位中寫下<b>「一句話的模糊想法」</b>，接著點選對應的 AI 協助按鈕，讓 AI 引導深化，學生再將其修改後貼回。這種「人機協作」能大幅減少學生寫不出長文的挫折感。
+        </div>
+
+        <h3>四大核心欄位與引導：</h3>
+        <ol>
+          <li><b>學習動機（為什麼想做這個主題？）：</b>引導思考好奇的點、與未來升學或生活的關聯性。</li>
+          <li><b>我需要什麼資源或工具？：</b>引導思考書籍、網站、論文、軟體、場地與費用。</li>
+          <li><b>我如何有效學習？（方法或技巧）：</b>引導具體學習步驟、策略，以及自我檢核機制。</li>
+          <li><b>預期目標：</b>引導撰寫具體、可衡量的期末產出（例如完成一份 1500 字的實驗報告與一張圖表）。</li>
+        </ol>
+
+        <h3>本頁按鈕功能：</h3>
+        <table class="interactive-table">
+          <thead>
+            <tr>
+              <th style="width: 30%;">按鈕</th>
+              <th>功能與 AI 提示工程邏輯</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="btn-desc ai">🤖 AI 協助這欄</span><br>（各欄位旁）</td>
+              <td>針對單一欄位進行補強。例如，<b>「動機輔助」</b>會將學生簡短的文字修潤成有個人連結且具說服力的條列版；<b>"目標輔助"</b>會將目標具體化，並給予「基本目標」與「進階目標」的階梯式版本。</td>
+            </tr>
+            <tr>
+              <td><span class="btn-desc ai">✨ AI 統整全計畫</span></td>
+              <td><b>整體檢視按鈕。</b>會同時讀取動機、資源、方法、目標四個欄位，分析彼此是否具備邏輯一致性（例如：方法有沒有用到資源？目標有沒有呼應動機？），並提供一份潤稿好的「內容概述」整合建議。</td>
+            </tr>
+            <tr>
+              <td><span class="btn-desc ghost">🔎 上網查資料</span></td>
+              <td>自動以學生輸入的「計畫名稱」或「計畫主題」作為關鍵字，開新分頁進行 Google 搜尋，方便找論文或線上課程資源。</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Section: Tab 3 Schedule -->
+      <section id="tab-schedule" class="doc-section">
+        <h2>3. 預計進度頁（週計畫）</h2>
+        <p>週計畫要求學生將計畫拆解到每週實施。本頁提供便利的自動化表格生成，大幅省去學生手動排版、填寫週次的麻煩。</p>
+
+        <h3>操作步驟：</h3>
+        <div class="flow-steps">
+          <div class="flow-step">
+            <div class="step-number">1</div>
+            <div class="flow-step-body">
+              <h4>設定週數與起始日期</h4>
+              <p>在下拉選單選擇<b>「總週數」</b>（1-20 週），並選擇<b>「起始日期」</b>。系統會自動以每 7 天為一週計算，自動算出每週對應的日期。</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="step-number">2</div>
+            <div class="flow-step-body">
+              <h4>產生進度表</h4>
+              <p>點選 <span class="btn-desc accent">產生 / 更新進度表</span>，系統會即時在下方渲染出一個包含「週次、日期、進度內容、自我反思檢核（A/B/C 下拉選單）、老師簽名欄」的表格。</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="step-number">3</div>
+            <div class="flow-step-body">
+              <h4>AI 進度規劃（選填）</h4>
+              <p>如果學生不知道每週該做什麼，可點選 <span class="btn-desc ai">🤖 AI 設計每週進度與檢核</span>。AI 會根據第二頁的學習方法與目標，規劃符合週數的「每週進度 | 檢核方式」大綱，學生可以直接參考並填入表格中。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="alert alert-info">
+          <strong>💡 設計巧思（Milestone）：</strong>
+          生成的進度表中，最後倒數兩週的進度內容會自動顯示預設的 Placeholder 建議（「自主學習成果分享」與「自主學習成果反思」），且該兩列會以<b>淡藍色背景</b>高亮顯示，以符合教育部倡導「最後階段應有分享與反思」的計畫書規範。
+        </div>
+      </section>
+
+      <!-- Section: Tab 4 Effect -->
+      <section id="tab-effect" class="doc-section">
+        <h2>4. 學習成效頁</h2>
+        <p>此分頁是<b>「執行自主學習計畫期間與期末」</b>才需要填寫的。它用於追蹤記錄實際執行狀況，也是期末成果報告的底稿。</p>
+
+        <h3>主要功能與按鈕：</h3>
+        <ul>
+          <li><span class="btn-desc sub">依進度週數產生成效表</span>：點擊後，系統會依據前一頁設定的週數，在下方渲染出「週次、學習成效、成果影像」表格。
+            <ul>
+              <li><b>學習成效（文字）：</b>學生可在執行當週或期末，逐週輸入該週實際學到、做到什麼，以及遇到的問題與解決方式。</li>
+              <li><b>成果影像（多媒體）：</b>提供 <code>📷 上傳</code> 按鈕。學生可直接將當週的成果照、筆記截圖、實驗照片上傳。系統會自動將圖片轉為 Base64 編碼，<b>直接嵌入並預覽</b>（亦可一併保存在 LocalStorage 中）。若想刪除，可按紅色的 <code>🗑</code> 垃圾桶按鈕。</li>
+            </ul>
+          </li>
+          <li><span class="btn-desc ai">🤖 AI 協助潤飾成效紀錄</span>：讀取學生目前在成效表格中輸入的所有內容，由 AI 協助進行文字重組與優化，使其文筆更具學術性與反思深度。</li>
+          <li><b>自我檢核次數統計：</b>系統會自動掃描「預計進度頁」中每一週的下拉選單（A/B/C），統計出次數。若學生在中途有更新進度頁的下拉選單，可點選下方的 <span class="btn-desc sub">重新計算統計</span> 按鈕來更新次數。
+            <ul>
+              <li><b>A 依計畫完成</b> / <b>B 修正後完成</b> / <b>C 部分完成</b>。</li>
+            </ul>
+          </li>
+          <li><b>家長回饋與簽名：</b>供家長在檢視學生計畫與成果後填寫評語，並鍵入姓名。</li>
+          <li><b>成果發表形式（複選）：</b>勾選期末的發表方式。若勾選「其他方式」，可於下方的輸入框中手動輸入細節。</li>
+        </ul>
+      </section>
+
+      <!-- Section: Tab 5 Export -->
+      <section id="tab-export" class="doc-section">
+        <h2>5. 匯出列印頁</h2>
+        <p>當基本資料、內容概述、週進度與成效紀錄皆填寫完畢後，本分頁提供一鍵產出正式計畫書的功能。</p>
+
+        <h3>三大匯出按鈕：</h3>
+        <table class="interactive-table">
+          <thead>
+            <tr>
+              <th style="width: 30%;">按鈕</th>
+              <th style="width: 45%;">功能說明</th>
+              <th style="width: 25%;">輸出格式與建議</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="btn-desc accent">🖨️ 預覽 / 列印</span></td>
+              <td>開新分頁，將所有填寫的資料（含圖片）排版進<b>符合官方規格的計畫書表格</b>中，並自動呼叫瀏覽器的列印對話框。</td>
+              <td>可直接選擇實體印表機列印，或在列印目標中選<b>「另存為 PDF」</b>保存。</td>
+            </tr>
+            <tr>
+              <td><span class="btn-desc ghost">⬇️ 下載 Word（.doc）</span></td>
+              <td>將排版好的計畫書網頁打包成一個 MicroSoft Word 格式的 <code>.doc</code> 檔案下載。</td>
+              <td>下載後，學生可以直接用 Word 開啟編輯，或貼入學校規定的 <code>.odt</code> 檔案範本中。</td>
+            </tr>
+            <tr>
+              <td><span class="btn-desc sub">📋 複製全文純文字</span></td>
+              <td>將基本資料、學習動機、資源、方法、目標、週計畫列表、成效列表與家長評語，以清爽的排版整理成純文字，一鍵複製到剪貼簿。</td>
+              <td>適合需要將文字貼進學校其他線上申報系統（例如校務行政系統、自主學習平台）時使用。</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Section: Scenario -->
+      <section id="teaching-scenario" class="doc-section">
+        <h2>💡 教師指導應用情境</h2>
+        <p>為方便指導老師（如：自主學習指導老師、班導師、課程諮詢教師）在課堂中更有效率地應用此工具，以下提供三個推薦的指導情境：</p>
+        
+        <h3>情境一：自主學習第一堂課 — 構想引導與起草</h3>
+        <ol>
+          <li>引導全班開啟 <a href="https://froglssh.github.io/ai-assisted-self-learning-online/" target="_blank">AI輔助自主學習系統</a>。</li>
+          <li>請學生先在<b>「第 1 步：基本資料」</b>填入主題構想，並點擊 <b>AI 協助</b>，讓 AI 給予題目範圍與聚焦度的建議。</li>
+          <li>學生修改好正式的「計畫名稱」後，進入<b>「第 2 步：學習計畫」</b>。請學生在動機、資源、方法、目標四個欄位各寫下一句最真實的想法。</li>
+          <li>點擊各欄的 <b>AI 協助</b>（外部模式會複製指令並打開 ChatGPT/Gemini，請學生貼上指令）。學生將 AI 產出的建議做個人化修改，並填回網頁。</li>
+          <li>要求學生點選右上方<b>「儲存」</b>，保存進度。</li>
+        </ol>
+
+        <h3>情境二：中期滾動式修正與追蹤</h3>
+        <ol>
+          <li>每隔數週的自主學習課，請學生在電腦上開啟網頁，在下拉選單選擇自己的名字並按<b>「讀取」</b>。</li>
+          <li>請學生到<b>「第 3 步：預計進度」</b>，針對過去幾週的進度，在「自我反思檢核」欄位下拉選擇完成狀況（A/B/C）。</li>
+          <li>點選<b>「第 4 步：學習成效」</b>，要求學生在成效表格中填寫當週心得，並<b>「拍照上傳」</b>目前的實體筆記、程式畫面或實驗成果，以作為學習歷程的真實佐證。</li>
+          <li>點擊<b>「儲存」</b>，確保成效紀錄與照片保存在這台電腦。</li>
+        </ol>
+
+        <h3>情境三：期末產出、成果發表與建檔</h3>
+        <ol>
+          <li>自主學習學期結束前，引導學生讀取暫存檔案。</li>
+          <li>到<b>「第 4 步」</b>點擊 <b>重新計算統計</b>，確認 A/B/C 的檢核統計次數已更新。</li>
+          <li>請學生邀請家長檢閱成效，在「家長給學生的回饋」欄位鍵入評語與家長姓名。</li>
+          <li>進入<b>「第 5 步：匯出與列印」</b>：
+            <ul>
+              <li>若學校要求繳交電子檔，請學生點選<b>「預覽 / 列印」並選擇「另存為 PDF」</b>上傳至校內系統。</li>
+              <li>若需要微調格式，點選<b>「下載 Word」</b>進行排版美化，這份檔案即可以直接作為多元表現的「自主學習計畫與成果」上傳至高中學習歷程檔案平台。</li>
+            </ul>
+          </li>
+        </ol>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>AI 輔助自主學習計畫書系統 ｜ 臺北市立麗山高中 林獻升老師 研發設計</p>
+    <p>說明文件發佈網址：<a href="https://froglssh.github.io/ai-assisted-self-learning-online/" target="_blank">https://froglssh.github.io/ai-assisted-self-learning-online/</a></p>
+  </footer>
+
+  <script>
+    // Smooth scrolling & Sidebar active state highlight
+    const sections = document.querySelectorAll('.doc-section');
+    const navLinks = document.querySelectorAll('.sidebar-menu a');
+
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        const sectionHeight = section.clientHeight;
+        if (window.pageYOffset >= (sectionTop - 150)) {
+          current = section.getAttribute('id');
+        }
+      });
+
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href').slice(1) === current) {
+          link.classList.add('active');
+        }
+      });
+    });
+
+    // Smooth scroll trigger
+    navLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = link.getAttribute('href');
+        const targetSection = document.querySelector(targetId);
+        window.scrollTo({
+          top: targetSection.offsetTop - 40,
+          behavior: 'smooth'
+        });
+      });
+    });
+  </script>
+</body>
+</html>

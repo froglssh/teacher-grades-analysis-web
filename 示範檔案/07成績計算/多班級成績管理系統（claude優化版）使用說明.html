@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>多班級成績管理系統 2.0 使用說明與教學手冊</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #1E6B52;
+    --primary-dark: #14503C;
+    --primary-light: #EAF3EE;
+    --secondary: #2D5F8A;
+    --secondary-light: #EAF1F7;
+    --accent: #B97D14;
+    --accent-light: #FBF3E2;
+    --danger: #B5443C;
+    --danger-light: #F9ECEA;
+    --ink: #22302A;
+    --ink-soft: #5C6B63;
+    --bg-page: #F4F6F3;
+    --bg-card: #FFFFFF;
+    --line: #DDE3DD;
+    --radius: 12px;
+    --shadow: 0 4px 20px rgba(20, 80, 60, 0.08);
+    --transition: all 0.25s ease;
+  }
+
+  * { box-sizing: border-box; }
+  
+  html { scroll-behavior: smooth; }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-page);
+    color: var(--ink);
+    font-family: "Noto Sans TC", sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── 側邊欄導航 ── */
+  .sidebar {
+    width: 280px;
+    background-color: var(--primary-dark);
+    color: #ffffff;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+    overflow-y: auto;
+  }
+
+  .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    margin-bottom: 24px;
+  }
+
+  .sidebar-brand h1 {
+    font-size: 19px;
+    font-weight: 900;
+    margin: 0;
+    letter-spacing: 1px;
+    background: linear-gradient(to right, #ffffff, #F2C879);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .sidebar-menu a {
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+    padding: 10px 14px;
+    border-radius: 8px;
+    display: block;
+    font-size: 14.5px;
+    font-weight: 500;
+    transition: var(--transition);
+    border-left: 3px solid transparent;
+  }
+
+  .sidebar-menu a:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.08);
+    padding-left: 18px;
+  }
+
+  .sidebar-menu li.active a {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.15);
+    border-left-color: #F2C879;
+    font-weight: 700;
+    padding-left: 18px;
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    text-align: center;
+  }
+
+  .sidebar-footer a {
+    color: #F2C879;
+    text-decoration: none;
+  }
+  .sidebar-footer a:hover {
+    text-decoration: underline;
+  }
+
+  /* ── 主要內容區 ── */
+  .main-content {
+    margin-left: 280px;
+    flex: 1;
+    padding: 40px 48px;
+    max-width: 1000px;
+  }
+
+  /* ── 頂部英雄區 ── */
+  .hero-card {
+    background: linear-gradient(135deg, #14503C 0%, #1E6B52 60%, #2E876B 100%);
+    color: #ffffff;
+    border-radius: 16px;
+    padding: 40px;
+    margin-bottom: 32px;
+    box-shadow: 0 10px 30px rgba(20, 80, 60, 0.15);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-card::after {
+    content: "";
+    position: absolute;
+    right: -50px;
+    bottom: -50px;
+    width: 250px;
+    height: 250px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .hero-badge {
+    background-color: #F2C879;
+    color: var(--primary-dark);
+    padding: 4px 12px;
+    border-radius: 99px;
+    font-size: 13px;
+    font-weight: 700;
+    display: inline-block;
+    margin-bottom: 16px;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+
+  .hero-card h2 {
+    font-size: 32px;
+    font-weight: 800;
+    margin: 0 0 12px 0;
+    letter-spacing: 1px;
+  }
+
+  .hero-card p {
+    font-size: 17px;
+    opacity: 0.9;
+    margin: 0 0 24px 0;
+    max-width: 720px;
+  }
+
+  .btn-primary-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #ffffff;
+    color: var(--primary);
+    text-decoration: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: var(--transition);
+  }
+
+  .btn-primary-link:hover {
+    background-color: #F2C879;
+    color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  }
+
+  /* ── 內容卡片與排版 ── */
+  .section-anchor {
+    scroll-margin-top: 24px;
+  }
+
+  .card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: var(--shadow);
+  }
+
+  .card h2 {
+    color: var(--primary-dark);
+    font-size: 22px;
+    font-weight: 800;
+    margin-top: 0;
+    margin-bottom: 18px;
+    border-left: 5px solid var(--primary);
+    padding-left: 12px;
+  }
+
+  .card h3 {
+    color: var(--primary);
+    font-size: 18px;
+    font-weight: 700;
+    margin-top: 24px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  p {
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: var(--ink);
+  }
+
+  .hint-text {
+    font-size: 14.5px;
+    color: var(--ink-soft);
+  }
+
+  /* ── 警示框 ── */
+  .alert {
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 15px;
+    line-height: 1.6;
+    border-left: 4px solid transparent;
+  }
+
+  .alert.note {
+    background-color: var(--primary-light);
+    border-left-color: var(--primary);
+    color: var(--primary-dark);
+  }
+
+  .alert.warning {
+    background-color: var(--accent-light);
+    border-left-color: var(--accent);
+    color: #8A5F0C;
+  }
+
+  .alert.danger {
+    background-color: var(--danger-light);
+    border-left-color: var(--danger);
+    color: #8F3530;
+  }
+
+  .alert-title {
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ── 精美小圖示與功能標籤 ── */
+  .badge {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 99px;
+    line-height: 1.4;
+  }
+  
+  .badge.primary { background-color: var(--primary-light); color: var(--primary); }
+  .badge.secondary { background-color: var(--secondary-light); color: var(--secondary); }
+  .badge.accent { background-color: var(--accent-light); color: var(--accent); }
+  .badge.danger { background-color: var(--danger-light); color: var(--danger); }
+
+  .btn-mockup {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13.5px;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background-color: #F8FAF7;
+    color: var(--ink);
+    cursor: default;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+
+  .btn-mockup.primary { background-color: var(--primary); color: #fff; border-color: var(--primary); }
+  .btn-mockup.secondary { background-color: var(--secondary); color: #fff; border-color: var(--secondary); }
+  .btn-mockup.accent { background-color: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-mockup.danger { background-color: var(--danger); color: #fff; border-color: var(--danger); }
+  .btn-mockup.ghost { background-color: #ffffff; color: var(--primary); border: 1.5px solid var(--primary); }
+  .btn-mockup.ghost-secondary { background-color: #ffffff; color: var(--secondary); border: 1.5px solid var(--secondary); }
+
+  /* ── 模擬成績冊表格與配分群組樣式 ── */
+  .demo-table-wrapper {
+    overflow-x: auto;
+    margin: 16px 0;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+
+  table.demo-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    text-align: center;
+  }
+
+  table.demo-table th, table.demo-table td {
+    padding: 10px 8px;
+    border: 1px solid var(--line);
+    white-space: nowrap;
+  }
+
+  table.demo-table th {
+    background-color: #F8FAF7;
+    font-weight: 700;
+  }
+
+  table.demo-table tr.grp-hdr th {
+    color: #fff;
+    font-size: 12.5px;
+    padding: 4px 8px;
+  }
+
+  .g-daily { background-color: var(--primary) !important; }
+  .g-exam { background-color: var(--secondary) !important; }
+  .g-other { background-color: var(--ink-soft) !important; }
+  .g-fixed { background-color: #8A958D !important; }
+
+  /* ── 階層結構展示 ── */
+  .steps-list {
+    margin: 20px 0;
+    padding-left: 20px;
+  }
+
+  .steps-list li {
+    margin-bottom: 16px;
+    position: relative;
+  }
+
+  .steps-list li strong {
+    color: var(--primary-dark);
+  }
+
+  /* ── FAQ 卡片 ── */
+  .faq-item {
+    border-bottom: 1px solid var(--line);
+    padding: 16px 0;
+  }
+
+  .faq-item:first-child { padding-top: 0; }
+  .faq-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+  .faq-question {
+    font-weight: 700;
+    font-size: 16.5px;
+    color: var(--primary-dark);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .faq-question::before {
+    content: "Q.";
+    color: var(--accent);
+    font-weight: 900;
+    font-size: 18px;
+  }
+
+  .faq-answer {
+    padding-left: 24px;
+    color: var(--ink);
+  }
+
+  /* ── 響應式調整 ── */
+  @media (max-width: 900px) {
+    body {
+      flex-direction: column;
+    }
+    .sidebar {
+      width: 100%;
+      position: relative;
+      height: auto;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      padding: 16px 20px;
+    }
+    .sidebar-brand {
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+    }
+    .sidebar-menu {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .sidebar-menu a {
+      font-size: 13.5px;
+      padding: 6px 10px;
+    }
+    .sidebar-footer {
+      display: none;
+    }
+    .main-content {
+      margin-left: 0;
+      padding: 24px 20px;
+    }
+    .hero-card {
+      padding: 24px;
+    }
+    .hero-card h2 {
+      font-size: 24px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── 側邊欄導航 ── -->
+<div class="sidebar">
+  <div class="sidebar-brand">
+    <svg viewBox="0 0 48 48" width="32" height="32">
+      <rect x="3" y="3" width="42" height="42" rx="11" fill="#ffffff" opacity="0.12"/>
+      <rect x="9" y="22" width="6" height="17" rx="2" fill="#A8D8C0"/>
+      <rect x="21" y="14" width="6" height="25" rx="2" fill="#ffffff"/>
+      <rect x="33" y="8" width="6" height="31" rx="2" fill="#F2C879"/>
+      <path d="M8 19 L20 13 L33 7" stroke="#F2C879" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="8" cy="19" r="2.6" fill="#fff"/><circle cx="20" cy="13" r="2.6" fill="#fff"/><circle cx="33" cy="7" r="2.6" fill="#fff"/>
+    </svg>
+    <h1>多班級成績管理系統</h1>
+  </div>
+  <ul class="sidebar-menu">
+    <li class="active"><a href="#intro">系統簡介</a></li>
+    <li><a href="#tab-import">1. 匯入 Excel</a></li>
+    <li><a href="#tab-class">2. 班級管理</a></li>
+    <li><a href="#tab-score">3. 成績管理</a></li>
+    <li><a href="#btn-toolbar">4. 表格工具欄</a></li>
+    <li><a href="#personal-weights">5. 個別配分</a></li>
+    <li><a href="#tab-stats">6. 統計分析</a></li>
+    <li><a href="#tab-export">7. 匯出與備份</a></li>
+    <li><a href="#tab-demo">8. 示範資料</a></li>
+    <li><a href="#faq">FAQ 常見問題</a></li>
+  </ul>
+  <div class="sidebar-footer">
+    <p>多班級成績管理系統 2.0<br>教師使用手冊電子版</p>
+    <a href="https://froglssh.github.io/multi-class-grades-management/" target="_blank">點此開啟主程式 ↗</a>
+  </div>
+</div>
+
+<!-- ── 主要內容區 ── -->
+<div class="main-content">
+  
+  <!-- 頂部英雄區 -->
+  <div class="hero-card">
+    <span class="hero-badge">線上版說明指南</span>
+    <h2>多班級成績管理系統 2.0</h2>
+    <p>本系統是專為高中及中小學教師開發的「純前端、零負擔」多班級學期成績冊管理工具。能自動識別您的 Excel 分頁、動態計算日常與定期加權，並提供跨班比較與跨學期追蹤。</p>
+    <a href="https://froglssh.github.io/multi-class-grades-management/" class="btn-primary-link" target="_blank">
+      🚀 立即開啟成績管理系統線上版
+    </a>
+  </div>
+
+  <!-- ── 系統簡介 ── -->
+  <div id="intro" class="section-anchor card">
+    <h2>系統簡介與技術安全</h2>
+    <p>日常教學中，老師們常常需要管理多個班級、不同科目，甚至要應對請假補考、個別特殊生加權配分的需求。本系統旨在為老師提供一個簡便、強大且極度安全的成績管理方案。</p>
+    
+    <div class="alert note">
+      <div class="alert-title">🔒 隱私與資料安全聲明</div>
+      本系統為<strong>純前端（Single Page Application）</strong>應用。所有您上傳的 Excel 成績單、學生名單以及您鍵入的成績，<strong>100% 儲存在您的本機電腦瀏覽器中（利用 localStorage 技術）</strong>。本系統沒有任何後端伺服器，絕不會將任何學生姓名或成績傳輸至外部網際網路，確保完全符合個資法規範，請老師們安心使用。
+    </div>
+
+    <h3>系統特色</h3>
+    <ul>
+      <li><strong>無痛銜接 Excel</strong>：支援直接拖放學校教務系統下載的成績冊活頁簿，自動識別多班級分頁。</li>
+      <li><strong>極度彈性的配分機制</strong>：除了一般加權，還支援「去掉最低 1 次 / 2 次」的小考平均欄位，甚至能為個別學生調整專屬配分。</li>
+      <li><strong>視覺化統計分析</strong>：自動生成常態分布曲線圖、跨班段考平均比較圖，以及沿革追蹤一個班級在不同學期的學習表現。</li>
+      <li><strong>專用 A4 列印樣式</strong>：一鍵輸出精美、工整的紙本成績單。</li>
+    </ul>
+  </div>
+
+  <!-- ── 1. 匯入 Excel ── -->
+  <div id="tab-import" class="section-anchor card">
+    <h2>分頁說明：匯入 Excel</h2>
+    <p>此分頁是您開始使用系統的起點，提供「從本機載入」與「匯入新檔案」兩大區塊。</p>
+
+    <h3>1. 已儲存的班級資料</h3>
+    <p>當您在瀏覽器中建立過班級後，每次開啟網頁，這些班級會顯示在此區塊中。您可以：</p>
+    <ul>
+      <li>使用 <span class="badge primary">篩選學年</span> 或 <span class="badge primary">篩選學期</span> 下拉選單快速篩選班級。</li>
+      <li>勾選特定班級，並點擊 <span class="btn-mockup">▶ 載入勾選的班級</span>，即可將這些班級載入工作區。</li>
+      <li>對於舊學年或不要的資料，勾選後點擊紅色的 <span class="btn-mockup danger">🗑 刪除勾選的班級</span>（注意：此動作無法復原）。</li>
+    </ul>
+    
+    <h3>2. 匯入新的 Excel 成績冊</h3>
+    <p>如果您手邊有全新的 Excel 學生名單或成績冊，請在此匯入：</p>
+    <ol class="steps-list">
+      <li>設定 <strong>學年</strong>（如 114）、<strong>學期</strong>（第一學期或第二學期）以及 <strong>科目名稱</strong>（如：生物）。</li>
+      <li>將 Excel 檔案拖曳至 <span class="badge primary">點擊選擇檔案，或將 Excel 拖曳到這裡</span> 的虛線框中，或點擊該區域選擇檔案。</li>
+      <li>系統會自動讀取 Excel 中的所有活頁分頁（每個分頁代表一個班級）。系統會智慧型分析：
+        <ul>
+          <li><strong>學生基本資料</strong>：自動定位「座號」與「姓名」欄位。</li>
+          <li><strong>欄位群組（簽名元素）</strong>：系統會自動根據欄位名稱判定其群組，例如小考歸入「日常考查」（綠色）、段考歸入「期中考試」/「期末考試」（藍色）。</li>
+        </ul>
+      </li>
+      <li>在下方預覽清單中，勾選您要匯入的班級，點擊 <span class="btn-mockup">匯入勾選的班級</span> 即可完成。</li>
+    </ol>
+  </div>
+
+  <!-- ── 2. 班級管理 ── -->
+  <div id="tab-class" class="section-anchor card">
+    <h2>分頁說明：班級管理</h2>
+    <p>如果您沒有 Excel，或者想直接手動修改學生的座號、姓名及班級，請使用此分頁。</p>
+
+    <h3>1. 選取班級</h3>
+    <p>點擊選取您要管理的「學年」→「學期」→「班級」膠囊按鈕，下方的名單即會自動載入。</p>
+
+    <h3>2. 手動新增班級</h3>
+    <p>若要手動新增一個班級，請輸入 <strong>班級名稱</strong>（例：`204 生物`）、<strong>學年</strong> 與 <strong>學期</strong>，然後點擊 <span class="btn-mockup">新增班級</span> 即可建立一個沒有學生的空白班級。</p>
+
+    <h3>3. 編輯學生名單</h3>
+    <p>大文字框會載入目前班級的學生名單，格式如下：</p>
+    <div class="alert note" style="font-family: monospace; white-space: pre;">
+01 王小明
+02 李小華
+03 張大同</div>
+    <ul>
+      <li>您可以直接在此文字框中新增、修改或刪除學生姓名。</li>
+      <li>支援直接從 Excel 複製兩欄（座號、姓名）並貼上於此。</li>
+      <li>修改完畢後，請務必點擊 <span class="btn-mockup primary">更新學生名單</span> 進行儲存。</li>
+      <li>如果您想徹底移除該班，可點擊 <span class="btn-mockup danger">刪除此班級</span>。</li>
+    </ul>
+  </div>
+
+  <!-- ── 3. 成績管理 ── -->
+  <div id="tab-score" class="section-anchor card">
+    <h2>分頁說明：成績管理 (核心輸入與配分)</h2>
+    <p>這是您日常教學最常使用的核心介面。包含班級選取器、成績表表格，以及上方強大的工具按鈕。</p>
+
+    <div class="alert warning">
+      <div class="alert-title">💡 成績計算邏輯與加權配分（重要！）</div>
+      每個欄位（如小考 1、期中考）的標題下方都有一個<strong>配分比例輸入框（%）</strong>。系統計算「加權成績」時，會將各項成績乘以其配分比例。
+      <br><strong>例如：</strong>日常考查配分合佔 40%、期中考 30%、期末考 30%。學期加權總分為這三部分成績加權相加的結果。
+    </div>
+
+    <h3>表格結構介紹</h3>
+    <p>表格分為固定列與成績欄位，表頭由<strong>群組色帶</strong>區分：</p>
+    <div class="demo-table-wrapper">
+      <table class="demo-table">
+        <thead>
+          <tr class="grp-hdr">
+            <th class="g-fixed" colspan="2">固定欄位</th>
+            <th class="g-daily">日常考查 (合佔 40%)</th>
+            <th class="g-exam">期中考試 (合佔 30%)</th>
+            <th class="g-exam">期末考試 (合佔 30%)</th>
+            <th class="g-fixed" colspan="2">系統計算</th>
+          </tr>
+          <tr>
+            <th>座號</th>
+            <th>姓名</th>
+            <th>小考 1 <br><small>配分 40%</small></th>
+            <th>期中考 <br><small>配分 30%</small></th>
+            <th>期末考 <br><small>配分 30%</small></th>
+            <th>加權成績</th>
+            <th>學期成績</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>01</td>
+            <td>王小明</td>
+            <td>80</td>
+            <td>90</td>
+            <td>85</td>
+            <td>85.5</td>
+            <td>86</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ul>
+      <li><strong>日常考查（綠色）</strong>、<strong>期中考試（藍色）</strong>、<strong>期末考試（深藍）</strong> 等群組色帶與配分，能清晰指引老師目前欄位的屬性。</li>
+      <li><strong>學期加權成績</strong>：為系統精確到小數點後的真實加權平均。</li>
+      <li><strong>學期成績（加權後四捨五入）</strong>：最終登錄成績系統之四捨五入整數。低於 60 分（不及格）時，該格背景會自動呈現<strong>淡紅色</strong>作為預警。</li>
+      <li><strong>調整成績欄（藍色輸入框）</strong>：如果老師想要在加權後手動幫特定學生加減分數（如日常表現優異），可直接在該生的<strong>「調整」</strong>格輸入加減分（如 `+2` 或 `-1`），系統將自動累加至學期成績。</li>
+    </ul>
+  </div>
+
+  <!-- ── 4. 表格工具欄 ── -->
+  <div id="btn-toolbar" class="section-anchor card">
+    <h2>功能詳解：表格頂部工具欄按鈕</h2>
+    <p>在成績表格的上方，有一排強大的快捷工具，操作邏輯與功能如下：</p>
+
+    <h3>1. ☑ 選取欄位 與 建立平均欄位</h3>
+    <ul>
+      <li><strong>操作方式</strong>：點擊 <span class="btn-mockup ghost">☑ 選取欄位</span>，表格表頭會出現勾選框。勾選多個成績欄位（如小考1 ~ 小考5），上方的 <span class="btn-mockup accent">建立平均欄位</span> 按鈕便會浮現。</li>
+      <li><strong>計算方式</strong>：
+        <ul>
+          <li><strong>全部平均（空白不計）</strong>：只對有分數的項目進行平均。</li>
+          <li><strong>去掉最低 1 次 / 去掉最低 2 次</strong>：適用於多次小考，系統會為每位學生自動挑出分數最低的 1 或 2 次排除後再做平均。若學生請假次數多於排除限制，則會以剩下的次數計算。</li>
+        </ul>
+      </li>
+      <li><strong>意義</strong>：幫助老師快速生成一個「小考平均」或「平時作業平均」的獨立欄位，並賦予該平均欄位一個總配分比重（如 20%），精簡成績冊版面。</li>
+    </ul>
+
+    <h3>2. 🗑 刪除欄位</h3>
+    <p>點擊 <span class="btn-mockup ghost">🗑 刪除欄位</span> 後，每個成績欄位標題旁會出現紅色 <span style="color:var(--danger)">[✖]</span> 按鈕，點擊即可刪除該欄位。再次點擊此按鈕可關閉刪除模式。</p>
+
+    <h3>3. ＋ 新增欄位</h3>
+    <p>點擊後開啟控制面板，可輸入欄位名稱、指定考查群組，並設定初始加權比例。</p>
+
+    <h3>4. 📋 批次貼上成績 (高效輸入)</h3>
+    <ul>
+      <li><strong>情境</strong>：老師在其他 Excel 檔案登錄了成績，不想一筆一筆輸入。</li>
+      <li><strong>操作</strong>：勾選要貼上的目標欄位（可多選），在文字區直接貼上從 Excel 複製的整直行成績（一列對應一位學生），點擊匯入即可一次完成數十人的成績輸入！</li>
+    </ul>
+
+    <h3>5. ⚖ 複製配分到其他班級 (一鍵同步)</h3>
+    <p>當您帶多個班級且使用相同的評量比例時，不需要在每個班級手動輸入比例。點擊此按鈕，可將本班各欄位的配分比例（%）以及平均欄位設定，一鍵複製並套用到同一年段的其他班級。</p>
+
+    <h3>6. ⬆ 上傳成績檔 (段考/平時成績匯入)</h3>
+    <p>當教務處發放了段考 Excel 成績單，或您從線上測驗系統導出了小考成績：</p>
+    <ul>
+      <li>點擊按鈕，上傳 Excel 檔案。</li>
+      <li>系統會嚴格執行<strong>「座號 + 姓名」雙重比對</strong>，確保成績準確填入本系統對應的學生格內，並會詳細標示成功配對、部分不符或無此學生的清單，避免張冠李戴。</li>
+    </ul>
+
+    <h3>7. 顯示大小與高度調整</h3>
+    <p>提供 <span class="btn-mockup ghost">＋</span> 和 <span class="btn-mockup ghost">－</span> 按鈕，可自由放大或縮小表格（70% ~ 130%），或調整表格視窗的高度（vh），適應不同尺寸的螢幕或投影機展示。</p>
+  </div>
+
+  <!-- ── 5. 個別配分 ── -->
+  <div id="personal-weights" class="section-anchor card">
+    <h2>進階功能：個別學生配分 (特殊生處理)</h2>
+    <p>在實際教學中，常有學生因長期公假、生病缺考、或是轉學生，無法參與某些考試項目。本系統特有<strong>「個別學生配分」</strong>功能，完美解決此困擾。</p>
+
+    <h3>操作步驟：</h3>
+    <ol class="steps-list">
+      <li>在成績管理表格中，找到該位學生的姓名旁，點擊紫色的小字標籤 <span class="btn-mockup ghost-secondary" style="font-size:11px; padding:2px 6px;">個</span>。</li>
+      <li>將會彈出「個別學生配分設定」視窗。</li>
+      <li>在<strong>「個別配分（%）」</strong>欄位中，針對該生輸入專屬的配分比例。</li>
+      <li>點擊 <span class="btn-mockup">儲存個別配分</span> 即可。</li>
+    </ol>
+
+    <div class="alert note">
+      <div class="alert-title">ℹ 計算規則說明</div>
+      <ul>
+        <li>若該生某個欄位的個別配分設為 <strong>0% 或留白</strong>，則表示該欄位對該生使用「班級預設配分」。</li>
+        <li>設定個別配分後，該生姓名旁的 <span class="badge secondary">個</span> 按鈕會變為實心紫色，方便識別。</li>
+        <li>系統在計算該生學期成績時，會以其「個別配分」為準，其餘學生的成績計算與權重完全不受影響。</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── 6. 統計分析 ── -->
+  <div id="tab-stats" class="section-anchor card">
+    <h2>分頁說明：統計分析的教學意義</h2>
+    <p>本分頁提供強大的視覺化分析，協助教師發掘學習落差、掌握教學成效。</p>
+
+    <h3>1. 單一班級分析</h3>
+    <p>選擇班級與統計依據（如學期成績），系統會自動計算：</p>
+    <ul>
+      <li><strong>基礎統計量</strong>：全班人數、平均分數、最高分、最低分、及格人數、不及格人數與及格率。</li>
+      <li><strong>成績分布直方圖（左圖）</strong>：直觀展示 90分以上、80~89分...等各分數段的人數比例。<strong>教學意義</strong>：若呈現雙峰分布，代表班級學習產生兩極化，需實施差異化教學。</li>
+      <li><strong>考試項目平均折線圖（右圖）</strong>：對比該班日常考查、期中考、期末考等各主要群組的平均分起伏。<strong>教學意義</strong>：若期末考平均大幅下降，代表期末課程難度提高或學生複習不足。</li>
+    </ul>
+
+    <h3>2. 多班級比較</h3>
+    <p>勾選多個同一年級的班級，系統會產生**跨班級平均分柱狀圖與表格**。</p>
+    <ul>
+      <li><strong>教學意義</strong>：老師可以直觀地看出自己帶的 301 班、302 班在同一次段考中的表現落差。若某班平均顯著落後，可及時調整該班的授課進度或引導方式。</li>
+    </ul>
+
+    <h3>3. 長期追蹤</h3>
+    <p>當班級從高二升高三，或從第一學期進入第二學期，學生名單大致不變但班級名稱變更時：</p>
+    <ul>
+      <li><strong>操作</strong>：勾選不同學期的沿革班級（如 113-1-201 班與 113-2-201 班），點擊產生長期分析。</li>
+      <li><strong>教學意義</strong>：系統會自動對比每位學生在不同學期的加權成績，畫出長期趨勢折線圖。能幫助老師實施**「早期預警」**，找出成績持續下滑、需要關懷或輔導的學生名單。</li>
+    </ul>
+  </div>
+
+  <!-- ── 7. 匯出與備份 ── -->
+  <div id="tab-export" class="section-anchor card">
+    <h2>分頁說明：匯出、列印與資料備份</h2>
+    <p>完成一學期的成績登錄後，您需要將成績資料儲存或交給學校系統。</p>
+
+    <h3>1. 匯出成績與列印</h3>
+    <ul>
+      <li><span class="btn-mockup">⬇ 下載班級成績</span>：一鍵將當前選取班級的完整成績表格下載為 Excel 檔案，方便您直接上傳至學校的行政系統。</li>
+      <li><span class="btn-mockup secondary">🖨 列印班級成績</span>：開啟專為紙本設計的列印視窗，格式工整並包含基本統計量。建議在列印設定中勾選<strong>「顯示背景圖形」</strong>，以確保群組色帶與不及格淡紅色標示能完美列印。</li>
+    </ul>
+
+    <h3>2. 還原與備份 (重要安全保護)</h3>
+    <div class="alert danger">
+      <div class="alert-title">⚠ 瀏覽器清除快取風險宣導</div>
+      由於資料儲存在瀏覽器的 `localStorage`，若您執行了瀏覽器清理（如：清理 Cookie、清除歷程記錄、重設瀏覽器），或是使用他人電腦的無痕視窗，<strong>儲存的成績資料將會遺失！</strong>
+    </div>
+    
+    <p>為避免上述情況導致心血白費，系統提供：</p>
+    <ul>
+      <li><span class="btn-mockup ghost-secondary">⬇ 下載 JSON 備份</span>：定期（如每次段考登記完）點擊此按鈕，會下載一個包含您所有班級、所有學期成績的 `.json` 備份檔。請將此檔案妥善保存在您的隨身碟或雲端硬碟。</li>
+      <li><span class="btn-mockup ghost">⬆ 還原 JSON 備份</span>：在新電腦或瀏覽器被清空時，點擊此按鈕並選取您的備份檔，即可 1 秒還原所有歷史成績資料。</li>
+    </ul>
+  </div>
+
+  <!-- ── 8. 示範資料 ── -->
+  <div id="tab-demo" class="section-anchor card">
+    <h2>分頁說明：成績示範與練習</h2>
+    <p>為了方便新使用者快速熟悉系統，系統內建了 11 份完整的示範班級成績檔。</p>
+    <ul>
+      <li>您可以直接勾選如 `113學年第一學期 201 生物` 或全選，然後點擊 <span class="btn-mockup">▶ 匯入勾選的示範班級</span>。</li>
+      <li><strong>練習建議</strong>：
+        <ul>
+          <li>匯入 113 學年與 114 學年的示範班級後，切換到「統計分析」→「長期追蹤」，勾選 `113-1-201`、`113-2-201`、`114-1-301`，觀察學生在兩年內的成績升降軌跡。</li>
+          <li>練習在「成績管理」中修改示範學生的分數，體會即時加權計算的便利性。</li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+
+  <!-- ── FAQ 常見問題 ── -->
+  <div id="faq" class="section-anchor card">
+    <h2>FAQ 常見問題與疑難排解</h2>
+    <div class="faq-item">
+      <div class="faq-question">如果學校的 Excel 成績單格式跟系統不符，要怎麼匯入？</div>
+      <div class="faq-answer">
+        系統在匯入 Excel 時，具有高度的容錯力。它會自動在表格中尋找含有「座號」、「姓名」的欄位。如果您的 Excel 格式比較特殊，建議您可以使用「班級管理」手動建立學生名單，再使用「成績管理」頂部工具欄的「批次貼上成績」或「上傳成績檔」功能，將成績快速複製進來。
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">我不小心關掉網頁，剛剛輸入的成績會不見嗎？</div>
+      <div class="faq-answer">
+        不會。本系統在您輸入成績、修改配分或名單時，皆會<strong>即時自動儲存</strong>至瀏覽器中。您也可以在成績管理中點擊「手動儲存」確保安全。只要您不主動清除瀏覽器快取，下次開啟同一網址時資料依然會在。
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">我想把成績分發給學生看，可以只列印個別學生的成績嗎？</div>
+      <div class="faq-answer">
+        在點擊「列印班級成績」時，會彈出列印選項面板。您可以選擇列印「完整成績冊」，或者在「統計分析」分頁中觀察學生的個人表現。如果您只需要個別學生的成績，建議將資料導出為 Excel 後，在 Excel 中進行篩選與分發。
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">有些學生的名字有罕見字，在 Excel 匯入時出現亂碼怎麼辦？</div>
+      <div class="faq-answer">
+        本系統採用現代的 `SheetJS` 庫解讀 Excel，對 UTF-8 與罕見字有良好的支援。若真的出現亂碼，您可以隨時在「班級管理」分頁的學生名單中，直接手動修正學生的姓名，並點擊更新即可。
+      </div>
+    </div>
+  </div>
+
+  <!-- 頁尾 -->
+  <footer style="margin-top: 40px; border-top: 1px solid var(--line); padding-top: 20px; text-align: center; font-size: 14px; color: var(--ink-soft);">
+    <p>多班級成績管理系統 2.0 使用說明手冊 © 2026</p>
+    <p>
+      主程式 GitHub 線上版：
+      <a href="https://froglssh.github.io/multi-class-grades-management/" target="_blank" style="color: var(--primary); font-weight: 700;">https://froglssh.github.io/multi-class-grades-management/</a>
+    </p>
+  </footer>
+
+</div>
+
+<script>
+  // ── 滾動監聽 (ScrollSpy) ──
+  const sections = document.querySelectorAll('.section-anchor');
+  const navLi = document.querySelectorAll('.sidebar-menu li');
+
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(section => {
+      const sectionTop = section.offsetTop;
+      const sectionHeight = section.clientHeight;
+      if (pageYOffset >= (sectionTop - 80)) {
+        current = section.getAttribute('id');
+      }
+    });
+
+    navLi.forEach(li => {
+      li.classList.remove('active');
+      const targetAnchor = li.querySelector('a').getAttribute('href').substring(1);
+      if (targetAnchor === current) {
+        li.classList.add('active');
+      }
+    });
+  });
+</script>
+</body>
+</html>

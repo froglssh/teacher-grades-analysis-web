@@ -1,0 +1,3733 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智慧班級成績分析系統 2.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --p:#2563eb;--pl:#dbeafe;--p2:#7c3aed;--p2l:#ede9fe;
+  --d:#dc2626;--dl:#fee2e2;--s:#059669;--sl:#d1fae5;--w:#d97706;--wl:#fef3c7;
+  --bg:#eef2f7;--bg-grad:linear-gradient(160deg,#0f172a 0%,#1e3a5f 45%,#0f172a 100%);
+  --card:#ffffff;--card2:#f8fafc;--card3:#f1f5f9;
+  --tx:#0f172a;--mu:#64748b;--mu2:#94a3b8;--bo:#e2e8f0;
+  --sh:0 2px 12px rgba(15,23,42,.07);--shl:0 12px 40px rgba(15,23,42,.14);--r:13px;--rs:8px;
+  --th-c:#2563eb;--th2-c:#7c3aed;--th3-c:#0891b2;--th4-c:#059669;
+  --row-even:#f8fafc;--row-hover:#eef2ff;
+}
+[data-theme="dark"]{
+  --p:#5b8cff;--pl:#16294f;--p2:#a78bfa;--p2l:#251c45;
+  --d:#f87171;--dl:#3b1414;--s:#34d399;--sl:#0c2e24;--w:#fbbf24;--wl:#3a2d10;
+  --bg:#0b1220;--bg-grad:linear-gradient(160deg,#060b16 0%,#0d1b33 45%,#060b16 100%);
+  --card:#101a2e;--card2:#0c1526;--card3:#16223a;
+  --tx:#e6edf7;--mu:#aebdd3;--mu2:#64748b;--bo:#22314d;
+  --sh:0 2px 12px rgba(0,0,0,.4);--shl:0 12px 40px rgba(0,0,0,.55);
+  --th-c:#1e3a8a;--th2-c:#4c1d95;--th3-c:#155e75;--th4-c:#065f46;
+  --row-even:#0e1830;--row-hover:#16294f;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Noto Sans TC','Microsoft JhengHei','Segoe UI',sans-serif;background:var(--bg-grad);color:var(--tx);line-height:1.6;font-variant-numeric:tabular-nums;min-height:100vh;}
+
+/* ===== Header ===== */
+.header{background:linear-gradient(135deg,#14274d 0%,#1d4ed8 55%,#5b21b6 100%);color:#fff;padding:26px 32px;position:relative;overflow:hidden;}
+.header::before{content:'';position:absolute;inset:-50%;background:radial-gradient(circle at 25% 40%,rgba(255,255,255,.1) 0%,transparent 45%),radial-gradient(circle at 80% 70%,rgba(124,58,237,.3) 0%,transparent 50%);pointer-events:none;}
+.header h1{font-size:1.6rem;font-weight:900;letter-spacing:1.5px;position:relative;}
+.header p{opacity:.88;font-size:.86rem;margin-top:4px;position:relative;}
+.header .author{font-size:.78rem;opacity:.8;margin-top:5px;position:relative;}
+.theme-toggle{position:absolute;top:18px;right:22px;z-index:3;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:6px 15px;cursor:pointer;font-size:.82rem;font-family:inherit;transition:background .2s;}
+.theme-toggle:hover{background:rgba(255,255,255,.26);}
+
+.container{max-width:1520px;margin:0 auto;padding:22px;}
+.card{background:var(--card);border:1px solid var(--bo);border-radius:var(--r);box-shadow:var(--sh);padding:22px;margin-bottom:18px;}
+.ct{font-size:1.05rem;color:var(--p);margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--pl);font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.ct .hint{font-size:.76rem;font-weight:400;color:var(--mu2);}
+
+/* ===== Upload ===== */
+.up-area{border:2px dashed var(--mu2);border-radius:var(--r);padding:32px;text-align:center;cursor:pointer;transition:all .2s;background:var(--card2);}
+.up-area:hover,.up-area.drag{border-color:var(--p);background:var(--pl);transform:translateY(-1px);}
+.up-area .ico{font-size:2.5rem;margin-bottom:8px;}
+.up-area p{color:var(--mu);margin:3px 0;}
+.up-area small{color:var(--mu2);font-size:.78rem;}
+#fi{display:none;}
+.up-btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--pl);color:var(--p);padding:5px 13px;border-radius:20px;font-size:.82rem;font-weight:600;border:1px solid transparent;}
+.chip .rm{cursor:pointer;opacity:.6;font-weight:800;}
+.chip .rm:hover{opacity:1;color:var(--d);}
+
+/* ===== Hero dashboard ===== */
+.hero{display:none;background:linear-gradient(135deg,var(--card),var(--card3));border:1px solid var(--bo);border-radius:var(--r);box-shadow:var(--sh);padding:20px 22px;margin-bottom:18px;}
+.hero.on{display:block;}
+.hero-title{font-size:.95rem;font-weight:800;color:var(--p);margin-bottom:12px;}
+.hero-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;}
+.hk{background:var(--card);border:1px solid var(--bo);border-radius:var(--rs);padding:13px 12px;text-align:center;}
+.hk .v{font-size:1.55rem;font-weight:900;line-height:1.15;}
+.hk .l{font-size:.76rem;color:var(--mu2);margin-top:3px;}
+.hk .dlt{font-size:.74rem;font-weight:700;margin-top:4px;display:inline-block;padding:1px 8px;border-radius:99px;}
+.dlt.up{background:var(--sl);color:var(--s);}
+.dlt.dn{background:var(--dl);color:var(--d);}
+.dlt.nt{background:var(--card3);color:var(--mu2);}
+.hk.clickable{cursor:pointer;transition:transform .12s,box-shadow .12s;}
+.hk.clickable:hover{transform:translateY(-2px);box-shadow:var(--sh);}
+
+/* ===== Validation ===== */
+.vp{border-radius:var(--rs);padding:13px 17px;margin:8px 0;border-left:4px solid;}
+.vp-ok{background:var(--sl);border-color:var(--s);}
+.vp-w{background:var(--wl);border-color:var(--w);}
+.vp-e{background:var(--dl);border-color:var(--d);}
+.vp-ttl{font-weight:700;font-size:.88rem;margin-bottom:5px;}
+.vp-ul{font-size:.83rem;list-style:none;padding:0;}
+.vp-ul li{padding:2px 0;}
+
+/* ===== Tabs ===== */
+.tabs{display:flex;gap:3px;background:var(--card3);border:1px solid var(--bo);border-radius:10px;padding:4px;flex-wrap:wrap;margin-bottom:18px;position:sticky;top:8px;z-index:60;backdrop-filter:blur(8px);}
+.tab{padding:9px 15px;border-radius:7px;cursor:pointer;font-size:.86rem;font-weight:600;color:var(--mu);border:none;background:transparent;transition:all .15s;font-family:inherit;}
+.tab:hover{color:var(--tx);}
+.tab.active{background:var(--card);color:var(--p);box-shadow:var(--sh);}
+.tab.warn-tab.active{color:var(--d);}
+
+/* ===== Table ===== */
+.tw{overflow-x:auto;border-radius:var(--rs);}
+table{width:100%;border-collapse:collapse;font-size:.8rem;}
+th,td{padding:8px 9px;text-align:center;border:1px solid var(--bo);white-space:nowrap;color:var(--tx);}
+th{background:var(--th-c);color:#fff;font-weight:700;position:sticky;top:0;z-index:2;}
+th.sortable{cursor:pointer;user-select:none;}
+th.sortable:hover{filter:brightness(1.15);}
+th.th2{background:var(--th2-c);}
+th.th3{background:var(--th3-c);}
+th.th4{background:var(--th4-c);}
+tr:nth-child(even){background:var(--row-even);}
+tr:hover{background:var(--row-hover);}
+td.fail{color:var(--d);font-weight:800;background:var(--dl);}
+td.seat{font-weight:800;color:var(--p);}
+td.hi{color:var(--s);font-weight:700;}
+.stat-r td{background:var(--pl)!important;font-weight:700;}
+tr.stu-row{cursor:pointer;}
+.up{color:var(--s);font-weight:700;}
+.dn{color:var(--d);font-weight:700;}
+
+/* heatmap mode cells get inline backgrounds */
+.hm-on td.sc-cell{font-weight:700;}
+
+/* ===== Controls ===== */
+.ctrl{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
+select,input[type="text"],input[type="search"]{padding:8px 12px;border:1.5px solid var(--bo);border-radius:var(--rs);font-size:.88rem;font-family:inherit;background:var(--card);color:var(--tx);}
+select:focus,input:focus{outline:none;border-color:var(--p);box-shadow:0 0 0 3px var(--pl);}
+.switch{display:inline-flex;align-items:center;gap:6px;font-size:.82rem;color:var(--mu);cursor:pointer;user-select:none;background:var(--card2);border:1px solid var(--bo);padding:7px 12px;border-radius:var(--rs);}
+.switch input{accent-color:var(--p);}
+
+/* ===== Buttons ===== */
+.btn{padding:9px 17px;border:none;border-radius:var(--rs);font-size:.86rem;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:transform .1s,filter .15s;}
+.btn:hover{filter:brightness(1.08);}
+.btn:active{transform:scale(.97);}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+.bp{background:linear-gradient(135deg,var(--p),#1e40af);color:#fff;box-shadow:0 4px 14px rgba(37,99,235,.3);}
+.bs{background:var(--card3);color:var(--tx);border:1px solid var(--bo);}
+.bv{background:linear-gradient(135deg,var(--p2),#6d28d9);color:#fff;}
+.bd{background:var(--dl);color:var(--d);border:1px solid var(--d);}
+.bo2{background:transparent;color:var(--p);border:1.5px solid var(--p);}
+
+/* ===== Metric cards / charts ===== */
+.mg{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:9px;margin-bottom:16px;}
+.mc{text-align:center;padding:12px 7px;border-radius:var(--rs);background:var(--card2);border:1px solid var(--bo);}
+.mc .l{font-size:.74rem;color:var(--mu2);}
+.mc .v{font-size:1.28rem;font-weight:900;margin-top:2px;}
+.cg{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px;}
+.cb{background:var(--card);border:1px solid var(--bo);border-radius:var(--r);box-shadow:var(--sh);padding:16px;}
+.cb h3{font-size:.92rem;margin-bottom:10px;color:var(--tx);font-weight:700;}
+.cb .note{font-size:.75rem;color:var(--mu2);margin-top:8px;line-height:1.55;}
+.cb.full{grid-column:1/-1;}
+
+/* ===== Student header ===== */
+.sh{background:linear-gradient(135deg,var(--pl),var(--p2l));border:1px solid var(--bo);border-radius:var(--r);padding:16px 18px;margin-bottom:16px;}
+.sh h3{color:var(--p);font-size:1.02rem;margin-bottom:8px;font-weight:800;}
+.sm{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:.86rem;color:var(--mu);}
+.sm span{font-weight:800;color:var(--tx);}
+.stu-nav{display:inline-flex;gap:6px;margin-left:10px;}
+.stu-nav button{padding:3px 11px;font-size:.78rem;}
+
+/* ===== Warning tab ===== */
+.warn-sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px;}
+.wlevel{border-radius:var(--rs);padding:14px;text-align:center;border:1px solid var(--bo);}
+.wlevel .n{font-size:1.7rem;font-weight:900;}
+.wlevel .t{font-size:.8rem;margin-top:2px;}
+.wl-hi{background:var(--dl);} .wl-hi .n,.wl-hi .t{color:var(--d);}
+.wl-mid{background:var(--wl);} .wl-mid .n,.wl-mid .t{color:var(--w);}
+.wl-low{background:var(--pl);} .wl-low .n,.wl-low .t{color:var(--p);}
+.wl-ok{background:var(--sl);} .wl-ok .n,.wl-ok .t{color:var(--s);}
+.wbadge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.74rem;font-weight:800;}
+.wb-hi{background:var(--d);color:#fff;}
+.wb-mid{background:var(--w);color:#fff;}
+.wb-low{background:var(--p);color:#fff;}
+.wreason{display:inline-block;background:var(--card3);border:1px solid var(--bo);border-radius:99px;padding:1px 9px;font-size:.72rem;color:var(--mu);margin:1px 2px;}
+
+/* ===== Matrix (correlation) ===== */
+.mx{border-collapse:collapse;font-size:.78rem;}
+.mx th,.mx td{border:1px solid var(--bo);padding:6px 8px;min-width:52px;}
+.mx th{background:var(--card3);color:var(--mu);position:static;}
+.mx td{font-weight:700;}
+
+/* ===== Insight / section ===== */
+.insight{border-radius:var(--r);padding:16px;margin-top:14px;border:1px solid var(--p2);background:var(--p2l);line-height:1.75;font-size:.88rem;}
+.insight h4{color:var(--p2);margin-bottom:6px;}
+
+/* ===== Overlay / loading / toast ===== */
+.ov{position:fixed;inset:0;background:rgba(2,6,23,.62);display:none;align-items:center;justify-content:center;z-index:1000;padding:16px;}
+.ov.on{display:flex;}
+.vm{background:var(--card);color:var(--tx);border:1px solid var(--bo);border-radius:var(--r);padding:24px;width:100%;max-width:680px;max-height:86vh;overflow-y:auto;box-shadow:var(--shl);}
+.vm h2{font-size:1.1rem;margin-bottom:12px;color:var(--p);}
+.ld{display:none;text-align:center;padding:24px;}
+.ld.on{display:block;}
+.sp{display:inline-block;width:34px;height:34px;border:4px solid var(--pl);border-top-color:var(--p);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ld p{color:var(--mu);margin-top:8px;font-size:.85rem;}
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(110px);background:var(--tx);color:var(--card);padding:11px 24px;border-radius:999px;font-size:.88rem;z-index:2000;transition:transform .3s;box-shadow:var(--shl);pointer-events:none;max-width:90vw;}
+.toast.on{transform:translateX(-50%) translateY(0);}
+
+/* ===== Print ===== */
+.prt-bar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;}
+.print-hdr{display:none;font-weight:800;font-size:1rem;margin-bottom:10px;}
+@media print{
+  body{background:#fff;}
+  .header,.tabs,.prt-bar,.up-card,.no-print,.theme-toggle,.hero{display:none!important;}
+  .container{max-width:100%;padding:0;}
+  .card{box-shadow:none;border:none;padding:8px;}
+  .tc{display:none!important;}
+  .tc.printing{display:block!important;}
+  .print-hdr{display:block;}
+  table{font-size:9px;}
+  th,td{padding:4px 5px;}
+  th{position:static;}
+  .cg{grid-template-columns:1fr 1fr;}
+  .cb{page-break-inside:avoid;border:1px solid #ddd;}
+}
+@media (max-width:760px){
+  .container{padding:10px;}
+  .header h1{font-size:1.15rem;}
+  .cg{grid-template-columns:1fr;}
+  .theme-toggle{position:static;margin-top:8px;}
+  .tabs{position:static;}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <button class="theme-toggle no-print" id="themeBtn" onclick="toggleTheme()">🌙 深色模式</button>
+  <h1>📊 智慧班級成績分析系統 <span style="font-size:.85rem;font-weight:400;opacity:.8;">v2.0</span></h1>
+  <p>Excel 智慧解析 ｜ 班級體質儀表板 ｜ 五標統計 ｜ 預警關懷名單 ｜ 進階計量診斷（VAM·成長軌跡·信度校正）｜ 多次比較 ｜ 個人深度追蹤</p>
+  <p style="margin-top:6px;opacity:.75;font-size:.8rem;">臺北市立麗山高中 生物科 林獻升老師製作 ｜ <a href="mailto:frog@lssh.tp.edu.tw" style="color:rgba(255,255,255,.85);text-decoration:none;">frog@lssh.tp.edu.tw</a></p>
+</div>
+
+<div class="container">
+
+  <div class="card no-print">
+    <div class="ct">📁 上傳成績檔案（Excel .xlsx）</div>
+    <div class="up-area" id="dropZone">
+      <div class="ico">📊</div>
+      <p><strong>點擊選擇</strong>或<strong>拖曳</strong> Excel 成績檔案至此</p>
+      <p>支援 <strong>.xlsx / .xls</strong> 格式，可同時上傳多份（多次考試比較）</p>
+      <small>系統將自動識別座號、各科成績、總分、平均、名次等所有欄位，解析後先驗證再呈現</small>
+      <input type="file" id="fi" accept=".xlsx,.xls" multiple>
+    </div>
+    <div class="up-btns no-print">
+      <button class="btn bs" onclick="loadDemoClass()">✨ 載入示範班級（3 次段考）</button>
+      <label class="switch"><input type="checkbox" id="nameToggle" onchange="toggleNames(this.checked)">顯示學生姓名</label>
+      <button class="btn bd" onclick="clearAllData()">🗑️ 清除全部資料</button>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <div class="ld" id="ld"><div class="sp"></div><p id="ldMsg">解析中…</p></div>
+
+  <div class="hero" id="hero"></div>
+
+  <div id="main" style="display:none;">
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-tab="t1">📋 成績一覽</button>
+      <button class="tab" data-tab="t2">📏 五標統計</button>
+      <button class="tab" data-tab="t3">📈 全班分析</button>
+      <button class="tab" data-tab="t4">🧑‍🎓 個人分析</button>
+      <button class="tab" data-tab="t5">📊 名次分析</button>
+      <button class="tab warn-tab" data-tab="t8">🚨 預警關懷</button>
+      <button class="tab" data-tab="t9">🔬 進階計量診斷</button>
+      <button class="tab" data-tab="t6">🔄 多次比較</button>
+      <button class="tab" data-tab="t7">💾 匯出</button>
+    </div>
+
+    <!-- T1: Grade Table -->
+    <div id="t1" class="tc">
+      <div class="card">
+        <div class="prt-bar no-print">
+          <button class="btn bs" onclick="printCurrentTab('t1')">🖨️ 列印本頁（含圖表）</button>
+        </div>
+        <div class="print-hdr" id="ph1"></div>
+        <div class="ct">📋 成績一覽表（含名次與班級資訊）</div>
+        <div class="ctrl">
+          <select id="s1"></select>
+          <input type="search" id="q1" placeholder="🔍 搜尋座號/姓名" oninput="renderGradeTable(+document.getElementById('s1').value||0)" style="width:170px;">
+          <label class="switch"><input type="checkbox" id="hm1" onchange="renderGradeTable(+document.getElementById('s1').value||0)">熱力圖模式</label>
+          <span style="font-size:.8rem;color:var(--mu);">🔴 不及格（&lt;60）｜ 姓名已遮罩</span>
+        </div>
+        <div class="tw" id="gw"></div>
+      </div>
+    </div>
+
+    <!-- T2: Five Marks -->
+    <div id="t2" class="tc" style="display:none;">
+      <div class="card">
+        <div class="prt-bar no-print">
+          <button class="btn bs" onclick="printCurrentTab('t2')">🖨️ 列印本頁（含圖表）</button>
+        </div>
+        <div class="print-hdr" id="ph2"></div>
+        <div class="ct">📏 各科五標統計</div>
+        <div class="ctrl"><select id="s2"></select></div>
+        <p style="font-size:.79rem;color:var(--mu);margin-bottom:12px;">
+          <strong>頂標</strong>前12%｜<strong>前標</strong>前25%｜<strong>均標</strong>前50%｜<strong>後標</strong>後25%｜<strong>底標</strong>後12%（均為該範圍均值）
+        </p>
+        <div id="fmBody"></div>
+      </div>
+    </div>
+
+    <!-- T3: Class Analysis -->
+    <div id="t3" class="tc" style="display:none;">
+      <div class="card">
+        <div class="prt-bar no-print">
+          <button class="btn bs" onclick="printCurrentTab('t3')">🖨️ 列印本頁（含圖表）</button>
+        </div>
+        <div class="print-hdr" id="ph3"></div>
+        <div class="ct">📈 全班成績統計分析</div>
+        <div class="ctrl"><select id="s3"></select></div>
+        <div id="cs"></div>
+        <div class="cg" id="cc"></div>
+      </div>
+    </div>
+
+    <!-- T4: Student Analysis -->
+    <div id="t4" class="tc" style="display:none;">
+      <div class="card">
+        <div class="prt-bar no-print">
+          <button class="btn bs" onclick="printCurrentTab('t4')">🖨️ 列印本頁（含圖表）</button>
+        </div>
+        <div class="print-hdr" id="ph4"></div>
+        <div class="ct">🧑‍🎓 個人成績分析</div>
+        <div class="ctrl">
+          <select id="s4"></select>
+          <select id="ss"></select>
+        </div>
+        <div id="sb"></div>
+      </div>
+    </div>
+
+    <!-- T5: Rank Analysis -->
+    <div id="t5" class="tc" style="display:none;">
+      <div class="card">
+        <div class="prt-bar no-print">
+          <button class="btn bs" onclick="printCurrentTab('t5')">🖨️ 列印本頁（含圖表）</button>
+        </div>
+        <div class="print-hdr" id="ph5"></div>
+        <div class="ct">📊 名次與排名分析</div>
+        <div class="ctrl"><select id="s5"></select></div>
+        <div id="rb"></div>
+        <div class="cg" id="rc"></div>
+      </div>
+    </div>
+
+    <!-- T9: Advanced psychometrics -->
+    <div id="t9" class="tc" style="display:none;">
+      <div class="card">
+        <div class="prt-bar no-print">
+          <button class="btn bs" onclick="printCurrentTab('t9')">🖨️ 列印本頁（含圖表）</button>
+        </div>
+        <div class="ct">🔬 進階計量診斷 <span class="hint">信度衰減校正關聯・增值評量 VAM・成長軌跡 HLM・學術穩定度 ─ 依《計量方法學藍圖》實作</span></div>
+        <div class="print-hdr" id="ph9"></div>
+        <div id="advBody"></div>
+      </div>
+    </div>
+
+    <!-- T8: Early warning -->
+    <div id="t8" class="tc" style="display:none;">
+      <div class="card">
+        <div class="prt-bar no-print">
+          <button class="btn bs" onclick="printCurrentTab('t8')">🖨️ 列印本頁（含圖表）</button>
+          <button class="btn bo2" onclick="exportWarnList()">📥 下載預警名單 .xlsx</button>
+        </div>
+        <div class="ct">🚨 學習預警與關懷名單 <span class="hint">依不及格科數、名次退步、成績驟降、單科崩盤等規則自動篩選，供導師與輔導參考</span></div>
+        <div class="print-hdr" id="ph8"></div>
+        <div class="ctrl"><select id="s8"></select></div>
+        <div id="wbody"></div>
+      </div>
+    </div>
+
+    <!-- T6: Comparison -->
+    <div id="t6" class="tc" style="display:none;">
+      <div class="card">
+        <div class="prt-bar no-print">
+          <button class="btn bs" onclick="printCurrentTab('t6')">🖨️ 列印本頁（含圖表）</button>
+        </div>
+        <div class="print-hdr" id="ph6"></div>
+        <div class="ct">🔄 多次考試比較</div>
+        <div class="ctrl">
+          <label><input type="radio" name="cm" value="class" checked> 全班比較</label>
+          <label><input type="radio" name="cm" value="student"> 個人比較</label>
+          <select id="scs" style="display:none;"></select>
+        </div>
+        <div id="cpb"></div>
+      </div>
+    </div>
+
+    <!-- T7: Export -->
+    <div id="t7" class="tc" style="display:none;">
+      <div class="card">
+        <div class="ct">💾 匯出與列印</div>
+        <div style="display:flex;flex-direction:column;gap:18px;">
+
+          <div>
+            <h3 style="font-size:.92rem;margin-bottom:8px;">🖨️ 列印 / 存 PDF</h3>
+            <div class="ctrl">
+              <select id="prtExamScope" title="選擇完整班級報告範圍"></select>
+              <button class="btn bp" onclick="printFullReport()">📊 列印完整班級分析報告</button>
+              <span class="hint">可選擇全部成績或單次考試；涵蓋成績一覽、五標、全班分析、名次、預警、進階計量等班級統計（不含個別學生）</span>
+            </div>
+            <div class="ctrl" style="margin-top:10px;">
+              <select id="prtStu"></select>
+              <button class="btn bv" onclick="printStudentReport()">🧑‍🎓 列印選定學生分析報告</button>
+              <span class="hint">輸出該生單次成績分析＋多次成績追蹤比較的完整圖表</span>
+            </div>
+          </div>
+
+          <div>
+            <h3 style="font-size:.92rem;margin-bottom:8px;">📥 Excel 匯出</h3>
+            <div class="ctrl">
+              <select id="se"></select>
+              <button class="btn bs" onclick="exportOne()">下載此次完整成績 .xlsx</button>
+              <button class="btn bs" onclick="exportAll()">下載全部考試 .xlsx</button>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid var(--bo);padding-top:16px;">
+            <h3 style="font-size:.92rem;margin-bottom:8px;">🗂️ 資料儲存與讀取（瀏覽器）<span class="hint">可存多筆不同名稱的分析，換頁不遺失</span></h3>
+            <div class="ctrl">
+              <button class="btn bp" onclick="openSaveDataset()">💾 儲存目前分析（命名）</button>
+              <select id="dsList" style="min-width:220px;"></select>
+              <button class="btn bo2" onclick="loadSelectedDataset()">📂 讀取選定分析</button>
+              <button class="btn bd" onclick="deleteSelectedDataset()">🗑️ 刪除選定分析</button>
+            </div>
+            <div id="dsMeta" class="hint" style="margin-top:8px;"></div>
+          </div>
+
+          <div style="border-top:1px solid var(--bo);padding-top:16px;">
+            <h3 style="font-size:.92rem;margin-bottom:8px;">🔄 全部資料備份（JSON）<span class="hint">換機 / 備份用，含所有已命名分析</span></h3>
+            <div class="ctrl">
+              <button class="btn bs" onclick="exportAllJSON()">⬇️ 匯出全部資料 .json</button>
+              <button class="btn bs" onclick="exportCurrentJSON()">⬇️ 只匯出目前分析 .json</button>
+              <button class="btn bo2" onclick="document.getElementById('jsonImport').click()">⬆️ 匯入 .json</button>
+              <input type="file" id="jsonImport" accept=".json,application/json" style="display:none" onchange="importJSON(event)">
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Validation Modal -->
+<div class="ov" id="ov">
+  <div class="modal">
+    <h2 id="vt">📋 成績資料驗證結果</h2>
+    <div id="vb"></div>
+    <div class="ma">
+      <button class="btn bx" onclick="rejectV()">取消，重新上傳</button>
+      <button class="btn bp" id="vOk" onclick="acceptV()">確認，載入資料</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Save Dataset Modal -->
+<div class="ov" id="saveOv">
+  <div class="vm" style="max-width:440px;">
+    <h2>💾 儲存目前分析</h2>
+    <p style="font-size:.85rem;color:var(--mu);margin-bottom:10px;">為這份分析命名（例如「307班 114上學期」），之後可隨時讀取。同名會覆蓋。</p>
+    <input type="text" id="dsName" placeholder="輸入分析名稱…" style="width:100%;margin-bottom:14px;" onkeydown="if(event.key==='Enter')confirmSaveDataset()">
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn bs" onclick="document.getElementById('saveOv').classList.remove('on')">取消</button>
+      <button class="btn bp" onclick="confirmSaveDataset()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =====================================================================
+// SheetJS only – no PDF
+// =====================================================================
+
+// =====================================================================
+// CONSTANTS – column name synonyms
+// =====================================================================
+const COL_SEAT   = ['座號','座位'];
+const COL_NAME   = ['姓名','姓　　名'];
+const COL_TOTAL  = ['總分','總　分'];
+const COL_AVG    = ['平均分數','平均','平均分'];
+const COL_FAIL   = ['不及格數','不及格'];
+const COL_CRANK  = ['班級名次','班級\n名次'];
+const COL_CDIFF  = ['班級進退','班級\n進退'];
+const COL_GRANK  = ['類組名次','類組\n名次'];
+const COL_GDIFF  = ['類組進退','類組\n進退'];
+const COL_GPCT   = ['類組百分名次','類組\n百分\n名次','類組百分\n名次'];
+
+// Subject keywords (if a header cell contains any of these, treat as subject)
+const SUBJ_KW = ['國語文','英語文','國文','英文','數學甲','數學乙','數學',
+  '選修物理','物理','選修化學','化學','選修生物','生物',
+  '歷史','地理','公民','自然','社會','本國語文','語文',
+  '美術','音樂','體育','家政','藝術','生活','生涯',
+  '地球','地科','科學','國防','進階','職人','健康','護理',
+  '資訊','計算機','科技','倫理','寫作','素養'];
+
+const SKIP_KW = ['座號','姓名','姓','總分','平均','不及格','名次',
+  '班級','類組','進退','百分','標準差','高標','及格','導師','列印',
+  '學校','學年','學期','班','科','時','考','成績','一覽','A0','R1'];
+
+// =====================================================================
+// STATE
+// =====================================================================
+const S = { exams:[], cur:0, pending:null };
+
+// ExamData shape:
+// { name, examId, subjects[], students[{seat,scores{},total,avg,failCount,classRank,classDiff,groupRank,groupDiff,groupPct}], stats{} }
+
+// =====================================================================
+// XLSX PARSER
+// =====================================================================
+async function parseXLSX(file) {
+  setLd(true, `解析 ${file.name}…`);
+  const buf = await file.arrayBuffer();
+  const wb  = XLSX.read(buf, {type:'array'});
+
+  for (const sn of wb.SheetNames) {
+    const ws   = wb.Sheets[sn];
+    if (!ws['!ref']) continue;
+    // raw:false → keep numbers as strings so we preserve "#55" text
+    const data = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', raw:false});
+    if (data.length < 3) continue;
+    const result = buildExam(data, file.name);
+    if (result && result.students.length > 0) { setLd(false); return result; }
+  }
+  setLd(false);
+  return null;
+}
+
+// =====================================================================
+// BUILD EXAM FROM SHEET ROWS
+// =====================================================================
+function buildExam(rows, fileName) {
+  const examName = fileName.replace(/\.(xlsx?|xls)$/i,'');
+
+  // ── STEP 1: detect header row ──────────────────────────────────────
+  // Score: each subject-keyword hit +2, auxiliary col +1
+  let hdrIdx = -1, hdrScore = 0;
+  rows.forEach((row, i) => {
+    let sc = 0;
+    row.forEach(c => {
+      const t = norm(c);
+      if (SUBJ_KW.some(k => t.includes(k))) sc += 2;
+      if ([...COL_TOTAL,...COL_AVG,...COL_FAIL,...COL_CRANK,...COL_CDIFF,
+           ...COL_GRANK,...COL_GDIFF,...COL_GPCT].some(k => norm(k)===t)) sc += 1;
+    });
+    if (sc > hdrScore) { hdrScore = sc; hdrIdx = i; }
+  });
+  if (hdrIdx < 0) return null;
+
+  // Also check the row ABOVE hdrIdx – some sheets have subject names on row N-1
+  // and credits (4/4) on row N. We merge both rows for column naming.
+  const hdrRow   = rows[hdrIdx] || [];
+  const aboveRow = hdrIdx > 0 ? (rows[hdrIdx-1] || []) : [];
+
+  // ── STEP 2: build column definitions ──────────────────────────────
+  const cols = {}; // colIndex → {name, type}
+  let seatCol=-1, nameCol=-1;
+
+  const maxCols = Math.max(hdrRow.length, aboveRow.length);
+  for (let ci=0; ci<maxCols; ci++) {
+    const cell  = norm(hdrRow[ci]  || '');
+    const above = norm(aboveRow[ci] || '');
+    const combined = (above + cell).replace(/\s+/g,''); // merged label
+
+    // Seat / Name
+    if (matchAny(cell, COL_SEAT)  || matchAny(above, COL_SEAT))  { seatCol=ci; continue; }
+    if (matchAny(cell, COL_NAME)  || matchAny(above, COL_NAME))  { nameCol=ci; continue; }
+
+    // Aux cols (type-tagged)
+    if (matchAny(combined, COL_TOTAL))  { cols[ci]={name:'總分',       type:'total'};   continue; }
+    if (matchAny(combined, COL_AVG))    { cols[ci]={name:'平均分數',   type:'avg'};     continue; }
+    if (matchAny(combined, COL_FAIL))   { cols[ci]={name:'不及格數',   type:'fail'};    continue; }
+    if (matchAny(combined, COL_CRANK))  { cols[ci]={name:'班級名次',   type:'crank'};   continue; }
+    if (matchAny(combined, COL_CDIFF))  { cols[ci]={name:'班級進退',   type:'cdiff'};   continue; }
+    if (matchAny(combined, COL_GRANK))  { cols[ci]={name:'類組名次',   type:'grank'};   continue; }
+    if (matchAny(combined, COL_GDIFF))  { cols[ci]={name:'類組進退',   type:'gdiff'};   continue; }
+    if (matchAny(combined, COL_GPCT))   { cols[ci]={name:'類組百分名次',type:'gpct'};   continue; }
+
+    // Subject?
+    const nm = (combined||cell||above).replace(/\d+\/\d+/g,'').trim();
+    if (nm && !SKIP_KW.some(k=>norm(k).length>1&&norm(nm).includes(norm(k))) && isSubj(cell||above||combined)) {
+      cols[ci]={name:nm, type:'subject'};
+    }
+  }
+
+  // Detect seat/name columns from first data row if still not found
+  if (seatCol < 0) {
+    for (let ri=hdrIdx+1; ri<Math.min(hdrIdx+6, rows.length); ri++) {
+      const row=rows[ri];
+      for (let ci=0; ci<Math.min(6,row.length); ci++) {
+        if (SEAT_RE.test(String(row[ci]).trim())) { seatCol=ci; nameCol=ci+1; break; }
+      }
+      if (seatCol>=0) break;
+    }
+  }
+  if (seatCol<0) seatCol=0;
+  if (nameCol<0) nameCol=seatCol+1;
+
+  // Deduplicate subject names (same name at two columns → append 一/二/三)
+  const subjEntries = Object.entries(cols)
+    .filter(([,d])=>d.type==='subject')
+    .sort((a,b)=>+a[0]-+b[0]);
+
+  const nameCnt={};
+  subjEntries.forEach(([,d])=>{ nameCnt[d.name]=(nameCnt[d.name]||0)+1; });
+  const nameSeq={};
+  const subjMap={}; // colIdx→finalName
+  subjEntries.forEach(([ci,d])=>{
+    const base=d.name;
+    if (nameCnt[base]>1){
+      nameSeq[base]=(nameSeq[base]||0)+1;
+      subjMap[ci]=base+(nameSeq[base]===1?'(一)':nameSeq[base]===2?'(二)':'(三)');
+    } else {
+      subjMap[ci]=base;
+    }
+  });
+  const subjects = Object.entries(subjMap).sort((a,b)=>+a[0]-+b[0]).map(([,n])=>n);
+
+  // ── STEP 2b: reusable column-def builder (for multi-section support) ──
+  function buildColsFromHeader(hRow, aRow) {
+    const c={}; let sc=-1, nc=-1;
+    const maxC=Math.max((hRow||[]).length,(aRow||[]).length);
+    for (let ci=0; ci<maxC; ci++) {
+      const cell  = norm((hRow||[])[ci]||'');
+      const above = norm((aRow||[])[ci]||'');
+      const combo = (above+cell).replace(/\s+/g,'');
+      if (matchAny(cell,COL_SEAT)||matchAny(above,COL_SEAT)) {sc=ci;continue;}
+      if (matchAny(cell,COL_NAME)||matchAny(above,COL_NAME)) {nc=ci;continue;}
+      if (matchAny(combo,COL_TOTAL))  {c[ci]={name:'總分',        type:'total'};continue;}
+      if (matchAny(combo,COL_AVG))    {c[ci]={name:'平均分數',    type:'avg'};  continue;}
+      if (matchAny(combo,COL_FAIL))   {c[ci]={name:'不及格數',    type:'fail'}; continue;}
+      if (matchAny(combo,COL_CRANK))  {c[ci]={name:'班級名次',    type:'crank'};continue;}
+      if (matchAny(combo,COL_CDIFF))  {c[ci]={name:'班級進退',    type:'cdiff'};continue;}
+      if (matchAny(combo,COL_GRANK))  {c[ci]={name:'類組名次',    type:'grank'};continue;}
+      if (matchAny(combo,COL_GDIFF))  {c[ci]={name:'類組進退',    type:'gdiff'};continue;}
+      if (matchAny(combo,COL_GPCT))   {c[ci]={name:'類組百分名次',type:'gpct'}; continue;}
+      const nm=(combo||cell||above).replace(/\d+\/\d+/g,'').trim();
+      if (nm && !SKIP_KW.some(k=>norm(k).length>1&&norm(nm).includes(norm(k))) && isSubj(cell||above||combo)) {
+        c[ci]={name:nm, type:'subject'};
+      }
+    }
+    if (sc<0) sc=seatCol; if (nc<0) nc=nameCol;
+    // subject dedup within this section
+    const ent=Object.entries(c).filter(([,d])=>d.type==='subject').sort((a,b)=>+a[0]-+b[0]);
+    const cnt={},seq={},sm={};
+    ent.forEach(([,d])=>{cnt[d.name]=(cnt[d.name]||0)+1;});
+    ent.forEach(([ci,d])=>{
+      const base=d.name;
+      if (cnt[base]>1){seq[base]=(seq[base]||0)+1;sm[ci]=base+(seq[base]===1?'(一)':seq[base]===2?'(二)':'(三)');}
+      else sm[ci]=base;
+    });
+    const subs=Object.entries(sm).sort((a,b)=>+a[0]-+b[0]).map(([,n])=>n);
+    return {cols:c, subjMap:sm, seatCol:sc, nameCol:nc, subjects:subs};
+  }
+
+  // ── STEP 3: parse student rows – multi-section merge ─────────────────
+  // When the same seat number appears in multiple header sections (because
+  // there are too many subjects to fit on one Excel "page"), merge all rows
+  // for that seat into a single student record.
+  const studentMap = new Map();          // seat → merged student data
+  const allSubjNames = [...subjects];    // cumulative subject list
+  let curCols     = cols,    curSubjMap  = subjMap;
+  let curSeatCol  = seatCol, curNameCol  = nameCol;
+
+  for (let ri=hdrIdx+1; ri<rows.length; ri++) {
+    const row=rows[ri];
+    if (!row||row.every(c=>!c)) continue;
+
+    // ── Detect a new section header ──────────────────────────────────
+    const hasSeatKw = row.some(c=>COL_SEAT.some(k=>norm(k)===norm(c)));
+    const hasSubjKw = row.some(c=>SUBJ_KW.some(k=>norm(c).includes(norm(k))));
+    if (hasSeatKw && hasSubjKw) {
+      // Use above row only if it looks like a credits row (not a data row)
+      const rowAbove = ri>0?(rows[ri-1]||[]):[];
+      const aboveIsData = rowAbove.some(c=>{
+        const n=String(c).trim().replace('#','');
+        return /^\d+(\.\d+)?$/.test(n) && +n<=200;
+      });
+      const sec = buildColsFromHeader(row, aboveIsData?[]:rowAbove);
+      curCols=sec.cols; curSubjMap=sec.subjMap;
+      curSeatCol=sec.seatCol; curNameCol=sec.nameCol;
+      sec.subjects.forEach(s=>{if(!allSubjNames.includes(s))allSubjNames.push(s);});
+      continue;
+    }
+
+    // ── Parse student row ─────────────────────────────────────────────
+    if (!row[curSeatCol]) continue;
+    const sRaw=String(row[curSeatCol]).trim();
+    if (!SEAT_RE.test(sRaw)) continue;
+    const seat=parseInt(sRaw);
+
+    const scores={};
+    let total=null,avg=null,failCount=null,classRank=null,classDiff=null,
+        groupRank=null,groupDiff=null,groupPct=null;
+
+    Object.entries(curSubjMap).forEach(([ci,subj])=>{
+      if (+ci>=row.length) return;
+      const raw=String(row[+ci]||'').trim();
+      if (!raw) return;
+      const isFail=raw.startsWith('#');
+      const val=parseFloat(raw.replace('#',''));
+      if (!isNaN(val)&&val>=0&&val<=100) scores[subj]={value:val,fail:isFail||val<60};
+    });
+
+    Object.entries(curCols).forEach(([ci,d])=>{
+      const raw=String(row[+ci]||'').trim();
+      if (!raw||raw==='-') return;
+      const val=parseFloat(raw.replace(/,/g,''));
+      switch(d.type){
+        case 'total':  if(!isNaN(val)) total=val;     break;
+        case 'avg':    if(!isNaN(val)) avg=val;        break;
+        case 'fail':   if(!isNaN(val)) failCount=val;  break;
+        case 'crank':  if(!isNaN(val)) classRank=val;  break;
+        case 'cdiff':  if(!isNaN(val)) classDiff=val;  break;
+        case 'grank':  if(!isNaN(val)) groupRank=val;  break;
+        case 'gdiff':  if(!isNaN(val)) groupDiff=val;  break;
+        case 'gpct':   if(!isNaN(val)) groupPct=val;   break;
+      }
+    });
+
+    const hasData=Object.keys(scores).length>0||total!==null||avg!==null||failCount!==null;
+    if (!hasData) continue;
+
+    const stuName = curNameCol>=0 && row[curNameCol] ? String(row[curNameCol]).trim() : '';
+    if (!studentMap.has(seat)) {
+      studentMap.set(seat,{seat,name:stuName,scores,total,avg,failCount,classRank,classDiff,groupRank,groupDiff,groupPct});
+    } else {
+      // Merge into existing student record (second page of same student)
+      const ex=studentMap.get(seat);
+      if(!ex.name && stuName) ex.name=stuName;
+      Object.entries(scores).forEach(([s,v])=>{ if(!ex.scores[s]) ex.scores[s]=v; });
+      if (total!==null)     ex.total=total;
+      if (avg!==null)       ex.avg=avg;
+      if (failCount!==null) ex.failCount=failCount;
+      if (classRank!==null) ex.classRank=classRank;
+      if (classDiff!==null) ex.classDiff=classDiff;
+      if (groupRank!==null) ex.groupRank=groupRank;
+      if (groupDiff!==null) ex.groupDiff=groupDiff;
+      if (groupPct!==null)  ex.groupPct=groupPct;
+    }
+  }
+
+  const students=Array.from(studentMap.values()).sort((a,b)=>a.seat-b.seat);
+  const stats = calcStats(students, allSubjNames);
+
+  return {
+    name: examName,
+    examId:`ex_${Date.now()}_${Math.random().toString(36).substr(2,5)}`,
+    subjects: allSubjNames, students, stats,
+    parsedAt: new Date().toLocaleString('zh-TW'),
+  };
+}
+
+// =====================================================================
+// HELPERS
+// =====================================================================
+const SEAT_RE = /^\s*(0?[1-9]|[1-4]\d|5[0-5])\s*$/;
+function norm(s){ return String(s||'').replace(/[\s\u3000\u00a0]/g,'').replace(/　/g,''); }
+function matchAny(cell, synonyms){ const t=norm(cell); return synonyms.some(s=>t.includes(norm(s))||norm(s).includes(t)&&t.length>1); }
+function isSubj(t){ const n=norm(t); return SUBJ_KW.some(k=>n.includes(norm(k)))&&!SKIP_KW.some(k=>n===norm(k)); }
+function p2(n){ return String(n).padStart(2,'0'); }
+function fmt1(v){ return typeof v==='number'?v.toFixed(1):v; }
+function abbr(s){ return s.length>7?s.substr(0,7)+'…':s; }
+
+// =====================================================================
+// STATISTICS
+// =====================================================================
+function calcStats(students, subjects) {
+  const st={};
+  subjects.forEach(subj=>{
+    const vals=students.filter(s=>s.scores[subj]!==undefined)
+      .map(s=>s.scores[subj].value).sort((a,b)=>b-a);
+    if(!vals.length){st[subj]=null;return;}
+    st[subj]=computeStatObj(vals);
+  });
+
+  // Per-student average
+  const avgVals=students.filter(s=>s.avg!==null&&s.avg>0).map(s=>s.avg).sort((a,b)=>b-a);
+  if(avgVals.length) st['_avg']=computeStatObj(avgVals);
+
+  // Total scores
+  const totVals=students.filter(s=>s.total!==null&&s.total>0).map(s=>s.total).sort((a,b)=>b-a);
+  if(totVals.length) st['_total']=computeStatObj(totVals);
+
+  // Class rank distribution
+  const rankVals=students.filter(s=>s.classRank!==null).map(s=>s.classRank);
+  if(rankVals.length) st['_crank']={values:rankVals};
+
+  return st;
+}
+
+function computeStatObj(vals){
+  const n=vals.length;
+  const sum=vals.reduce((a,b)=>a+b,0);
+  const mean=sum/n;
+  const sd=Math.sqrt(vals.reduce((a,v)=>a+(v-mean)**2,0)/n);
+  const median=n%2===0?(vals[n/2-1]+vals[n/2])/2:vals[Math.floor(n/2)];
+  const q1=vals[Math.floor(n*.75)];
+  const q3=vals[Math.floor(n*.25)];
+  const avg2=arr=>arr.reduce((a,b)=>a+b,0)/arr.length;
+  const topN  =Math.max(1,Math.round(n*.12));
+  const frN   =Math.max(1,Math.round(n*.25));
+  const midN  =Math.max(1,Math.round(n*.50));
+  const bkN   =Math.max(1,Math.round(n*.25));
+  const btN   =Math.max(1,Math.round(n*.12));
+  const dist=new Array(10).fill(0);
+  vals.forEach(v=>dist[Math.min(9,Math.floor(v/10))]++);
+  const passCount=vals.filter(v=>v>=60).length;
+  return {
+    n,mean,sd,median,q1,q3,
+    min:vals[n-1],max:vals[0],
+    top: avg2(vals.slice(0,topN)),
+    front:avg2(vals.slice(0,frN)),
+    mid: avg2(vals.slice(0,midN)),
+    back: avg2(vals.slice(n-bkN)),
+    bottom:avg2(vals.slice(n-btN)),
+    passRate:passCount/n*100, passCount,
+    dist, values:vals,
+  };
+}
+
+// =====================================================================
+// VALIDATION
+// =====================================================================
+function validate(exam) {
+  const err=[], warn=[];
+
+  if(!exam||exam.students.length===0){
+    err.push('未偵測到任何學生資料，請確認 Excel 格式（需有座號欄與成績欄）');
+    return{ok:false,err,warn,sum:'解析失敗'};
+  }
+  if(!exam.subjects||exam.subjects.length===0)
+    err.push('未能識別任何科目欄位，請確認表頭是否包含科目名稱');
+
+  // Duplicate seats
+  const dup=[...exam.students.map(s=>s.seat)].filter((v,i,a)=>a.indexOf(v)!==i);
+  if(dup.length) err.push(`重複座號：${[...new Set(dup)].join('、')}`);
+
+  // Score range
+  let outR=0;
+  exam.students.forEach(s=>Object.values(s.scores).forEach(sc=>{if(sc.value<0||sc.value>100)outR++;}));
+  if(outR) warn.push(`${outR} 筆分數超出 0–100 範圍`);
+
+  // Completeness
+  const sN=exam.subjects.length;
+  if(sN>0){
+    const inc=exam.students.filter(s=>Object.keys(s.scores).length<Math.floor(sN*.4)).length;
+    if(inc>exam.students.length*.4)
+      warn.push(`${inc} 位學生各科成績欄位嚴重不足，可能有欄位對應問題`);
+  }
+
+  // Check at least one aux field was captured
+  const hasAux=exam.students.some(s=>s.classRank!==null||s.total!==null||s.avg!==null);
+  if(!hasAux) warn.push('未偵測到總分、平均或名次等輔助欄位，若 Excel 包含這些欄位請確認欄位名稱');
+
+  // Avg consistency
+  let mis=0;
+  exam.students.forEach(s=>{
+    if(s.avg===null) return;
+    const vv=Object.values(s.scores).map(x=>x.value);
+    if(!vv.length) return;
+    if(Math.abs(s.avg-vv.reduce((a,b)=>a+b,0)/vv.length)>30) mis++;
+  });
+  if(mis>3) warn.push(`${mis} 位學生的平均分數與各科均值差距超過30分（可能因加權學分）`);
+
+  if(exam.students.length<5)  warn.push(`學生人數僅 ${exam.students.length} 人，請確認是否完整`);
+  if(exam.students.length>65) warn.push(`學生人數達 ${exam.students.length} 人，超過一般班級上限`);
+
+  const ok=err.length===0;
+  return{
+    ok, err, warn,
+    sum:`解析完成：${exam.students.length} 位學生 / ${exam.subjects.length} 科 ｜ ${err.length} 錯誤 / ${warn.length} 警告`
+  };
+}
+
+// =====================================================================
+// FILE HANDLING
+// =====================================================================
+const dz=document.getElementById('dropZone');
+const fi=document.getElementById('fi');
+
+dz.addEventListener('click',()=>fi.click());
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');handleFiles(e.dataTransfer.files);});
+fi.addEventListener('change',()=>{handleFiles(fi.files);fi.value='';});
+
+async function handleFiles(list) {
+  if(!list||!list.length) return;
+  for(const f of list) await handleOne(f);
+}
+
+async function handleOne(file) {
+  const ext=file.name.split('.').pop().toLowerCase();
+  if(ext!=='xlsx'&&ext!=='xls'){toast('⚠️ 僅支援 .xlsx / .xls 格式');return;}
+  let exam=null;
+  try{ exam=await parseXLSX(file); }
+  catch(e){ console.error(e); toast(`❌ 解析失敗：${file.name}`); setLd(false); return; }
+  setLd(false);
+  if(!exam){ toast(`⚠️ 無法從 ${file.name} 中解析成績資料，請確認格式`); return; }
+  showVldModal(exam, validate(exam));
+}
+
+// =====================================================================
+// VALIDATION MODAL
+// =====================================================================
+let _pending=null;
+function showVldModal(exam, vld) {
+  _pending=exam;
+  document.getElementById('vt').textContent=`📋 解析驗證結果：${exam.name}`;
+  const cls=vld.ok&&vld.warn.length===0?'vp-ok':vld.err.length>0?'vp-e':'vp-w';
+  let h=`<div class="vp ${cls}"><div class="vp-ttl">${vld.sum}</div></div>`;
+  if(vld.err.length){
+    h+=`<div class="vp vp-e"><div class="vp-ttl">❌ 錯誤（須修正）</div><ul class="vp-ul">`;
+    vld.err.forEach(e=>{h+=`<li>• ${e}</li>`;});
+    h+=`</ul></div>`;
+  }
+  if(vld.warn.length){
+    h+=`<div class="vp vp-w"><div class="vp-ttl">⚠️ 警告（請確認）</div><ul class="vp-ul">`;
+    vld.warn.forEach(w=>{h+=`<li>• ${w}</li>`;});
+    h+=`</ul></div>`;
+  }
+  if(vld.ok&&vld.warn.length===0)
+    h+=`<div class="vp vp-ok"><div class="vp-ttl">✅ 驗證通過</div></div>`;
+
+  // Field detection summary
+  const e=exam;
+  const stu0=e.students[0]||{};
+  const fields=[
+    {l:'座號',v:'✅'},
+    {l:'科目數',v:e.subjects.length+'科'},
+    {l:'學生數',v:e.students.length+'人'},
+    {l:'總分',v:e.students.some(s=>s.total!==null)?'✅':'⚠️ 未偵測'},
+    {l:'平均分數',v:e.students.some(s=>s.avg!==null)?'✅':'⚠️ 未偵測'},
+    {l:'不及格數',v:e.students.some(s=>s.failCount!==null)?'✅':'⚠️ 未偵測'},
+    {l:'班級名次',v:e.students.some(s=>s.classRank!==null)?'✅':'⚠️ 未偵測'},
+    {l:'班級進退',v:e.students.some(s=>s.classDiff!==null)?'✅':'⚠️ 未偵測'},
+    {l:'類組名次',v:e.students.some(s=>s.groupRank!==null)?'✅':'⚠️ 未偵測'},
+    {l:'類組進退',v:e.students.some(s=>s.groupDiff!==null)?'✅':'⚠️ 未偵測'},
+    {l:'類組百分名次',v:e.students.some(s=>s.groupPct!==null)?'✅':'⚠️ 未偵測'},
+  ];
+  h+=`<div style="margin-top:12px;"><div style="font-weight:700;font-size:.85rem;margin-bottom:6px;">欄位偵測結果</div>`;
+  h+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;">`;
+  fields.forEach(f=>{
+    const ok=f.v.startsWith('✅');
+    h+=`<div style="background:${ok?'#f0fdf4':'#fffbeb'};border-radius:6px;padding:6px 10px;font-size:.8rem;">
+      <strong>${f.l}</strong>：${f.v}</div>`;
+  });
+  h+=`</div></div>`;
+  h+=`<div style="margin-top:10px;font-size:.8rem;color:var(--mu);">科目：${e.subjects.join('、')}</div>`;
+  document.getElementById('vb').innerHTML=h;
+  document.getElementById('vOk').disabled=!vld.ok;
+  document.getElementById('ov').classList.add('on');
+}
+
+function acceptV(){
+  document.getElementById('ov').classList.remove('on');
+  if(!_pending) return;
+  S.exams.push(_pending);
+  S.cur=S.exams.length-1;
+  _pending=null;
+  refresh();
+  toast(`✅ ${S.exams[S.cur].name} 載入成功（${S.exams[S.cur].students.length} 位學生）`);
+}
+function rejectV(){
+  document.getElementById('ov').classList.remove('on');
+  _pending=null;
+}
+
+// =====================================================================
+// UI REFRESH
+// =====================================================================
+function refresh(){
+  updSelects();
+  updChips();
+  document.getElementById('main').style.display='block';
+  renderGradeTable();
+}
+function setLd(on,msg=''){
+  const el=document.getElementById('ld');
+  if(on){el.classList.add('on');document.getElementById('ldMsg').textContent=msg;}
+  else el.classList.remove('on');
+}
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('on');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('on'),3200);
+}
+
+function updSelects(){
+  ['s1','s2','s3','s4','s5','s8','se'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    el.innerHTML='';
+    S.exams.forEach((e,i)=>{
+      const o=document.createElement('option');
+      o.value=i; o.textContent=e.name; el.appendChild(o);
+    });
+    el.value=S.cur;
+  });
+  updPrintExamScope();
+  updStuSel();
+}
+function updPrintExamScope(){
+  const el=document.getElementById('prtExamScope'); if(!el) return;
+  const prev=el.value || 'all';
+  el.innerHTML='<option value="all">全部成績</option>';
+  S.exams.forEach((e,i)=>{
+    const o=document.createElement('option');
+    o.value=i; o.textContent=e.name; el.appendChild(o);
+  });
+  el.value = (prev==='all' || S.exams[+prev]) ? prev : 'all';
+}
+function updStuSel(){
+  const e=S.exams[S.cur]; if(!e) return;
+  ['ss','scs'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    el.innerHTML='';
+    e.students.forEach(s=>{
+      const o=document.createElement('option');
+      o.value=s.seat; o.textContent=`座號 ${p2(s.seat)}`; el.appendChild(o);
+    });
+  });
+}
+function updChips(){
+  const c=document.getElementById('chips'); c.innerHTML='';
+  S.exams.forEach((e,i)=>{
+    const chip=document.createElement('span'); chip.className='chip';
+    chip.innerHTML=`📊 ${e.name} (${e.students.length}人) <span class="rm" data-i="${i}">×</span>`;
+    c.appendChild(chip);
+  });
+  c.querySelectorAll('.rm').forEach(b=>b.addEventListener('click',ev=>{
+    const i=parseInt(ev.target.dataset.i);
+    S.exams.splice(i,1);
+    if(!S.exams.length){document.getElementById('main').style.display='none';}
+    else{S.cur=Math.min(S.cur,S.exams.length-1);refresh();}
+    updChips();
+  }));
+}
+function ex(idx){ return S.exams[idx!=null?+idx:S.cur]; }
+
+// =====================================================================
+// RENDER: GRADE TABLE
+// =====================================================================
+function renderGradeTable(idx){
+  const e=ex(idx); if(!e) return;
+
+  // Determine which aux columns exist
+  const hasTot  =e.students.some(s=>s.total!==null);
+  const hasAvg  =e.students.some(s=>s.avg!==null);
+  const hasFail =e.students.some(s=>s.failCount!==null);
+  const hasCR   =e.students.some(s=>s.classRank!==null);
+  const hasCD   =e.students.some(s=>s.classDiff!==null);
+  const hasGR   =e.students.some(s=>s.groupRank!==null);
+  const hasGD   =e.students.some(s=>s.groupDiff!==null);
+  const hasGP   =e.students.some(s=>s.groupPct!==null);
+
+  let h=`<table><thead><tr><th>座號</th>`;
+  e.subjects.forEach(s=>{h+=`<th>${s}</th>`;});
+  if(hasTot)  h+=`<th class="th3">總分</th>`;
+  if(hasAvg)  h+=`<th class="th3">平均分數</th>`;
+  if(hasFail) h+=`<th class="th3">不及格數</th>`;
+  if(hasCR)   h+=`<th class="th4">班級名次</th>`;
+  if(hasCD)   h+=`<th class="th4">班級進退</th>`;
+  if(hasGR)   h+=`<th class="th2">類組名次</th>`;
+  if(hasGD)   h+=`<th class="th2">類組進退</th>`;
+  if(hasGP)   h+=`<th class="th2">類組百分名次</th>`;
+  h+=`</tr></thead><tbody>`;
+
+  e.students.forEach(s=>{
+    h+=`<tr><td class="seat">${p2(s.seat)}</td>`;
+    e.subjects.forEach(subj=>{
+      const sc=s.scores[subj];
+      if(sc) h+=`<td class="${sc.fail?'fail':sc.value>=90?'hi':''}">${sc.value}</td>`;
+      else h+=`<td style="color:#cbd5e1">—</td>`;
+    });
+    if(hasTot)  h+=`<td>${s.total!=null?s.total.toLocaleString():'—'}</td>`;
+    if(hasAvg)  h+=`<td>${s.avg!=null?s.avg.toFixed(1):'—'}</td>`;
+    if(hasFail) h+=`<td class="${s.failCount>0?'fail':''}">${s.failCount!=null?s.failCount:'—'}</td>`;
+    if(hasCR)   h+=`<td>${s.classRank!=null?s.classRank:'—'}</td>`;
+    if(hasCD)   h+=diffTd(s.classDiff);
+    if(hasGR)   h+=`<td>${s.groupRank!=null?s.groupRank:'—'}</td>`;
+    if(hasGD)   h+=diffTd(s.groupDiff);
+    if(hasGP)   h+=`<td>${s.groupPct!=null?s.groupPct:'—'}</td>`;
+    h+=`</tr>`;
+  });
+
+  // Stats footer rows
+  const fmtRow=(label,fn)=>{
+    let r=`<tr class="stat-r"><td>${label}</td>`;
+    e.subjects.forEach(s=>{const st=e.stats[s];r+=`<td>${st?fn(st):'—'}</td>`;});
+    if(hasTot){const st=e.stats['_total'];r+=`<td>${st?fn(st):'—'}</td>`;}
+    if(hasAvg){const st=e.stats['_avg'];r+=`<td>${st?fn(st):'—'}</td>`;}
+    const auxN=(hasFail?1:0)+(hasCR?1:0)+(hasCD?1:0)+(hasGR?1:0)+(hasGD?1:0)+(hasGP?1:0);
+    r+=`<td colspan="${auxN}"></td></tr>`;
+    return r;
+  };
+  h+=fmtRow('班均',st=>st.mean.toFixed(1));
+  h+=fmtRow('標準差',st=>st.sd.toFixed(1));
+  h+=fmtRow('最高',st=>st.max.toFixed?st.max.toFixed(1):st.max);
+  h+=fmtRow('最低',st=>st.min.toFixed?st.min.toFixed(1):st.min);
+  h+=`</tbody></table>`;
+  document.getElementById('gw').innerHTML=h;
+}
+
+function diffTd(v){
+  if(v===null) return '<td>—</td>';
+  const cls=v>0?'up':v<0?'dn':'';
+  const arrow=v>0?'▲':v<0?'▽':'─';
+  return `<td class="${cls}">${arrow}${v!==0?Math.abs(v):''}</td>`;
+}
+
+// =====================================================================
+// RENDER: FIVE MARKS
+// =====================================================================
+function renderFiveMarks(idx){
+  const e=ex(idx); if(!e) return;
+  const ROWS=[
+    ['🔝 頂標','top'],['⬆️ 前標','front'],['➡️ 均標','mid'],['⬇️ 後標','back'],['🔻 底標','bottom'],
+    ['📊 平均','mean'],['📐 標準差','sd'],['🏆 最高','max'],['📉 最低','min'],['📏 中位數','median'],
+    ['✅ 及格率%','passRate'],['✅ 及格人數','passCount'],['👥 人數','n'],
+  ];
+  let h=`<div class="tw"><table><thead><tr><th class="th2">統計</th>`;
+  e.subjects.forEach(s=>{h+=`<th class="th2">${s}</th>`;});
+  h+=`</tr></thead><tbody>`;
+  ROWS.forEach(([lbl,k])=>{
+    h+=`<tr><td style="text-align:left;font-weight:600;background:#f8fafc;">${lbl}</td>`;
+    e.subjects.forEach(s=>{
+      const st=e.stats[s];
+      if(st&&st[k]!==undefined){
+        const v=st[k];
+        let style='';
+        if(k==='passRate'&&v<60) style=' style="color:var(--d)"';
+        if(k==='mean'&&v<60)     style=' style="color:var(--d);font-weight:700"';
+        h+=`<td${style}>${typeof v==='number'?v.toFixed(1):v}</td>`;
+      } else h+='<td>—</td>';
+    });
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+
+  // Visual metric cards per subject
+  h+='<div style="margin-top:20px;">';
+  e.subjects.forEach(subj=>{
+    const st=e.stats[subj]; if(!st) return;
+    h+=`<div style="margin-bottom:18px;"><h3 style="font-size:.9rem;margin-bottom:7px;color:var(--p);">${subj}（${st.n}人）</h3><div class="mg">`;
+    [{l:'頂標',v:st.top,c:'#7c3aed'},{l:'前標',v:st.front,c:'#1a56db'},
+     {l:'均標',v:st.mid,c:'#16a34a'},{l:'後標',v:st.back,c:'#f59e0b'},
+     {l:'底標',v:st.bottom,c:'#dc2626'},{l:'平均',v:st.mean,c:'#0891b2'},
+     {l:'及格率',v:st.passRate,c:st.passRate>=60?'#16a34a':'#dc2626'},
+    ].forEach(m=>{
+      h+=`<div class="mc"><div class="l">${m.l}</div><div class="v" style="color:${m.c}">${m.v.toFixed(1)}${m.l==='及格率'?'%':''}</div></div>`;
+    });
+    h+='</div></div>';
+  });
+  h+='</div>';
+  document.getElementById('fmBody').innerHTML=h;
+}
+
+// =====================================================================
+// RENDER: CLASS ANALYSIS
+// =====================================================================
+const CC=['#1a56db','#dc2626','#16a34a','#f59e0b','#7c3aed','#ec4899','#06b6d4','#84cc16','#f97316','#6366f1'];
+
+function renderClassAnalysis(idx){
+  const e=ex(idx); if(!e) return;
+  const ov=e.stats['_avg'];
+
+  let mh='<div class="mg" style="margin-bottom:16px;">';
+  mh+=mc('學生人數',e.students.length,'#1a56db');
+  mh+=mc('科目數',e.subjects.length+'科','#7c3aed');
+  if(ov){
+    mh+=mc('平均均分',ov.mean.toFixed(1),'#0891b2');
+    mh+=mc('最高均分',ov.max.toFixed(1),'#16a34a');
+    mh+=mc('最低均分',ov.min.toFixed(1),'#dc2626');
+    mh+=mc('標準差',ov.sd.toFixed(1),'#f59e0b');
+  }
+  mh+='</div>';
+  document.getElementById('cs').innerHTML=mh;
+
+  const cc=document.getElementById('cc');
+  cc.innerHTML='';
+  // Destroy old charts
+  killCharts();
+
+  // 1. Mean bar
+  addCB(cc,'c1','各科平均分數');
+  new Chart(document.getElementById('c1'),{type:'bar',
+    data:{labels:e.subjects.map(abbr),datasets:[{label:'平均',
+      data:e.subjects.map(s=>e.stats[s]?.mean||0),
+      backgroundColor:e.subjects.map(s=>(e.stats[s]?.mean||0)>=60?'rgba(26,86,219,.75)':'rgba(220,38,38,.75)'),
+      borderRadius:6}]},
+    options:cOpts({y:{min:0,max:100,title:{display:true,text:'分數'}}})
+  });
+
+  // 2. Pass rate
+  addCB(cc,'c2','各科及格率 (%)');
+  new Chart(document.getElementById('c2'),{type:'bar',
+    data:{labels:e.subjects.map(abbr),datasets:[{label:'及格率',
+      data:e.subjects.map(s=>e.stats[s]?.passRate||0),
+      backgroundColor:e.subjects.map(s=>(e.stats[s]?.passRate||0)>=60?'rgba(22,163,74,.75)':'rgba(245,158,11,.75)'),
+      borderRadius:6}]},
+    options:cOpts({y:{min:0,max:100,title:{display:true,text:'%'}}})
+  });
+
+  // 3. Distribution histogram
+  addCB(cc,'c3','全班成績分布（各科人數）');
+  const dL=['0–9','10–19','20–29','30–39','40–49','50–59','60–69','70–79','80–89','90–100'];
+  new Chart(document.getElementById('c3'),{type:'bar',
+    data:{labels:dL,datasets:e.subjects.slice(0,10).map((s,i)=>({
+      label:abbr(s),data:e.stats[s]?.dist||new Array(10).fill(0),
+      backgroundColor:CC[i]+'99',borderColor:CC[i],borderWidth:1}))},
+    options:cOpts({y:{beginAtZero:true,title:{display:true,text:'人數'}}})
+  });
+
+  // 4. Box chart
+  addCB(cc,'c4','各科五數摘要（箱型圖）');
+  const bd=e.subjects.map(s=>{
+    const st=e.stats[s]; if(!st)return{min:0,q1:0,med:0,q3:0,max:0};
+    return{min:st.min,q1:st.q1,med:st.median,q3:st.q3,max:st.max};
+  });
+  new Chart(document.getElementById('c4'),{type:'bar',
+    data:{labels:e.subjects.map(abbr),datasets:[
+      {label:'最低–Q1',data:bd.map(d=>[d.min,d.q1]),backgroundColor:'rgba(220,38,38,.35)',borderColor:'rgba(220,38,38,.7)',borderWidth:1,borderSkipped:false},
+      {label:'Q1–中位數',data:bd.map(d=>[d.q1,d.med]),backgroundColor:'rgba(245,158,11,.45)',borderColor:'rgba(245,158,11,.8)',borderWidth:1,borderSkipped:false},
+      {label:'中位數–Q3',data:bd.map(d=>[d.med,d.q3]),backgroundColor:'rgba(26,86,219,.45)',borderColor:'rgba(26,86,219,.8)',borderWidth:1,borderSkipped:false},
+      {label:'Q3–最高',data:bd.map(d=>[d.q3,d.max]),backgroundColor:'rgba(22,163,74,.35)',borderColor:'rgba(22,163,74,.7)',borderWidth:1,borderSkipped:false},
+    ]},
+    options:{responsive:true,indexAxis:'y',scales:{
+      x:{min:0,max:100,stacked:true,title:{display:true,text:'分數'}},y:{stacked:true}
+    }}
+  });
+
+  // 5. Radar
+  addCB(cc,'c5','全班各科平均雷達圖');
+  new Chart(document.getElementById('c5'),{type:'radar',
+    data:{labels:e.subjects.map(abbr),datasets:[{label:'全班平均',
+      data:e.subjects.map(s=>e.stats[s]?.mean||0),
+      fill:true,backgroundColor:'rgba(26,86,219,.18)',borderColor:'rgba(26,86,219,.85)',pointBackgroundColor:'#1a56db'}]},
+    options:{responsive:true,scales:{r:{min:0,max:100}}}
+  });
+
+  // 6. Five benchmarks line
+  addCB(cc,'c6','各科五標折線圖');
+  new Chart(document.getElementById('c6'),{type:'line',
+    data:{labels:e.subjects.map(abbr),datasets:[
+      {label:'頂標',data:e.subjects.map(s=>e.stats[s]?.top||null),borderColor:'#7c3aed',tension:.3,fill:false},
+      {label:'前標',data:e.subjects.map(s=>e.stats[s]?.front||null),borderColor:'#1a56db',tension:.3,fill:false},
+      {label:'均標',data:e.subjects.map(s=>e.stats[s]?.mid||null),borderColor:'#16a34a',tension:.3,fill:false},
+      {label:'後標',data:e.subjects.map(s=>e.stats[s]?.back||null),borderColor:'#f59e0b',tension:.3,fill:false},
+      {label:'底標',data:e.subjects.map(s=>e.stats[s]?.bottom||null),borderColor:'#dc2626',tension:.3,fill:false},
+    ]},
+    options:{responsive:true,scales:{y:{min:0,max:100}},plugins:{legend:{position:'bottom'}}}
+  });
+
+  // 7. Avg distribution (scatter / histogram)
+  if(e.stats['_avg']){
+    addCB(cc,'c7','全班平均分數分布');
+    const avgDist=new Array(10).fill(0);
+    e.stats['_avg'].values.forEach(v=>avgDist[Math.min(9,Math.floor(v/10))]++);
+    new Chart(document.getElementById('c7'),{type:'bar',
+      data:{labels:dL,datasets:[{label:'人數',data:avgDist,
+        backgroundColor:avgDist.map((_,i)=>i>=6?'rgba(22,163,74,.75)':'rgba(220,38,38,.75)'),
+        borderRadius:6}]},
+      options:cOpts({y:{beginAtZero:true,title:{display:true,text:'人數'}}})
+    });
+  }
+}
+
+function addCB(p,id,title){
+  const d=document.createElement('div'); d.className='cb';
+  d.innerHTML=`<h3>${title}</h3><canvas id="${id}"></canvas>`;
+  p.appendChild(d);
+}
+function cOpts(scales={}){return{responsive:true,plugins:{legend:{display:false}},scales};}
+function mc(l,v,c){return `<div class="mc"><div class="l">${l}</div><div class="v" style="color:${c}">${v}</div></div>`;}
+
+// =====================================================================
+// RENDER: STUDENT ANALYSIS
+// =====================================================================
+function renderStudentAnalysis(examIdx, seat){
+  const e=ex(examIdx);
+  const stu=e?.students.find(s=>s.seat===+seat);
+  if(!e||!stu) return;
+
+  let h=`<div class="sh"><h3>座號 ${p2(stu.seat)} 成績分析</h3><div class="sm">`;
+  if(stu.avg!=null)        h+=`<div>平均分數：<span>${stu.avg.toFixed(1)}</span></div>`;
+  if(stu.total!=null)      h+=`<div>總分：<span>${stu.total.toLocaleString()}</span></div>`;
+  if(stu.failCount!=null)  h+=`<div>不及格數：<span style="color:${stu.failCount>0?'var(--d)':'var(--s)'};">${stu.failCount}</span></div>`;
+  if(stu.classRank!=null)  h+=`<div>班級名次：<span>#${stu.classRank}</span></div>`;
+  if(stu.classDiff!=null){
+    const cls=stu.classDiff>0?'up':stu.classDiff<0?'dn':'';
+    h+=`<div>班級進退：<span class="${cls}">${stu.classDiff>0?'▲':'▽'}${Math.abs(stu.classDiff)}</span></div>`;
+  }
+  if(stu.groupRank!=null)  h+=`<div>類組名次：<span>#${stu.groupRank}</span></div>`;
+  if(stu.groupDiff!=null){
+    const cls=stu.groupDiff>0?'up':stu.groupDiff<0?'dn':'';
+    h+=`<div>類組進退：<span class="${cls}">${stu.groupDiff>0?'▲':'▽'}${Math.abs(stu.groupDiff)}</span></div>`;
+  }
+  if(stu.groupPct!=null)   h+=`<div>類組百分名次：<span>${stu.groupPct}</span></div>`;
+  h+=`</div></div>`;
+
+  // Detailed table
+  h+=`<div class="tw"><table><thead><tr>
+    <th class="th2">科目</th><th class="th2">成績</th>
+    <th class="th2">班平均</th><th class="th2">差距</th>
+    <th class="th2">PR(估)</th><th class="th2">頂標</th>
+    <th class="th2">均標</th><th class="th2">底標</th>
+    <th class="th2">評等</th></tr></thead><tbody>`;
+
+  e.subjects.forEach(subj=>{
+    const sc=stu.scores[subj], st=e.stats[subj];
+    if(!sc||!st){h+=`<tr><td style="text-align:left">${subj}</td><td colspan="8" style="color:#cbd5e1">—</td></tr>`;return;}
+    const diff=sc.value-st.mean;
+    const rank=st.values.filter(v=>v>sc.value).length+1;
+    const pr=Math.max(0,Math.round((1-rank/st.n)*100));
+    const [g,gc]=sc.value>=90?['A+','#16a34a']:sc.value>=80?['A','#1a56db']:sc.value>=70?['B','#7c3aed']:sc.value>=60?['C','#f59e0b']:['D','#dc2626'];
+    h+=`<tr><td style="text-align:left">${subj}</td>
+      <td class="${sc.fail?'fail':sc.value>=90?'hi':''}">${sc.value}</td>
+      <td>${st.mean.toFixed(1)}</td>
+      <td class="${diff>=0?'up':'dn'}">${diff>=0?'+':''}${diff.toFixed(1)}</td>
+      <td>${pr}</td><td>${st.top.toFixed(1)}</td><td>${st.mid.toFixed(1)}</td><td>${st.bottom.toFixed(1)}</td>
+      <td style="font-weight:700;color:${gc}">${g}</td></tr>`;
+  });
+  h+=`</tbody></table></div>`;
+
+  // Charts
+  h+=`<div class="cg" style="margin-top:16px;">
+    <div class="cb"><h3>個人成績 vs 班級平均</h3><canvas id="sb1"></canvas></div>
+    <div class="cb"><h3>個人能力雷達圖</h3><canvas id="sb2"></canvas></div>
+  </div>`;
+  document.getElementById('sb').innerHTML=h;
+
+  const labels=e.subjects.map(abbr);
+  const my=e.subjects.map(s=>stu.scores[s]?.value||0);
+  const cls=e.subjects.map(s=>e.stats[s]?.mean||0);
+
+  new Chart(document.getElementById('sb1'),{type:'bar',
+    data:{labels,datasets:[
+      {label:'個人',data:my,backgroundColor:'rgba(26,86,219,.75)',borderRadius:6},
+      {label:'班均',data:cls,backgroundColor:'rgba(148,163,184,.45)',borderRadius:6}
+    ]},options:{responsive:true,scales:{y:{min:0,max:100}}}
+  });
+  new Chart(document.getElementById('sb2'),{type:'radar',
+    data:{labels,datasets:[
+      {label:'個人',data:my,fill:true,backgroundColor:'rgba(124,58,237,.18)',borderColor:'rgba(124,58,237,.85)',pointBackgroundColor:'#7c3aed'},
+      {label:'班均',data:cls,fill:true,backgroundColor:'rgba(148,163,184,.12)',borderColor:'rgba(148,163,184,.6)',pointBackgroundColor:'#94a3b8'}
+    ]},options:{responsive:true,scales:{r:{min:0,max:100}},plugins:{legend:{position:'bottom'}}}
+  });
+}
+
+// =====================================================================
+// RENDER: RANK ANALYSIS
+// =====================================================================
+function renderRankAnalysis(idx){
+  const e=ex(idx); if(!e) return;
+  const hasCR=e.students.some(s=>s.classRank!=null);
+  const hasGR=e.students.some(s=>s.groupRank!=null);
+  const hasGP=e.students.some(s=>s.groupPct!=null);
+  const hasCD=e.students.some(s=>s.classDiff!=null);
+  const hasGD=e.students.some(s=>s.groupDiff!=null);
+
+  if(!hasCR&&!hasGR){
+    document.getElementById('rb').innerHTML='<p style="text-align:center;color:var(--mu);padding:32px;">此份成績未包含名次資料</p>';
+    document.getElementById('rc').innerHTML='';
+    return;
+  }
+
+  // Summary table
+  let h=`<div class="tw"><table><thead><tr><th>座號</th>`;
+  if(hasCR) h+=`<th class="th4">班級名次</th>`;
+  if(hasCD) h+=`<th class="th4">班級進退</th>`;
+  if(hasGR) h+=`<th class="th2">類組名次</th>`;
+  if(hasGD) h+=`<th class="th2">類組進退</th>`;
+  if(hasGP) h+=`<th class="th2">類組百分名次</th>`;
+  if(e.students.some(s=>s.avg!=null)) h+=`<th class="th3">平均分數</th>`;
+  h+=`</tr></thead><tbody>`;
+
+  const sorted=[...e.students].sort((a,b)=>{
+    if(hasCR&&a.classRank!=null&&b.classRank!=null) return a.classRank-b.classRank;
+    return a.seat-b.seat;
+  });
+  sorted.forEach(s=>{
+    h+=`<tr><td class="seat">${p2(s.seat)}</td>`;
+    if(hasCR) h+=`<td>${s.classRank??'—'}</td>`;
+    if(hasCD) h+=diffTd(s.classDiff);
+    if(hasGR) h+=`<td>${s.groupRank??'—'}</td>`;
+    if(hasGD) h+=diffTd(s.groupDiff);
+    if(hasGP) h+=`<td>${s.groupPct??'—'}</td>`;
+    if(e.students.some(s=>s.avg!=null)) h+=`<td>${s.avg!=null?s.avg.toFixed(1):'—'}</td>`;
+    h+=`</tr>`;
+  });
+  h+=`</tbody></table></div>`;
+  document.getElementById('rb').innerHTML=h;
+
+  // Charts
+  const rc=document.getElementById('rc'); rc.innerHTML='';
+  killCharts();
+
+  if(hasCR){
+    // Class rank distribution
+    addCB(rc,'r1','班級名次分布（直條圖）');
+    new Chart(document.getElementById('r1'),{type:'bar',
+      data:{labels:e.students.map(s=>p2(s.seat)),
+        datasets:[{label:'班級名次',data:e.students.map(s=>s.classRank),
+          backgroundColor:'rgba(22,163,74,.7)',borderRadius:4}]},
+      options:{responsive:true,scales:{y:{beginAtZero:true,title:{display:true,text:'名次（數值越小越好）'},reverse:false}}}
+    });
+
+    // Class rank vs average scatter
+    if(e.students.some(s=>s.avg!=null)){
+      addCB(rc,'r2','平均分數 vs 班級名次（散布圖）');
+      new Chart(document.getElementById('r2'),{type:'scatter',
+        data:{datasets:[{label:'學生',
+          data:e.students.filter(s=>s.classRank!=null&&s.avg!=null).map(s=>({x:s.avg,y:s.classRank,seat:s.seat})),
+          backgroundColor:'rgba(26,86,219,.7)',pointRadius:6}]},
+        options:{responsive:true,
+          plugins:{tooltip:{callbacks:{label:ctx=>`座號${p2(ctx.raw.seat)}：均分${ctx.raw.x?.toFixed(1)} / 第${ctx.raw.y}名`}}},
+          scales:{
+            x:{title:{display:true,text:'平均分數'}},
+            y:{title:{display:true,text:'班級名次（越小越好）'},reverse:true}
+          }}
+      });
+    }
+  }
+
+  if(hasGP){
+    addCB(rc,'r3','類組百分名次分布');
+    const gDist=new Array(10).fill(0);
+    e.students.forEach(s=>{if(s.groupPct!=null)gDist[Math.min(9,Math.floor(s.groupPct/10))]++;});
+    new Chart(document.getElementById('r3'),{type:'bar',
+      data:{labels:['1–10','11–20','21–30','31–40','41–50','51–60','61–70','71–80','81–90','91–100'],
+        datasets:[{label:'人數',data:gDist,
+          backgroundColor:gDist.map((_,i)=>i<3?'rgba(22,163,74,.75)':i<5?'rgba(26,86,219,.75)':'rgba(220,38,38,.65)'),
+          borderRadius:6}]},
+      options:cOpts({y:{beginAtZero:true,title:{display:true,text:'人數'}}})
+    });
+  }
+
+  if(hasCD){
+    addCB(rc,'r4','班級名次進退分布');
+    const diffBins={
+      '進步10+':0,'進步5–9':0,'進步1–4':0,'持平':0,'退步1–4':0,'退步5–9':0,'退步10+':0
+    };
+    e.students.forEach(s=>{
+      if(s.classDiff===null) return;
+      const v=s.classDiff; // 班級進退欄：正值＝進步
+      if(v>=10)      diffBins['進步10+']++;
+      else if(v>=5)  diffBins['進步5–9']++;
+      else if(v>=1)  diffBins['進步1–4']++;
+      else if(v===0) diffBins['持平']++;
+      else if(v>=-4) diffBins['退步1–4']++;
+      else if(v>=-9) diffBins['退步5–9']++;
+      else           diffBins['退步10+']++;
+    });
+    const labels=Object.keys(diffBins),vals=Object.values(diffBins);
+    new Chart(document.getElementById('r4'),{type:'bar',
+      data:{labels,datasets:[{label:'人數',data:vals,
+        backgroundColor:labels.map(l=>l.includes('進步')?'rgba(22,163,74,.75)':l==='持平'?'rgba(100,116,139,.65)':'rgba(220,38,38,.7)'),
+        borderRadius:6}]},
+      options:cOpts({y:{beginAtZero:true,title:{display:true,text:'人數'}}})
+    });
+  }
+}
+
+// =====================================================================
+// RENDER: COMPARISON
+// =====================================================================
+function renderCmp(){
+  const mode=document.querySelector('input[name="cm"]:checked').value;
+  const div=document.getElementById('cpb');
+  if(S.exams.length<2){
+    div.innerHTML='<p style="text-align:center;color:var(--mu);padding:32px;">請上傳至少兩份成績檔案以進行多次比較</p>';
+    return;
+  }
+  mode==='class'?renderClassCmp(div):renderStuCmp(div);
+}
+
+// =====================================================================
+// COMPARISON HELPERS
+// =====================================================================
+function examLabels(){ return S.exams.map(e=>e.name.length>16?e.name.substr(0,16)+'…':e.name); }
+
+/* Linear regression slope over an array (nulls ignored) */
+function linSlope(arr){
+  const pts=arr.map((v,i)=>({x:i,y:v})).filter(p=>p.y!=null);
+  if(pts.length<2) return 0;
+  const n=pts.length, mx=pts.reduce((s,p)=>s+p.x,0)/n, my=pts.reduce((s,p)=>s+p.y,0)/n;
+  const num=pts.reduce((s,p)=>s+(p.x-mx)*(p.y-my),0);
+  const den=pts.reduce((s,p)=>s+(p.x-mx)**2,0);
+  return den?num/den:0;
+}
+
+/* Compute per-subject trend info */
+function computeTrends(allSubj, getVal){
+  return allSubj.map(subj=>{
+    const vals=S.exams.map(e=>getVal(e,subj));
+    const valid=vals.filter(v=>v!=null);
+    if(!valid.length) return {subj,vals,first:null,last:null,diff:null,slope:0,avgV:null,maxV:null,minV:null,trend:'n/a'};
+    const first=valid[0], last=valid[valid.length-1], diff=last-first;
+    const avgV=valid.reduce((a,b)=>a+b,0)/valid.length;
+    const maxV=Math.max(...valid), minV=Math.min(...valid);
+    const slope=linSlope(vals);
+    let trend=slope>1.5?'up':slope<-1.5?'dn':'stable';
+    return {subj,vals,first,last,diff,slope,avgV,maxV,minV,trend};
+  });
+}
+
+/* Insight card HTML */
+function insightCard(icon,label,items,style){
+  const bdr={up:'#16a34a',dn:'#dc2626',warn:'#f59e0b',info:'#1a56db',neutral:'#64748b'}[style]||'#1a56db';
+  const bg ={up:'#f0fdf4',dn:'#fef2f2',warn:'#fffbeb',info:'#eff6ff',neutral:'#f8fafc'}[style]||'#eff6ff';
+  return `<div style="border-left:4px solid ${bdr};background:${bg};border-radius:8px;padding:12px 16px;min-width:200px;flex:1;">
+    <div style="font-weight:700;font-size:.88rem;margin-bottom:6px;color:${bdr};">${icon} ${label}</div>
+    ${items.map(i=>`<div style="font-size:.82rem;color:#374151;padding:2px 0;">${i}</div>`).join('')}
+  </div>`;
+}
+
+/* Section header */
+function secH(t){ return `<div style="font-weight:700;font-size:.95rem;color:var(--p);margin:18px 0 10px;padding-left:10px;border-left:3px solid var(--p);">${t}</div>`; }
+
+// =====================================================================
+// CLASS COMPARISON (full)
+// =====================================================================
+function renderClassCmp(div){
+  const allSubj=[...new Set(S.exams.flatMap(e=>e.subjects))];
+  const exLbls=examLabels();
+  const trends=computeTrends(allSubj, (e,s)=>e.stats[s]?.mean??null);
+  const passT  =computeTrends(allSubj, (e,s)=>e.stats[s]?.passRate??null);
+  const sdT    =computeTrends(allSubj, (e,s)=>e.stats[s]?.sd??null);
+  const avgT   =computeTrends(['全班均分'],(e,_)=>e.stats['_avg']?.mean??null)[0];
+
+  // Categorise subjects
+  const upSubj   =trends.filter(t=>t.trend==='up'  ).sort((a,b)=>b.slope-a.slope);
+  const dnSubj   =trends.filter(t=>t.trend==='dn'  ).sort((a,b)=>a.slope-b.slope);
+  const weakSubj =trends.filter(t=>t.avgV!=null&&t.avgV<60);
+  const strongSubj=trends.filter(t=>t.avgV!=null&&t.avgV>=75&&t.trend!=='dn');
+  const volatileSubj=trends.filter(t=>t.maxV!=null&&(t.maxV-t.minV)>=15).sort((a,b)=>(b.maxV-b.minV)-(a.maxV-a.minV));
+
+  // ── Insight cards ──────────────────────────────────────
+  let ins='';
+  const ovFirst=S.exams[0].stats['_avg']?.mean, ovLast=S.exams[S.exams.length-1].stats['_avg']?.mean;
+  const ovDiff=ovFirst!=null&&ovLast!=null?ovLast-ovFirst:null;
+  if(ovDiff!=null)
+    ins+=insightCard(ovDiff>=0?'📈':'📉','整體均分趨勢',
+      [`${S.exams[0].name}：${ovFirst.toFixed(1)} 分`,
+       `${S.exams[S.exams.length-1].name}：${ovLast.toFixed(1)} 分`,
+       `變化幅度：${ovDiff>=0?'▲+':'▽'}${ovDiff.toFixed(1)} 分`],
+      ovDiff>=0?'up':'dn');
+
+  if(upSubj.length)
+    ins+=insightCard('📈','進步最顯著科目',
+      upSubj.slice(0,3).map(t=>`${t.subj}｜${t.first?.toFixed(1)}→${t.last?.toFixed(1)}（+${t.diff?.toFixed(1)}）`),
+      'up');
+
+  if(dnSubj.length)
+    ins+=insightCard('📉','下滑需關注科目',
+      dnSubj.slice(0,3).map(t=>`${t.subj}｜${t.first?.toFixed(1)}→${t.last?.toFixed(1)}（${t.diff?.toFixed(1)}）`),
+      'dn');
+
+  if(weakSubj.length)
+    ins+=insightCard('⚠️','弱勢科目（均分&lt;60）',
+      weakSubj.slice(0,3).map(t=>`${t.subj}｜平均 ${t.avgV?.toFixed(1)} 分`),
+      'warn');
+
+  if(strongSubj.length)
+    ins+=insightCard('🏆','優勢穩定科目（均分≥75）',
+      strongSubj.slice(0,3).map(t=>`${t.subj}｜平均 ${t.avgV?.toFixed(1)} 分`),
+      'info');
+
+  if(volatileSubj.length)
+    ins+=insightCard('↕️','波動最大科目',
+      volatileSubj.slice(0,3).map(t=>`${t.subj}｜最高${t.maxV?.toFixed(1)} / 最低${t.minV?.toFixed(1)}（波幅${(t.maxV-t.minV).toFixed(1)}）`),
+      'neutral');
+
+  // ── Main HTML ──────────────────────────────────────────
+  let h='';
+
+  // 1. Insight cards row
+  h+=secH('🔍 關鍵發現');
+  h+=`<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;">${ins}</div>`;
+
+  // 2. Multi-exam average table
+  h+=secH('📊 各科平均分數歷次對照表');
+  h+=`<div class="tw"><table><thead><tr><th>考試</th>`;
+  allSubj.forEach(s=>{h+=`<th>${abbr(s)}</th>`;});
+  h+=`<th class="th3">全班均分</th></tr></thead><tbody>`;
+  S.exams.forEach(e=>{
+    h+=`<tr><td style="text-align:left;font-weight:600;min-width:80px">${e.name}</td>`;
+    allSubj.forEach(s=>{
+      const v=e.stats[s]?.mean; h+=v!=null?`<td class="${v<60?'fail':v>=80?'hi':''}">${v.toFixed(1)}</td>`:`<td style="color:#cbd5e1">—</td>`;
+    });
+    const ov=e.stats['_avg']?.mean; h+=ov!=null?`<td>${ov.toFixed(1)}</td>`:`<td>—</td>`;
+    h+=`</tr>`;
+  });
+  // Trend row
+  h+=`<tr style="background:#fef9c3;"><td style="font-weight:700;">首末變化</td>`;
+  allSubj.forEach(s=>{
+    const t=trends.find(x=>x.subj===s);
+    if(t?.diff!=null){h+=`<td class="${t.diff>=0?'up':'dn'}" style="font-weight:700;">${t.diff>=0?'↑+':'↓'}${t.diff.toFixed(1)}</td>`;}
+    else h+='<td>—</td>';
+  });
+  if(ovDiff!=null) h+=`<td class="${ovDiff>=0?'up':'dn'}" style="font-weight:700;">${ovDiff>=0?'↑+':'↓'}${ovDiff.toFixed(1)}</td>`;
+  else h+='<td>—</td>';
+  h+=`</tr>`;
+  // Trend direction row
+  h+=`<tr style="background:#f0f4ff;"><td style="font-weight:700;">趨勢方向</td>`;
+  allSubj.forEach(s=>{
+    const t=trends.find(x=>x.subj===s);
+    const [lbl,col]=t?.trend==='up'?['⬆進步','#16a34a']:t?.trend==='dn'?['⬇退步','#dc2626']:['→平穩','#64748b'];
+    h+=`<td style="color:${col};font-weight:600;">${lbl}</td>`;
+  });
+  h+=`<td>—</td></tr>`;
+  h+=`</tbody></table></div>`;
+
+  // 3. Subject analysis table
+  h+=secH('📋 科目表現分類分析');
+  h+=`<div class="tw"><table><thead><tr>
+    <th class="th2">科目</th><th class="th2">平均水準</th><th class="th2">趨勢方向</th>
+    <th class="th2">首次均分</th><th class="th2">最近均分</th><th class="th2">最大增減</th>
+    <th class="th2">最高均分</th><th class="th2">最低均分</th><th class="th2">波動幅度</th>
+    <th class="th2">綜合評判</th></tr></thead><tbody>`;
+  trends.forEach(t=>{
+    if(t.avgV==null)return;
+    const lvl=t.avgV>=75?'優秀':t.avgV>=60?'中等':'偏弱';
+    const lvlC=t.avgV>=75?'#16a34a':t.avgV>=60?'#1a56db':'#dc2626';
+    const [tDir,tC]=t.trend==='up'?['⬆ 進步中','#16a34a']:t.trend==='dn'?['⬇ 退步中','#dc2626']:['→ 持平','#64748b'];
+    const fluct=t.maxV-t.minV;
+    let verdict=''; let vC='#64748b';
+    if(t.avgV<60&&t.trend==='dn'){verdict='🚨 急需加強';vC='#dc2626';}
+    else if(t.avgV<60){verdict='⚠️ 待加強';vC='#f59e0b';}
+    else if(t.avgV>=75&&t.trend==='up'){verdict='🌟 優秀進步';vC='#16a34a';}
+    else if(t.avgV>=75){verdict='✅ 優勢維持';vC='#1a56db';}
+    else if(t.trend==='up'){verdict='📈 穩定提升';vC='#16a34a';}
+    else if(t.trend==='dn'){verdict='📉 關注退步';vC='#dc2626';}
+    else{verdict='📊 表現平穩';vC='#64748b';}
+    h+=`<tr>
+      <td style="text-align:left;font-weight:600;">${t.subj}</td>
+      <td style="color:${lvlC};font-weight:700;">${lvl} (${t.avgV.toFixed(1)})</td>
+      <td style="color:${tC};font-weight:600;">${tDir}</td>
+      <td>${t.first?.toFixed(1)??'—'}</td>
+      <td>${t.last?.toFixed(1)??'—'}</td>
+      <td class="${(t.diff??0)>=0?'up':'dn'}" style="font-weight:700;">${t.diff!=null?((t.diff>=0?'+':'')+t.diff.toFixed(1)):'—'}</td>
+      <td class="hi">${t.maxV?.toFixed(1)??'—'}</td>
+      <td class="fail" style="background:none;">${t.minV?.toFixed(1)??'—'}</td>
+      <td style="color:${fluct>15?'#dc2626':fluct>8?'#f59e0b':'#16a34a'}">${t.maxV!=null?(fluct.toFixed(1)+' 分'):'—'}</td>
+      <td style="color:${vC};font-weight:700;">${verdict}</td>
+    </tr>`;
+  });
+  h+=`</tbody></table></div>`;
+
+  // 4. Charts section
+  h+=secH('📈 趨勢圖表');
+  h+=`<div class="cg" id="ccmpCharts"></div>`;
+
+  div.innerHTML=h;
+  const cg=document.getElementById('ccmpCharts');
+  killCharts();
+
+  // Chart A: All-subject mean trend
+  addCB(cg,'cc1','各科平均分數趨勢（折線圖）');
+  new Chart(document.getElementById('cc1'),{type:'line',
+    data:{labels:exLbls,datasets:allSubj.map((s,i)=>({label:abbr(s),
+      data:S.exams.map(e=>e.stats[s]?.mean??null),
+      borderColor:CC[i%CC.length],backgroundColor:CC[i%CC.length]+'30',
+      tension:.35,fill:false,pointRadius:5,pointHoverRadius:7}))},
+    options:{responsive:true,scales:{y:{min:0,max:100,title:{display:true,text:'平均分數'}}},
+      plugins:{legend:{position:'bottom'}}}
+  });
+
+  // Chart B: Pass rate trend
+  addCB(cg,'cc2','各科及格率趨勢 (%)');
+  new Chart(document.getElementById('cc2'),{type:'line',
+    data:{labels:exLbls,datasets:allSubj.map((s,i)=>({label:abbr(s),
+      data:S.exams.map(e=>e.stats[s]?.passRate??null),
+      borderColor:CC[i%CC.length],tension:.35,fill:false,pointRadius:5}))},
+    options:{responsive:true,scales:{y:{min:0,max:100,title:{display:true,text:'及格率%'}}},
+      plugins:{legend:{position:'bottom'}}}
+  });
+
+  // Chart C: First vs Last grouped bar
+  addCB(cg,'cc3','首次 vs 最近一次均分對照');
+  const firstE=S.exams[0], lastE=S.exams[S.exams.length-1];
+  new Chart(document.getElementById('cc3'),{type:'bar',
+    data:{labels:allSubj.map(abbr),datasets:[
+      {label:firstE.name,data:allSubj.map(s=>firstE.stats[s]?.mean??0),backgroundColor:'rgba(148,163,184,.65)',borderRadius:5},
+      {label:lastE.name, data:allSubj.map(s=>lastE.stats[s]?.mean??0),
+        backgroundColor:allSubj.map(s=>{const d=(lastE.stats[s]?.mean??0)-(firstE.stats[s]?.mean??0);
+          return d>=0?'rgba(22,163,74,.75)':'rgba(220,38,38,.75)';}),borderRadius:5},
+    ]},
+    options:{responsive:true,scales:{y:{min:0,max:100,title:{display:true,text:'分數'}}},
+      plugins:{legend:{position:'top'}}}
+  });
+
+  // Chart D: Change waterfall bar
+  addCB(cg,'cc4','各科首末均分變化量');
+  const diffVals=allSubj.map(s=>{
+    const f=S.exams[0].stats[s]?.mean, l=S.exams[S.exams.length-1].stats[s]?.mean;
+    return f!=null&&l!=null?+(l-f).toFixed(1):0;
+  });
+  new Chart(document.getElementById('cc4'),{type:'bar',
+    data:{labels:allSubj.map(abbr),datasets:[{label:'分數變化',data:diffVals,
+      backgroundColor:diffVals.map(v=>v>=0?'rgba(22,163,74,.75)':'rgba(220,38,38,.75)'),
+      borderRadius:5}]},
+    options:{responsive:true,plugins:{legend:{display:false}},
+      scales:{y:{title:{display:true,text:'變化分數'},
+        ticks:{callback:v=>(v>=0?'+':'')+v}}}}
+  });
+
+  // Chart E: Standard deviation trend (class spread)
+  addCB(cg,'cc5','各科標準差趨勢（班內分散程度）');
+  new Chart(document.getElementById('cc5'),{type:'line',
+    data:{labels:exLbls,datasets:allSubj.map((s,i)=>({label:abbr(s),
+      data:S.exams.map(e=>e.stats[s]?.sd??null),
+      borderColor:CC[i%CC.length],tension:.35,fill:false,pointRadius:4,
+      borderDash:i>4?[5,3]:[]}))},
+    options:{responsive:true,scales:{y:{beginAtZero:true,title:{display:true,text:'標準差（越小越齊）'}}},
+      plugins:{legend:{position:'bottom'}}}
+  });
+
+  // Chart F: Radar – first vs last class profile
+  if(S.exams.length>=2){
+    addCB(cg,'cc6','全班整體科目能力輪廓（首次 vs 最近）');
+    new Chart(document.getElementById('cc6'),{type:'radar',
+      data:{labels:allSubj.map(abbr),datasets:[
+        {label:firstE.name,data:allSubj.map(s=>firstE.stats[s]?.mean??0),
+          fill:true,backgroundColor:'rgba(148,163,184,.2)',borderColor:'rgba(148,163,184,.8)',pointBackgroundColor:'#94a3b8'},
+        {label:lastE.name, data:allSubj.map(s=>lastE.stats[s]?.mean??0),
+          fill:true,backgroundColor:'rgba(26,86,219,.18)',borderColor:'rgba(26,86,219,.85)',pointBackgroundColor:'#1a56db'},
+      ]},
+      options:{responsive:true,scales:{r:{min:0,max:100}},plugins:{legend:{position:'bottom'}}}
+    });
+  }
+
+  // Chart G: Class overall average trend
+  if(avgT&&avgT.vals.filter(v=>v!=null).length>1){
+    addCB(cg,'cc7','全班平均分數整體趨勢');
+    new Chart(document.getElementById('cc7'),{type:'line',
+      data:{labels:exLbls,datasets:[
+        {label:'全班均分',data:avgT.vals,borderColor:'#1a56db',backgroundColor:'rgba(26,86,219,.12)',
+          fill:true,tension:.35,pointRadius:7,pointHoverRadius:9,borderWidth:2.5},
+        {label:'60分及格線',data:S.exams.map(()=>60),borderColor:'rgba(220,38,38,.5)',
+          borderDash:[6,4],pointRadius:0,fill:false},
+      ]},
+      options:{responsive:true,scales:{y:{min:0,max:100,title:{display:true,text:'全班平均分數'}}},
+        plugins:{legend:{position:'top'},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}：${ctx.parsed.y?.toFixed(1)||ctx.parsed.y}`}}}}
+    });
+  }
+}
+
+// =====================================================================
+// STUDENT COMPARISON (full)
+// =====================================================================
+function renderStuCmp(div){
+  const seat=+document.getElementById('scs').value;
+  const allSubj=[...new Set(S.exams.flatMap(e=>e.subjects))];
+  const exLbls=examLabels();
+
+  const getScoreVal=(e,subj)=>e.students.find(s=>s.seat===seat)?.scores[subj]?.value??null;
+  const stuTrends=computeTrends(allSubj,getScoreVal);
+  const clsTrends =computeTrends(allSubj,(e,s)=>e.stats[s]?.mean??null);
+
+  // Rank & avg trends
+  const rankVals=S.exams.map(e=>e.students.find(s=>s.seat===seat)?.classRank??null);
+  const avgVals =S.exams.map(e=>e.students.find(s=>s.seat===seat)?.avg??null);
+  const gpctVals=S.exams.map(e=>e.students.find(s=>s.seat===seat)?.groupPct??null);
+
+  // Categorise for this student
+  const upSubj   =stuTrends.filter(t=>t.trend==='up' ).sort((a,b)=>b.slope-a.slope);
+  const dnSubj   =stuTrends.filter(t=>t.trend==='dn' ).sort((a,b)=>a.slope-b.slope);
+  const weakSubj =stuTrends.filter(t=>t.avgV!=null&&t.avgV<60);
+  const strongSubj=stuTrends.filter(t=>t.avgV!=null&&t.avgV>=75&&t.trend!=='dn');
+  const volatileSubj=stuTrends.filter(t=>t.maxV!=null&&(t.maxV-t.minV)>=15).sort((a,b)=>(b.maxV-b.minV)-(a.maxV-a.minV));
+
+  // Compare vs class: last exam above/below class avg
+  const lastE=S.exams[S.exams.length-1];
+  const aboveClass=allSubj.filter(s=>{
+    const sc=lastE.students.find(x=>x.seat===seat)?.scores[s]?.value;
+    const cls=lastE.stats[s]?.mean;
+    return sc!=null&&cls!=null&&sc>cls+5;
+  });
+  const belowClass=allSubj.filter(s=>{
+    const sc=lastE.students.find(x=>x.seat===seat)?.scores[s]?.value;
+    const cls=lastE.stats[s]?.mean;
+    return sc!=null&&cls!=null&&sc<cls-5;
+  });
+
+  // ── Insight cards ──────────────────────────────────────
+  const latestRank=rankVals.filter(v=>v!=null);
+  const rankFirst=latestRank[0], rankLast=latestRank[latestRank.length-1];
+  const rankDiff=rankFirst!=null&&rankLast!=null?rankFirst-rankLast:null; // positive = improved (smaller number)
+  const validAvgs=avgVals.filter(v=>v!=null);
+  const avgDiff=validAvgs.length>=2?validAvgs[validAvgs.length-1]-validAvgs[0]:null;
+
+  let ins='';
+  if(avgDiff!=null) ins+=insightCard(avgDiff>=0?'📈':'📉','個人均分趨勢',
+    [`${S.exams[0].name}：${validAvgs[0].toFixed(1)} 分`,
+     `${S.exams[S.exams.length-1].name}：${validAvgs[validAvgs.length-1].toFixed(1)} 分`,
+     `幅度：${avgDiff>=0?'▲+':'▽'}${avgDiff.toFixed(1)} 分`],
+    avgDiff>=0?'up':'dn');
+
+  if(rankDiff!=null) ins+=insightCard(rankDiff>0?'🏅':'📋','班級名次趨勢',
+    [`${S.exams[0].name}：第 ${rankFirst} 名`,
+     `${S.exams[S.exams.length-1].name}：第 ${rankLast} 名`,
+     `${rankDiff>0?'進步 ▲'+rankDiff+' 名':rankDiff<0?'退步 ▽'+Math.abs(rankDiff)+' 名':'名次持平'}`],
+    rankDiff>0?'up':rankDiff<0?'dn':'neutral');
+
+  if(upSubj.length) ins+=insightCard('📈','進步最顯著科目',
+    upSubj.slice(0,3).map(t=>`${t.subj}｜${t.first?.toFixed(1)}→${t.last?.toFixed(1)}（+${t.diff?.toFixed(1)}）`),
+    'up');
+
+  if(dnSubj.length) ins+=insightCard('📉','退步需關注科目',
+    dnSubj.slice(0,3).map(t=>`${t.subj}｜${t.first?.toFixed(1)}→${t.last?.toFixed(1)}（${t.diff?.toFixed(1)}）`),
+    'dn');
+
+  if(weakSubj.length) ins+=insightCard('⚠️','個人弱勢科目（均分&lt;60）',
+    weakSubj.slice(0,3).map(t=>`${t.subj}｜個人平均 ${t.avgV?.toFixed(1)}`),
+    'warn');
+
+  if(aboveClass.length) ins+=insightCard('🌟','高於班均科目（+5分以上）',
+    aboveClass.slice(0,4).map(s=>{
+      const sc=lastE.students.find(x=>x.seat===seat)?.scores[s]?.value;
+      const cls=lastE.stats[s]?.mean;
+      return `${s}｜個人${sc} / 班均${cls?.toFixed(1)}`;
+    }),
+    'info');
+
+  if(belowClass.length) ins+=insightCard('🔽','低於班均科目（-5分以上）',
+    belowClass.slice(0,4).map(s=>{
+      const sc=lastE.students.find(x=>x.seat===seat)?.scores[s]?.value;
+      const cls=lastE.stats[s]?.mean;
+      return `${s}｜個人${sc} / 班均${cls?.toFixed(1)}`;
+    }),
+    'warn');
+
+  // ── Main HTML ──────────────────────────────────────────
+  let h=`<div class="sh"><h3>座號 ${p2(seat)} 多次考試成績追蹤</h3>`;
+  const lastStu=lastE.students.find(s=>s.seat===seat);
+  if(lastStu){
+    h+=`<div class="sm">`;
+    if(lastStu.avg!=null)       h+=`<div>最近均分：<span>${lastStu.avg.toFixed(1)}</span></div>`;
+    if(lastStu.classRank!=null) h+=`<div>最近班級名次：<span>#${lastStu.classRank}</span></div>`;
+    if(lastStu.groupRank!=null) h+=`<div>最近類組名次：<span>#${lastStu.groupRank}</span></div>`;
+    if(lastStu.groupPct!=null)  h+=`<div>類組百分名次：<span>${lastStu.groupPct}</span></div>`;
+    h+=`</div>`;
+  }
+  h+=`</div>`;
+
+  h+=secH('🔍 個人學習關鍵發現');
+  h+=`<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;">${ins}</div>`;
+
+  h+=secH('📊 各科歷次成績對照表');
+  h+=`<div class="tw"><table><thead><tr><th>考試</th>`;
+  allSubj.forEach(s=>{h+=`<th>${abbr(s)}</th>`;});
+  h+=`<th class="th3">平均</th><th class="th4">班名</th><th class="th2">類名</th><th class="th2">百分</th></tr></thead><tbody>`;
+  S.exams.forEach(e=>{
+    const stu=e.students.find(s=>s.seat===seat);
+    const cls_avg=e.stats['_avg']?.mean;
+    h+=`<tr><td style="text-align:left;font-weight:600;">${e.name}</td>`;
+    allSubj.forEach(subj=>{
+      const sc=stu?.scores[subj], cls=e.stats[subj]?.mean;
+      if(sc) h+=`<td class="${sc.fail?'fail':sc.value>=90?'hi':''}" title="班均${cls?.toFixed(1)??'—'}">${sc.value}</td>`;
+      else h+=`<td style="color:#cbd5e1">—</td>`;
+    });
+    h+=`<td class="${stu?.avg!=null&&cls_avg!=null&&stu.avg>=cls_avg?'hi':''}">${stu?.avg?.toFixed(1)||'—'}</td>`;
+    h+=`<td>${stu?.classRank??'—'}</td><td>${stu?.groupRank??'—'}</td><td>${stu?.groupPct??'—'}</td></tr>`;
+  });
+  // Trend rows
+  h+=`<tr style="background:#fef9c3;"><td style="font-weight:700;">首末變化</td>`;
+  allSubj.forEach(s=>{
+    const t=stuTrends.find(x=>x.subj===s);
+    h+=t?.diff!=null?`<td class="${t.diff>=0?'up':'dn'}" style="font-weight:700;">${t.diff>=0?'+':''}${t.diff.toFixed(1)}</td>`:`<td>—</td>`;
+  });
+  h+=`<td colspan="4"></td></tr>`;
+  h+=`<tr style="background:#f0f4ff;"><td style="font-weight:700;">趨勢方向</td>`;
+  allSubj.forEach(s=>{
+    const t=stuTrends.find(x=>x.subj===s);
+    const [lbl,col]=t?.trend==='up'?['⬆進步','#16a34a']:t?.trend==='dn'?['⬇退步','#dc2626']:['→平穩','#64748b'];
+    h+=`<td style="color:${col};font-weight:600;">${lbl}</td>`;
+  });
+  h+=`<td colspan="4"></td></tr>`;
+  // vs class row (latest exam)
+  h+=`<tr style="background:#f0fdf4;"><td style="font-weight:700;">vs 班均(最近)</td>`;
+  allSubj.forEach(s=>{
+    const sc=lastE.students.find(x=>x.seat===seat)?.scores[s]?.value;
+    const cls=lastE.stats[s]?.mean;
+    if(sc!=null&&cls!=null){
+      const d=sc-cls;
+      h+=`<td class="${d>=0?'up':'dn'}" style="font-weight:600;">${d>=0?'+':''}${d.toFixed(1)}</td>`;
+    } else h+='<td>—</td>';
+  });
+  h+=`<td colspan="4"></td></tr>`;
+  h+=`</tbody></table></div>`;
+
+  h+=secH('📋 科目表現分類分析（個人）');
+  h+=`<div class="tw"><table><thead><tr>
+    <th class="th2">科目</th><th class="th2">個人均分</th><th class="th2">趨勢</th>
+    <th class="th2">首次→最近</th><th class="th2">最大增減</th>
+    <th class="th2">vs班均(最近)</th><th class="th2">個人評判</th></tr></thead><tbody>`;
+  stuTrends.forEach(t=>{
+    if(t.avgV==null)return;
+    const [tDir,tC]=t.trend==='up'?['⬆進步','#16a34a']:t.trend==='dn'?['⬇退步','#dc2626']:['→平穩','#64748b'];
+    const cls=lastE.stats[t.subj]?.mean;
+    const lastSc=lastE.students.find(s=>s.seat===seat)?.scores[t.subj]?.value;
+    const vsStr=lastSc!=null&&cls!=null?((lastSc-cls>=0?'+':'')+((lastSc-cls).toFixed(1))):'—';
+    const vsC=lastSc!=null&&cls!=null?(lastSc-cls>=0?'#16a34a':'#dc2626'):'#64748b';
+    let verdict=''; let vC='#64748b';
+    if(t.avgV<60&&t.trend==='dn'){verdict='🚨 亟需輔導';vC='#dc2626';}
+    else if(t.avgV<60){verdict='⚠️ 需加強';vC='#f59e0b';}
+    else if(t.avgV>=75&&t.trend==='up'){verdict='🌟 傑出進步';vC='#16a34a';}
+    else if(t.avgV>=75){verdict='✅ 強項維持';vC='#1a56db';}
+    else if(t.trend==='up'){verdict='📈 持續進步';vC='#16a34a';}
+    else if(t.trend==='dn'){verdict='📉 注意退步';vC='#dc2626';}
+    else{verdict='📊 表現平穩';vC='#64748b';}
+    h+=`<tr>
+      <td style="text-align:left;font-weight:600;">${t.subj}</td>
+      <td class="${t.avgV<60?'fail':t.avgV>=75?'hi':''}">${t.avgV.toFixed(1)}</td>
+      <td style="color:${tC};font-weight:600;">${tDir}</td>
+      <td>${t.first?.toFixed(1)??'—'} → ${t.last?.toFixed(1)??'—'}</td>
+      <td class="${(t.diff??0)>=0?'up':'dn'}" style="font-weight:700;">${t.diff!=null?((t.diff>=0?'+':'')+t.diff.toFixed(1)):'—'}</td>
+      <td style="color:${vsC};font-weight:600;">${vsStr}</td>
+      <td style="color:${vC};font-weight:700;">${verdict}</td>
+    </tr>`;
+  });
+  h+=`</tbody></table></div>`;
+
+  h+=secH('📈 個人趨勢圖表');
+  h+=`<div class="cg" id="scmpCharts"></div>`;
+
+  div.innerHTML=h;
+  const cg=document.getElementById('scmpCharts');
+  killCharts();
+
+  // Chart A: Subject score trend
+  addCB(cg,'sc1','個人各科成績趨勢（折線圖）');
+  new Chart(document.getElementById('sc1'),{type:'line',
+    data:{labels:exLbls,datasets:allSubj.map((s,i)=>({label:abbr(s),
+      data:S.exams.map(e=>e.students.find(x=>x.seat===seat)?.scores[s]?.value??null),
+      borderColor:CC[i%CC.length],tension:.35,fill:false,pointRadius:5,pointHoverRadius:7}))},
+    options:{responsive:true,scales:{y:{min:0,max:100}},plugins:{legend:{position:'bottom'}}}
+  });
+
+  // Chart B: Avg trend + class avg
+  if(validAvgs.length>1){
+    addCB(cg,'sc2','個人平均分數 vs 全班均分');
+    const clsAvgs=S.exams.map(e=>e.stats['_avg']?.mean??null);
+    new Chart(document.getElementById('sc2'),{type:'line',
+      data:{labels:exLbls,datasets:[
+        {label:'個人平均',data:avgVals,borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.12)',fill:true,tension:.35,pointRadius:6,borderWidth:2.5},
+        {label:'全班均分',data:clsAvgs,borderColor:'rgba(100,116,139,.6)',borderDash:[5,3],fill:false,tension:.35,pointRadius:4},
+        {label:'60分線',  data:S.exams.map(()=>60),borderColor:'rgba(220,38,38,.4)',borderDash:[6,4],fill:false,pointRadius:0},
+      ]},
+      options:{responsive:true,scales:{y:{min:0,max:100,title:{display:true,text:'分數'}}},
+        plugins:{legend:{position:'top'}}}
+    });
+  }
+
+  // Chart C: Rank trend (lower = better, reverse y axis)
+  if(rankVals.filter(v=>v!=null).length>1){
+    addCB(cg,'sc3','班級名次趨勢（越低越好）');
+    new Chart(document.getElementById('sc3'),{type:'line',
+      data:{labels:exLbls,datasets:[
+        {label:'班級名次',data:rankVals,borderColor:'#16a34a',backgroundColor:'rgba(22,163,74,.12)',
+          fill:true,tension:.35,pointRadius:6,borderWidth:2.5},
+      ]},
+      options:{responsive:true,scales:{y:{reverse:true,beginAtZero:false,title:{display:true,text:'名次（越低越好）'},
+        ticks:{callback:v=>v+'名'}}},plugins:{legend:{display:false}}}
+    });
+  }
+
+  // Chart D: Subject change bar (first → last)
+  addCB(cg,'sc4','各科首末成績變化量');
+  const diffVals=allSubj.map(s=>{
+    const t=stuTrends.find(x=>x.subj===s);
+    return t?.diff!=null?+t.diff.toFixed(1):0;
+  });
+  new Chart(document.getElementById('sc4'),{type:'bar',
+    data:{labels:allSubj.map(abbr),datasets:[{label:'分數變化',data:diffVals,
+      backgroundColor:diffVals.map(v=>v>=0?'rgba(22,163,74,.75)':'rgba(220,38,38,.75)'),
+      borderRadius:5}]},
+    options:{responsive:true,plugins:{legend:{display:false}},
+      scales:{y:{title:{display:true,text:'變化分數'},ticks:{callback:v=>(v>=0?'+':'')+v}}}}
+  });
+
+  // Chart E: Individual vs Class latest radar
+  addCB(cg,'sc5','個人 vs 全班平均科目輪廓（最近一次）');
+  new Chart(document.getElementById('sc5'),{type:'radar',
+    data:{labels:allSubj.map(abbr),datasets:[
+      {label:'個人',data:allSubj.map(s=>lastE.students.find(x=>x.seat===seat)?.scores[s]?.value??0),
+        fill:true,backgroundColor:'rgba(124,58,237,.2)',borderColor:'rgba(124,58,237,.85)',pointBackgroundColor:'#7c3aed'},
+      {label:'班均',data:allSubj.map(s=>lastE.stats[s]?.mean??0),
+        fill:true,backgroundColor:'rgba(148,163,184,.15)',borderColor:'rgba(148,163,184,.6)',pointBackgroundColor:'#94a3b8'},
+    ]},
+    options:{responsive:true,scales:{r:{min:0,max:100}},plugins:{legend:{position:'bottom'}}}
+  });
+
+  // Chart F: Personal radar first vs last
+  if(S.exams.length>=2){
+    const firstE=S.exams[0];
+    addCB(cg,'sc6','個人科目輪廓對比（首次 vs 最近）');
+    new Chart(document.getElementById('sc6'),{type:'radar',
+      data:{labels:allSubj.map(abbr),datasets:[
+        {label:firstE.name,data:allSubj.map(s=>firstE.students.find(x=>x.seat===seat)?.scores[s]?.value??0),
+          fill:true,backgroundColor:'rgba(148,163,184,.2)',borderColor:'rgba(148,163,184,.7)',pointBackgroundColor:'#94a3b8'},
+        {label:lastE.name, data:allSubj.map(s=>lastE.students.find(x=>x.seat===seat)?.scores[s]?.value??0),
+          fill:true,backgroundColor:'rgba(26,86,219,.18)',borderColor:'rgba(26,86,219,.85)',pointBackgroundColor:'#1a56db'},
+      ]},
+      options:{responsive:true,scales:{r:{min:0,max:100}},plugins:{legend:{position:'bottom'}}}
+    });
+  }
+
+  // Chart G: Group percentile trend
+  if(gpctVals.filter(v=>v!=null).length>1){
+    addCB(cg,'sc7','類組百分名次趨勢');
+    new Chart(document.getElementById('sc7'),{type:'line',
+      data:{labels:exLbls,datasets:[
+        {label:'類組百分名次',data:gpctVals,borderColor:'#0891b2',backgroundColor:'rgba(8,145,178,.12)',
+          fill:true,tension:.35,pointRadius:6,borderWidth:2.5},
+      ]},
+      options:{responsive:true,scales:{y:{min:0,max:100,title:{display:true,text:'百分名次（越高越好）'}}},
+        plugins:{legend:{display:false}}}
+    });
+  }
+}
+
+// =====================================================================
+// EXPORT
+// =====================================================================
+function makeWB(e){
+  const wb=XLSX.utils.book_new();
+
+  // Sheet 1: All data
+  const hdr=['座號',...e.subjects,'總分','平均分數','不及格數','班級名次','班級進退','類組名次','類組進退','類組百分名次'];
+  const rows=e.students.map(s=>{
+    const r=[p2(s.seat)];
+    e.subjects.forEach(subj=>r.push(s.scores[subj]?.value??''));
+    r.push(s.total??'',s.avg??'',s.failCount??'',s.classRank??'',s.classDiff??'',s.groupRank??'',s.groupDiff??'',s.groupPct??'');
+    return r;
+  });
+  const ws=XLSX.utils.aoa_to_sheet([hdr,...rows]);
+  // Style header – column widths
+  ws['!cols']=[{wch:6},...e.subjects.map(()=>({wch:9})),...new Array(9).fill({wch:10})];
+  XLSX.utils.book_append_sheet(wb,ws,'成績');
+
+  // Sheet 2: Stats
+  const sh2=[['統計項目',...e.subjects]];
+  [['頂標','top'],['前標','front'],['均標','mid'],['後標','back'],['底標','bottom'],
+   ['平均','mean'],['標準差','sd'],['最高','max'],['最低','min'],['中位數','median'],
+   ['及格率%','passRate'],['及格人數','passCount'],['人數','n']
+  ].forEach(([l,k])=>{
+    sh2.push([l,...e.subjects.map(s=>e.stats[s]!=null?+(e.stats[s][k])?.toFixed(1)||'':'')]);
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sh2),'五標統計');
+
+  return wb;
+}
+
+function exportOne(){
+  const e=ex(+document.getElementById('se').value);
+  if(!e) return;
+  XLSX.writeFile(makeWB(e),`${e.name}.xlsx`);
+  toast('✅ Excel 已下載');
+}
+
+function exportAll(){
+  const wb=XLSX.utils.book_new();
+  const allSubjects=Array.from(new Set(S.exams.flatMap(e=>e.subjects||[])));
+  const mergedHdr=['座號','姓名','考試名稱',...allSubjects,'總分','平均分數','不及格數','班級名次','班級進退','類組名次','類組進退','類組百分名次'];
+  const seatMap=new Map();
+  S.exams.forEach(e=>{
+    e.students.forEach(s=>{
+      if(!seatMap.has(s.seat)) seatMap.set(s.seat, {seat:s.seat, name:s.name||''});
+      else if(!seatMap.get(s.seat).name && s.name) seatMap.get(s.seat).name=s.name;
+    });
+  });
+  const mergedRows=[mergedHdr];
+  Array.from(seatMap.values()).sort((a,b)=>a.seat-b.seat).forEach((stu,idx,arr)=>{
+    S.exams.forEach(e=>{
+      const s=e.students.find(x=>x.seat===stu.seat);
+      const r=[p2(stu.seat), stu.name, e.name];
+      allSubjects.forEach(subj=>r.push(s?.scores?.[subj]?.value??''));
+      r.push(s?.total??'',s?.avg??'',s?.failCount??'',s?.classRank??'',s?.classDiff??'',s?.groupRank??'',s?.groupDiff??'',s?.groupPct??'');
+      mergedRows.push(r);
+    });
+    if(idx<arr.length-1) mergedRows.push([]);
+  });
+  const mergedWs=XLSX.utils.aoa_to_sheet(mergedRows);
+  mergedWs['!cols']=[{wch:6},{wch:10},{wch:18},...allSubjects.map(()=>({wch:9})),...new Array(9).fill({wch:10})];
+  XLSX.utils.book_append_sheet(wb,mergedWs,'合併所有成績');
+
+  S.exams.forEach((e,i)=>{
+    const hdr=['座號','姓名',...e.subjects,'總分','平均分數','不及格數','班級名次','班級進退','類組名次','類組進退','類組百分名次'];
+    const rows=e.students.map(s=>{
+      const r=[p2(s.seat), s.name||''];
+      e.subjects.forEach(sj=>r.push(s.scores[sj]?.value??''));
+      r.push(s.total??'',s.avg??'',s.failCount??'',s.classRank??'',s.classDiff??'',s.groupRank??'',s.groupDiff??'',s.groupPct??'');
+      return r;
+    });
+    const nm=(e.name.length>28?e.name.substr(0,28):e.name)||`考試${i+1}`;
+    const ws=XLSX.utils.aoa_to_sheet([hdr,...rows]);
+    ws['!cols']=[{wch:6},{wch:10},...e.subjects.map(()=>({wch:9})),...new Array(9).fill({wch:10})];
+    XLSX.utils.book_append_sheet(wb,ws,nm);
+  });
+  XLSX.writeFile(wb,'全部成績匯出.xlsx');
+  toast('✅ 全部考試已匯出');
+}
+
+// =====================================================================
+// PRINT TAB AS PDF  (auto-scale to A4 width)
+// =====================================================================
+const TAB_TITLES = {
+  t1:'成績一覽表',t2:'五標統計',t3:'全班成績分析',
+  t4:'個人成績分析',t5:'名次與排名分析',t6:'多次考試比較',t8:'學習預警與關懷名單'
+};
+
+function printTab(tabId){
+  // 1. Fill print-header with exam name + tab title
+  const examName = S.exams[S.cur]?.name || '';
+  const phEl = document.getElementById('ph'+tabId.replace('t',''));
+  if(phEl) phEl.textContent = examName + '　｜　' + (TAB_TITLES[tabId]||'');
+
+  // 2. Mark tab for printing (CSS hides all other .tc)
+  const tabEl = document.getElementById(tabId);
+  document.querySelectorAll('.tc').forEach(el=>el.classList.remove('printing'));
+  if(tabEl) tabEl.classList.add('printing');
+
+  // 3. Print (browser "Save as PDF" available in print dialog)
+  setTimeout(()=>{
+    window.print();
+    // 4. Cleanup
+    setTimeout(()=>{
+      document.querySelectorAll('.tc').forEach(el=>el.classList.remove('printing'));
+      if(phEl) phEl.textContent='';
+    }, 800);
+  }, 120);
+}
+
+// (舊版單頁列印已由 printFullReport / printStudentReport 取代)
+
+// =====================================================================
+// TAB ROUTING
+// =====================================================================
+function switchTab(id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===id));
+  document.querySelectorAll('.tc').forEach(c=>c.style.display='none');
+  const p=document.getElementById(id); if(p) p.style.display='block';
+  const i=(n)=>+document.getElementById(n)?.value||0;
+  if(id==='t1') renderGradeTable(i('s1'));
+  else if(id==='t2') renderFiveMarks(i('s2'));
+  else if(id==='t3') renderClassAnalysis(i('s3'));
+  else if(id==='t4') renderStudentAnalysis(i('s4'),document.getElementById('ss')?.value||1);
+  else if(id==='t5') renderRankAnalysis(i('s5'));
+  else if(id==='t6') renderCmp();
+  else if(id==='t8') renderWarning(i('s8'));
+  else if(id==='t9') renderAdvanced();
+}
+
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
+
+['s1','s2','s3','s4','s5','s8'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('change',function(){
+    S.cur=+this.value;
+    updStuSel();
+    const mp={s1:'t1',s2:'t2',s3:'t3',s4:'t4',s5:'t5',s8:'t8'};
+    switchTab(mp[id]);
+  });
+});
+
+document.getElementById('ss')?.addEventListener('change',function(){
+  renderStudentAnalysis(+document.getElementById('s4').value||0,this.value);
+});
+document.getElementById('scs')?.addEventListener('change',renderCmp);
+document.querySelectorAll('input[name="cm"]').forEach(r=>r.addEventListener('change',function(){
+  document.getElementById('scs').style.display=this.value==='student'?'inline-block':'none';
+  renderCmp();
+}));
+
+// =====================================================================
+// ===== Advanced Psychometric Engine =====
+// ===== Advanced Psychometric Engine (applicable subset) =====
+const PSY = {
+  mean(a){ return a.length? a.reduce((x,y)=>x+y,0)/a.length : 0; },
+  sd(a){ if(a.length<2) return 0; const m=this.mean(a); return Math.sqrt(a.reduce((s,v)=>s+(v-m)**2,0)/a.length); },
+  sdSample(a){ if(a.length<2) return 0; const m=this.mean(a); return Math.sqrt(a.reduce((s,v)=>s+(v-m)**2,0)/(a.length-1)); },
+
+  // Cronbach's alpha across subjects (items = subjects, persons = students)
+  // matrix: students x subjects (numbers). Missing -> excluded row-wise (listwise).
+  cronbachAlpha(matrix){
+    const rows = matrix.filter(r => r.every(v => v!=null && !isNaN(v)));
+    const n = rows.length, k = rows[0]?.length || 0;
+    if(n<3 || k<2) return null;
+    const itemVars = [];
+    for(let j=0;j<k;j++){ itemVars.push(this.sdSample(rows.map(r=>r[j]))**2); }
+    const totals = rows.map(r=>r.reduce((a,b)=>a+b,0));
+    const totalVar = this.sdSample(totals)**2;
+    if(totalVar===0) return null;
+    const sumItemVar = itemVars.reduce((a,b)=>a+b,0);
+    const alpha = (k/(k-1))*(1 - sumItemVar/totalVar);
+    return Math.max(0, Math.min(1, alpha));
+  },
+
+  // Pearson r
+  pearson(a,b){
+    const n=Math.min(a.length,b.length); if(n<3) return null;
+    const ma=this.mean(a.slice(0,n)), mb=this.mean(b.slice(0,n));
+    let num=0,da=0,db=0;
+    for(let i=0;i<n;i++){num+=(a[i]-ma)*(b[i]-mb);da+=(a[i]-ma)**2;db+=(b[i]-mb)**2;}
+    const d=Math.sqrt(da*db); return d?num/d:null;
+  },
+
+  // OLS multiple regression via normal equations (X already includes intercept col)
+  // returns {beta, residuals, fitted, hat(diag), rss, df, n, p}
+  ols(X, y){
+    const n=X.length, p=X[0].length;
+    const Xt = this.transpose(X);
+    const XtX = this.matmul(Xt, X);
+    const XtXinv = this.invert(XtX);
+    if(!XtXinv) return null;
+    const Xty = this.matmul(Xt, y.map(v=>[v]));
+    const beta = this.matmul(XtXinv, Xty).map(r=>r[0]);
+    const fitted = X.map(row => row.reduce((s,v,j)=>s+v*beta[j],0));
+    const residuals = y.map((v,i)=>v-fitted[i]);
+    const rss = residuals.reduce((s,r)=>s+r*r,0);
+    // hat diag: h_ii = x_i (XtX)^-1 x_i^T
+    const hat = X.map(row=>{
+      const tmp = XtXinv.map(r=>r.reduce((s,v,j)=>s+v*row[j],0)); // (XtX)^-1 x_i
+      return row.reduce((s,v,j)=>s+v*tmp[j],0);
+    });
+    const tss = (()=>{ const my=this.mean(y); return y.reduce((s,v)=>s+(v-my)**2,0); })();
+    const r2 = tss>0 ? Math.max(0,1-rss/tss) : 0;
+    return {beta, residuals, fitted, hat, rss, df:n-p, n, p, r2};
+  },
+
+  // externally studentized residuals from an ols() result
+  studentizedResiduals(fit){
+    const {residuals, hat, rss, df} = fit;
+    return residuals.map((e,i)=>{
+      const h=Math.min(0.999, hat[i]);
+      // leave-one-out residual variance: s^2_(i) = (rss - e^2/(1-h)) / (df-1)
+      const num = rss - (e*e)/(1-h);
+      const s2 = Math.max(1e-6, num/Math.max(1,df-1));
+      return e/(Math.sqrt(s2)*Math.sqrt(1-h));
+    });
+  },
+
+  // linear matrix helpers
+  transpose(A){ return A[0].map((_,j)=>A.map(r=>r[j])); },
+  matmul(A,B){
+    const n=A.length, m=B[0].length, k=B.length;
+    const C=Array.from({length:n},()=>new Array(m).fill(0));
+    for(let i=0;i<n;i++) for(let j=0;j<m;j++){ let s=0; for(let t=0;t<k;t++) s+=A[i][t]*B[t][j]; C[i][j]=s; }
+    return C;
+  },
+  invert(A){
+    const n=A.length;
+    const M=A.map((r,i)=>[...r,...Array.from({length:n},(_,j)=>i===j?1:0)]);
+    for(let i=0;i<n;i++){
+      let piv=i;
+      for(let k=i+1;k<n;k++) if(Math.abs(M[k][i])>Math.abs(M[piv][i])) piv=k;
+      if(Math.abs(M[piv][i])<1e-11) return null;
+      [M[i],M[piv]]=[M[piv],M[i]];
+      const d=M[i][i];
+      for(let j=0;j<2*n;j++) M[i][j]/=d;
+      for(let k=0;k<n;k++){ if(k===i) continue; const f=M[k][i]; for(let j=0;j<2*n;j++) M[k][j]-=f*M[i][j]; }
+    }
+    return M.map(r=>r.slice(n));
+  },
+
+  // t-distribution two-tailed p-value (approx via incomplete beta), for significance flags
+  tCDF(t, df){
+    // returns P(T<=t); use regularized incomplete beta
+    const x = df/(df+t*t);
+    const ib = this.betacf ? null : null;
+    const p = 0.5*this.ibeta(df/2, 0.5, x);
+    return t>0 ? 1-p : p;
+  },
+  ibeta(a,b,x){
+    if(x<=0) return 0; if(x>=1) return 1;
+    const lbeta = this.lgamma(a)+this.lgamma(b)-this.lgamma(a+b);
+    const front = Math.exp(Math.log(x)*a + Math.log(1-x)*b - lbeta)/a;
+    // continued fraction (Lentz)
+    let f=1,c=1,d=0;
+    for(let i=0;i<=200;i++){
+      let m=Math.floor(i/2), num;
+      if(i===0) num=1;
+      else if(i%2===0) num=(m*(b-m)*x)/((a+2*m-1)*(a+2*m));
+      else num=-((a+m)*(a+b+m)*x)/((a+2*m)*(a+2*m+1));
+      d=1+num*d; if(Math.abs(d)<1e-30)d=1e-30; d=1/d;
+      c=1+num/c; if(Math.abs(c)<1e-30)c=1e-30;
+      const cd=c*d; f*=cd;
+      if(Math.abs(1-cd)<1e-8) break;
+    }
+    const res = front*(f-1);
+    return (a>(a+b)*x) ? 1-this.ibetaRaw(b,a,1-x,lbeta) : res;
+  },
+  ibetaRaw(a,b,x,lbeta){
+    const front=Math.exp(Math.log(x)*a+Math.log(1-x)*b-lbeta)/a;
+    let f=1,c=1,d=0;
+    for(let i=0;i<=200;i++){
+      let m=Math.floor(i/2),num;
+      if(i===0)num=1;
+      else if(i%2===0)num=(m*(b-m)*x)/((a+2*m-1)*(a+2*m));
+      else num=-((a+m)*(a+b+m)*x)/((a+2*m)*(a+2*m+1));
+      d=1+num*d; if(Math.abs(d)<1e-30)d=1e-30; d=1/d;
+      c=1+num/c; if(Math.abs(c)<1e-30)c=1e-30;
+      const cd=c*d; f*=cd;
+      if(Math.abs(1-cd)<1e-8)break;
+    }
+    return front*(f-1);
+  },
+  lgamma(z){
+    const g=[676.5203681218851,-1259.1392167224028,771.32342877765313,-176.61502916214059,12.507343278686905,-0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7];
+    if(z<0.5) return Math.log(Math.PI/Math.sin(Math.PI*z))-this.lgamma(1-z);
+    z-=1; let x=0.99999999999980993;
+    for(let i=0;i<g.length;i++) x+=g[i]/(z+i+1);
+    const t=z+g.length-0.5;
+    return 0.5*Math.log(2*Math.PI)+(z+0.5)*Math.log(t)-t+Math.log(x);
+  },
+};
+
+
+
+// ===== v2.0 升級層：以下定義會覆寫前面的同名函式（後定義者優先） =====
+// =====================================================================
+
+// ---------- 共用 ----------
+function killCharts(){
+  document.querySelectorAll('canvas').forEach(cv=>{
+    const c = Chart.getChart(cv);
+    if(c){ try{c.destroy();}catch(e){} }
+  });
+}
+let SHOW_NAMES = false;
+function stuLabel(s){ return p2(s.seat) + (SHOW_NAMES && s.name ? ' ' + s.name : ''); }
+function sAvg(s){
+  if(s.avg!=null) return s.avg;
+  const vv=Object.values(s.scores).map(x=>x.value);
+  return vv.length? vv.reduce((a,b)=>a+b,0)/vv.length : null;
+}
+function toggleNames(on){
+  SHOW_NAMES = on;
+  try{ localStorage.setItem('classGA_names', on?'1':'0'); }catch(e){}
+  if(S.exams.length){ refresh(); }
+}
+function curTab(){ const t=document.querySelector('.tab.active'); return t?t.dataset.tab:'t1'; }
+
+// ---------- 主題 ----------
+function applyChartTheme(){
+  if(typeof Chart==='undefined') return;
+  const css=getComputedStyle(document.documentElement);
+  Chart.defaults.color = css.getPropertyValue('--mu').trim();
+  Chart.defaults.borderColor = (document.documentElement.dataset.theme==='dark')?'rgba(230,237,247,.09)':'rgba(15,23,42,.08)';
+  Chart.defaults.font.family = "'Noto Sans TC',sans-serif";
+}
+function toggleTheme(){
+  const h=document.documentElement;
+  h.dataset.theme = h.dataset.theme==='dark'?'light':'dark';
+  try{ localStorage.setItem('classGA_theme', h.dataset.theme); }catch(e){}
+  document.getElementById('themeBtn').textContent = h.dataset.theme==='dark'?'☀️ 淺色模式':'🌙 深色模式';
+  if(S.exams.length){ switchTab(curTab()); renderHero(); }
+}
+
+// ---------- 五標改採大考中心官方定義（百分位數） ----------
+function pctile(sortedAsc, p){ // p: 0–100
+  const n=sortedAsc.length;
+  if(!n) return null;
+  const idx=(n-1)*p/100, lo=Math.floor(idx), hi=Math.ceil(idx);
+  return lo===hi ? sortedAsc[lo] : sortedAsc[lo]+(sortedAsc[hi]-sortedAsc[lo])*(idx-lo);
+}
+function computeStatObj(vals){            // vals 傳入為降冪
+  const desc=[...vals], asc=[...vals].sort((a,b)=>a-b);
+  const n=asc.length;
+  const mean=asc.reduce((a,b)=>a+b,0)/n;
+  const sd=Math.sqrt(asc.reduce((a,v)=>a+(v-mean)**2,0)/n);
+  const median=pctile(asc,50);
+  const q1=pctile(asc,25), q3=pctile(asc,75);
+  const dist=new Array(10).fill(0);
+  asc.forEach(v=>dist[Math.min(9,Math.floor(v/10))]++);
+  const passCount=asc.filter(v=>v>=60).length;
+  return {
+    n, mean, sd, median, q1, q3,
+    min:asc[0], max:asc[n-1],
+    top:    pctile(asc,88),   // 頂標
+    front:  pctile(asc,75),   // 前標
+    mid:    pctile(asc,50),   // 均標
+    back:   pctile(asc,25),   // 後標
+    bottom: pctile(asc,12),   // 底標
+    passRate:passCount/n*100, passCount,
+    hiCount:asc.filter(v=>v>=90).length,
+    cv: mean? sd/mean*100 : 0,
+    dist, values:desc,
+  };
+}
+// 五標表尾加註官方定義說明
+const _origRFM = renderFiveMarks;
+renderFiveMarks = function(idx){
+  _origRFM(idx);
+  const fm=document.getElementById('fmBody');
+  if(fm) fm.insertAdjacentHTML('beforeend',
+    `<div style="font-size:.78rem;color:var(--mu2);margin-top:10px;line-height:1.6;">
+      ※ 五標採大考中心官方定義：頂標＝第88百分位、前標＝第75、均標＝第50、後標＝第25、底標＝第12百分位之成績。</div>`);
+};
+
+// ---------- 學生選單（含姓名） ----------
+function updStuSel(){
+  const e=S.exams[S.cur]; if(!e) return;
+  ['ss','scs','prtStu'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    const prev=el.value;
+    el.innerHTML='';
+    e.students.forEach(s=>{
+      const o=document.createElement('option');
+      o.value=s.seat; o.textContent='座號 '+stuLabel(s); el.appendChild(o);
+    });
+    if(prev && e.students.some(s=>String(s.seat)===String(prev))) el.value=prev;
+  });
+}
+
+// ---------- 成績總表 2.0：搜尋・排序・熱力圖・姓名・點列跳個人 ----------
+let SORT_KEY=null, SORT_DIR=1;
+function gtSort(key){
+  if(SORT_KEY===key) SORT_DIR*=-1; else { SORT_KEY=key; SORT_DIR=(key==='crank'||key==='grank'||key==='gpct'||key==='fail')?1:-1; }
+  renderGradeTable(+document.getElementById('s1').value||0);
+}
+function heatBG(v){
+  if(v==null) return '';
+  if(v<60) return `background:rgba(220,38,38,${(0.14+(60-v)/60*.32).toFixed(2)});`;
+  const t=Math.max(0,Math.min(1,(v-60)/40));
+  return `background:rgba(5,150,105,${(0.08+t*.42).toFixed(2)});`;
+}
+function renderGradeTable(idx){
+  const e=ex(idx); if(!e) return;
+  const q=(document.getElementById('q1')?.value||'').trim().toLowerCase();
+  const hm=document.getElementById('hm1')?.checked;
+
+  const hasTot=e.students.some(s=>s.total!==null), hasAvg=e.students.some(s=>s.avg!==null),
+        hasFail=e.students.some(s=>s.failCount!==null), hasCR=e.students.some(s=>s.classRank!==null),
+        hasCD=e.students.some(s=>s.classDiff!==null), hasGR=e.students.some(s=>s.groupRank!==null),
+        hasGD=e.students.some(s=>s.groupDiff!==null), hasGP=e.students.some(s=>s.groupPct!==null);
+
+  // 排序
+  let list=[...e.students];
+  if(SORT_KEY){
+    const get=s=>{
+      if(SORT_KEY==='seat')return s.seat;
+      if(SORT_KEY==='total')return s.total??-1;
+      if(SORT_KEY==='avg')return sAvg(s)??-1;
+      if(SORT_KEY==='fail')return s.failCount??-1;
+      if(SORT_KEY==='crank')return s.classRank??9999;
+      if(SORT_KEY==='grank')return s.groupRank??9999;
+      if(SORT_KEY==='gpct')return s.groupPct??9999;
+      return s.scores[SORT_KEY]?.value??-1;
+    };
+    list.sort((a,b)=>(get(a)-get(b))*SORT_DIR);
+  }
+  // 搜尋
+  if(q) list=list.filter(s=>p2(s.seat).includes(q)||String(s.seat)===q||(s.name&&s.name.toLowerCase().includes(q)));
+
+  const sArrow=k=>SORT_KEY===k?(SORT_DIR===1?' ▲':' ▼'):'';
+  let h=`<table class="${hm?'hm-on':''}"><thead><tr><th class="sortable" onclick="gtSort('seat')">座號${sArrow('seat')}</th>`;
+  if(SHOW_NAMES) h+=`<th>姓名</th>`;
+  e.subjects.forEach(s=>{h+=`<th class="sortable" onclick="gtSort('${s.replace(/'/g,"\\'")}')">${s}${sArrow(s)}</th>`;});
+  if(hasTot) h+=`<th class="th3 sortable" onclick="gtSort('total')">總分${sArrow('total')}</th>`;
+  if(hasAvg) h+=`<th class="th3 sortable" onclick="gtSort('avg')">平均分數${sArrow('avg')}</th>`;
+  if(hasFail)h+=`<th class="th3 sortable" onclick="gtSort('fail')">不及格數${sArrow('fail')}</th>`;
+  if(hasCR)  h+=`<th class="th4 sortable" onclick="gtSort('crank')">班級名次${sArrow('crank')}</th>`;
+  if(hasCD)  h+=`<th class="th4">班級進退</th>`;
+  if(hasGR)  h+=`<th class="th2 sortable" onclick="gtSort('grank')">類組名次${sArrow('grank')}</th>`;
+  if(hasGD)  h+=`<th class="th2">類組進退</th>`;
+  if(hasGP)  h+=`<th class="th2 sortable" onclick="gtSort('gpct')">類組百分名次${sArrow('gpct')}</th>`;
+  h+=`</tr></thead><tbody>`;
+
+  list.forEach(s=>{
+    h+=`<tr class="stu-row" title="點擊查看個人分析" onclick="gotoStudent(${s.seat})"><td class="seat">${p2(s.seat)}</td>`;
+    if(SHOW_NAMES) h+=`<td style="font-weight:600;">${s.name||'—'}</td>`;
+    e.subjects.forEach(subj=>{
+      const sc=s.scores[subj];
+      if(sc){
+        const style=hm?` style="${heatBG(sc.value)}"`:'';
+        h+=`<td class="sc-cell ${!hm&&sc.fail?'fail':!hm&&sc.value>=90?'hi':''}"${style}>${sc.value}</td>`;
+      } else h+=`<td style="color:var(--mu2)">—</td>`;
+    });
+    if(hasTot) h+=`<td>${s.total!=null?s.total.toLocaleString():'—'}</td>`;
+    if(hasAvg) h+=`<td>${s.avg!=null?s.avg.toFixed(1):'—'}</td>`;
+    if(hasFail)h+=`<td class="${s.failCount>0?'fail':''}">${s.failCount??'—'}</td>`;
+    if(hasCR)  h+=`<td>${s.classRank??'—'}</td>`;
+    if(hasCD)  h+=diffTd(s.classDiff);
+    if(hasGR)  h+=`<td>${s.groupRank??'—'}</td>`;
+    if(hasGD)  h+=diffTd(s.groupDiff);
+    if(hasGP)  h+=`<td>${s.groupPct??'—'}</td>`;
+    h+=`</tr>`;
+  });
+
+  const fmtRow=(label,fn)=>{
+    let r=`<tr class="stat-r"><td>${label}</td>`;
+    if(SHOW_NAMES) r+=`<td></td>`;
+    e.subjects.forEach(s=>{const st=e.stats[s];r+=`<td>${st?fn(st):'—'}</td>`;});
+    if(hasTot){const st=e.stats['_total'];r+=`<td>${st?fn(st):'—'}</td>`;}
+    if(hasAvg){const st=e.stats['_avg'];r+=`<td>${st?fn(st):'—'}</td>`;}
+    const auxN=(hasFail?1:0)+(hasCR?1:0)+(hasCD?1:0)+(hasGR?1:0)+(hasGD?1:0)+(hasGP?1:0);
+    if(auxN) r+=`<td colspan="${auxN}"></td>`;
+    r+=`</tr>`;
+    return r;
+  };
+  h+=fmtRow('班均',st=>st.mean.toFixed(1));
+  h+=fmtRow('標準差',st=>st.sd.toFixed(1));
+  h+=fmtRow('最高',st=>(+st.max).toFixed(1));
+  h+=fmtRow('最低',st=>(+st.min).toFixed(1));
+  h+=`</tbody></table>`;
+  document.getElementById('gw').innerHTML=h;
+}
+function gotoStudent(seat){
+  switchTab('t4');
+  const s4=document.getElementById('s4'); if(s4) s4.value=S.cur;
+  const ss=document.getElementById('ss'); if(ss) ss.value=seat;
+  renderStudentAnalysis(S.cur, seat);
+  document.getElementById('t4').scrollIntoView({behavior:'smooth'});
+}
+
+
+// ---------- 班級體質儀表板 ----------
+function renderHero(){
+  const hero=document.getElementById('hero');
+  if(!S.exams.length){ hero.classList.remove('on'); return; }
+  const e=S.exams[S.exams.length-1];
+  const prev=S.exams.length>=2?S.exams[S.exams.length-2]:null;
+
+  const allScores=e.students.flatMap(s=>Object.values(s.scores).map(x=>x.value));
+  const passRate=allScores.length?allScores.filter(v=>v>=60).length/allScores.length*100:0;
+  const hiRate=allScores.length?allScores.filter(v=>v>=90).length/allScores.length*100:0;
+  const clsAvg=e.stats['_avg']?.mean ?? (allScores.length?allScores.reduce((a,b)=>a+b,0)/allScores.length:0);
+  const clsSD=e.stats['_avg']?.sd;
+  const warnN=computeWarnings(S.exams.length-1).filter(w=>w.level!=='ok').length;
+
+  let pAvg=null,pPass=null,pHi=null;
+  if(prev){
+    const pv=prev.students.flatMap(s=>Object.values(s.scores).map(x=>x.value));
+    pAvg=prev.stats['_avg']?.mean ?? (pv.length?pv.reduce((a,b)=>a+b,0)/pv.length:null);
+    pPass=pv.length?pv.filter(v=>v>=60).length/pv.length*100:null;
+    pHi=pv.length?pv.filter(v=>v>=90).length/pv.length*100:null;
+  }
+  const dlt=(cur,old,unit='')=>{
+    if(old==null) return '<span class="dlt nt">首份資料</span>';
+    const d=cur-old;
+    if(Math.abs(d)<0.05) return '<span class="dlt nt">持平</span>';
+    return `<span class="dlt ${d>0?'up':'dn'}">${d>0?'▲+':'▼'}${d.toFixed(1)}${unit} vs 上次</span>`;
+  };
+  hero.innerHTML=`
+    <div class="hero-title">🏫 班級體質儀表板 ─ ${e.name}（${e.students.length} 位學生 / ${e.subjects.length} 科）${prev?`，對照：${prev.name}`:''}</div>
+    <div class="hero-grid">
+      <div class="hk"><div class="v" style="color:var(--p)">${clsAvg.toFixed(1)}</div><div class="l">全班均分</div>${dlt(clsAvg,pAvg)}</div>
+      <div class="hk"><div class="v" style="color:var(--s)">${passRate.toFixed(0)}%</div><div class="l">全科及格率</div>${dlt(passRate,pPass,'%')}</div>
+      <div class="hk"><div class="v" style="color:var(--p2)">${hiRate.toFixed(0)}%</div><div class="l">90 分以上比率</div>${dlt(hiRate,pHi,'%')}</div>
+      <div class="hk"><div class="v" style="color:var(--w)">${clsSD!=null?clsSD.toFixed(1):'—'}</div><div class="l">均分標準差（班內差距）</div></div>
+      <div class="hk clickable" onclick="switchTab('t8')"><div class="v" style="color:${warnN?'var(--d)':'var(--s)'}">${warnN}</div><div class="l">預警關懷人數（點擊查看）</div></div>
+    </div>`;
+  hero.classList.add('on');
+}
+
+// ---------- 預警關懷系統 ----------
+function computeWarnings(idx){
+  const e=ex(idx); if(!e) return [];
+  const prevIdx=S.exams.indexOf(e)-1;
+  const prev=prevIdx>=0?S.exams[prevIdx]:null;
+  return e.students.map(s=>{
+    const reasons=[]; let score=0;
+    const avg=sAvg(s);
+    const vv=Object.values(s.scores).map(x=>x.value);
+    const failN = s.failCount!=null ? s.failCount : vv.filter(v=>v<60).length;
+    if(failN>=3){ reasons.push(`不及格 ${failN} 科`); score+=3; }
+    else if(failN===2){ reasons.push('不及格 2 科'); score+=2; }
+    if(avg!=null&&avg<50){ reasons.push(`均分僅 ${avg.toFixed(1)}`); score+=3; }
+    else if(avg!=null&&avg<60){ reasons.push(`均分 ${avg.toFixed(1)} 未達及格`); score+=2; }
+    if(s.classDiff!=null&&s.classDiff<=-10){ reasons.push(`班名大退 ${Math.abs(s.classDiff)} 名`); score+=3; }
+    else if(s.classDiff!=null&&s.classDiff<=-5){ reasons.push(`班名退步 ${Math.abs(s.classDiff)} 名`); score+=2; }
+    if(vv.length>=3&&avg!=null){
+      const crashed=Object.entries(s.scores).filter(([,x])=>x.value<=avg-25).map(([sub])=>sub);
+      if(crashed.length){ reasons.push(`單科崩盤：${crashed.slice(0,2).join('、')}`); score+=2; }
+    }
+    if(s.groupPct!=null&&s.groupPct>=90){ reasons.push(`類組後 10%（百分名次 ${s.groupPct}）`); score+=1; }
+    if(prev){
+      const ps=prev.students.find(x=>x.seat===s.seat);
+      const pAvg=ps?sAvg(ps):null;
+      if(pAvg!=null&&avg!=null&&avg-pAvg<=-8){ reasons.push(`均分驟降 ${(pAvg-avg).toFixed(1)} 分`); score+=3; }
+    }
+    const level=score>=6?'hi':score>=3?'mid':score>=1?'low':'ok';
+    return {stu:s, score, reasons, level, avg, failN};
+  });
+}
+function renderWarning(idx){
+  const e=ex(idx); if(!e) return;
+  const list=computeWarnings(idx);
+  const hi=list.filter(w=>w.level==='hi'), mid=list.filter(w=>w.level==='mid'),
+        low=list.filter(w=>w.level==='low'), ok=list.filter(w=>w.level==='ok');
+  let h=`<div class="warn-sum">
+    <div class="wlevel wl-hi"><div class="n">${hi.length}</div><div class="t">🔴 高度關注</div></div>
+    <div class="wlevel wl-mid"><div class="n">${mid.length}</div><div class="t">🟠 中度關注</div></div>
+    <div class="wlevel wl-low"><div class="n">${low.length}</div><div class="t">🟡 持續留意</div></div>
+    <div class="wlevel wl-ok"><div class="n">${ok.length}</div><div class="t">🟢 狀況良好</div></div>
+  </div>`;
+  const flagged=list.filter(w=>w.level!=='ok').sort((a,b)=>b.score-a.score);
+  if(!flagged.length){
+    h+=`<p style="text-align:center;color:var(--s);padding:28px;font-weight:700;">🎉 本次考試沒有觸發預警條件的學生</p>`;
+  }else{
+    h+=`<div class="tw"><table><thead><tr><th>等級</th><th>座號</th>${SHOW_NAMES?'<th>姓名</th>':''}<th>均分</th><th>不及格</th><th>班名</th><th>進退</th><th style="min-width:260px;">預警原因</th><th>動作</th></tr></thead><tbody>`;
+    flagged.forEach(w=>{
+      const s=w.stu;
+      const badge=w.level==='hi'?'<span class="wbadge wb-hi">高</span>':w.level==='mid'?'<span class="wbadge wb-mid">中</span>':'<span class="wbadge wb-low">留意</span>';
+      h+=`<tr><td>${badge}</td><td class="seat">${p2(s.seat)}</td>${SHOW_NAMES?`<td style="font-weight:600;">${s.name||'—'}</td>`:''}
+        <td class="${w.avg!=null&&w.avg<60?'fail':''}">${w.avg!=null?w.avg.toFixed(1):'—'}</td>
+        <td class="${w.failN>0?'fail':''}">${w.failN}</td>
+        <td>${s.classRank??'—'}</td>${diffTd(s.classDiff)}
+        <td style="text-align:left;">${w.reasons.map(r=>`<span class="wreason">${r}</span>`).join('')}</td>
+        <td><button class="btn bs" style="padding:4px 10px;font-size:.76rem;" onclick="gotoStudent(${s.seat})">查看分析</button></td></tr>`;
+    });
+    h+=`</tbody></table></div>`;
+  }
+  h+=`<div class="insight"><h4>📌 判定規則說明</h4>
+    高度關注（≥6 分）、中度關注（3–5 分）、持續留意（1–2 分）。計分規則：不及格 ≥3 科 +3、2 科 +2；均分 &lt;50 +3、&lt;60 +2；
+    班名退步 ≥10 名 +3、≥5 名 +2；任一科低於個人均分 25 分以上（單科崩盤）+2；類組百分名次 ≥90 +1；
+    與上次考試相比均分驟降 ≥8 分 +3。規則為輔助參考，實際關懷仍以導師專業判斷為準。</div>`;
+  document.getElementById('wbody').innerHTML=h;
+}
+function exportWarnList(){
+  const e=ex(+document.getElementById('s8')?.value||S.cur); if(!e) return;
+  const list=computeWarnings(S.exams.indexOf(e)).filter(w=>w.level!=='ok').sort((a,b)=>b.score-a.score);
+  if(!list.length){ toast('本次沒有預警學生'); return; }
+  const hdr=['等級','座號','姓名','平均分數','不及格科數','班級名次','班級進退','預警原因'];
+  const rows=list.map(w=>[
+    w.level==='hi'?'高度關注':w.level==='mid'?'中度關注':'持續留意',
+    p2(w.stu.seat), w.stu.name||'', w.avg!=null?+w.avg.toFixed(1):'', w.failN,
+    w.stu.classRank??'', w.stu.classDiff??'', w.reasons.join('；')
+  ]);
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet([hdr,...rows]);
+  ws['!cols']=[{wch:9},{wch:6},{wch:10},{wch:9},{wch:9},{wch:9},{wch:9},{wch:60}];
+  XLSX.utils.book_append_sheet(wb,ws,'預警名單');
+  XLSX.writeFile(wb,`${e.name}_預警關懷名單.xlsx`);
+  toast('✅ 預警名單已下載');
+}
+
+
+// ---------- 全班分析擴充：箱型圖・相關性矩陣・成績分群 ----------
+function pearsonArr(a,b){
+  const n=a.length; if(n<3) return null;
+  const ma=a.reduce((x,y)=>x+y,0)/n, mb=b.reduce((x,y)=>x+y,0)/n;
+  let num=0,da=0,db=0;
+  for(let i=0;i<n;i++){num+=(a[i]-ma)*(b[i]-mb);da+=(a[i]-ma)**2;db+=(b[i]-mb)**2;}
+  const d=Math.sqrt(da*db);
+  return d?num/d:null;
+}
+const _origRCA = renderClassAnalysis;
+renderClassAnalysis = function(idx){
+  applyChartTheme();
+  _origRCA(idx);
+  const e=ex(idx); if(!e) return;
+  const cc=document.getElementById('cc');
+
+  // (A) 箱型圖：min–Q1–Q3–max ＋ 中位數標記
+  addCB(cc,'cx1','各科分數箱型圖（最小–Q1–Q3–最大，◆＝中位數）');
+  const subj=e.subjects;
+  new Chart(document.getElementById('cx1'),{
+    data:{labels:subj.map(abbr),datasets:[
+      {type:'bar',label:'全距 (min–max)',grouped:false,
+        data:subj.map(s=>{const st=e.stats[s];return st?[st.min,st.max]:null;}),
+        backgroundColor:'rgba(100,116,139,.22)',barPercentage:.18,borderSkipped:false,borderRadius:4},
+      {type:'bar',label:'四分位距 (Q1–Q3)',grouped:false,
+        data:subj.map(s=>{const st=e.stats[s];return st?[st.q1,st.q3]:null;}),
+        backgroundColor:'rgba(37,99,235,.5)',borderColor:'rgba(37,99,235,.9)',borderWidth:1,
+        barPercentage:.5,borderSkipped:false,borderRadius:4},
+      {type:'scatter',label:'中位數',
+        data:subj.map((s,i)=>{const st=e.stats[s];return st?{x:i,y:st.median}:null;}).filter(Boolean),
+        pointStyle:'rectRot',pointRadius:7,backgroundColor:'#d97706'},
+    ]},
+    options:{responsive:true,scales:{y:{min:0,max:100},x:{type:'category',labels:subj.map(abbr)}},
+      plugins:{legend:{position:'bottom'},
+        tooltip:{callbacks:{label:c=>c.dataset.type==='bar'?`${c.dataset.label}：${c.raw[0]}–${c.raw[1]}`:`中位數：${c.parsed.y.toFixed(1)}`}}}}
+  });
+
+  // (B) 成績分群圓環（依個人均分）
+  addCB(cc,'cx2','學生程度分群（依個人平均分數）');
+  const groups={'90 以上（頂尖群）':0,'75–89（優良群）':0,'60–74（中間群）':0,'60 以下（待加強群）':0};
+  e.students.forEach(s=>{
+    const a=sAvg(s); if(a==null) return;
+    if(a>=90)groups['90 以上（頂尖群）']++;
+    else if(a>=75)groups['75–89（優良群）']++;
+    else if(a>=60)groups['60–74（中間群）']++;
+    else groups['60 以下（待加強群）']++;
+  });
+  new Chart(document.getElementById('cx2'),{type:'doughnut',
+    data:{labels:Object.keys(groups),datasets:[{data:Object.values(groups),
+      backgroundColor:['rgba(124,58,237,.75)','rgba(5,150,105,.7)','rgba(37,99,235,.65)','rgba(220,38,38,.7)'],
+      borderWidth:2,borderColor:getComputedStyle(document.documentElement).getPropertyValue('--card').trim()}]},
+    options:{responsive:true,plugins:{legend:{position:'right'}}}
+  });
+
+  // (C) 相關性矩陣（科目兩兩 Pearson r，跨學生）
+  const pairsOK = e.subjects.length>=2 && e.students.length>=6;
+  let mxh=`<div class="cb full"><h3>🔗 科目相關性矩陣（Pearson r，跨全班學生）</h3>`;
+  if(pairsOK){
+    mxh+=`<div class="note" style="margin:0 0 10px;">藍色＝兩科成績在班上「同強同弱」（可能反映共同能力或讀書習慣）；紅色＝負相關。|r|>0.7 為高度相關。樣本為兩科皆有成績的學生。</div>
+      <div class="tw"><table class="mx"><thead><tr><th></th>${e.subjects.map(s=>`<th>${abbr(s)}</th>`).join('')}</tr></thead><tbody>`;
+    const insights=[];
+    e.subjects.forEach(a=>{
+      mxh+=`<tr><th>${abbr(a)}</th>`;
+      e.subjects.forEach(b=>{
+        if(a===b){mxh+=`<td style="background:var(--card3);color:var(--mu2)">1.00</td>`;return;}
+        const pairs=e.students.map(s=>[s.scores[a]?.value,s.scores[b]?.value]).filter(p=>p[0]!=null&&p[1]!=null);
+        const r=pairs.length>=6?pearsonArr(pairs.map(p=>p[0]),pairs.map(p=>p[1])):null;
+        if(r==null){mxh+=`<td style="color:var(--mu2)">—</td>`;return;}
+        const al=Math.min(.72,Math.abs(r)*.72);
+        const bg=r>=0?`rgba(37,99,235,${al.toFixed(2)})`:`rgba(220,38,38,${al.toFixed(2)})`;
+        mxh+=`<td style="background:${bg};${Math.abs(r)>.5?'color:#fff;':''}">${r.toFixed(2)}</td>`;
+        if(e.subjects.indexOf(a)<e.subjects.indexOf(b)&&Math.abs(r)>=0.7) insights.push({a,b,r});
+      });
+      mxh+=`</tr>`;
+    });
+    mxh+=`</tbody></table></div>`;
+    if(insights.length){
+      insights.sort((x,y)=>Math.abs(y.r)-Math.abs(x.r));
+      mxh+=`<div class="note" style="margin-top:10px;">🧩 高度相關科目組合：${insights.slice(0,4).map(i=>`<b>${i.a}×${i.b}</b>（r=${i.r.toFixed(2)}）`).join('、')}　→ 同群科目可考慮共同的補強策略或跨科教學設計。</div>`;
+    }
+  }else{
+    mxh+=`<div class="note">需至少 2 科且 6 位以上學生才能計算相關性。</div>`;
+  }
+  mxh+=`</div>`;
+  cc.insertAdjacentHTML('beforeend',mxh);
+};
+
+// ---------- 個人分析 2.0：Z/T 分數・偏科指數・上下一位導覽 ----------
+function renderStudentAnalysis(examIdx, seat){
+  applyChartTheme();
+  const e=ex(examIdx);
+  const stu=e?.students.find(s=>s.seat===+seat);
+  if(!e||!stu) return;
+  const sidx=e.students.indexOf(stu);
+  const prevS=e.students[sidx-1], nextS=e.students[sidx+1];
+
+  const vv=Object.values(stu.scores).map(x=>x.value);
+  const myMean=vv.length?vv.reduce((a,b)=>a+b,0)/vv.length:null;
+  const mySD=vv.length>1?Math.sqrt(vv.reduce((a,v)=>a+(v-myMean)**2,0)/vv.length):0;
+  const myCV=myMean?mySD/myMean*100:0;
+  const cvLabel=myCV<6?'發展均衡':myCV<12?'大致均衡':myCV<18?'輕度偏科':'明顯偏科';
+
+  let h=`<div class="sh"><h3>座號 ${p2(stu.seat)}${SHOW_NAMES&&stu.name?` ${stu.name}`:''} 成績分析
+    <span class="stu-nav no-print">
+      <button class="btn bs" ${prevS?'':'disabled'} onclick="${prevS?`gotoStudent(${prevS.seat})`:''}">← 上一位</button>
+      <button class="btn bs" ${nextS?'':'disabled'} onclick="${nextS?`gotoStudent(${nextS.seat})`:''}">下一位 →</button>
+    </span></h3><div class="sm">`;
+  if(stu.avg!=null)       h+=`<div>平均分數：<span>${stu.avg.toFixed(1)}</span></div>`;
+  if(stu.total!=null)     h+=`<div>總分：<span>${stu.total.toLocaleString()}</span></div>`;
+  if(stu.failCount!=null) h+=`<div>不及格數：<span style="color:${stu.failCount>0?'var(--d)':'var(--s)'};">${stu.failCount}</span></div>`;
+  if(stu.classRank!=null) h+=`<div>班級名次：<span>#${stu.classRank}</span></div>`;
+  if(stu.classDiff!=null){const c=stu.classDiff>0?'up':stu.classDiff<0?'dn':'';h+=`<div>班級進退：<span class="${c}">${stu.classDiff>0?'▲':stu.classDiff<0?'▽':'─'}${stu.classDiff!==0?Math.abs(stu.classDiff):''}</span></div>`;}
+  if(stu.groupRank!=null) h+=`<div>類組名次：<span>#${stu.groupRank}</span></div>`;
+  if(stu.groupPct!=null)  h+=`<div>類組百分名次：<span>${stu.groupPct}</span></div>`;
+  h+=`<div>偏科指數：<span style="color:${myCV>=18?'var(--d)':myCV>=12?'var(--w)':'var(--s)'};">CV ${myCV.toFixed(1)}%（${cvLabel}）</span></div>`;
+  h+=`</div></div>`;
+
+  h+=`<div class="tw"><table><thead><tr>
+    <th class="th2">科目</th><th class="th2">成績</th><th class="th2">班平均</th><th class="th2">差距</th>
+    <th class="th2">Z 分數</th><th class="th2">T 分數</th><th class="th2">班內排名</th><th class="th2">PR(估)</th>
+    <th class="th2">頂標</th><th class="th2">均標</th><th class="th2">底標</th><th class="th2">評等</th></tr></thead><tbody>`;
+  e.subjects.forEach(subj=>{
+    const sc=stu.scores[subj], st=e.stats[subj];
+    if(!sc||!st){h+=`<tr><td style="text-align:left">${subj}</td><td colspan="11" style="color:var(--mu2)">—</td></tr>`;return;}
+    const diff=sc.value-st.mean;
+    const z=st.sd?(sc.value-st.mean)/st.sd:0, t=50+10*z;
+    const rank=st.values.filter(v=>v>sc.value).length+1;
+    const pr=Math.max(0,Math.round((1-rank/st.n)*100));
+    const [g,gc]=sc.value>=90?['A+','var(--s)']:sc.value>=80?['A','var(--p)']:sc.value>=70?['B','var(--p2)']:sc.value>=60?['C','var(--w)']:['D','var(--d)'];
+    h+=`<tr><td style="text-align:left">${subj}</td>
+      <td class="${sc.fail?'fail':sc.value>=90?'hi':''}">${sc.value}</td>
+      <td>${st.mean.toFixed(1)}</td>
+      <td class="${diff>=0?'up':'dn'}">${diff>=0?'+':''}${diff.toFixed(1)}</td>
+      <td class="${z>=0?'up':'dn'}">${z.toFixed(2)}</td><td>${t.toFixed(1)}</td>
+      <td>${rank}/${st.n}</td><td>${pr}</td>
+      <td>${st.top.toFixed(1)}</td><td>${st.mid.toFixed(1)}</td><td>${st.bottom.toFixed(1)}</td>
+      <td style="font-weight:800;color:${gc}">${g}</td></tr>`;
+  });
+  h+=`</tbody></table></div>
+  <div class="note" style="font-size:.76rem;color:var(--mu2);margin-top:8px;">Z 分數＝(個人−班均)÷班標準差，呈現在班上的相對位置；T＝50＋10Z。PR 為班內百分等級估算。</div>`;
+
+  h+=`<div class="cg" style="margin-top:16px;">
+    <div class="cb"><h3>個人成績 vs 班級平均</h3><canvas id="sb1"></canvas></div>
+    <div class="cb"><h3>個人能力雷達圖（個人 vs 班均 vs 頂標）</h3><canvas id="sb2"></canvas></div>
+    <div class="cb full"><h3>各科 Z 分數剖面（0 線＝班級平均）</h3><canvas id="sb3"></canvas></div>
+  </div>`;
+  document.getElementById('sb').innerHTML=h;
+
+  const labels=e.subjects.map(abbr);
+  const my=e.subjects.map(s=>stu.scores[s]?.value??null);
+  const cls=e.subjects.map(s=>e.stats[s]?.mean??null);
+  const top=e.subjects.map(s=>e.stats[s]?.top??null);
+  const zs=e.subjects.map(s=>{
+    const sc=stu.scores[s],st=e.stats[s];
+    return sc&&st&&st.sd?+(((sc.value-st.mean)/st.sd).toFixed(2)):null;
+  });
+
+  killCharts();
+  new Chart(document.getElementById('sb1'),{type:'bar',
+    data:{labels,datasets:[
+      {label:'個人',data:my,backgroundColor:'rgba(37,99,235,.75)',borderRadius:6},
+      {label:'班均',data:cls,backgroundColor:'rgba(148,163,184,.45)',borderRadius:6}
+    ]},options:{responsive:true,scales:{y:{min:0,max:100}}}
+  });
+  new Chart(document.getElementById('sb2'),{type:'radar',
+    data:{labels,datasets:[
+      {label:'個人',data:my,fill:true,backgroundColor:'rgba(124,58,237,.18)',borderColor:'rgba(124,58,237,.85)',pointBackgroundColor:'#7c3aed'},
+      {label:'班均',data:cls,fill:true,backgroundColor:'rgba(148,163,184,.12)',borderColor:'rgba(148,163,184,.6)',pointBackgroundColor:'#94a3b8'},
+      {label:'頂標',data:top,fill:false,borderColor:'rgba(217,119,6,.7)',borderDash:[5,4],pointRadius:2,pointBackgroundColor:'#d97706'}
+    ]},options:{responsive:true,scales:{r:{min:0,max:100}},plugins:{legend:{position:'bottom'}}}
+  });
+  new Chart(document.getElementById('sb3'),{type:'bar',
+    data:{labels,datasets:[{label:'Z 分數',data:zs,
+      backgroundColor:zs.map(z=>z==null?'#999':z>=1?'rgba(5,150,105,.8)':z>=0?'rgba(37,99,235,.65)':z>=-1?'rgba(217,119,6,.7)':'rgba(220,38,38,.75)'),
+      borderRadius:5}]},
+    options:{responsive:true,plugins:{legend:{display:false}},
+      scales:{y:{suggestedMin:-3,suggestedMax:3,title:{display:true,text:'Z 分數'},ticks:{callback:v=>(v>0?'+':'')+v}}}}
+  });
+}
+
+
+// ---------- 匯出（含姓名欄） ----------
+function makeWB(e){
+  const wb=XLSX.utils.book_new();
+  const hdr=['座號','姓名',...e.subjects,'總分','平均分數','不及格數','班級名次','班級進退','類組名次','類組進退','類組百分名次'];
+  const rows=e.students.map(s=>{
+    const r=[p2(s.seat), s.name||''];
+    e.subjects.forEach(subj=>r.push(s.scores[subj]?.value??''));
+    r.push(s.total??'',s.avg??'',s.failCount??'',s.classRank??'',s.classDiff??'',s.groupRank??'',s.groupDiff??'',s.groupPct??'');
+    return r;
+  });
+  const ws=XLSX.utils.aoa_to_sheet([hdr,...rows]);
+  ws['!cols']=[{wch:6},{wch:10},...e.subjects.map(()=>({wch:9})),...new Array(9).fill({wch:10})];
+  XLSX.utils.book_append_sheet(wb,ws,'成績');
+  const sh2=[['統計項目',...e.subjects]];
+  [['頂標(P88)','top'],['前標(P75)','front'],['均標(P50)','mid'],['後標(P25)','back'],['底標(P12)','bottom'],
+   ['平均','mean'],['標準差','sd'],['最高','max'],['最低','min'],['中位數','median'],['Q1','q1'],['Q3','q3'],
+   ['及格率%','passRate'],['及格人數','passCount'],['人數','n']
+  ].forEach(([l,k])=>{
+    sh2.push([l,...e.subjects.map(s=>e.stats[s]!=null&&e.stats[s][k]!=null?+(+e.stats[s][k]).toFixed(1):'')]);
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sh2),'五標統計');
+  return wb;
+}
+
+// ---------- 資料持久化（localStorage） ----------
+const STORE_KEY='classGradeAnalysisData';
+function saveState(){
+  try{
+    localStorage.setItem(STORE_KEY, JSON.stringify({v:2, cur:S.cur, exams:S.exams}));
+  }catch(e){ /* quota 超過時靜默略過 */ }
+}
+function loadState(){
+  try{
+    const raw=localStorage.getItem(STORE_KEY);
+    if(!raw) return false;
+    const d=JSON.parse(raw);
+    if(!d.exams||!d.exams.length) return false;
+    S.exams=d.exams; S.cur=Math.min(d.cur||0, d.exams.length-1);
+    return true;
+  }catch(e){ return false; }
+}
+function clearAllData(){
+  if(!confirm('將清除所有已載入的考試資料（含瀏覽器儲存），確定嗎？')) return;
+  S.exams=[]; S.cur=0;
+  try{ localStorage.removeItem(STORE_KEY); }catch(e){}
+  killCharts();
+  document.getElementById('main').style.display='none';
+  document.getElementById('hero').classList.remove('on');
+  updChips();
+  toast('🗑️ 已清除全部資料');
+}
+const _origRefresh = refresh;
+refresh = function(){
+  applyChartTheme();
+  _origRefresh();
+  renderHero();
+  saveState();
+  if(typeof refreshDatasetList==='function') refreshDatasetList();
+};
+
+// ---------- 示範班級資料產生器 ----------
+function loadDemoClass(){
+  const SUBJ=['國語文','英語文','數學','物理','化學','生物','地科','公民'];
+  const FAM='陳林王李張吳劉蔡楊許鄭謝郭洪曾'.split('');
+  const GIV=['宇翔','子涵','承恩','怡君','冠廷','詩涵','柏宇','雅婷','家豪','欣妤','哲瑋','佩珊','俊傑','韻如','昱辰','芷瑄','鈞翔','婉婷','彥廷','思齊','士哲','靜宜','志明','嘉玲','建宏','心怡','冠宇','宛蓉','育誠','美琪'];
+  const N=30;
+  // 固定亂數種子（mulberry32）讓示範資料可重現
+  let seed=20260610;
+  const rnd=()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
+  const ability=[]; // 每位學生的基礎能力 + 科目偏好
+  for(let i=0;i<N;i++){
+    ability.push({base:55+rnd()*38, pref:SUBJ.map(()=>(rnd()-0.5)*16), growth:(rnd()-0.35)*3});
+  }
+  const examNames=['1141 第一次段考','1141 第二次段考','1141 第三次段考'];
+  let prevRanks=null;
+  const exams=examNames.map((nm,ei)=>{
+    const students=[];
+    for(let i=0;i<N;i++){
+      const a=ability[i];
+      const scores={};
+      SUBJ.forEach((s,si)=>{
+        let v=a.base + a.pref[si] + a.growth*ei + (rnd()-0.5)*12;
+        v=Math.round(Math.max(28,Math.min(99,v)));
+        scores[s]={value:v, fail:v<60};
+      });
+      const vv=Object.values(scores).map(x=>x.value);
+      const total=vv.reduce((x,y)=>x+y,0);
+      const avg=+(total/vv.length).toFixed(1);
+      students.push({seat:i+1,name:FAM[i%FAM.length]+GIV[i%GIV.length],scores,total,avg,
+        failCount:vv.filter(v=>v<60).length,classRank:null,classDiff:null,groupRank:null,groupDiff:null,groupPct:null});
+    }
+    // 名次計算
+    const byAvg=[...students].sort((a,b)=>b.avg-a.avg);
+    byAvg.forEach((s,r)=>{
+      s.classRank=r+1;
+      s.groupRank=Math.round((r+1)*3.3 + rnd()*4);            // 模擬類組（約三個班）
+      s.groupPct=Math.min(99,Math.max(1,Math.round((r+0.5)/N*100)));
+    });
+    if(prevRanks){
+      students.forEach(s=>{
+        s.classDiff = prevRanks.c.get(s.seat)!=null ? prevRanks.c.get(s.seat)-s.classRank : null;  // 正值＝進步
+        s.groupDiff = prevRanks.g.get(s.seat)!=null ? prevRanks.g.get(s.seat)-s.groupRank : null;
+      });
+    }
+    prevRanks={c:new Map(students.map(s=>[s.seat,s.classRank])), g:new Map(students.map(s=>[s.seat,s.groupRank]))};
+    return {name:nm, examId:'demo_'+ei, subjects:[...SUBJ], students, stats:calcStats(students,SUBJ),
+            parsedAt:new Date().toLocaleString('zh-TW')};
+  });
+  S.exams=exams; S.cur=exams.length-1;
+  refresh();
+  switchTab('t1');
+  toast('✨ 已載入示範班級：30 位學生 × 8 科 × 3 次段考（合成資料）');
+}
+
+// ---------- 啟動初始化 ----------
+(function initV2(){
+  // 主題還原
+  try{
+    const th=localStorage.getItem('classGA_theme');
+    if(th){ document.documentElement.dataset.theme=th;
+      document.getElementById('themeBtn').textContent = th==='dark'?'☀️ 淺色模式':'🌙 深色模式'; }
+    const nm=localStorage.getItem('classGA_names');
+    if(nm==='1'){ SHOW_NAMES=true; const t=document.getElementById('nameToggle'); if(t) t.checked=true; }
+  }catch(e){}
+  applyChartTheme();
+  // 資料還原
+  if(loadState()){
+    refresh();
+    toast(`📂 已自動載入上次的 ${S.exams.length} 份考試資料`);
+  }
+})();
+
+
+// =====================================================================
+// ===== 進階計量診斷（依《計量方法學設計藍圖》實作） =====
+// =====================================================================
+// 適用性說明：本程式儲存「各科總分(0–100)」而非「逐題作答」，故：
+//  ‧ 可實作：信度衰減校正關聯、增值評量VAM(學生化殘差)、成長軌跡HLM、學術穩定度(MELS精神)
+//  ‧ 無法實作：CTT誘答分析、Rasch PROX、DINA ─ 這些需要逐題對錯/選項資料
+
+function _studentMatrix(e){
+  // 回傳 {rows:學生×科目分數矩陣(僅完整作答者), subjects, seatList}
+  const subs=e.subjects;
+  const rows=[], seatList=[];
+  e.students.forEach(s=>{
+    const r=subs.map(sub=>s.scores[sub]?.value);
+    if(r.every(v=>v!=null&&!isNaN(v))){ rows.push(r); seatList.push(s.seat); }
+  });
+  return {rows, subjects:subs, seatList};
+}
+
+function renderAdvanced(){
+  applyChartTheme();
+  const body=document.getElementById('advBody');
+  if(!S.exams.length){ body.innerHTML='<p style="text-align:center;color:var(--mu);padding:30px;">請先載入成績資料</p>'; return; }
+  let h='';
+  h+=renderAttenuationSection();
+  h+=renderVAMSection();
+  h+=renderGrowthSection();
+  body.innerHTML=h;
+  drawAdvancedCharts();
+}
+
+// ---------- (1) 信度衰減校正關聯矩陣 ----------
+let _attenCache=null;
+function renderAttenuationSection(){
+  const e=S.exams[S.cur];
+  const {rows,subjects}=_studentMatrix(e);
+  if(subjects.length<2 || rows.length<6){
+    return `<div class="ct" style="margin-top:4px;">🔗 信度衰減校正後的真實學科關聯</div>
+      <div class="cb"><div class="note">需至少 2 科且 6 位完整作答學生。目前完整樣本 ${rows.length} 人。</div></div>`;
+  }
+  // 以 Cronbach α 作為整份測驗（跨科）的信度；個別科目信度以「該科與其餘科總分」的折半概念近似不可得，
+  // 故採整體 α 作為各科共同信度估計（保守、穩健，符合藍圖小樣本策略）。
+  const alpha=PSY.cronbachAlpha(rows);
+  const k=subjects.length;
+  // 各科信度近似：用 Spearman-Brown 由整體 α 反推單科（α 為 k 科合成信度）
+  // 單科信度 r1 = α / (k - (k-1)α)
+  const r1 = alpha!=null ? Math.max(0.05, Math.min(0.99, alpha/(k-(k-1)*alpha))) : null;
+
+  const obs={}, cor={};
+  for(let i=0;i<k;i++) for(let j=0;j<k;j++){
+    if(i===j) continue;
+    const a=rows.map(r=>r[i]), b=rows.map(r=>r[j]);
+    const r=PSY.pearson(a,b);
+    obs[i+'_'+j]=r;
+    if(r!=null && r1!=null){
+      cor[i+'_'+j]=Math.max(-1,Math.min(1, r/r1)); // r_TxTy = r_xy / sqrt(αx·αy)，αx=αy=r1
+    }
+  }
+  _attenCache={subjects,obs,cor};
+
+  const cell=(r)=>{
+    if(r==null) return '<td style="color:var(--mu2)">—</td>';
+    const al=Math.min(.72,Math.abs(r)*.72);
+    const bg=r>=0?`rgba(37,99,235,${al.toFixed(2)})`:`rgba(220,38,38,${al.toFixed(2)})`;
+    return `<td style="background:${bg};${Math.abs(r)>.5?'color:#fff;':''}">${r.toFixed(2)}</td>`;
+  };
+  let mh=`<div class="ct" style="margin-top:4px;">🔗 信度衰減校正後的真實學科關聯</div>
+    <div class="cb full"><div class="note" style="margin-bottom:10px;">
+      在教育測量中，各科實得分數含隨機誤差，會「稀釋」科目間的真實關聯。本表依藍圖以
+      <b>r<sub>T</sub> = r<sub>xy</sub> / √(α<sub>x</sub>·α<sub>y</sub>)</b> 進行衰減校正。
+      整份測驗 Cronbach's α＝<b>${alpha!=null?alpha.toFixed(3):'—'}</b>（${alphaLabel(alpha)}），單科信度估計 ≈ ${r1!=null?r1.toFixed(3):'—'}。
+      下表左下＝實得相關，右上＝校正後真實關聯（兩科底層能力的純粹關聯）。
+    </div>
+    <div class="tw"><table class="mx"><thead><tr><th></th>${subjects.map(s=>`<th>${abbr(s)}</th>`).join('')}</tr></thead><tbody>`;
+  for(let i=0;i<k;i++){
+    mh+=`<tr><th>${abbr(subjects[i])}</th>`;
+    for(let j=0;j<k;j++){
+      if(i===j){ mh+=`<td style="background:var(--card3);color:var(--mu2)">1.00</td>`; continue; }
+      mh += j>i ? cell(cor[i+'_'+j]) : cell(obs[i+'_'+j]);
+    }
+    mh+=`</tr>`;
+  }
+  mh+=`</tbody></table></div>`;
+  // insight
+  const pairs=[];
+  for(let i=0;i<k;i++) for(let j=i+1;j<k;j++){
+    if(cor[i+'_'+j]!=null) pairs.push({a:subjects[i],b:subjects[j],ro:obs[i+'_'+j],rc:cor[i+'_'+j]});
+  }
+  pairs.sort((x,y)=>Math.abs(y.rc)-Math.abs(x.rc));
+  const top=pairs.filter(p=>Math.abs(p.rc)>=0.7).slice(0,4);
+  if(top.length){
+    mh+=`<div class="insight"><h4>🧩 真實能力關聯洞察</h4>
+      ${top.map(p=>`<div>• <b>${p.a} × ${p.b}</b>：實得 r=${p.ro.toFixed(2)} → 校正後 <b>${p.rc.toFixed(2)}</b>，
+        兩科底層認知能力${p.rc>=0.7?'高度同質':'呈現連動'}，可考慮跨科整合教學或共用補強策略。</div>`).join('')}
+      <div style="font-size:.78rem;color:var(--mu);margin-top:6px;">※ 校正會放大關聯；若單科信度偏低，校正後係數僅供趨勢參考。</div>
+    </div>`;
+  }
+  mh+=`</div>`;
+  return mh;
+}
+function alphaLabel(a){
+  if(a==null) return '無法估計';
+  if(a>=0.9) return '信度優異';
+  if(a>=0.8) return '信度良好';
+  if(a>=0.7) return '信度可接受';
+  if(a>=0.6) return '信度偏低';
+  return '信度不足，校正結果僅供參考';
+}
+
+// ---------- (2) 增值評量 VAM + 學生化殘差 ----------
+let _vamResult=null;
+function renderVAMSection(){
+  // 需要至少 2 次先前考試（t-1, t-2）來預測最新一次；對齊藍圖滯後回歸
+  if(S.exams.length<3){
+    return `<div class="ct" style="margin-top:18px;">📈 增值評量（VAM）與隱性退步偵測</div>
+      <div class="cb"><div class="note">增值評量需要 <b>3 次以上</b>考試（以前兩次預測最新一次）。目前 ${S.exams.length} 次。
+      上傳更多次段考後，系統將自動以滯後回歸排除「起點高低」的影響，找出真正超預期或隱性退步的學生。</div></div>`;
+  }
+  const tIdx=S.exams.length-1;
+  const cur=S.exams[tIdx], ePrev1=S.exams[tIdx-1], ePrev2=S.exams[tIdx-2];
+  // 取三次都有「個人均分」的共同學生
+  const common=cur.students.filter(s=>{
+    const a=sAvg(s), b=ePrev1.students.find(x=>x.seat===s.seat), c=ePrev2.students.find(x=>x.seat===s.seat);
+    return a!=null && b && sAvg(b)!=null && c && sAvg(c)!=null;
+  });
+  if(common.length<6){
+    return `<div class="ct" style="margin-top:18px;">📈 增值評量（VAM）與隱性退步偵測</div>
+      <div class="cb"><div class="note">三次考試共同作答學生不足 6 人（目前 ${common.length} 人），無法穩定回歸。</div></div>`;
+  }
+  const y=common.map(s=>sAvg(s));
+  const x1=common.map(s=>sAvg(ePrev1.students.find(x=>x.seat===s.seat)));
+  const x2=common.map(s=>sAvg(ePrev2.students.find(x=>x.seat===s.seat)));
+  const X=common.map((_,i)=>[1,x1[i],x2[i]]);
+  const fit=PSY.ols(X,y);
+  if(!fit){ return `<div class="cb"><div class="note">回歸共線性過高，無法估計 VAM。</div></div>`; }
+  const sr=PSY.studentizedResiduals(fit);
+  const df=fit.df-1;
+  const rows=common.map((s,i)=>({
+    seat:s.seat, name:s.name, actual:y[i], expected:fit.fitted[i], resid:fit.residuals[i],
+    sr:sr[i], rank:cur.students.find(x=>x.seat===s.seat)?.classRank,
+    p: df>0 ? (1-PSY.tCDF(Math.abs(sr[i]),df))*2 : null
+  }));
+  _vamResult={cur,rows,fit,df};
+
+  const highMavericks=rows.filter(r=>r.sr>=1.96).sort((a,b)=>b.sr-a.sr);   // 正偏離黑馬
+  const declines=rows.filter(r=>r.sr<=-1.96).sort((a,b)=>a.sr-b.sr);        // 負偏離預警
+  // 隱性退步：絕對分數及格但顯著負偏離
+  const hidden=declines.filter(r=>r.actual>=60);
+
+  let h=`<div class="ct" style="margin-top:18px;">📈 增值評量（VAM）與隱性退步偵測 <span class="hint">${cur.name}（以前兩次成績預測）</span></div>
+    <div class="cb full">
+      <div class="note" style="margin-bottom:10px;">
+        VAM 用前兩次考試的均分回歸預測本次「應有表現」，再看實際與預期的落差（學生化外在殘差），
+        排除了「起點高低」與單純回歸效應。模型：本次 = β₀ + β₁·前一次 + β₂·前二次，
+        R²＝<b>${fit.r2.toFixed(3)}</b>（解釋力），自由度 ${df}。殘差 |t|>1.96 視為統計顯著（約 95% 信賴）。
+      </div>
+      <div class="warn-sum">
+        <div class="wlevel wl-ok"><div class="n">${highMavericks.length}</div><div class="t">🐎 超預期黑馬</div></div>
+        <div class="wlevel wl-hi"><div class="n">${declines.length}</div><div class="t">⚠️ 顯著退步</div></div>
+        <div class="wlevel wl-mid"><div class="n">${hidden.length}</div><div class="t">🕵️ 隱性危機（分數及格但增值顯著為負）</div></div>
+        <div class="wlevel wl-low"><div class="n">${rows.length}</div><div class="t">納入分析人數</div></div>
+      </div>`;
+
+  const flagged=[...highMavericks,...declines].sort((a,b)=>b.sr-a.sr);
+  if(flagged.length){
+    h+=`<div class="tw"><table><thead><tr><th>標記</th><th>座號</th>${SHOW_NAMES?'<th>姓名</th>':''}<th>本次均分</th><th>VAM 預期</th><th>增值殘差</th><th>學生化殘差 t</th><th>顯著性</th><th>判讀</th></tr></thead><tbody>`;
+    flagged.forEach(r=>{
+      const badge=r.sr>=1.96?'<span class="wbadge wb-low" style="background:var(--s)">黑馬</span>':'<span class="wbadge wb-hi">退步</span>';
+      const verdict=r.sr>=1.96?'學習成效超出同儕起點預期，宜記錄有效方法'
+        :(r.actual>=60?'分數仍及格，但成長顯著落後預期 ─ 隱性危機，優先關懷':'顯著低於預期且未及格，亟需介入');
+      h+=`<tr><td>${badge}</td><td class="seat">${p2(r.seat)}</td>${SHOW_NAMES?`<td style="font-weight:600;">${r.name||'—'}</td>`:''}
+        <td>${r.actual.toFixed(1)}</td><td>${r.expected.toFixed(1)}</td>
+        <td class="${r.resid>=0?'up':'dn'}">${r.resid>=0?'+':''}${r.resid.toFixed(1)}</td>
+        <td class="${r.sr>=0?'up':'dn'}" style="font-weight:800;">${r.sr>=0?'+':''}${r.sr.toFixed(2)}</td>
+        <td>${r.p!=null?(r.p<0.01?'p<.01':r.p<0.05?'p<.05':'n.s.'):'—'}</td>
+        <td style="text-align:left;font-size:.82rem;">${verdict}</td></tr>`;
+    });
+    h+=`</tbody></table></div>`;
+  } else {
+    h+=`<p style="text-align:center;color:var(--s);padding:18px;font-weight:700;">本次無學生達到顯著偏離（全班大致符合預期成長軌跡）</p>`;
+  }
+  h+=`<div class="cb full" style="margin-top:14px;"><h3>VAM 實際 vs 預期能力（點越偏離 45°線＝增值越大）</h3><canvas id="vamScatter"></canvas>
+    <div class="note">綠＝顯著正偏離（黑馬）、紅＝顯著負偏離（退步）、灰＝符合預期。對角線為「實際＝預期」。</div></div>`;
+  h+=`</div>`;
+  return h;
+}
+
+// ---------- (3) 成長軌跡 HLM/LGCA + 學術穩定度 ----------
+let _growthRows=null;
+function renderGrowthSection(){
+  if(S.exams.length<3){
+    return `<div class="ct" style="margin-top:18px;">📉 個體成長軌跡與學術穩定度</div>
+      <div class="cb"><div class="note">成長軌跡分析需 <b>3 次以上</b>考試（目前 ${S.exams.length} 次）。屆時系統將為每位學生擬合「起點＋成長斜率」，並依藍圖 MELS 精神計算學術波動度。</div></div>`;
+  }
+  // 對每位學生：以各次「個人均分」對時間(0,1,2,…)做線性迴歸 → 截距(起點)、斜率(成長率)、殘差波動
+  const seats=[...new Set(S.exams.flatMap(e=>e.students.map(s=>s.seat)))].sort((a,b)=>a-b);
+  const T=S.exams.length;
+  const rows=[];
+  seats.forEach(seat=>{
+    const series=S.exams.map(e=>{const s=e.students.find(x=>x.seat===seat);return s?sAvg(s):null;});
+    const pts=series.map((v,i)=>({t:i,v})).filter(p=>p.v!=null);
+    if(pts.length<3) return;
+    const X=pts.map(p=>[1,p.t]), y=pts.map(p=>p.v);
+    const fit=PSY.ols(X,y);
+    if(!fit) return;
+    const intercept=fit.beta[0], slope=fit.beta[1];
+    const volat=Math.sqrt(fit.rss/pts.length); // 個體內殘差標準差＝學術波動度(MELS精神)
+    const nm=S.exams[T-1].students.find(x=>x.seat===seat)?.name;
+    rows.push({seat,name:nm,intercept,slope,volat,n:pts.length,last:pts[pts.length-1].v});
+  });
+  if(!rows.length) return '';
+  // 截距-斜率協方差：班級分化 or 收斂
+  const ints=rows.map(r=>r.intercept), slopes=rows.map(r=>r.slope);
+  const cov=PSY.pearson(ints,slopes);
+  _growthRows=rows;
+
+  const divergence = cov==null?'資料不足':cov>0.3?'起點高者成長更快 → 班級學術分化（雙峰）擴大中'
+    :cov<-0.3?'起點低者追趕較快 → 班級同質性提升、低分群正在收斂':'起點與成長率關聯不明顯 ─ 各自獨立發展';
+  const avgSlope=PSY.mean(slopes);
+
+  const sorted=[...rows].sort((a,b)=>b.slope-a.slope);
+  const risers=sorted.filter(r=>r.slope>=1.5).slice(0,5);
+  const fallers=[...sorted].reverse().filter(r=>r.slope<=-1.5).slice(0,5);
+  const volatile=[...rows].sort((a,b)=>b.volat-a.volat).filter(r=>r.volat>=8).slice(0,5);
+
+  let h=`<div class="ct" style="margin-top:18px;">📉 個體成長軌跡與學術穩定度 <span class="hint">HLM/LGCA 精神：每生擬合「起點截距＋成長斜率」</span></div>
+    <div class="cb full">
+      <div class="note" style="margin-bottom:8px;">
+        為每位學生以「個人均分對時間」做線性成長模型，得到 <b>起點（截距）</b>、<b>成長率（斜率，分/次）</b> 與
+        <b>學術波動度</b>（個體內殘差，越大越不穩定）。班級層級的<b>截距-斜率相關＝${cov!=null?cov.toFixed(2):'—'}</b>，
+        診斷：<b>${divergence}</b>。全班平均成長率 ${avgSlope>=0?'+':''}${avgSlope.toFixed(2)} 分/次。
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+        <div class="insight" style="background:var(--sl);border-color:var(--s);margin-top:0;"><h4 style="color:var(--s)">🚀 成長最快</h4>
+          ${risers.length?risers.map(r=>`<div>座號 ${p2(r.seat)}${SHOW_NAMES&&r.name?' '+r.name:''}：+${r.slope.toFixed(1)} 分/次</div>`).join(''):'<div style="color:var(--mu)">無明顯快速成長者</div>'}</div>
+        <div class="insight" style="background:var(--dl);border-color:var(--d);margin-top:0;"><h4 style="color:var(--d)">📉 持續下滑</h4>
+          ${fallers.length?fallers.map(r=>`<div>座號 ${p2(r.seat)}${SHOW_NAMES&&r.name?' '+r.name:''}：${r.slope.toFixed(1)} 分/次</div>`).join(''):'<div style="color:var(--mu)">無持續下滑者</div>'}</div>
+        <div class="insight" style="background:var(--wl);border-color:var(--w);margin-top:0;"><h4 style="color:var(--w)">↕️ 高波動（穩定度低）</h4>
+          ${volatile.length?volatile.map(r=>`<div>座號 ${p2(r.seat)}${SHOW_NAMES&&r.name?' '+r.name:''}：波動 ${r.volat.toFixed(1)}</div>`).join(''):'<div style="color:var(--mu)">全班成績相對穩定</div>'}</div>
+      </div>
+      <div class="cb full" style="margin-top:14px;padding:0;border:none;box-shadow:none;">
+        <h3>起點 vs 成長率散布（右上＝高起點高成長；左上＝逆襲進步）</h3><canvas id="growthScatter"></canvas></div>
+    </div>`;
+  return h;
+}
+
+function drawAdvancedCharts(){
+  killCharts();
+  // VAM scatter
+  if(_vamResult){
+    const {rows}=_vamResult;
+    const pts=rows.map(r=>({x:r.expected,y:r.actual,sr:r.sr,seat:r.seat}));
+    const col=r=>r.sr>=1.96?'rgba(5,150,105,.85)':r.sr<=-1.96?'rgba(220,38,38,.85)':'rgba(148,163,184,.6)';
+    const lo=Math.min(...pts.map(p=>Math.min(p.x,p.y)))-3, hi=Math.max(...pts.map(p=>Math.max(p.x,p.y)))+3;
+    const cv=document.getElementById('vamScatter');
+    if(cv) new Chart(cv,{type:'scatter',
+      data:{datasets:[
+        {label:'學生',data:pts,pointRadius:6,backgroundColor:pts.map(col)},
+        {type:'line',label:'實際=預期',data:[{x:lo,y:lo},{x:hi,y:hi}],borderColor:'rgba(100,116,139,.6)',borderDash:[6,4],pointRadius:0,fill:false}
+      ]},
+      options:{responsive:true,plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:c=>c.raw.seat!=null?`座號${p2(c.raw.seat)}：預期${c.raw.x.toFixed(1)} / 實際${c.raw.y.toFixed(1)}（t=${c.raw.sr.toFixed(2)}）`:''}}},
+        scales:{x:{title:{display:true,text:'VAM 預期均分'},min:lo,max:hi},y:{title:{display:true,text:'實際均分'},min:lo,max:hi}}}
+    });
+  }
+  // Growth scatter (intercept vs slope)
+  if(_growthRows){
+    const pts=_growthRows.map(r=>({x:r.intercept,y:r.slope,seat:r.seat,vol:r.volat}));
+    const cv=document.getElementById('growthScatter');
+    if(cv) new Chart(cv,{type:'scatter',
+      data:{datasets:[{label:'學生',data:pts,pointRadius:pts.map(p=>Math.min(12,4+p.vol/3)),
+        backgroundColor:pts.map(p=>p.y>=1.5?'rgba(5,150,105,.7)':p.y<=-1.5?'rgba(220,38,38,.7)':'rgba(37,99,235,.6)')}]},
+      options:{responsive:true,plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:c=>`座號${p2(c.raw.seat)}：起點${c.raw.x.toFixed(1)} / 成長${c.raw.y>=0?'+':''}${c.raw.y.toFixed(1)}分/次（點大小＝波動）`}}},
+        scales:{x:{title:{display:true,text:'起點截距（初始均分）'}},y:{title:{display:true,text:'成長率（分/次）'}}}}
+    });
+  }
+}
+
+
+// =====================================================================
+// ===== v3.1：完整列印報告 + 學生列印 + 多筆命名資料庫 + JSON 匯出入 =====
+// =====================================================================
+
+// ---------- 把一張 canvas 轉成 <img>（保留比例） ----------
+function canvasToImg(cv){
+  try{
+    if(!cv || !cv.width || !cv.height) return '';
+    const url=cv.toDataURL('image/png',1.0);
+    if(!url || url.length<200) return ''; // 空白圖
+    return `<img src="${url}" style="max-width:100%;height:auto;display:block;margin:4px auto;">`;
+  }catch(e){ return ''; }
+}
+// 等待瀏覽器完成兩次繪製（確保 Chart.js 已上畫）
+function nextPaint(ms=350){
+  return new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(r,ms))));
+}
+
+// 關鍵修正：列印前讓某個分頁「真的可見且有尺寸」，否則 canvas 為 0×0，toDataURL 會是空白。
+// 作法：把該 tab 暫時設為 block 並給定寬度，渲染→resize 圖表→擷取→還原。
+function showTabForCapture(tabId){
+  const el=document.getElementById(tabId);
+  const prev={display:el.style.display, position:el.style.position, visibility:el.style.visibility, width:el.style.width};
+  el.style.display='block';
+  el.style.visibility='visible';
+  el.style.width='1080px';
+  // 確保所有 .cb / canvas 容器有寬度
+  return ()=>{ el.style.display=prev.display||''; el.style.visibility=prev.visibility||''; el.style.width=prev.width||''; el.style.position=prev.position||''; };
+}
+// 強制重繪某容器內所有 Chart 並等待
+async function resizeChartsIn(el){
+  if(!el) return;
+  el.querySelectorAll('canvas').forEach(cv=>{
+    const c=Chart.getChart(cv);
+    if(c){ try{ c.resize(); c.update('none'); }catch(e){} }
+  });
+  await nextPaint(380);
+}
+
+// 通用：把容器內所有 canvas 換成 img（在 canvas 仍可見時呼叫），回傳 HTML 片段
+function snapshotContainer(el){
+  if(!el) return '';
+  const clone=el.cloneNode(true);
+  const srcCanvas=el.querySelectorAll('canvas');
+  const dstCanvas=clone.querySelectorAll('canvas');
+  dstCanvas.forEach((c,i)=>{
+    const wrap=document.createElement('div');
+    const html=canvasToImg(srcCanvas[i]);
+    if(html){ wrap.innerHTML=html; c.replaceWith(wrap.firstChild); }
+    else { c.remove(); } // 真的沒內容才移除，避免破圖
+  });
+  clone.querySelectorAll('.no-print,.prt-bar,select,button,input,.ctrl').forEach(n=>n.remove());
+  return clone.innerHTML;
+}
+// 一站式：顯示分頁→渲染（呼叫者已做）→resize圖→擷取多個容器→還原
+async function captureTab(tabId, renderFn, containerIds){
+  const restore=showTabForCapture(tabId);
+  renderFn();                       // 在可見狀態下渲染，canvas 取得真實尺寸
+  await nextPaint(200);
+  const el=document.getElementById(tabId);
+  await resizeChartsIn(el);          // 強制圖表重繪
+  let html='';
+  containerIds.forEach(id=>{ html+=snapshotContainer(document.getElementById(id)); });
+  restore();
+  return html;
+}
+
+// ---------- 列印完整班級分析報告（所有班級分頁，含各次原始成績；不含個別學生） ----------
+async function printFullReport(){
+  if(!S.exams.length){ toast('請先載入成績資料'); return; }
+  // 完整班級報告彙整時間較長；避免預先開啟等待視窗搶焦點，造成部分瀏覽器暫停後續彙整。
+  const scope=document.getElementById('prtExamScope')?.value || 'all';
+  const printAll = scope==='all';
+  const examIndexes = printAll ? S.exams.map((_,i)=>i) : [Math.max(0, Math.min(S.exams.length-1, +scope||0))];
+  const scopeName = printAll ? '全部成績' : S.exams[examIndexes[0]].name;
+  const reportTitle = `${scopeName} 班級完整分析報告`;
+  toast(`正在彙整「${scopeName}」完整報告（含圖表），請稍候…`);
+  const savedTab=curTab(), savedCur=S.cur;
+  const sections=[];
+
+  // 0. 班級體質儀表板
+  if(printAll){
+    renderHero(); await nextPaint(120);
+    sections.push({title:'班級體質儀表板', html: snapshotContainer(document.getElementById('hero'))});
+  }
+
+  // 1. 各次原始成績一覽（無圖表，直接擷取）
+  for(const i of examIndexes){
+    const html=await captureTab('t1', ()=>renderGradeTable(i), ['gw']);
+    sections.push({title:`成績一覽 ─ ${S.exams[i].name}`, html});
+  }
+  // 2. 五標統計（無圖表）
+  for(const i of examIndexes){
+    const html=await captureTab('t2', ()=>renderFiveMarks(i), ['fmBody']);
+    sections.push({title:`五標統計 ─ ${S.exams[i].name}`, html});
+  }
+  // 3. 全班分析（多張圖表）
+  for(const i of examIndexes){
+    const html=await captureTab('t3', ()=>{ S.cur=i; renderClassAnalysis(i); }, ['cs','cc']);
+    sections.push({title:`全班分析 ─ ${S.exams[i].name}`, html});
+  }
+  // 4. 名次分析（含圖表）
+  for(const i of examIndexes){
+    const html=await captureTab('t5', ()=>renderRankAnalysis(i), ['rb','rc']);
+    sections.push({title:`名次分析 ─ ${S.exams[i].name}`, html});
+  }
+  // 5. 預警關懷（表格）
+  for(const i of examIndexes){
+    const html=await captureTab('t8', ()=>renderWarning(i), ['wbody']);
+    sections.push({title:`學習預警與關懷名單 ─ ${S.exams[i].name}`, html});
+  }
+  // 6. 進階計量診斷（含散布圖）
+  {
+    const advIdx=printAll ? S.exams.length-1 : examIndexes[0];
+    const html=await captureTab('t9', ()=>{ S.cur=advIdx; renderAdvanced(); }, ['advBody']);
+    sections.push({title:`進階計量診斷（信度校正・VAM・成長軌跡）${printAll?'':` ─ ${S.exams[advIdx].name}`}`, html});
+  }
+  // 7. 多次比較（全班，多張圖表）
+  if(printAll && S.exams.length>=2){
+    const html=await captureTab('t6', ()=>{
+      const cm=document.querySelector('input[name="cm"][value="class"]'); if(cm) cm.checked=true;
+      const scs=document.getElementById('scs'); if(scs) scs.style.display='none';
+      renderCmp();
+    }, ['cpb']);
+    sections.push({title:'多次考試比較（全班）', html});
+  }
+
+  // 還原畫面
+  S.cur=savedCur; switchTab(savedTab);
+
+  fillPrintWindow(null, reportTitle, sections, {preferIframe:true, silentIframeToast:true});
+  toast('✅ 報告已完成，請於列印視窗選擇「另存為 PDF」');
+}
+
+// ---------- 列印單一學生完整分析（單次 + 多次追蹤） ----------
+async function printStudentReport(){
+  if(!S.exams.length){ toast('請先載入成績資料'); return; }
+  const seat=+document.getElementById('prtStu').value;
+  if(!seat){ toast('請先選擇學生'); return; }
+  const stuName0=(S.exams[S.cur].students.find(s=>s.seat===seat)?.name)||'';
+  const reportTitle=`座號 ${p2(seat)}${stuName0?' '+stuName0:''} 個人分析報告`;
+  // 個人報告也改在原頁背景彙整，避免預先開啟等待視窗搶焦點而暫停後續流程。
+  toast('正在彙整學生報告（含所有圖表），請稍候…');
+  const savedTab=curTab(), savedCur=S.cur, savedSs=document.getElementById('ss')?.value;
+  const sections=[];
+
+  // 各次單次成績分析
+  for(let i=0;i<S.exams.length;i++){
+    if(!S.exams[i].students.some(s=>s.seat===seat)) continue;
+    const html=await captureTab('t4', ()=>{ S.cur=i; renderStudentAnalysis(i, seat); }, ['sb']);
+    sections.push({title:`單次成績分析 ─ ${S.exams[i].name}`, html});
+  }
+  // 多次追蹤比較（個人）
+  if(S.exams.length>=2){
+    const html=await captureTab('t6', ()=>{
+      const sm=document.querySelector('input[name="cm"][value="student"]'); if(sm) sm.checked=true;
+      const scs=document.getElementById('scs'); if(scs){ scs.style.display='inline-block'; scs.value=seat; }
+      renderCmp();
+    }, ['cpb']);
+    sections.push({title:'多次成績追蹤比較（個人）', html});
+  }
+
+  // 還原
+  S.cur=savedCur;
+  const sm2=document.querySelector('input[name="cm"][value="class"]'); if(sm2) sm2.checked=true;
+  if(document.getElementById('scs')) document.getElementById('scs').style.display='none';
+  switchTab(savedTab);
+  if(savedSs && document.getElementById('ss')) document.getElementById('ss').value=savedSs;
+
+  fillPrintWindow(null, reportTitle, sections, {preferIframe:true, silentIframeToast:true});
+  toast('✅ 學生報告已完成');
+}
+
+// ---------- 單一分頁列印（復原功能：印當前分頁，含圖表） ----------
+const SINGLE_TAB_MAP={
+  t1:{title:'成績一覽表', render:()=>renderGradeTable(+document.getElementById('s1').value||0), ids:['gw']},
+  t2:{title:'五標統計', render:()=>renderFiveMarks(+document.getElementById('s2').value||0), ids:['fmBody']},
+  t3:{title:'全班成績分析', render:()=>renderClassAnalysis(+document.getElementById('s3').value||0), ids:['cs','cc']},
+  t4:{title:'個人成績分析', render:()=>renderStudentAnalysis(+document.getElementById('s4').value||0, document.getElementById('ss')?.value||1), ids:['sb']},
+  t5:{title:'名次與排名分析', render:()=>renderRankAnalysis(+document.getElementById('s5').value||0), ids:['rb','rc']},
+  t6:{title:'多次考試比較', render:()=>renderCmp(), ids:['cpb']},
+  t8:{title:'學習預警與關懷名單', render:()=>renderWarning(+document.getElementById('s8').value||0), ids:['wbody']},
+  t9:{title:'進階計量診斷', render:()=>renderAdvanced(), ids:['advBody']},
+};
+async function printCurrentTab(tabId){
+  if(!S.exams.length){ toast('請先載入成績資料'); return; }
+  const cfg=SINGLE_TAB_MAP[tabId]; if(!cfg){ toast('此分頁無法單獨列印'); return; }
+  const examName=S.exams[S.cur]?.name||'';
+  const titleSuffix = (tabId==='t3'||tabId==='t1'||tabId==='t2'||tabId==='t5') ? `（${examName}）` : '';
+  toast('正在準備列印（含圖表）…');
+  const savedTab=curTab(), savedCur=S.cur;
+  const html=await captureTab(tabId, cfg.render, cfg.ids);
+  S.cur=savedCur; switchTab(savedTab);
+  fillPrintWindow(null, `${cfg.title}${titleSuffix}`, [{title:cfg.title+titleSuffix, html}], {preferIframe:true, silentIframeToast:true});
+  toast('✅ 已完成，請於列印視窗操作');
+}
+
+// ---------- 列印視窗：點擊當下立即開空白窗（保留 user-gesture，避免被封鎖） ----------
+function openBlankPrintWindow(reportTitle){
+  let w=null;
+  try{ w=window.open('','_blank'); }catch(e){ w=null; }
+  if(w){
+    try{
+      w.document.open();
+      w.document.write(`<!DOCTYPE html><html lang="zh-TW"><head><meta charset="UTF-8"><title>${reportTitle}</title>
+        <style>body{font-family:'Microsoft JhengHei',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;color:#334155;background:#f8fafc;}
+        .sp{width:42px;height:42px;border:4px solid #dbeafe;border-top-color:#2563eb;border-radius:50%;animation:s .8s linear infinite;}
+        @keyframes s{to{transform:rotate(360deg)}}p{margin-top:14px;font-size:15px;}small{color:#94a3b8;margin-top:4px;}</style>
+        </head><body><div class="sp"></div><p>正在彙整「${reportTitle}」…</p><small>圖表渲染中，請稍候，完成後會自動開啟列印</small></body></html>`);
+      w.document.close();
+    }catch(e){ /* 寫入佔位失敗不影響後續 */ }
+  }
+  return w; // 可能為 null（被封鎖），fillPrintWindow 會走同頁 fallback
+}
+
+// ---------- 共用：組裝列印 HTML 字串 ----------
+function buildPrintDoc(reportTitle, sections){
+  const e0=S.exams[S.cur]||S.exams[0];
+  const meta=`共 ${S.exams.length} 次考試｜${e0?e0.students.length:0} 位學生｜產生時間 ${new Date().toLocaleString('zh-TW')}`;
+  const css=`
+    *{box-sizing:border-box;}
+    body{font-family:'Noto Sans TC','Microsoft JhengHei',sans-serif;color:#1e293b;margin:0;padding:14px 16px;line-height:1.55;font-variant-numeric:tabular-nums;background:#fff;}
+    .report-head{margin-bottom:10px;}
+    h1{font-size:19px;text-align:center;margin:0 0 3px;}
+    .meta{text-align:center;color:#64748b;font-size:11.5px;margin-bottom:3px;}
+    .author{text-align:center;color:#94a3b8;font-size:11px;margin-bottom:8px;}
+    h2.sec{font-size:14.5px;color:#1d4ed8;border-bottom:2px solid #1d4ed8;padding-bottom:4px;margin:14px 0 9px;break-after:avoid;page-break-after:avoid;}
+    .report-head + .sec-wrap h2.sec{margin-top:4px;}
+    .sec-wrap{margin-bottom:10px;}
+    table{width:100%;border-collapse:collapse;font-size:10.5px;margin:6px 0;}
+    th,td{border:1px solid #cbd5e1;padding:4px 6px;text-align:center;}
+    th{background:#1d4ed8;color:#fff;}
+    th.th2{background:#7c3aed;}th.th3{background:#0891b2;}th.th4{background:#059669;}
+    tr:nth-child(even){background:#f8fafc;}
+    tr{break-inside:avoid;page-break-inside:avoid;}
+    td.fail{color:#dc2626;font-weight:700;background:#fef2f2;}
+    td.hi{color:#059669;font-weight:700;} td.seat{font-weight:700;color:#1d4ed8;}
+    .up{color:#059669;font-weight:700;} .dn{color:#dc2626;font-weight:700;}
+    .stat-r td{background:#eef2ff!important;font-weight:700;}
+    .mx td,.mx th{min-width:42px;}
+    .mg{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0;}
+    .mc{flex:1;min-width:92px;text-align:center;padding:8px;border:1px solid #e2e8f0;border-radius:7px;background:#f8fafc;break-inside:avoid;}
+    .mc .l{font-size:10px;color:#64748b;} .mc .v{font-size:15px;font-weight:900;}
+    .cg{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .cb{border:1px solid #e2e8f0;border-radius:9px;padding:10px;break-inside:avoid;page-break-inside:avoid;}
+    .cb.full{grid-column:1/-1;} .cb h3{font-size:12px;margin:0 0 6px;}
+    .cb .note,.note{font-size:10px;color:#64748b;line-height:1.5;}
+    .hero-grid{display:flex;flex-wrap:wrap;gap:8px;} .hk{flex:1;min-width:110px;text-align:center;border:1px solid #e2e8f0;border-radius:8px;padding:8px;}
+    .hk .v{font-size:18px;font-weight:900;} .hk .l{font-size:10px;color:#64748b;}
+    .hero-title{font-weight:800;color:#1d4ed8;font-size:13px;margin-bottom:8px;}
+    .dlt{font-size:9px;padding:1px 6px;border-radius:99px;} .dlt.up{background:#d1fae5;color:#059669;} .dlt.dn{background:#fee2e2;color:#dc2626;} .dlt.nt{background:#f1f5f9;color:#64748b;}
+    .sh{background:#eef2ff;border:1px solid #c7d2fe;border-radius:9px;padding:10px;margin-bottom:10px;break-inside:avoid;}
+    .sh h3{margin:0 0 6px;color:#1d4ed8;font-size:13px;} .sm{display:flex;flex-wrap:wrap;gap:5px 16px;font-size:11px;color:#64748b;} .sm span{font-weight:800;color:#1e293b;}
+    .insight{border:1px solid #c4b5fd;background:#f5f3ff;border-radius:9px;padding:11px;margin:10px 0;font-size:11px;line-height:1.6;break-inside:avoid;} .insight h4{margin:0 0 5px;color:#6d28d9;}
+    .warn-sum{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;} .wlevel{flex:1;min-width:110px;text-align:center;border-radius:8px;padding:9px;border:1px solid #e2e8f0;}
+    .wl-hi{background:#fef2f2;} .wl-mid{background:#fffbeb;} .wl-low{background:#eef2ff;} .wl-ok{background:#f0fdf4;}
+    .wlevel .n{font-size:17px;font-weight:900;} .wlevel .t{font-size:10px;}
+    .wbadge{padding:1px 7px;border-radius:99px;font-size:10px;font-weight:800;color:#fff;} .wb-hi{background:#dc2626;}.wb-mid{background:#d97706;}.wb-low{background:#2563eb;}
+    .wreason{display:inline-block;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:99px;padding:1px 7px;font-size:9.5px;color:#64748b;margin:1px;}
+    .trend-indicator{padding:1px 7px;border-radius:99px;font-size:10px;}
+    img{max-width:100%;height:auto;display:block;break-inside:avoid;}
+    @page{size:A4;margin:11mm;}
+  `;
+  let body=`<div class="report-head"><h1>📊 ${reportTitle}</h1><div class="meta">${meta}</div>
+    <div class="author">臺北市立麗山高中 生物科 林獻升老師製作　智慧班級成績分析系統</div></div>`;
+  let count=0;
+  sections.forEach(s=>{
+    if(!s.html||!s.html.trim()) return;
+    body+=`<div class="sec-wrap"><h2 class="sec">${s.title}</h2>${s.html}</div>`;
+    count++;
+  });
+  return {count, css, body, title:reportTitle};
+}
+
+// ---------- 把彙整好的內容寫入已開好的視窗（或同頁 fallback） ----------
+function fillPrintWindow(pw, reportTitle, sections, options){
+  const opts = (options && typeof options==='object') ? options : {};
+  const doc=buildPrintDoc(reportTitle, sections);
+  if(!doc.count){
+    if(pw){ try{ pw.close(); }catch(e){} }
+    toast('⚠️ 沒有可列印的內容');
+    return;
+  }
+  const printScript=`<script>
+    (function(){
+      var printed=false;
+      function go(){
+        if(printed) return;
+        printed=true;
+        try{ window.focus(); window.print(); }catch(e){}
+      }
+      var imgs=Array.prototype.slice.call(document.images);
+      if(!imgs.length){ setTimeout(go,300); return; }
+      var left=imgs.length;
+      var done=function(){ if(--left<=0) setTimeout(go,250); };
+      imgs.forEach(function(im){ if(im.complete){ done(); } else { im.addEventListener('load',done); im.addEventListener('error',done); } });
+      setTimeout(go,5000);
+    })();
+  <\/script>`;
+  const fullHTML=`<!DOCTYPE html><html lang="zh-TW"><head><meta charset="UTF-8"><title>${reportTitle}</title>
+    <style>${doc.css}</style></head><body>${doc.body}${printScript}</body></html>`;
+
+  if(opts.preferIframe){
+    printViaIframe(doc, reportTitle, opts);
+    return;
+  }
+  // 情境 A：視窗已成功開啟（點擊當下開的）→ 直接寫入
+  if(pw && !pw.closed){
+    try{
+      pw.document.open();
+      pw.document.write(fullHTML);
+      pw.document.close();
+      return;
+    }catch(e){ /* 落到 fallback */ }
+  }
+  // 情境 B：彈出視窗被封鎖 → 改用同頁隱藏 iframe 列印（不需彈窗權限）
+  printViaIframe(doc, reportTitle, opts);
+}
+
+// ---------- Fallback：同頁 iframe 列印（免彈窗權限） ----------
+function printViaIframe(doc, reportTitle, options){
+  const opts = (options && typeof options==='object') ? options : {};
+  let f=document.getElementById('printFrame');
+  if(f) f.remove();
+  f=document.createElement('iframe');
+  f.id='printFrame';
+  f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;';
+  document.body.appendChild(f);
+  const idoc=f.contentWindow.document;
+  idoc.open();
+  idoc.write(`<!DOCTYPE html><html lang="zh-TW"><head><meta charset="UTF-8"><title>${reportTitle}</title>
+    <style>${doc.css}</style></head><body>${doc.body}</body></html>`);
+  idoc.close();
+  // 等圖片載入後列印 iframe
+  const imgs=Array.prototype.slice.call(idoc.images||[]);
+  let printed=false;
+  let oldTitle=null;
+  const restoreTitle=()=>{
+    if(oldTitle!=null){
+      document.title=oldTitle;
+      oldTitle=null;
+    }
+    window.removeEventListener('afterprint', restoreTitle);
+  };
+  const fire=()=>{
+    if(printed) return;
+    printed=true;
+    try{
+      oldTitle=document.title;
+      document.title=reportTitle;
+      window.addEventListener('afterprint', restoreTitle, {once:true});
+      f.contentWindow.focus();
+      f.contentWindow.print();
+      setTimeout(restoreTitle, 120000);
+    }catch(e){ restoreTitle(); }
+  };
+  if(!imgs.length){ setTimeout(fire,400); }
+  else{
+    let left=imgs.length;
+    const done=()=>{ if(--left<=0) setTimeout(fire,300); };
+    imgs.forEach(im=>{ if(im.complete) done(); else { im.addEventListener('load',done); im.addEventListener('error',done); } });
+    setTimeout(fire,5000);
+  }
+  if(!opts.silentIframeToast){
+    toast('ℹ️ 偵測到彈出視窗被封鎖，已改用本頁列印（建議允許彈出視窗以獲得最佳體驗）');
+  }
+}
+
+// =====================================================================
+// 多筆命名資料庫（localStorage）
+// =====================================================================
+const DB_KEY='classGA_datasets';      // { name: {savedAt, cur, exams} }
+function loadDB(){ try{ return JSON.parse(localStorage.getItem(DB_KEY)||'{}'); }catch(e){ return {}; } }
+function saveDB(db){ try{ localStorage.setItem(DB_KEY, JSON.stringify(db)); return true; }catch(e){ toast('⚠️ 瀏覽器儲存空間不足'); return false; } }
+
+function openSaveDataset(){
+  if(!S.exams.length){ toast('請先載入成績資料'); return; }
+  const def = S.curDatasetName || (S.exams[0]?.name?.replace(/第.*$/, '').trim()||'') ;
+  document.getElementById('dsName').value = def;
+  document.getElementById('saveOv').classList.add('on');
+  setTimeout(()=>document.getElementById('dsName').focus(),50);
+}
+function confirmSaveDataset(){
+  const name=document.getElementById('dsName').value.trim();
+  if(!name){ toast('請輸入分析名稱'); return; }
+  const db=loadDB();
+  db[name]={ savedAt:new Date().toISOString(), cur:S.cur, exams:S.exams };
+  if(saveDB(db)){
+    S.curDatasetName=name;
+    document.getElementById('saveOv').classList.remove('on');
+    refreshDatasetList();
+    toast(`✅ 已儲存分析「${name}」（${S.exams.length} 次考試）`);
+  }
+}
+function refreshDatasetList(){
+  const sel=document.getElementById('dsList'); if(!sel) return;
+  const db=loadDB();
+  const names=Object.keys(db).sort((a,b)=>(db[b].savedAt||'').localeCompare(db[a].savedAt||''));
+  sel.innerHTML = names.length ? names.map(n=>{
+    const d=db[n]; const cnt=d.exams?.length||0;
+    return `<option value="${n.replace(/"/g,'&quot;')}">${n}（${cnt} 次考試）</option>`;
+  }).join('') : '<option value="">（尚無儲存的分析）</option>';
+  updateDsMeta();
+}
+function updateDsMeta(){
+  const sel=document.getElementById('dsList'); const meta=document.getElementById('dsMeta');
+  if(!sel||!meta) return;
+  const db=loadDB(); const d=db[sel.value];
+  meta.textContent = d ? `最後儲存：${new Date(d.savedAt).toLocaleString('zh-TW')}　考試：${(d.exams||[]).map(e=>e.name).join('、')}` : '';
+}
+function loadSelectedDataset(){
+  const name=document.getElementById('dsList').value;
+  if(!name){ toast('沒有可讀取的分析'); return; }
+  const db=loadDB(); const d=db[name];
+  if(!d||!d.exams){ toast('讀取失敗'); return; }
+  S.exams=d.exams; S.cur=Math.min(d.cur||0, d.exams.length-1); S.curDatasetName=name;
+  refresh(); switchTab('t1');
+  toast(`📂 已讀取「${name}」（${d.exams.length} 次考試）`);
+}
+function deleteSelectedDataset(){
+  const name=document.getElementById('dsList').value;
+  if(!name){ return; }
+  if(!confirm(`確定刪除已儲存的分析「${name}」？此動作無法復原。`)) return;
+  const db=loadDB(); delete db[name]; saveDB(db);
+  refreshDatasetList();
+  toast(`🗑️ 已刪除「${name}」`);
+}
+
+// =====================================================================
+// JSON 匯出 / 匯入
+// =====================================================================
+function downloadBlob(obj, filename){
+  const blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=filename; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function exportAllJSON(){
+  const db=loadDB();
+  // 若目前分析尚未存入資料庫，也一併附上「目前分析」
+  const payload={ app:'classGradeAnalysis', schema:3, exportedAt:new Date().toISOString(),
+    datasets:db, current: S.exams.length?{name:S.curDatasetName||'目前分析', cur:S.cur, exams:S.exams}:null };
+  downloadBlob(payload, `班級成績分析_全部備份_${new Date().toISOString().slice(0,10)}.json`);
+  toast('⬇️ 全部資料已匯出 JSON');
+}
+function exportCurrentJSON(){
+  if(!S.exams.length){ toast('目前沒有分析資料'); return; }
+  const payload={ app:'classGradeAnalysis', schema:3, exportedAt:new Date().toISOString(),
+    datasets:{}, current:{name:S.curDatasetName||'目前分析', cur:S.cur, exams:S.exams} };
+  downloadBlob(payload, `班級成績分析_${(S.curDatasetName||'目前分析')}_${new Date().toISOString().slice(0,10)}.json`);
+  toast('⬇️ 目前分析已匯出 JSON');
+}
+function importJSON(ev){
+  const file=ev.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      let added=0;
+      const db=loadDB();
+      // 相容：整包備份
+      if(d.datasets && typeof d.datasets==='object'){
+        Object.entries(d.datasets).forEach(([n,v])=>{ if(v&&v.exams){ db[n]=v; added++; } });
+      }
+      // 目前分析
+      if(d.current && d.current.exams){
+        const nm=d.current.name||'匯入的分析';
+        db[nm]=d.current; added++;
+      }
+      // 相容：直接是 {exams:[...]} 或陣列
+      if(!added){
+        if(Array.isArray(d.exams)){ db[file.name.replace(/\.json$/i,'')]={savedAt:new Date().toISOString(),cur:0,exams:d.exams}; added++; }
+        else if(Array.isArray(d)){ db['匯入_'+file.name.replace(/\.json$/i,'')]={savedAt:new Date().toISOString(),cur:0,exams:d}; added++; }
+      }
+      if(!added){ toast('⚠️ 無法辨識的 JSON 格式'); return; }
+      saveDB(db);
+      refreshDatasetList();
+      // 自動載入剛匯入的第一筆（優先目前分析）
+      let loadName = d.current?.name || Object.keys(d.datasets||{})[0];
+      if(loadName && db[loadName]){
+        S.exams=db[loadName].exams; S.cur=Math.min(db[loadName].cur||0, db[loadName].exams.length-1);
+        S.curDatasetName=loadName; refresh(); switchTab('t1');
+        const sel=document.getElementById('dsList'); if(sel) sel.value=loadName; updateDsMeta();
+      }
+      toast(`⬆️ 已匯入 ${added} 筆分析資料`);
+    }catch(err){ toast('⚠️ JSON 解析失敗：'+err.message); }
+  };
+  reader.readAsText(file);
+  ev.target.value='';
+}
+
+// 啟動時建立資料庫清單與選單綁定
+document.addEventListener('DOMContentLoaded',()=>{
+  refreshDatasetList();
+  const sel=document.getElementById('dsList'); if(sel) sel.addEventListener('change',updateDsMeta);
+  const so=document.getElementById('saveOv'); if(so) so.addEventListener('click',e=>{ if(e.target===so) so.classList.remove('on'); });
+});
+
+</script>
+</body>
+</html>

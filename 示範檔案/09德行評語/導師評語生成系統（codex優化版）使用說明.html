@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>導師評語生成系統（codex優化版）使用說明</title>
+<style>
+body {
+  font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  color: #1f2333;
+  line-height: 1.8;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 36px 24px 64px;
+  background: #fbfaf7;
+}
+h1, h2, h3 {
+  line-height: 1.35;
+  color: #17182a;
+}
+h1 {
+  font-size: 2rem;
+  border-bottom: 4px solid #c0392b;
+  padding-bottom: 12px;
+}
+h2 {
+  font-size: 1.35rem;
+  margin-top: 36px;
+  border-left: 6px solid #16a085;
+  padding-left: 12px;
+}
+h3 {
+  font-size: 1.08rem;
+  margin-top: 22px;
+}
+a { color: #1b6fb7; }
+code {
+  background: #f0eee8;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  background: white;
+}
+th, td {
+  border: 1px solid #d8d2c6;
+  padding: 8px 10px;
+  vertical-align: top;
+}
+th {
+  background: #f1eadf;
+  text-align: left;
+}
+.note {
+  background: #eef8f5;
+  border-left: 5px solid #16a085;
+  padding: 12px 16px;
+  margin: 14px 0;
+}
+.example {
+  background: white;
+  border: 1px solid #e1d9cc;
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+@media print {
+  body { background: white; padding: 0; }
+  a { color: #1f2333; text-decoration: none; }
+}
+</style>
+</head>
+<body>
+<h1>導師評語生成系統（codex優化版）使用說明</h1>
+
+<p>本系統協助導師快速整理學生德行評語、特殊優良表現與日常生活表現資料，並可使用 Gemini AI 進行文字潤飾。老師可以先用結構化欄位輸入學生資料，再產生基礎評語，最後視需要使用 AI 優化成較完整、自然的成績單評語。</p>
+
+<p><strong>線上版網址：</strong><br>
+<a href="https://froglssh.github.io/homeroom-comment-generator-online/">https://froglssh.github.io/homeroom-comment-generator-online/</a></p>
+
+<h2>一、開啟系統</h2>
+<ol>
+  <li>使用 Chrome、Edge、Safari 等瀏覽器開啟線上版網址。</li>
+  <li>建議使用電腦或平板操作，畫面較寬時左右兩欄會比較容易填寫。</li>
+  <li>若頁面剛發佈後出現 404，請等待 1 至 3 分鐘後重新整理。</li>
+</ol>
+
+<h2>二、基本設定</h2>
+<p>在左側「基本設定」區填寫學生姓名、性別與語氣風格。語氣風格可選擇「溫暖鼓勵」、「客觀中立」或「委婉規勸」，這些設定會影響基礎評語與 AI 潤飾後的文字語氣。</p>
+
+<h2>三、選擇學校評語代碼</h2>
+<p>「學校評語代碼」區可多選學生適合的德行特質，例如性情、向學、進取、紀律、交友、服務、擅長等類別。點選分類後，再點選代碼項目即可加入；若選錯，可按標籤上的叉號移除。</p>
+
+<h2>四、填寫職務與特殊表現</h2>
+<h3>擔任職務</h3>
+<p>可使用快速選單選取班級幹部或科目小老師，例如班長、副班長、衛生股長、生物小老師等，也可以直接自行輸入其他職務。選好職務後，再選擇表現狀況並按加號加入。</p>
+
+<h3>校內外活動／競賽</h3>
+<p>若學生有科展、學科競賽、社團成果、校內外比賽等表現，可輸入活動名稱與成績。系統會在「競賽與活動」欄位顯示，也會整合到「特殊優良表現」中。</p>
+<div class="example">例如：活動名稱「校內科展」、成績「特優」，會整理為「校內科展獲得特優」。</div>
+
+<h2>五、匯入學生德行自評資料</h2>
+<ol>
+  <li>按「選擇檔案」上傳 Excel、XLS 或 CSV。</li>
+  <li>系統會讀取第一個工作表。</li>
+  <li>若表格中有「姓名」或「學生姓名」欄位，系統會嘗試自動比對目前學生。</li>
+  <li>也可以從「選擇學生列」手動選取學生。</li>
+  <li>按「套用選取學生資料」後，資料會自動帶入自評欄位。</li>
+</ol>
+<p>若表單某一欄沒有填寫，匯入後會保持空白，老師可自行補寫。系統可辨識學校服務、社團表現、學業表現、生活常規、社會服務、活動表演、科學展覽、其他特殊表現等常見欄位。</p>
+
+<h2>六、智慧生成選項</h2>
+<p>「智慧生成選項」提供常見學生表現項目，老師可快速點選「佳」或「待改進」。類別包含學習態度、生活常規與守法、人際互動、個人特質。系統會依照所選內容產生基礎評語素材。</p>
+
+<h2>七、導師勉勵／結語</h2>
+<p>若老師希望指定評語結尾，可在「導師勉勵／結語」欄位自行輸入。若留空，系統會依照語氣風格自動產生鼓勵或期許文字。</p>
+
+<h2>八、產生基礎評語</h2>
+<p>填寫左側資料後，按右側「生成基礎評語」。系統會整合學生姓名與性別、評語代碼、智慧生成選項、學生自評資料、幹部職務、活動競賽與導師勉勵，產生初稿。</p>
+
+<h2>九、使用 Gemini AI 潤飾評語</h2>
+<p>系統提供「本機規則合併」與「Google Gemini」兩種潤飾模式。</p>
+
+<h3>本機規則合併</h3>
+<p>不需要 API Key，所有文字只在瀏覽器內處理，不會送到雲端，適合快速合併基礎評語與補充觀察。</p>
+
+<h3>Google Gemini</h3>
+<ol>
+  <li>在「AI 設定」中選擇「Google Gemini」。</li>
+  <li>按「取得 API Key」前往 Google AI Studio。</li>
+  <li>建立並複製 API Key。</li>
+  <li>回到系統，貼到 API Key 欄位。</li>
+  <li>可按「儲存 Key」將 API Key 儲存在本機瀏覽器。</li>
+  <li>按「AI 智慧潤飾與合併」產生最終德行評語。</li>
+</ol>
+<div class="note">若使用 Gemini 潤飾，評語內容會送至 Google Gemini API。若不想送出資料，請使用「本機規則合併」。</div>
+
+<h2>十、最終德行評語</h2>
+<p>「最終德行評語」是正式使用的主要評語欄位。建議先生成基礎評語，再加入補充觀察，接著使用本機規則或 Gemini AI 潤飾，最後由老師檢查並手動微調。</p>
+
+<h2>十一、日常生活表現總表</h2>
+<p>按「同步所有資料至表格」後，系統會整理右側表格，包含評語代碼、幹部經歷、競賽與活動、德行評語、特殊優良表現。</p>
+
+<h3>德行評語</h3>
+<p>此欄位會自動帶入「最終德行評語」的文字。</p>
+
+<h3>特殊優良表現</h3>
+<p>此欄位會整理學生具體的特殊表現與成就，避免和最終德行評語重複稱讚。</p>
+<div class="example">林獻升特殊優良表現：擔任衛生服務隊，協助環境打掃；生物社長，辦理採集活動；段考經常前三名；校內科展獲得特優；學科能力競賽獲得一等獎。</div>
+
+<h2>十二、複製與匯出</h2>
+<h3>複製</h3>
+<p>可使用「複製基礎評語」、「複製最終德行評語」或「複製整張表格」。</p>
+
+<h3>匯出 Excel</h3>
+<p>按「匯出 Excel」後，系統會下載 Excel 檔。Excel 採直向排列，內容欄位會自動換行，避免文字橫向過長。</p>
+<table>
+  <thead><tr><th>項目</th><th>內容</th></tr></thead>
+  <tbody>
+    <tr><td>學生姓名</td><td>學生姓名</td></tr>
+    <tr><td>性別</td><td>男／女</td></tr>
+    <tr><td>最終德行評語</td><td>評語全文</td></tr>
+    <tr><td>特殊優良表現</td><td>表現摘要</td></tr>
+  </tbody>
+</table>
+
+<h3>匯出 PDF</h3>
+<p>按「匯出 PDF」後，瀏覽器會開啟列印視窗。在列印視窗中選擇「另存為 PDF」即可。</p>
+
+<h2>十三、常見問題</h2>
+<h3>Gemini API Key 輸入後仍無法潤飾？</h3>
+<p>請確認 API Key 是否完整複製、Google AI Studio 專案是否已啟用 Gemini API、網路是否可連線到 Google Gemini API。若仍失敗，可先改用「本機規則合併」。</p>
+
+<h3>AI 生成文字太短或不完整？</h3>
+<p>系統已加入回覆長度檢查與自動重試。若仍覺得不夠完整，可在「補充觀察」加入更多具體資料，再重新潤飾。</p>
+
+<h3>特殊優良表現和最終德行評語內容重複？</h3>
+<p>「特殊優良表現」設計為簡潔摘要，只列具體項目與成就；評價與稱讚主要放在「最終德行評語」。</p>
+
+<h2>十四、建議使用流程</h2>
+<ol>
+  <li>填寫學生姓名、性別與語氣。</li>
+  <li>選擇學校評語代碼。</li>
+  <li>輸入幹部、小老師、活動與競賽資料。</li>
+  <li>匯入或填寫學生德行自評資料。</li>
+  <li>點選智慧生成選項。</li>
+  <li>生成基礎評語。</li>
+  <li>補充導師觀察。</li>
+  <li>使用本機規則或 Gemini AI 潤飾。</li>
+  <li>同步日常生活表現總表。</li>
+  <li>檢查德行評語與特殊優良表現。</li>
+  <li>匯出 Excel 或 PDF。</li>
+</ol>
+
+<h2>十五、資料與隱私提醒</h2>
+<ul>
+  <li>若使用「本機規則合併」，文字只在瀏覽器內處理。</li>
+  <li>若使用「Google Gemini」，評語內容會送至 Google Gemini API 進行生成。</li>
+  <li>請避免輸入不必要的敏感個資。</li>
+  <li>API Key 請妥善保管，不要公開分享。</li>
+</ul>
+
+</body>
+</html>

@@ -1,0 +1,2511 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI智慧輔助升學系統</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f4ef;
+      --surface: #ffffff;
+      --surface-2: #f8faf8;
+      --text: #1d2528;
+      --muted: #667174;
+      --line: #d9ded9;
+      --primary: #166b5c;
+      --primary-2: #0f4f45;
+      --accent: #b45f3c;
+      --accent-2: #81422b;
+      --warn: #9a6b00;
+      --danger: #a33a3a;
+      --ok: #2f7b4f;
+      --shadow: 0 18px 45px rgba(26, 39, 37, 0.10);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+      color: var(--text);
+      background:
+        linear-gradient(180deg, rgba(22, 107, 92, 0.08), transparent 340px),
+        var(--bg);
+      line-height: 1.65;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #fff;
+      background: var(--primary);
+      cursor: pointer;
+      transition: transform .18s ease, background .18s ease, box-shadow .18s ease;
+      min-height: 42px;
+    }
+
+    button:hover {
+      background: var(--primary-2);
+      box-shadow: 0 8px 18px rgba(22, 107, 92, .18);
+      transform: translateY(-1px);
+    }
+
+    button.secondary {
+      background: #596a70;
+    }
+
+    button.secondary:hover {
+      background: #415156;
+    }
+
+    button.accent {
+      background: var(--accent);
+    }
+
+    button.accent:hover {
+      background: var(--accent-2);
+    }
+
+    button.danger {
+      background: var(--danger);
+    }
+
+    button.ghost {
+      color: var(--primary);
+      background: #e7f1ee;
+    }
+
+    button.ghost:hover {
+      color: #fff;
+      background: var(--primary);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: #334042;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 11px 12px;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 260px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(22, 107, 92, .13);
+    }
+
+    .app-shell {
+      width: min(1440px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 36px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 18px;
+      align-items: end;
+      padding: 24px 0 22px;
+      border-bottom: 1px solid rgba(22, 107, 92, .22);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 4.4vw, 56px);
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    .hero p {
+      max-width: none;
+      margin: 14px 0 0;
+      color: #425052;
+      font-size: clamp(12px, 1.28vw, 18px);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .creator-line {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .creator-line a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .page-nav {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 0 0 18px;
+    }
+
+    .page-nav button {
+      color: var(--primary);
+      background: #e7f1ee;
+    }
+
+    .page-nav button.active {
+      color: #fff;
+      background: var(--primary);
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin: 22px 0;
+    }
+
+    .toolbar .grow {
+      flex: 1 1 210px;
+    }
+
+    .page-stack {
+      display: grid;
+      gap: 18px;
+    }
+
+    .app-page[hidden] {
+      display: none !important;
+    }
+
+    .reference-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .reference-card {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .reference-card h3 {
+      margin: 0 0 8px;
+      color: var(--primary);
+      font-size: 17px;
+    }
+
+    .reference-card p {
+      margin: 0 0 8px;
+    }
+
+    .reference-card ul {
+      margin: 0;
+      padding-left: 1.2em;
+    }
+
+    .reference-card li {
+      margin: 0 0 6px;
+    }
+
+    .dialog-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(29, 37, 40, .42);
+    }
+
+    .dialog-backdrop[hidden] {
+      display: none !important;
+    }
+
+    .dialog {
+      width: min(760px, 100%);
+      max-height: min(88vh, 820px);
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: 0 28px 80px rgba(26, 39, 37, .28);
+    }
+
+    .dialog-wide {
+      width: min(1120px, 100%);
+    }
+
+    .dialog iframe {
+      width: 100%;
+      height: 72vh;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .dialog-header {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface-2);
+    }
+
+    .dialog-header h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .dialog-header p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .icon-button {
+      width: 42px;
+      min-width: 42px;
+      padding: 0;
+      color: var(--muted);
+      background: transparent;
+      border: 1px solid var(--line);
+      box-shadow: none;
+      transform: none;
+    }
+
+    .icon-button:hover {
+      color: #fff;
+      background: var(--primary);
+    }
+
+    .pdf-review {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .pdf-page-row {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .pdf-page-row strong {
+      color: var(--primary);
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface-2);
+    }
+
+    .panel-header h2,
+    .panel-header h3 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.35;
+    }
+
+    .panel-header p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .panel-body {
+      padding: 18px;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .two {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .three {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .tabbar {
+      display: flex;
+      gap: 8px;
+      padding: 10px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .tabbar button {
+      flex: 1 0 auto;
+      min-height: 38px;
+      padding: 8px 11px;
+      color: var(--muted);
+      background: transparent;
+      border: 1px solid transparent;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .tabbar button.active {
+      color: #fff;
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .checklist {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .option-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .option-chip {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 38px;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: #334042;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .option-chip input {
+      width: auto;
+      margin: 0;
+      accent-color: var(--primary);
+    }
+
+    .file-loader {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+      border: 1px dashed #a8bbb4;
+      border-radius: 8px;
+      background: #f5faf8;
+    }
+
+    .link-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 12px 0;
+    }
+
+    .link-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: #fff;
+      background: var(--primary);
+      text-decoration: none;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .link-button.accent {
+      background: var(--accent);
+    }
+
+    .checklist li,
+    .note {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .checklist strong {
+      color: var(--primary);
+    }
+
+    .score-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .score-row {
+      display: grid;
+      grid-template-columns: 92px 1fr 40px;
+      gap: 10px;
+      align-items: center;
+      font-size: 14px;
+    }
+
+    .bar {
+      height: 9px;
+      overflow: hidden;
+      border-radius: 99px;
+      background: #e7ece8;
+    }
+
+    .bar span {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: var(--primary);
+    }
+
+    .output {
+      min-height: 120px;
+      max-height: 520px;
+      overflow: auto;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfb;
+      white-space: pre-wrap;
+    }
+
+    .output h3,
+    .output h4 {
+      margin: 14px 0 8px;
+    }
+
+    .hint {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      color: var(--primary);
+      background: #e6f2ef;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .warning {
+      border-color: #ead59b;
+      color: #5d4300;
+      background: #fff8df;
+    }
+
+    .success {
+      border-color: #b8dcc6;
+      color: #1d5a39;
+      background: #effaf3;
+    }
+
+    .danger-text {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .small {
+      font-size: 13px;
+    }
+
+    .footer {
+      margin-top: 24px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 14px;
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      .toolbar,
+      .page-nav,
+      .actions,
+      .tabbar,
+      .link-buttons,
+      .file-loader,
+      .hero,
+      .dialog-backdrop,
+      .footer {
+        display: none !important;
+      }
+
+      .app-shell {
+        width: 100%;
+        padding: 0;
+      }
+
+      body.print-reference .toolbar,
+      body.print-reference .page-nav,
+      body.print-reference .hero,
+      body.print-reference .footer,
+      body.print-reference .app-page:not(#page-reference) {
+        display: none !important;
+      }
+
+      body.print-reference #page-reference,
+      body.print-reference .reference-grid {
+        display: block !important;
+      }
+
+      .panel {
+        box-shadow: none;
+        border: 1px solid #ccc;
+        margin: 0 0 14px;
+        break-inside: avoid;
+      }
+
+      textarea,
+      input,
+      select,
+      .output {
+        border: 1px solid #bbb;
+        max-height: none;
+      }
+
+      .reference-card {
+        border: 1px solid #ccc;
+        margin: 0 0 10px;
+        break-inside: avoid;
+      }
+    }
+
+    @media (max-width: 1180px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .app-shell {
+        width: min(100% - 20px, 1440px);
+        padding-top: 16px;
+      }
+
+      .toolbar,
+      .two,
+      .three,
+      .option-grid,
+      .link-buttons,
+      .page-nav,
+      .reference-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .two,
+      .three {
+        display: grid;
+      }
+
+      .toolbar {
+        display: grid;
+      }
+
+      .tabbar {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        overflow: visible;
+      }
+
+      .tabbar button {
+        width: 100%;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <section class="hero">
+      <div>
+        <span class="badge">以學習歷程檔案為核心的 AI 輔助工具</span>
+        <h1>AI智慧輔助升學系統</h1>
+        <div class="creator-line">臺北市立麗山高中 林獻升老師 | 聯絡信箱：<a href="mailto:frog@lssh.tp.edu.tw">frog@lssh.tp.edu.tw</a></div>
+        <p>協助學生把課程成果、多元表現、自述與讀書計畫整理成清楚、有反思、有科系連結的作品。AI 用於發想、檢核、修辭與模擬審查；核心經驗仍由學生親自判斷與改寫。</p>
+      </div>
+    </section>
+
+    <section class="toolbar" aria-label="學生資料管理">
+      <input class="grow" id="student-name" type="text" placeholder="學生姓名">
+      <select class="grow" id="student-select">
+        <option value="">選擇已儲存學生</option>
+      </select>
+      <button type="button" onclick="loadRecord()">讀取</button>
+      <button type="button" class="ghost" onclick="saveRecord()">儲存</button>
+      <button type="button" class="danger" onclick="deleteRecord()">刪除</button>
+      <button type="button" class="secondary" onclick="exportRecord()">下載 Word 檔</button>
+      <button type="button" class="accent" onclick="openAiSettings()">AI 設定</button>
+    </section>
+
+    <nav class="page-nav" aria-label="主要頁面切換">
+      <button type="button" class="active" data-page="settings" onclick="switchPage('settings')">申請與素材設定</button>
+      <button type="button" data-page="workspace" onclick="switchPage('workspace')">學習歷程草稿工作區</button>
+      <button type="button" data-page="reference" onclick="switchPage('reference')">學生參考資料與列印</button>
+    </nav>
+
+    <section class="page-stack">
+      <section class="panel app-page" id="page-settings">
+        <div class="panel-header">
+          <h2>申請與素材設定</h2>
+          <p>提供越具體的背景，AI 提示詞與本機診斷越有用。</p>
+        </div>
+        <div class="panel-body">
+          <div class="field">
+            <label for="portfolio-type">檔案類型</label>
+            <select id="portfolio-type">
+              <option value="課程學習成果">課程學習成果</option>
+              <option value="多元表現">多元表現</option>
+              <option value="升學自傳">升學自傳</option>
+              <option value="學習歷程自述">學習歷程自述</option>
+              <option value="自主學習計畫與成果">自主學習計畫與成果</option>
+              <option value="探究與實作成果">探究與實作成果</option>
+              <option value="讀書計畫">讀書計畫</option>
+              <option value="未來發展規劃">未來發展規劃</option>
+              <option value="多元表現綜整心得">多元表現綜整心得</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="file-name">檔案名稱</label>
+            <input id="file-name" type="text" placeholder="例：水質檢測專題成果">
+          </div>
+          <div class="field">
+            <label for="university-name">申請大學</label>
+            <input id="university-name" type="text" placeholder="例：國立陽明交通大學">
+          </div>
+          <div class="field">
+            <label for="department-name">申請科系</label>
+            <input id="department-name" type="text" placeholder="例：生物科技學系">
+          </div>
+          <div class="field">
+            <label>想凸顯的能力（可多選）</label>
+            <div class="option-grid" id="ability-options"></div>
+            <label for="target-abilities">其他能力補充</label>
+            <textarea id="target-abilities" style="min-height: 80px" placeholder="例：跨領域整合、英文口語表達、長期照護觀察"></textarea>
+          </div>
+          <div class="field">
+            <label>可佐證素材（可多選）</label>
+            <div class="option-grid" id="evidence-options"></div>
+            <label for="evidence-notes">其他佐證補充</label>
+            <textarea id="evidence-notes" style="min-height: 90px" placeholder="例：家長訪談紀錄、校外參訪心得、作品 GitHub 連結"></textarea>
+          </div>
+          <div class="note warning small">
+            AI 輔助前請先移除身分證字號、電話、住址、家庭敏感資訊等個資。若校系要求揭露 AI 使用範圍，可使用右側的誠信聲明草稿。
+          </div>
+        </div>
+      </section>
+
+      <section class="panel app-page" id="page-workspace" hidden>
+        <div class="panel-header">
+          <h2>學習歷程草稿工作區</h2>
+          <p>先放入自己的真實經驗，再讓系統協助檢核架構與產生 AI 提示詞。</p>
+        </div>
+        <div class="panel-body">
+          <div class="field">
+            <label for="file-upload">上傳 PDF / Word 檔讀取文字</label>
+            <div class="file-loader">
+              <input id="file-upload" type="file" accept=".pdf,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword">
+              <div class="actions">
+                <button type="button" class="ghost" onclick="readUploadedFile()">讀取檔案到草稿區</button>
+                <button type="button" class="ghost" onclick="openPdfViewer()">開啟 PDF 原檔檢視</button>
+                <button type="button" class="ghost" onclick="runPdfVisualReview()">PDF 圖文檢核</button>
+              </div>
+              <p class="hint" id="file-status">支援 PDF 與 Word .docx。舊版 .doc 檔建議先另存成 .docx 或 PDF 後再上傳。</p>
+            </div>
+          </div>
+          <div class="note small" id="pdf-visual-summary">尚未建立 PDF 圖文檢核。上傳 PDF 後可檢視原檔，並檢查文字、圖片、圖表、表格與自述是否互相支撐。</div>
+          <div class="field">
+            <label for="main-text">原始草稿</label>
+            <textarea id="main-text" placeholder="請貼上或撰寫學習歷程內容。建議包含：目的、過程、成果、困難、修正、收穫、與科系連結。"></textarea>
+          </div>
+          <div class="actions">
+            <button type="button" onclick="runLocalReview()">本機快速診斷</button>
+            <button type="button" class="ghost" onclick="runDeepPortfolioAnalysis()">第二階段深度分析</button>
+            <button type="button" class="ghost" onclick="runInterviewPrepAnalysis()">面試準備診斷</button>
+            <button type="button" class="ghost" onclick="runStudyPlanAnalysis()">讀書計畫診斷</button>
+            <button type="button" class="ghost" onclick="optimizeAutobiography()">自傳優化診斷</button>
+            <button type="button" class="accent" onclick="buildPrompt()">產生 AI 修飾提示詞</button>
+            <button type="button" class="accent" onclick="callAI()">用 API 產生回覆</button>
+            <button type="button" class="secondary" onclick="clearWorkspace()">清空</button>
+          </div>
+        </div>
+        <div class="tabbar" role="tablist">
+          <button type="button" class="active" data-tab="review" onclick="switchTab('review')">診斷</button>
+          <button type="button" data-tab="summary" onclick="switchTab('summary')">摘要</button>
+          <button type="button" data-tab="prompt" onclick="switchTab('prompt')">AI提示詞</button>
+          <button type="button" data-tab="ai" onclick="switchTab('ai')">AI回覆</button>
+        </div>
+        <div class="panel-body">
+          <div id="tab-review" class="tab-content">
+            <div class="score-list" id="score-list"></div>
+            <div class="output" id="review-output">尚未診斷。請輸入草稿後按「本機快速診斷」。</div>
+          </div>
+          <div id="tab-summary" class="tab-content" hidden>
+            <div class="output" id="summary-output">尚未產生摘要。</div>
+            <div class="actions">
+              <button type="button" class="ghost" onclick="copyFrom('summary-output')">複製摘要</button>
+            </div>
+          </div>
+          <div id="tab-prompt" class="tab-content" hidden>
+            <div class="field">
+              <label for="prompt-mode">提示詞任務</label>
+              <select id="prompt-mode" onchange="buildPrompt()">
+                <option value="polish">修飾與優化草稿</option>
+                <option value="secondStage">第二階段申請深度優化</option>
+                <option value="interviewPrep">面試準備深度優化</option>
+                <option value="studyPlan">讀書計畫深度優化</option>
+                <option value="autobiography">升學自傳深度優化</option>
+                <option value="review">模擬審查委員回饋</option>
+                <option value="outline">重建段落架構</option>
+                <option value="summary">產生精準摘要</option>
+                <option value="interview">產生面試追問題</option>
+                <option value="ethics">檢查 AI 使用與真實性風險</option>
+              </select>
+            </div>
+            <div class="output" id="prompt-output">尚未產生提示詞。</div>
+            <div class="actions">
+              <button type="button" class="ghost" onclick="copyFrom('prompt-output')">複製提示詞</button>
+              <button type="button" onclick="openExternalAI('chatgpt')">開啟 ChatGPT</button>
+              <button type="button" onclick="openExternalAI('gemini')">開啟 Gemini</button>
+            </div>
+            <p class="hint">外部 AI 網站通常不保證能從網址自動帶入全文；本工具會先複製提示詞，再開啟服務頁面。</p>
+          </div>
+          <div id="tab-ai" class="tab-content" hidden>
+            <div class="output" id="ai-output">尚未呼叫 AI。可在右側設定 API，或先使用「複製提示詞」到 ChatGPT/Gemini。</div>
+            <div class="actions">
+              <button type="button" class="ghost" onclick="copyFrom('ai-output')">複製 AI 回覆</button>
+              <button type="button" class="ghost" onclick="copyFrom('prompt-output')">複製提示詞</button>
+              <button type="button" onclick="useFallbackModel()">改用快速模型</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel app-page reference-page" id="page-reference" hidden>
+        <div class="panel-header">
+          <h2>學生參考資料與列印</h2>
+          <p>整合學習歷程檔案、第二階段審查、自傳、讀書計畫與面試準備重點，可列印給學生作為修改清單。</p>
+        </div>
+        <div class="panel-body">
+          <div class="actions">
+            <button type="button" class="accent" onclick="printReferencePage()">列印本頁參考資料</button>
+          </div>
+          <div class="reference-grid" id="reference-print-area">
+            <article class="reference-card">
+              <h3>整體審查精神</h3>
+              <p>大學第二階段重視學生是否能呈現真實學習軌跡、核心素養、解決問題能力、學習態度、邏輯推理與反思能力。資料不是越多越好，而是要能證明自己適合該校系。</p>
+              <ul>
+                <li>三重二不：重素養、重校內、重真實；不要求樣樣具備、不以數量取勝。</li>
+                <li>學生應像策展人一樣選資料，讓每份作品都能回答「證明什麼能力」與「為什麼和校系有關」。</li>
+                <li>所有 AI 修飾內容都必須可由學生本人在面試中自然說明。</li>
+              </ul>
+            </article>
+
+            <article class="reference-card">
+              <h3>備審資料常見類型</h3>
+              <p>高中生準備大學申請時，常見資料不是只有自傳，而是一組互相支援的申請證據。學生要先理解每一份檔案的功能，再決定放什麼內容。</p>
+              <ul>
+                <li>課程學習成果：證明課堂中的問題探究、方法、成果與反思。</li>
+                <li>多元表現與綜整心得：證明課堂外的投入、角色、能力與成長主軸。</li>
+                <li>學習歷程自述、自傳、讀書計畫與未來發展：說明我是誰、為何申請、如何善用校系資源。</li>
+                <li>自主學習、探究與實作成果：呈現主動規劃、資料蒐集、實作驗證、修正與問題解決。</li>
+              </ul>
+            </article>
+
+            <article class="reference-card">
+              <h3>製作基本檢核表</h3>
+              <ul class="checklist" id="portfolio-checklist"></ul>
+            </article>
+
+            <article class="reference-card">
+              <h3>課程學習成果</h3>
+              <p>課程成果要讓教授看見學生如何從課堂問題出發，經歷探索、修正與反思，而不只是放報告成品。</p>
+              <ul>
+                <li>建議結構：標題、摘要、動機、課程背景、問題意識、方法、成果、困難、修正、反思、科系連結。</li>
+                <li>要標明自己在小組中的實際角色，避免只呈現團隊成果而看不出個人貢獻。</li>
+                <li>證據可包含數據、照片、圖表、實驗紀錄、修正前後版本、教師回饋與作品連結。</li>
+              </ul>
+            </article>
+
+            <article class="reference-card">
+              <h3>多元表現</h3>
+              <p>多元表現不是獎狀集合，而是展現學生在課堂外如何投入、選擇、行動與成長。</p>
+              <ul>
+                <li>每項活動要說清楚參與動機、投入時間、負責任務、具體行動、成果與學到的能力。</li>
+                <li>服務、社團、競賽、幹部、檢定、自主學習都可以寫，但重點是角色與反思。</li>
+                <li>若沒有亮眼競賽，也可用長期投入、資源限制下的自主學習、問題解決與持續修正呈現優勢。</li>
+              </ul>
+            </article>
+
+            <article class="reference-card">
+              <h3>多元表現綜整心得</h3>
+              <p>綜整心得像一份能力儀表板，要把零散活動整合成清楚的個人主軸。</p>
+              <ul>
+                <li>不要逐項流水帳，應歸納出二到三個核心能力，例如領導、溝通、資料分析、社會關懷或自主學習。</li>
+                <li>每個能力都要搭配一到二個具體素材，說明事件、行動與反思。</li>
+                <li>結尾要連到申請校系需要的能力，讓教授看出活動和未來學習不是斷裂的。</li>
+              </ul>
+            </article>
+
+            <article class="reference-card">
+              <h3>自主學習計畫與成果</h3>
+              <p>自主學習重點不是題目看起來很大，而是學生是否能自己設定問題、規劃方法、管理進度、查找資源並修正成果。</p>
+              <ul>
+                <li>計畫要包含動機、問題意識、學習目標、時間安排、資源來源、成果形式與檢核方式。</li>
+                <li>成果要呈現實際做了什麼，例如閱讀筆記、實驗紀錄、作品、程式、訪談、簡報、模型或報告。</li>
+                <li>反思要寫出原本想法如何改變、遇到什麼限制、如何調整下一步，而不只是說收穫很多。</li>
+              </ul>
+            </article>
+
+            <article class="reference-card">
+              <h3>探究與實作成果</h3>
+              <p>探究與實作成果要呈現科學或專題探究的完整歷程，讓教授看見學生如何提出問題、蒐集證據、分析資料並形成結論。</p>
+              <ul>
+                <li>建議包含研究問題、假設或預期、方法設計、變因控制、資料蒐集、圖表分析、結論與限制。</li>
+                <li>圖片、實驗照片、數據表與統計圖要有說明文字，指出它證明了什麼，而不是只放版面裝飾。</li>
+                <li>若結果不如預期，也可以寫出失敗原因、方法修正與後續可改進方向，反而能展現真實探究能力。</li>
+              </ul>
+            </article>
+
+            <article class="reference-card">
+              <h3>學習歷程自述</h3>
+              <p>自述通常需要回應 O、P、Q：高中學習歷程反思、就讀動機、未來學習計畫與生涯規劃。</p>
+              <ul>
+                <li>O：選擇高中重要經驗，寫出轉變、困難、修正與後設反思。</li>
+                <li>P：就讀動機要從個人經驗連到問題意識，再連到目標校系的專業方法。</li>
+                <li>Q：未來規劃要分階段，包含課程、專題、能力補強、實習研究與職涯方向。</li>
+              </ul>
+            </article>
+
+            <article class="reference-card">
+              <h3>升學自傳</h3>
+              <p>自傳不是從出生開始寫的流水帳，而是個人品牌與科系契合的價值提案。</p>
+              <ul>
+                <li>開頭用三到五句建立個人標籤、核心能力與申請主軸。</li>
+                <li>關鍵經歷建議使用 START：情境、任務、行動、結果、反思。</li>
+                <li>避免抽象形容詞，例如我很努力、我很熱情；改用具體事件、數據與修正歷程證明。</li>
+              </ul>
+            </article>
+
+            <article class="reference-card">
+              <h3>讀書計畫</h3>
+              <p>讀書計畫不是願望清單，而是說明學生如何善用目標校系資源，逐步補強能力並形成未來方向。</p>
+              <ul>
+                <li>需由就讀動機自然延伸，並分成入學前、短程、中程、長程或大學四年時間軸。</li>
+                <li>每個計畫項目都要寫出為什麼做、怎麼做、何時做、如何檢核成果。</li>
+                <li>避免罐頭模板、頭重腳輕、過度承諾與未查證的課程、教授或實驗室資訊。</li>
+              </ul>
+            </article>
+
+            <article class="reference-card">
+              <h3>未來發展規劃</h3>
+              <p>未來發展不是喊口號，而是把個人興趣、校系資源、能力缺口與職涯方向串成可行路徑。</p>
+              <ul>
+                <li>短程可寫入學前補強、基礎課程、閱讀與工具能力；中程可寫專題、實習、研究、交換或跨域學程。</li>
+                <li>長程可寫研究所、產業、公共服務、專業證照或社會議題，但要保留彈性，不要過度承諾。</li>
+                <li>每個目標都要能回答：為什麼與我有關、為什麼需要這個科系、我會用什麼證據檢核進步。</li>
+              </ul>
+            </article>
+
+            <article class="reference-card">
+              <h3>面試準備</h3>
+              <p>面試用來驗證備審真實性、動機深度、臨場思考、抗壓性與校系契合度。</p>
+              <ul>
+                <li>準備 30 秒、1 分鐘、3 分鐘三種版本的自我介紹。</li>
+                <li>至少選三個備審重點整理成 START 回答卡，並準備教授追問。</li>
+                <li>遇到不會的題目，先誠實承認，再釐清問題、連回已做經驗，最後提出後續學習方式。</li>
+              </ul>
+            </article>
+
+            <article class="reference-card">
+              <h3>團體面試與 MMI</h3>
+              <p>團體面試重視協作與整合，不是搶話；MMI 重視情境判斷、倫理思考、壓力恢復與同理心。</p>
+              <ul>
+                <li>團體討論可扮演創意者、統整者、提問者或推進者，重點是讓討論更有結構。</li>
+                <li>發言時可用補充、延伸、統整、形成共識取代對立式反駁。</li>
+                <li>倫理題先辨識利益關係人，再思考不傷害、助益、公平、尊重自主與溝通流程。</li>
+              </ul>
+            </article>
+
+            <article class="reference-card">
+              <h3>AI 使用與誠信</h3>
+              <p>AI 是教練，不是代筆。可用於腦力激盪、架構建議、修辭潤飾、語法檢查與模擬教授回饋，但不能編造經歷。</p>
+              <ul>
+                <li>不可直接複製 AI 生成的整篇自傳、讀書計畫或虛構校系資料。</li>
+                <li>AI 提到的課程、教授、實驗室、職涯與證照都要回到校系官網或招生資料查證。</li>
+                <li>若校系要求揭露 AI 使用，應說明 AI 用於整理與潤飾，事實與反思由本人確認。</li>
+              </ul>
+            </article>
+
+            <article class="reference-card">
+              <h3>排版與上傳</h3>
+              <p>良好排版能降低教授閱讀負擔，也能呈現資訊整理能力。上傳前請以 PDF 檢查最終效果。</p>
+              <ul>
+                <li>使用清楚標題層級、適當留白、頁首頁尾與一致字體，不要做成密密麻麻的文字牆。</li>
+                <li>可使用甘特圖呈現讀書計畫時間軸，雷達圖呈現能力補強，心智圖呈現學習主軸。</li>
+                <li>上傳前在電腦、平板或手機檢查 PDF 是否跑版、圖片是否清晰、檔案大小是否符合限制。</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <div class="dialog-backdrop" id="ai-settings-dialog" hidden>
+      <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="ai-settings-title">
+        <div class="dialog-header">
+          <div>
+            <h2 id="ai-settings-title">AI 連接與檢核設定</h2>
+            <p>API 金鑰只存於目前瀏覽器工作階段；正式給學生大量使用時，建議改由學校後端代理呼叫。</p>
+          </div>
+          <button type="button" class="icon-button" onclick="closeAiSettings()" aria-label="關閉 AI 設定">×</button>
+        </div>
+        <div class="panel-body">
+          <div class="two">
+            <div class="field">
+              <label for="provider">AI 服務</label>
+              <select id="provider" onchange="syncProviderDefaults()">
+                <option value="openai">OpenAI Responses API</option>
+                <option value="gemini">Google Gemini API</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="temperature">溫度</label>
+              <input id="temperature" type="number" min="0" max="1" step="0.1" value="0.4">
+            </div>
+          </div>
+          <div class="field">
+            <label for="model">模型</label>
+            <input id="model" type="text" value="gpt-5.4-mini" list="model-suggestions" placeholder="可手動輸入模型 ID">
+            <datalist id="model-suggestions"></datalist>
+          </div>
+          <div class="field">
+            <label for="api-key">API Key</label>
+            <input id="api-key" type="password" placeholder="依下方選擇暫時或永久儲存">
+          </div>
+          <div class="field">
+            <label for="api-storage-mode">API 設定儲存方式</label>
+            <select id="api-storage-mode">
+              <option value="session">暫時儲存，關閉瀏覽器後清除</option>
+              <option value="local">永久儲存，保存在這台電腦的瀏覽器</option>
+            </select>
+          </div>
+          <div class="link-buttons" aria-label="API Key 申請連結">
+            <a class="link-button" href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">申請 OpenAI API Key</a>
+            <a class="link-button accent" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">申請 Gemini API Key</a>
+          </div>
+          <div class="actions">
+            <button type="button" class="ghost" onclick="useFallbackModel()">改用快速模型</button>
+            <button type="button" class="ghost" onclick="saveApiSettings()">儲存 API 設定</button>
+            <button type="button" class="accent" onclick="closeAiSettings()">完成設定</button>
+          </div>
+          <p class="hint" id="model-hint">目前預設使用較快、較省額度的模型。若遇到高需求或額度限制，請改用快速模型、切換 OpenAI/Gemini，或複製提示詞到外部網站。</p>
+        </div>
+      </section>
+    </div>
+
+    <div class="dialog-backdrop" id="pdf-viewer-dialog" hidden>
+      <section class="dialog dialog-wide" role="dialog" aria-modal="true" aria-labelledby="pdf-viewer-title">
+        <div class="dialog-header">
+          <div>
+            <h2 id="pdf-viewer-title">PDF 原檔檢視</h2>
+            <p id="pdf-viewer-note">可對照學生 PDF 的圖片、圖表、表格與文字排版，再回到草稿區修改說明。</p>
+          </div>
+          <button type="button" class="icon-button" onclick="closePdfViewer()" aria-label="關閉 PDF 檢視">×</button>
+        </div>
+        <div class="panel-body">
+          <iframe id="pdf-viewer-frame" title="PDF 原檔內容"></iframe>
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <script>
+    const storagePrefix = "ai-portfolio-v2:";
+    const fields = [
+      "student-name", "portfolio-type", "file-name", "university-name", "department-name",
+      "target-abilities", "evidence-notes", "main-text", "review-output", "summary-output",
+      "prompt-output", "ai-output", "prompt-mode"
+    ];
+
+    let uploadedPdfUrl = "";
+    let uploadedPdfName = "";
+    let uploadedPdfReport = "";
+    let uploadedPdfPages = [];
+
+    const rubric = [
+      { id: "structure", name: "結構", words: ["目的", "動機", "過程", "成果", "反思", "未來"] },
+      { id: "evidence", name: "佐證", words: ["數據", "照片", "證明", "紀錄", "作品", "回饋", "表格"] },
+      { id: "reflection", name: "反思", words: ["學到", "發現", "困難", "修正", "改進", "成長", "體會"] },
+      { id: "fit", name: "科系連結", words: ["科系", "課程", "大學", "領域", "職涯", "研究", "專業"] },
+      { id: "authenticity", name: "真實性", words: ["我", "曾", "參與", "負責", "嘗試", "完成", "遇到"] }
+    ];
+
+    const checklistItems = [
+      "是否清楚說明這份作品的目的或問題意識？",
+      "是否交代自己在活動或作品中的角色與具體行動？",
+      "是否有成果、數據、照片、證明或教師回饋等佐證？",
+      "是否寫出困難、修正、收穫與下一步，而非只有流水帳？",
+      "是否能看出與目標校系的課程、能力或職涯方向有連結？",
+      "是否避免過度花俏排版，並保留清楚標題與段落？",
+      "若使用 AI，是否由學生二次修改並確認真實性？"
+    ];
+
+    const autobiographyChecks = [
+      {
+        name: "黃金開場",
+        words: ["核心能力", "適合", "動機", "特質", "優勢", "目標"],
+        advice: "開頭應用三到五句話說清楚我是誰、我有什麼關鍵能力、為什麼適合這個校系。避免從出生地、家庭成員或籠統興趣開始。"
+      },
+      {
+        name: "高中學習反思",
+        words: ["高中", "課程", "學習", "反思", "修正", "成長", "轉變"],
+        advice: "自傳需要呈現高中階段的成長軌跡，選二到三個與申請科系最相關的事件，寫出轉變與後設反思。"
+      },
+      {
+        name: "STAR 具體敘事",
+        words: ["情境", "任務", "行動", "結果", "困難", "挑戰", "數據", "成果"],
+        advice: "經歷不要只寫參加過什麼，應寫清楚當時情境、自己的任務、採取的行動、結果與反思。失敗與修正過程反而能展現思考能力。"
+      },
+      {
+        name: "就讀動機",
+        words: ["申請", "科系", "動機", "問題", "社會", "專業", "解決"],
+        advice: "就讀動機要從個人連結出發，提升到問題意識，再說明該科系如何提供專業方法。避免只寫喜歡、校譽好或分數剛好。"
+      },
+      {
+        name: "校系客製化",
+        words: ["貴系", "課程", "教授", "實驗室", "專題", "資源", "特色"],
+        advice: "需要具體點出目標校系的課程、研究方向、專題資源或培育特色，證明這不是一篇到處都能投的自傳。"
+      },
+      {
+        name: "未來學習計畫",
+        words: ["近程", "中程", "遠程", "大學", "修課", "生涯", "職涯", "研究"],
+        advice: "未來計畫應分成入學前、大學期間、畢業後或近中遠程，寫出具體課程、能力補強、專題參與與生涯方向。"
+      }
+    ];
+
+    const deepPortfolioChecks = [
+      {
+        name: "完整性",
+        words: ["標題", "摘要", "動機", "背景", "過程", "成果", "反思", "心得"],
+        advice: "一份能進入第二階段審查的檔案，不能只放作品或證書。需要補足標題、摘要、背景脈絡、動機、正文成果與心得反思。"
+      },
+      {
+        name: "獨特性",
+        words: ["我", "個人", "興趣", "生活", "觀察", "主動", "自主", "延伸", "觀點"],
+        advice: "審查委員會看到許多相似作品。需要寫出這件作品為什麼是你的，包含個人興趣、生活觀察、自主延伸或獨特解讀。"
+      },
+      {
+        name: "關聯性",
+        words: ["科系", "能力", "課程", "專業", "素養", "解決問題", "邏輯", "團隊", "學習態度"],
+        advice: "關聯性不是科目名稱相同，而是你能論證作品中的核心素養如何符合目標科系需要。"
+      },
+      {
+        name: "真實性與可面試性",
+        words: ["我負責", "我發現", "我修正", "我嘗試", "困難", "失敗", "調整", "學到"],
+        advice: "第二階段常會追問細節。需要清楚寫出自己實際做了什麼、遇到什麼問題、如何修正，避免只有漂亮結論。"
+      },
+      {
+        name: "策展主軸",
+        words: ["主軸", "連結", "統整", "能力", "故事", "成長", "脈絡", "轉變"],
+        advice: "學習歷程不是資料堆疊，而是策展。需要用一個清楚主軸串起課程成果、多元表現、自述與面試說法。"
+      },
+      {
+        name: "第二階段準備",
+        words: ["面試", "口試", "教授", "問題", "準備", "說明", "指引", "備審", "甄試"],
+        advice: "第二階段不只交資料，還要能在面試或甄試中說明。需要準備教授可能追問的問題與自己的回答證據。"
+      }
+    ];
+
+    const interviewPrepChecks = [
+      {
+        name: "個人價值主張",
+        words: ["錄取", "適合", "貢獻", "優勢", "特色", "價值", "動機", "貴系"],
+        advice: "面試不是重複備審資料，而是要在短時間說清楚你能為該系帶來什麼。請準備一段一分鐘版本的自我定位與錄取理由。"
+      },
+      {
+        name: "START 經驗敘事",
+        words: ["情境", "任務", "行動", "結果", "反思", "修正", "如果重來", "學到"],
+        advice: "面試回答應把經歷整理成情境、任務、行動、結果、反思。若只背活動名稱，教授很難判斷你的真實能力。"
+      },
+      {
+        name: "校系契合與就讀意願",
+        words: ["課程", "教授", "實驗室", "資源", "特色", "系上", "職涯", "學習計畫"],
+        advice: "常見問題包含為什麼選本系、還報哪些校系、如果同時錄取怎麼選。請用課程、師資、資源與個人目標證明不是亂投。"
+      },
+      {
+        name: "壓力題與未知應變",
+        words: ["不熟悉", "我目前", "釐清", "請問", "類似", "延伸", "學習", "查證"],
+        advice: "遇到不會的題目不要硬編。請練習誠實承認、釐清問題、連回已做經驗、大方提問、提出後續學習方式。"
+      },
+      {
+        name: "團體面試協作",
+        words: ["傾聽", "補充", "統整", "共識", "同學", "觀點", "討論", "分工"],
+        advice: "團體面試不等於搶話。需要展現積極傾聽、補充延伸、歸納共識與推進討論的能力。"
+      },
+      {
+        name: "MMI 與倫理情境",
+        words: ["倫理", "同理", "利益關係人", "不傷害", "助益", "危機", "PDCA", "溝通"],
+        advice: "醫藥衛生、法律、心理等科系常考 MMI 或情境題。請練習從利益關係人、倫理原則、危機處理與人文關懷回答。"
+      }
+    ];
+
+    const studyPlanChecks = [
+      {
+        name: "N-O-P-Q 邏輯",
+        words: ["多元表現", "學習反思", "就讀動機", "未來學習", "生涯規劃", "N", "O", "P", "Q"],
+        advice: "讀書計畫不能孤立存在，應與多元表現、高中反思、就讀動機和未來規劃形成一條清楚的申請敘事。"
+      },
+      {
+        name: "短中長程規劃",
+        words: ["近程", "短程", "中程", "長程", "大一", "大二", "大三", "大四", "畢業"],
+        advice: "請把計畫分成入學前、大一大二、大三大四、畢業後或短中長程，並說明每階段的任務與成果。"
+      },
+      {
+        name: "校系客製化",
+        words: ["貴系", "課程", "教授", "實驗室", "專題", "學程", "資源", "交換", "實習"],
+        advice: "讀書計畫必須看得出是寫給這個校系。請補入經查證的課程、學程、實驗室、實習資源或學習特色。"
+      },
+      {
+        name: "具體可執行",
+        words: ["證照", "專案", "研究", "實習", "競賽", "閱讀", "線上課程", "時間", "方法"],
+        advice: "避免只寫努力讀書、多去圖書館。請寫出具體行動、學習方法、時間安排、成果形式與檢核方式。"
+      },
+      {
+        name: "可行性與風險控管",
+        words: ["優先", "行有餘力", "評估", "彈性", "調整", "時間管理", "資源", "限制"],
+        advice: "計畫要有野心，但不能過度承諾。請呈現主次順序、彈性調整與時間管理，避免看起來眼高手低。"
+      },
+      {
+        name: "AI 倫理與排版可讀性",
+        words: ["AI", "查證", "原創", "PDF", "圖表", "甘特圖", "雷達圖", "頁首", "檔案大小"],
+        advice: "AI 可以當教練，不能代筆或虛構課程。讀書計畫最後應轉 PDF，檢查頁首、留白、圖表、檔案大小與不同裝置可讀性。"
+      }
+    ];
+
+    const abilityOptions = [
+      "自主學習", "問題解決", "資料蒐集", "資料分析", "實驗設計", "觀察紀錄",
+      "邏輯推理", "批判思考", "跨域整合", "創意思考", "溝通表達", "團隊合作",
+      "領導規劃", "時間管理", "反思修正", "同理心", "社會關懷", "英文閱讀",
+      "簡報表達", "程式設計", "圖表製作", "研究寫作"
+    ];
+
+    const evidenceOptions = [
+      "課堂報告", "專題報告", "實驗紀錄", "實驗照片", "數據表", "統計圖表",
+      "作品截圖", "作品連結", "教師回饋", "同儕回饋", "修正前後版本", "學習單",
+      "簡報檔", "活動照片", "服務紀錄", "幹部證明", "競賽獎狀", "檢定證書",
+      "自主學習計畫", "閱讀筆記", "訪談紀錄", "反思心得"
+    ];
+
+    const parserSources = {
+      pdf: [
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+        "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"
+      ],
+      mammoth: [
+        "https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js",
+        "https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"
+      ]
+    };
+
+    const modelPresets = {
+      openai: {
+        default: "gpt-5.4-mini",
+        fallback: "gpt-5.4-nano",
+        options: [
+          { value: "gpt-5.4-mini", label: "gpt-5.4-mini - 快速、省額度，適合學習歷程修飾" },
+          { value: "gpt-5.4-nano", label: "gpt-5.4-nano - 最快備援，適合高需求時使用" },
+          { value: "gpt-5.4", label: "gpt-5.4 - 品質較高，速度與費用較高" },
+          { value: "gpt-5.5", label: "gpt-5.5 - 複雜推理，可能較容易遇到高需求" },
+          { value: "gpt-4.1", label: "gpt-4.1 - 舊設定相容" },
+          { value: "gpt-4.1-mini", label: "gpt-4.1-mini - 舊設定快速相容" }
+        ]
+      },
+      gemini: {
+        default: "gemini-3.5-flash",
+        fallback: "gemini-2.5-flash-lite",
+        options: [
+          { value: "gemini-3.5-flash", label: "gemini-3.5-flash - 穩定，適合一般文字任務" },
+          { value: "gemini-2.5-flash-lite", label: "gemini-2.5-flash-lite - 快速、省額度備援" },
+          { value: "gemini-2.5-flash", label: "gemini-2.5-flash - 低延遲大量任務" },
+          { value: "gemini-2.5-pro", label: "gemini-2.5-pro - 較複雜任務，速度較慢" }
+        ]
+      }
+    };
+
+    function getValue(id) {
+      const el = document.getElementById(id);
+      return el ? el.value.trim() : "";
+    }
+
+    function setText(id, text) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    }
+
+    function renderOptionGroup(containerId, name, options) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = options.map(option => `
+        <label class="option-chip">
+          <input type="checkbox" name="${name}" value="${option}">
+          <span>${option}</span>
+        </label>
+      `).join("");
+      container.querySelectorAll("input").forEach(input => {
+        input.addEventListener("change", () => {
+          if (document.getElementById("prompt-output").textContent !== "尚未產生提示詞。") buildPrompt();
+        });
+      });
+    }
+
+    function getCheckedValues(name) {
+      return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(input => input.value);
+    }
+
+    function setCheckedValues(name, values = []) {
+      document.querySelectorAll(`input[name="${name}"]`).forEach(input => {
+        input.checked = values.includes(input.value);
+      });
+    }
+
+    function combineList(checked, custom) {
+      return [...checked, ...custom.split(/[、，,\n]/).map(item => item.trim()).filter(Boolean)].join("、");
+    }
+
+    function currentContext() {
+      return {
+        studentName: getValue("student-name"),
+        portfolioType: getValue("portfolio-type"),
+        fileName: getValue("file-name"),
+        universityName: getValue("university-name"),
+        departmentName: getValue("department-name"),
+        abilities: combineList(getCheckedValues("ability-option"), getValue("target-abilities")),
+        evidence: combineList(getCheckedValues("evidence-option"), getValue("evidence-notes")),
+        text: getValue("main-text"),
+        pdfReport: uploadedPdfReport,
+        pdfName: uploadedPdfName
+      };
+    }
+
+    function analyzeText(text) {
+      const normalized = text.replace(/\r/g, "").trim();
+      const paragraphs = normalized ? normalized.split(/\n\s*\n|(?<=。)\s*\n/).filter(Boolean) : [];
+      const warnings = [];
+      const scores = {};
+
+      rubric.forEach(item => {
+        const hits = item.words.filter(word => normalized.includes(word)).length;
+        scores[item.id] = Math.min(100, Math.round((hits / Math.max(3, item.words.length)) * 100));
+      });
+
+      if (normalized.length < 450) warnings.push("內容偏短，可能不足以呈現完整的歷程、反思與科系連結。");
+      if (paragraphs.length < 3) warnings.push("段落偏少，建議拆成目的、過程、成果反思、科系連結等區塊。");
+      if (!/[0-9０-９一二三四五六七八九十百千週年月天次份項]/.test(normalized)) warnings.push("缺少數字或具體成果，可補入時間、規模、數據、次數或結果。");
+      if (!/(困難|挑戰|失敗|修正|改進|反思|學到|成長)/.test(normalized)) warnings.push("反思深度不足，建議補上困難、修正與學到的能力。");
+      if (!/(科系|大學|課程|專業|職涯|領域|研究)/.test(normalized)) warnings.push("與申請校系的連結不明顯，建議補上課程、能力或未來方向。");
+      if (/(身分證|電話|手機|住址|地址|出生年月日)/.test(normalized)) warnings.push("可能含有個人敏感資訊，上傳或送交 AI 前請先刪除。");
+
+      const score = Math.round(Object.values(scores).reduce((sum, value) => sum + value, 0) / rubric.length);
+      return { chars: normalized.length, paragraphs: paragraphs.length, warnings, scores, score };
+    }
+
+    async function readUploadedFile() {
+      const input = document.getElementById("file-upload");
+      const status = document.getElementById("file-status");
+      const file = input.files && input.files[0];
+      if (!file) {
+        status.textContent = "請先選擇 PDF 或 Word .docx 檔案。";
+        return;
+      }
+
+      const extension = file.name.split(".").pop().toLowerCase();
+      status.textContent = `正在讀取「${file.name}」，請稍候...`;
+
+      try {
+        let text = "";
+        resetPdfState();
+        if (extension === "pdf" || file.type === "application/pdf") {
+          const result = await extractPdfTextAndLayout(file);
+          text = result.text;
+          uploadedPdfName = file.name;
+          uploadedPdfPages = result.pages;
+          uploadedPdfReport = buildPdfVisualReport(result);
+          uploadedPdfUrl = URL.createObjectURL(file);
+          renderPdfVisualSummary();
+        } else if (extension === "docx") {
+          text = await extractDocxText(file);
+        } else if (extension === "doc") {
+          throw new Error("瀏覽器無法穩定解析舊版 .doc 檔，請先用 Word 或 Google Docs 另存成 .docx 或 PDF。");
+        } else {
+          throw new Error("目前支援 PDF 與 Word .docx 檔。");
+        }
+
+        const clean = text.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+        if (!clean) throw new Error("沒有讀取到可分析的文字，可能是掃描圖片 PDF，請先 OCR 後再上傳。");
+        document.getElementById("main-text").value = clean;
+        updateStats();
+        runLocalReview();
+        status.textContent = uploadedPdfName
+          ? `已讀取 ${clean.length} 個字元，並完成 PDF 圖文檢核與初步診斷。可開啟原檔對照圖片、圖表與表格。`
+          : `已讀取 ${clean.length} 個字元，並完成初步診斷。`;
+      } catch (error) {
+        status.textContent = `讀取失敗：${error.message}`;
+      }
+    }
+
+    async function extractPdfTextAndLayout(file) {
+      await ensurePdfLibrary();
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      const buffer = await file.arrayBuffer();
+      const pdf = await window.pdfjsLib.getDocument({ data: buffer }).promise;
+      const pages = [];
+      for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+        const page = await pdf.getPage(pageNumber);
+        const content = await page.getTextContent();
+        const operators = await page.getOperatorList();
+        const viewport = page.getViewport({ scale: 1 });
+        const text = content.items.map(item => item.str).join(" ");
+        const imageOps = operators.fnArray.filter(fn => [
+          window.pdfjsLib.OPS.paintImageXObject,
+          window.pdfjsLib.OPS.paintJpegXObject,
+          window.pdfjsLib.OPS.paintInlineImageXObject,
+          window.pdfjsLib.OPS.paintImageMaskXObject
+        ].includes(fn)).length;
+        const tableSignals = (text.match(/表|數據|平均|比例|百分比|統計|項目|總計|圖表|比較|分析|[0-9０-９]+\s*[.%％]/g) || []).length;
+        const figureSignals = (text.match(/圖|照片|示意|流程|架構|雷達|甘特|心智圖|截圖|作品|影像/g) || []).length;
+        pages.push({
+          pageNumber,
+          text,
+          charCount: text.replace(/\s/g, "").length,
+          itemCount: content.items.length,
+          imageOps,
+          tableSignals,
+          figureSignals,
+          width: Math.round(viewport.width),
+          height: Math.round(viewport.height)
+        });
+      }
+      return {
+        text: pages.map(page => page.text).join("\n\n"),
+        pages
+      };
+    }
+
+    async function extractDocxText(file) {
+      await ensureMammothLibrary();
+      const buffer = await file.arrayBuffer();
+      const result = await window.mammoth.extractRawText({ arrayBuffer: buffer });
+      return result.value || "";
+    }
+
+    function resetPdfState() {
+      if (uploadedPdfUrl) URL.revokeObjectURL(uploadedPdfUrl);
+      uploadedPdfUrl = "";
+      uploadedPdfName = "";
+      uploadedPdfReport = "";
+      uploadedPdfPages = [];
+      const frame = document.getElementById("pdf-viewer-frame");
+      if (frame) frame.removeAttribute("src");
+      setText("pdf-visual-summary", "尚未建立 PDF 圖文檢核。上傳 PDF 後可檢視原檔，並檢查文字、圖片、圖表、表格與自述是否互相支撐。");
+    }
+
+    function buildPdfVisualReport(result) {
+      const pages = result.pages || [];
+      const totalImages = pages.reduce((sum, page) => sum + page.imageOps, 0);
+      const tablePages = pages.filter(page => page.tableSignals > 0).map(page => page.pageNumber);
+      const figurePages = pages.filter(page => page.figureSignals > 0 || page.imageOps > 0).map(page => page.pageNumber);
+      const lowTextPages = pages.filter(page => page.charCount < 80).map(page => page.pageNumber);
+      const densePages = pages.filter(page => page.charCount > 900).map(page => page.pageNumber);
+      const notes = [
+        `PDF 檔名：${uploadedPdfName || "未命名"}`,
+        `總頁數：${pages.length}`,
+        `偵測到的圖片或影像物件：約 ${totalImages} 個`,
+        `可能含表格、數據或統計內容的頁面：${tablePages.length ? tablePages.join("、") : "未明顯偵測"}`,
+        `可能含圖片、圖表、照片或作品截圖的頁面：${figurePages.length ? figurePages.join("、") : "未明顯偵測"}`,
+        `文字偏少、可能需要 OCR 或人工補充說明的頁面：${lowTextPages.length ? lowTextPages.join("、") : "未明顯偵測"}`,
+        `文字偏密、建議檢查是否需要摘要或視覺分段的頁面：${densePages.length ? densePages.join("、") : "未明顯偵測"}`,
+        "",
+        "圖文整合檢核提醒：",
+        "1. 圖片、照片或截圖旁邊應有標題、時間、角色、任務、成果與反思，不要只放圖。",
+        "2. 表格或數據應在文字中解釋趨勢、比較、發現與限制，避免只有數字沒有分析。",
+        "3. 若正文提到成果、實驗、作品或活動，PDF 中應有對應的證據頁面，例如照片、圖表、紀錄或連結。",
+        "4. 若 PDF 有大量圖片但文字很少，AI 只能從抽取文字判斷，學生仍須打開原檔逐頁檢查圖片是否支撐自述內容。",
+        "5. 若 PDF 文字抽取結果混亂，建議回原始文件調整版面或先做 OCR，再重新上傳。"
+      ];
+      return notes.join("\n");
+    }
+
+    function renderPdfVisualSummary() {
+      if (!uploadedPdfReport) {
+        setText("pdf-visual-summary", "尚未建立 PDF 圖文檢核。");
+        return;
+      }
+      setText("pdf-visual-summary", uploadedPdfReport);
+    }
+
+    function runPdfVisualReview() {
+      if (!uploadedPdfPages.length) {
+        setText("pdf-visual-summary", "請先上傳並讀取 PDF 檔案，再執行圖文檢核。");
+        return;
+      }
+      renderPdfVisualSummary();
+      setText("review-output", [
+        "PDF 圖文整合檢核",
+        uploadedPdfReport,
+        "",
+        "建議學生對照方式：",
+        "1. 先開啟 PDF 原檔，逐頁確認圖片、圖表、表格是否都有文字說明。",
+        "2. 回到原始草稿，把圖表中最重要的一個發現寫進成果或反思段落。",
+        "3. 若某張圖片只好看但不能證明能力，請刪除或改成有說明的證據。",
+        "4. 若文字自述提到某項成果，請確認 PDF 中有相對應的佐證素材。"
+      ].join("\n"));
+      document.getElementById("prompt-mode").value = "secondStage";
+      buildPrompt();
+      switchTab("review");
+    }
+
+    function openPdfViewer() {
+      if (!uploadedPdfUrl) {
+        alert("請先上傳並讀取 PDF 檔案。");
+        return;
+      }
+      document.getElementById("pdf-viewer-frame").src = uploadedPdfUrl;
+      setText("pdf-viewer-note", `目前檢視：${uploadedPdfName}。請對照圖片、圖表、表格與文字說明是否互相支撐。`);
+      document.getElementById("pdf-viewer-dialog").hidden = false;
+    }
+
+    function closePdfViewer() {
+      document.getElementById("pdf-viewer-dialog").hidden = true;
+    }
+
+    async function ensurePdfLibrary() {
+      if (window.pdfjsLib) return;
+      await loadAnyScript(parserSources.pdf, () => !!window.pdfjsLib, "PDF 讀取套件載入失敗，請確認網路可連線或改用複製貼上文字。");
+    }
+
+    async function ensureMammothLibrary() {
+      if (window.mammoth) return;
+      await loadAnyScript(parserSources.mammoth, () => !!window.mammoth, "Word 讀取套件載入失敗，請確認網路可連線或改用複製貼上文字。");
+    }
+
+    async function loadAnyScript(urls, isReady, errorMessage) {
+      for (const url of urls) {
+        if (isReady()) return;
+        try {
+          await loadScript(url);
+        } catch (error) {
+          continue;
+        }
+      }
+      if (!isReady()) throw new Error(errorMessage);
+    }
+
+    function loadScript(url) {
+      return new Promise((resolve, reject) => {
+        const existing = [...document.scripts].find(script => script.src === url);
+        if (existing && existing.dataset.loaded === "true") {
+          resolve();
+          return;
+        }
+        if (existing) existing.remove();
+        const script = document.createElement("script");
+        script.src = url;
+        script.onload = () => {
+          script.dataset.loaded = "true";
+          resolve();
+        };
+        script.onerror = () => reject(new Error(`無法載入 ${url}`));
+        document.head.appendChild(script);
+      });
+    }
+
+    function openAiSettings() {
+      document.getElementById("ai-settings-dialog").hidden = false;
+    }
+
+    function closeAiSettings() {
+      document.getElementById("ai-settings-dialog").hidden = true;
+    }
+
+    function updateStats() {
+      const result = analyzeText(getValue("main-text"));
+      setText("stat-chars", String(result.chars));
+      setText("stat-paragraphs", String(result.paragraphs));
+      setText("stat-score", String(result.score));
+      setText("stat-warnings", String(result.warnings.length));
+      renderScores(result.scores);
+    }
+
+    function renderScores(scores) {
+      const container = document.getElementById("score-list");
+      container.innerHTML = rubric.map(item => {
+        const value = scores[item.id] || 0;
+        return `
+          <div class="score-row">
+            <span>${item.name}</span>
+            <div class="bar"><span style="width:${value}%"></span></div>
+            <strong>${value}</strong>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function runLocalReview() {
+      const ctx = currentContext();
+      if (!ctx.text) {
+        setText("review-output", "請先輸入學習歷程草稿。");
+        switchTab("review");
+        return;
+      }
+
+      const result = analyzeText(ctx.text);
+      const strengths = [];
+      if (result.scores.reflection >= 60) strengths.push("已出現反思或修正語彙，可進一步具體化成一段深度心得。");
+      if (result.scores.evidence >= 50) strengths.push("已有佐證線索，建議在 PDF 中搭配照片、表格或教師回饋呈現。");
+      if (result.scores.fit >= 50) strengths.push("已有科系連結，可再補上該校系課程或能力需求。");
+      if (!strengths.length) strengths.push("目前可先從真實經驗出發，補足目的、過程、成果與反思。");
+
+      const advice = [
+        `檔案類型：${ctx.portfolioType || "未選擇"}`,
+        `目標校系：${ctx.universityName || "未填"} ${ctx.departmentName || "未填"}`,
+        ctx.pdfReport ? `PDF 圖文檢核：已建立「${ctx.pdfName}」的頁面、圖片、表格與圖文對照摘要，建議搭配原檔檢視逐頁修正。` : "PDF 圖文檢核：尚未上傳 PDF，若作品含圖片、圖表或表格，建議上傳 PDF 後檢查圖文是否互相支撐。",
+        "",
+        "優點：",
+        ...strengths.map((item, index) => `${index + 1}. ${item}`),
+        "",
+        "需要優先修正：",
+        ...(result.warnings.length ? result.warnings.map((item, index) => `${index + 1}. ${item}`) : ["1. 目前未偵測到重大缺口，建議請 AI 或老師進行第二輪審查。"]),
+        "",
+        "建議下一步：",
+        "1. 先把草稿拆成「我為什麼做、我怎麼做、結果是什麼、我學到什麼、這和科系有何關係」。",
+        "2. 每段至少放入一個具體事件或證據，避免只寫抽象形容詞。",
+        "3. 使用 AI 修飾後，逐句確認是否仍符合自己的真實經驗，並準備面試時說明。"
+      ];
+      setText("review-output", advice.join("\n"));
+      updateStats();
+      switchTab("review");
+    }
+
+    function runDeepPortfolioAnalysis() {
+      const ctx = currentContext();
+      if (!ctx.text) {
+        setText("review-output", "請先輸入學習歷程草稿或上傳檔案。");
+        switchTab("review");
+        return;
+      }
+
+      const normalized = ctx.text.replace(/\s+/g, "");
+      const rows = deepPortfolioChecks.map(check => {
+        const hits = check.words.filter(word => normalized.includes(word));
+        return {
+          name: check.name,
+          score: Math.min(100, Math.round((hits.length / Math.max(3, check.words.length)) * 100)),
+          advice: check.advice
+        };
+      });
+      const overall = Math.round(rows.reduce((sum, row) => sum + row.score, 0) / rows.length);
+      const weakRows = rows.filter(row => row.score < 50);
+      const result = analyzeText(ctx.text);
+      const interviewQuestions = buildInterviewQuestions(ctx);
+      const strategicNotes = buildStrategicNotes(ctx, result);
+
+      const output = [
+        "第二階段申請深度分析",
+        `整體準備度：${overall}`,
+        `檔案類型：${ctx.portfolioType || "未選擇"}`,
+        `目標校系：${ctx.universityName || "未填"} ${ctx.departmentName || "未填"}`,
+        "",
+        "審查邏輯解讀：",
+        "1. 大學第二階段不只看成果多不多，而是看學生是否能呈現核心素養、學習態度、解決問題能力、邏輯推理、真實參與與成長反思。",
+        "2. 學習歷程檔案不是資料倉庫，而是個人學習證據的策展。每一份作品都應能回答它證明了什麼能力，以及為什麼和目標科系有關。",
+        "3. 申請資料需要能經得起面試追問。凡是 AI 代寫、過度包裝、只有成果沒有過程的內容，都會在口試時形成風險。",
+        "",
+        "六大深度檢核：",
+        ...rows.map((row, index) => `${index + 1}. ${row.name}：${row.score}。${row.score >= 70 ? "目前具備基本說服力。" : row.advice}`),
+        "",
+        "優先補強順序：",
+        ...(weakRows.length ? weakRows.map((row, index) => `${index + 1}. 先補強「${row.name}」。${row.advice}`) : ["1. 目前六大面向已有基礎，下一步請對照校系審查資料準備指引，補上更精準的校系特色與面試說法。"]),
+        "",
+        "策略提醒：",
+        ...strategicNotes.map((note, index) => `${index + 1}. ${note}`),
+        "",
+        "第二階段可能追問：",
+        ...interviewQuestions.map((question, index) => `${index + 1}. ${question}`),
+        "",
+        "學生下一步行動：",
+        "1. 找出這份檔案最想證明的一個主軸能力，例如解決問題、學習態度、邏輯推理、團隊合作或反思修正。",
+        "2. 補上至少一個具體困難與修正過程，讓審查委員看見學習過程，而不是只看見結果。",
+        "3. 對照目標校系審查資料準備指引，寫出這份作品與校系需求的關聯論證。",
+        "4. 準備三題面試可回答的故事，每題都要能說出情境、行動、結果、反思。",
+        "5. 檢查所有 AI 修飾內容是否仍符合真實經驗，確保面試時能自然說明。"
+      ];
+
+      setText("review-output", output.join("\n"));
+      document.getElementById("prompt-mode").value = "secondStage";
+      buildPrompt();
+      switchTab("review");
+    }
+
+    function scoreKeywordChecks(text, checks) {
+      const normalized = text.replace(/\s+/g, "");
+      return checks.map(check => {
+        const hits = check.words.filter(word => normalized.includes(word));
+        return {
+          name: check.name,
+          score: Math.min(100, Math.round((hits.length / Math.max(3, check.words.length)) * 100)),
+          hits,
+          advice: check.advice
+        };
+      });
+    }
+
+    function runInterviewPrepAnalysis() {
+      const ctx = currentContext();
+      if (!ctx.text) {
+        setText("review-output", "請先輸入備審、自我介紹、面試回答草稿，或上傳檔案。");
+        switchTab("review");
+        return;
+      }
+
+      const rows = scoreKeywordChecks(ctx.text, interviewPrepChecks);
+      const overall = Math.round(rows.reduce((sum, row) => sum + row.score, 0) / rows.length);
+      const weakRows = rows.filter(row => row.score < 50);
+      const questions = buildAdvancedInterviewQuestions(ctx);
+
+      const output = [
+        "面試準備深度診斷",
+        `整體準備度：${overall}`,
+        `目標校系：${ctx.universityName || "未填"} ${ctx.departmentName || "未填"}`,
+        "",
+        "面試評量邏輯：",
+        "1. 面試不是背誦備審，而是驗證資料真實性、動機深度、臨場思考、抗壓性與校系契合度。",
+        "2. 優秀回答應能把高中經驗轉成 START 結構，也就是情境、任務、行動、結果與反思。",
+        "3. 遇到未知問題時，誠實承認、釐清問題、連結經驗與提出後續學習，比硬編答案更能展現成熟度。",
+        "",
+        "六大面試檢核：",
+        ...rows.map((row, index) => `${index + 1}. ${row.name}：${row.score}。${row.score >= 70 ? "目前具備基本面試說服力。" : row.advice}`),
+        "",
+        "優先練習順序：",
+        ...(weakRows.length ? weakRows.map((row, index) => `${index + 1}. 先練「${row.name}」。${row.advice}`) : ["1. 基礎面向完整，下一步請進行計時口說與追問演練，確認回答自然且不背稿。"]),
+        "",
+        "教授可能追問：",
+        ...questions.map((question, index) => `${index + 1}. ${question}`),
+        "",
+        "學生練習任務：",
+        "1. 準備 30 秒、1 分鐘、3 分鐘三種版本的自我介紹。",
+        "2. 選三個最重要經驗，各自整理成 START 回答卡。",
+        "3. 準備一題不會回答時的應變句型，練習先承認不足，再釐清問題並連回已學經驗。",
+        "4. 若可能有團體面試，練習用補充、統整、追問與形成共識來推進討論。",
+        "5. 若科系可能採 MMI，練習從利益關係人、倫理原則、危機處理與同理心回答。"
+      ];
+
+      setText("review-output", output.join("\n"));
+      document.getElementById("prompt-mode").value = "interviewPrep";
+      buildPrompt();
+      switchTab("review");
+    }
+
+    function runStudyPlanAnalysis() {
+      const ctx = currentContext();
+      if (!ctx.text) {
+        setText("review-output", "請先輸入讀書計畫草稿或上傳檔案。");
+        switchTab("review");
+        return;
+      }
+
+      if (getValue("portfolio-type") !== "讀書計畫") {
+        document.getElementById("portfolio-type").value = "讀書計畫";
+      }
+
+      const rows = scoreKeywordChecks(ctx.text, studyPlanChecks);
+      const overall = Math.round(rows.reduce((sum, row) => sum + row.score, 0) / rows.length);
+      const weakRows = rows.filter(row => row.score < 50);
+      const redFlags = buildStudyPlanRedFlags(ctx);
+
+      const output = [
+        "讀書計畫深度診斷",
+        `整體準備度：${overall}`,
+        `目標校系：${ctx.universityName || "未填"} ${ctx.departmentName || "未填"}`,
+        "",
+        "讀書計畫審查邏輯：",
+        "1. 讀書計畫不是願望清單，而是證明你理解校系資源、知道自己缺口，並能提出可執行成長路徑。",
+        "2. 好的 Q 項應由 P 項就讀動機自然延伸，過去經驗只作為未來規劃的證據，不應佔滿篇幅。",
+        "3. AI 可以協助架構、潤飾與批判檢查，但不能代替學生虛構課程、教授、實驗室或未來計畫。",
+        "",
+        "六大讀書計畫檢核：",
+        ...rows.map((row, index) => `${index + 1}. ${row.name}：${row.score}。${row.score >= 70 ? "目前具備基本說服力。" : row.advice}`),
+        "",
+        "常見地雷提醒：",
+        ...redFlags.map((flag, index) => `${index + 1}. ${flag}`),
+        "",
+        "優先修改順序：",
+        ...(weakRows.length ? weakRows.map((row, index) => `${index + 1}. 先補強「${row.name}」。${row.advice}`) : ["1. 基礎完整，下一步請把每個階段的目標改成可檢核成果，例如作品、專題、實習、證照、研究問題或能力指標。"]),
+        "",
+        "學生下一步行動：",
+        "1. 將讀書計畫分成入學前、短程、中程、長程，並為每階段設定一個主要目標。",
+        "2. 對照目標校系網站，查證課程、學程、實驗室、交換、實習或專題資源。",
+        "3. 每個計畫項目都寫出為什麼要做、怎麼做、何時做、如何檢核成果。",
+        "4. 刪掉任何過度承諾或無法解釋的華麗句子，改成有優先順序的可行安排。",
+        "5. 轉成 PDF 前檢查頁首、標題層級、留白、圖表清晰度與檔案大小。"
+      ];
+
+      setText("review-output", output.join("\n"));
+      document.getElementById("prompt-mode").value = "studyPlan";
+      buildPrompt();
+      switchTab("review");
+    }
+
+    function buildStrategicNotes(ctx, result) {
+      const notes = [];
+      if (!ctx.universityName || !ctx.departmentName) {
+        notes.push("尚未填寫申請大學與科系，系統無法判斷校系關聯。請先填入目標校系，再重新分析。");
+      }
+      if (result.warnings.length) {
+        notes.push("本機快速診斷仍偵測到基礎問題，建議先處理字數、段落、反思、數據與科系連結。");
+      }
+      if (!/(摘要|簡述|重點|亮點)/.test(ctx.text)) {
+        notes.push("缺少摘要或亮點句。第二階段資料常被快速瀏覽，建議在開頭放入一段能三秒抓到重點的摘要。");
+      }
+      if (!/(圖|表|照片|數據|趨勢|雷達|心智圖|樹狀圖)/.test(ctx.text)) {
+        notes.push("若內容適合，可加入圖表、照片說明、數據趨勢或能力對應圖，但視覺化必須服務內容，不要只做裝飾。");
+      }
+      if (!/(指引|校系|審查資料|準備指引|要求)/.test(ctx.text)) {
+        notes.push("尚未看到對校系審查資料準備指引的回應。請確認是否有回答該系指定問題與格式要求。");
+      }
+      if (!notes.length) {
+        notes.push("目前策略面向完整度不錯，建議請老師或同學扮演審查委員，進行一次口頭追問演練。");
+      }
+      return notes;
+    }
+
+    function buildInterviewQuestions(ctx) {
+      const department = ctx.departmentName || "目標科系";
+      const portfolioType = ctx.portfolioType || "這份檔案";
+      return [
+        `你為什麼選擇把「${portfolioType}」放進申請資料，而不是其他作品？`,
+        `這份資料最能證明你適合 ${department} 的哪一項能力？請用具體事件說明。`,
+        "過程中遇到最大的困難是什麼？你如何判斷問題來源並修正？",
+        "如果重新做一次，你會改變哪一個方法？為什麼？",
+        `這份經驗如何影響你對 ${department} 的理解或未來學習規劃？`,
+        "這份資料中哪些內容是你親自完成的？哪些部分曾接受老師、同學或 AI 協助？",
+        "你如何確認資料、數據或結論是真實且可信的？",
+        "如果教授只給你一分鐘介紹這份檔案，你會如何說明重點？"
+      ];
+    }
+
+    function buildAdvancedInterviewQuestions(ctx) {
+      const department = ctx.departmentName || "目標科系";
+      return [
+        `請用一分鐘說明你為什麼適合 ${department}，並說出一項你能帶進系上的貢獻。`,
+        "你備審資料中最想被教授追問的是哪一件事？為什麼？",
+        "如果教授質疑你的成果只是老師或 AI 幫忙完成，你會如何說明自己的實際貢獻？",
+        `你對 ${department} 的哪一門課程、研究方向或職涯路徑最有興趣？這和你的高中經驗如何連接？`,
+        "如果今天問到完全不會的專業題，你會如何回應，才能展現誠實與學習能力？",
+        "請舉一個失敗或卡關經驗，說明你如何修正，而不是只說最後成功。",
+        "若團體面試中有人一直搶話或離題，你會如何協助討論回到主軸？",
+        "如果遇到倫理兩難或資源分配問題，你會先辨識哪些利益關係人？",
+        "除了成績與作品，你還有哪些人格特質能支持你在大學長期學習？",
+        "如果同時錄取其他校系，你選擇本系的判準是什麼？"
+      ];
+    }
+
+    function buildStudyPlanRedFlags(ctx) {
+      const flags = [];
+      if (!ctx.universityName || !ctx.departmentName) {
+        flags.push("尚未填寫申請大學與科系，讀書計畫容易變成任何校系都能用的罐頭稿。");
+      }
+      if (/(努力讀書|認真學習|多去圖書館|充實自己|聽從老師教導)/.test(ctx.text) && !/(課程|專題|實習|證照|研究|學程|實驗室)/.test(ctx.text)) {
+        flags.push("出現抽象承諾，但缺少具體資源或行動，容易被判斷為罐頭模板。");
+      }
+      if (/(雙主修|輔修|交換|實習|系學會|志工|研究|競賽)/.test(ctx.text) && !/(優先|行有餘力|評估|彈性|時間管理|調整)/.test(ctx.text)) {
+        flags.push("計畫項目很多，但尚未看到優先順序與時間管理，可能被視為過度承諾。");
+      }
+      if (/(高中|社團|比賽|專題|多元表現|學習歷程)/.test(ctx.text) && !/(大一|大二|大三|大四|入學後|未來|畢業)/.test(ctx.text)) {
+        flags.push("內容偏向回顧高中經歷，讀書計畫需要把重心轉向大學未來安排。");
+      }
+      if (/(教授|實驗室|課程|學程)/.test(ctx.text) && !/(查證|官網|課程地圖|招生|系網)/.test(ctx.text)) {
+        flags.push("若提到課程、教授或實驗室，請務必查證來源，避免 AI 虛構或資料過期。");
+      }
+      if (!/(近程|短程|中程|長程|大一|大二|大三|大四|入學前|畢業後)/.test(ctx.text)) {
+        flags.push("尚未看到時間軸。建議用短中長程或大學四年階段化呈現。");
+      }
+      if (!flags.length) {
+        flags.push("目前未偵測到明顯地雷，建議再請 AI 或老師以嚴格教授視角檢查可行性與校系客製化深度。");
+      }
+      return flags;
+    }
+
+    function optimizeAutobiography() {
+      const ctx = currentContext();
+      if (!ctx.text) {
+        setText("review-output", "請先輸入自傳草稿。");
+        switchTab("review");
+        return;
+      }
+
+      if (getValue("portfolio-type") !== "升學自傳") {
+        document.getElementById("portfolio-type").value = "升學自傳";
+      }
+
+      const normalized = ctx.text.replace(/\s+/g, "");
+      const rows = autobiographyChecks.map(check => {
+        const hits = check.words.filter(word => normalized.includes(word));
+        return {
+          name: check.name,
+          score: Math.min(100, Math.round((hits.length / Math.max(3, check.words.length)) * 100)),
+          hits,
+          advice: check.advice
+        };
+      });
+      const total = Math.round(rows.reduce((sum, row) => sum + row.score, 0) / rows.length);
+      const missing = rows.filter(row => row.score < 45);
+      const dangerSigns = [];
+
+      if (/(我出生|出生於|家中有|爸爸|媽媽|哥哥|姐姐|弟弟|妹妹)/.test(ctx.text) && !/(影響|啟發|志向|動機|價值觀)/.test(ctx.text)) {
+        dangerSigns.push("家庭或成長背景若沒有連到志向與人格特質，容易變成流水帳。");
+      }
+      if (/(我很努力|我很熱情|我很負責|我很認真|我很喜歡)/.test(ctx.text) && !/[0-9０-９一二三四五六七八九十百千]/.test(ctx.text)) {
+        dangerSigns.push("目前有抽象形容詞，但缺少數據、事件或成果佐證。");
+      }
+      if (!ctx.universityName || !ctx.departmentName) {
+        dangerSigns.push("尚未填寫申請大學或科系，自傳難以做到客製化。");
+      }
+      if (!/(失敗|挫折|困難|挑戰|修正|調整|反思)/.test(ctx.text)) {
+        dangerSigns.push("缺少困難、失敗或修正歷程，較難展現成熟反思。");
+      }
+
+      const output = [
+        "升學自傳優化診斷",
+        `整體完整度：${total}`,
+        `目標校系：${ctx.universityName || "未填"} ${ctx.departmentName || "未填"}`,
+        "",
+        "六大檢核結果：",
+        ...rows.map((row, index) => `${index + 1}. ${row.name}：${row.score}。${row.score >= 70 ? "目前表現清楚。" : row.advice}`),
+        "",
+        "優先修正方向：",
+        ...(missing.length ? missing.map((row, index) => `${index + 1}. 先補強「${row.name}」。${row.advice}`) : ["1. 架構已具備基礎，下一步可強化語氣、段落銜接與校系具體特色。"]),
+        "",
+        "常見風險提醒：",
+        ...(dangerSigns.length ? dangerSigns.map((item, index) => `${index + 1}. ${item}`) : ["1. 目前未偵測到明顯地雷，但仍需確認內容真實且面試時能說明。"]),
+        "",
+        "建議自傳架構：",
+        "1. 黃金開場：用三到五句話說明個人標籤、核心能力與申請方向。",
+        "2. 高中學習反思：挑選二到三個關鍵學習事件，用 STAR 寫出情境、任務、行動、結果與反思。",
+        "3. 就讀動機：由個人經驗延伸到問題意識，再連到科系專業。",
+        "4. 校系契合：具體寫出目標校系課程、教授、實驗室、專題或資源。",
+        "5. 未來計畫：分成近程、中程、遠程，寫出可執行的修課、能力補強與生涯方向。"
+      ];
+
+      setText("review-output", output.join("\n"));
+      document.getElementById("prompt-mode").value = "autobiography";
+      buildPrompt();
+      switchTab("review");
+    }
+
+    function createIntegrityStatement() {
+      const statement = [
+        "AI 使用誠信聲明草稿：",
+        "本檔案內容以本人高中學習經驗、課程作品與真實反思為基礎。AI 工具僅用於協助檢查錯字、整理段落架構、提供修辭建議與模擬審查回饋；所有事實、成果、數據、活動角色與心得均由本人確認並修正。本人未直接複製 AI 生成內容作為未經查證的個人經歷，也已避免輸入不必要的個人敏感資料。"
+      ].join("\n");
+      setText("summary-output", statement);
+      switchTab("summary");
+    }
+
+    function limitChinese(text, max) {
+      return text.length <= max ? text : text.slice(0, max - 1) + "。";
+    }
+
+    function buildPrompt() {
+      const ctx = currentContext();
+      if (!ctx.text) {
+        setText("prompt-output", "請先輸入草稿，再產生 AI 提示詞。");
+        switchTab("prompt");
+        return;
+      }
+      const mode = getValue("prompt-mode") || "polish";
+      const taskMap = {
+        polish: "請協助我修飾與優化草稿，但不要代替我虛構經驗。請保留第一人稱、真實語氣與原意，強化段落結構、反思深度、科系連結與文字流暢度。最後列出修改重點與我仍需補充的資料。",
+        secondStage: "請依臺灣大學申請入學第二階段審查邏輯，深度分析並優化我的學習歷程資料。請從三重二不、完整性、獨特性、關聯性、真實性、策展主軸、面試可說明性來檢查。請指出目前最可能被審查委員質疑的地方，給出優先修改順序，並產生可直接用於面試準備的追問題與回答方向。不得虛構任何經歷、校系特色、數據或成果；若需要校系資料，請標示需學生補充。",
+        interviewPrep: "請依大學甄選入學面試準備標準，深度優化我的面試準備內容。請檢查個人價值主張、START 經驗敘事、校系契合、壓力題與未知問題應變、團體面試協作、MMI 或倫理情境思考。請產生教授可能追問、回答架構、練習順序與需要補強的備審證據。請保留學生真實經驗，不要代替學生虛構經歷、校系資料或專業知識。",
+        studyPlan: "請依大學申請備審資料中的讀書計畫撰寫標準，深度分析並優化我的讀書計畫草稿。請檢查 N-O-P-Q 敘事邏輯、短中長程規劃、校系客製化、具體可執行性、可行性與風險控管、AI 倫理與 PDF 排版可讀性。請指出罐頭模板、頭重腳輕、過度承諾、校系資料未查證與未來規劃空泛等問題，並給出可直接修改的方向。不得虛構課程、教授、實驗室、證照或職涯資訊；若需要校系資料，請標示需學生自行查證。",
+        autobiography: "請依升學自傳標準深度優化我的草稿。請把自傳從流水帳改成具備個人品牌與價值提案的申請文本，使用黃金開場、O-P-Q 架構、STAR 敘事、校系客製化、近中遠程未來計畫來檢查與改寫。請保留真實經驗，不可虛構課程、教授、實驗室、獎項、數據或家庭故事。若缺少資訊，請標示需學生補充。輸出請包含一份優化後自傳、一份逐段修改說明、一份需要補資料清單。",
+        review: "請扮演大學申請入學審查委員，依據真實性、學習歷程、反思深度、科系契合、資料組織與表達清晰度進行審查。請給分、指出優點、風險與具體修改建議。",
+        outline: "請根據我的草稿重建最適合的段落架構，分成標題、段落主旨、應放入的證據、應補強的反思。不要直接寫完整成品。",
+        summary: "請根據我的草稿產生三個版本的 100 字摘要：正式版、具反思版、科系連結版。每一版約 100 字，必須忠於原文，不可新增未出現的成果、數據、活動或校系資訊。請讓摘要可直接放入學習歷程檔案或備審資料。",
+        interview: "請根據我的草稿產生 10 題教授可能追問的面試問題，並指出每題想確認的能力或真實性風險。",
+        ethics: "請檢查這份草稿是否有 AI 代寫感、過度誇大、個資外洩、缺乏真實佐證或面試時難以說明的內容，並提供修改方向。"
+      };
+
+      const prompt = [
+        "你是一位熟悉臺灣高中學習歷程檔案與大學申請入學審查的顧問。",
+        taskMap[mode],
+        "",
+        "請遵守以下原則：",
+        "1. 不虛構活動、獎項、數據、校系特色或學生沒有提供的經驗。",
+        "2. 優先強化「目的、過程、成果、困難、修正、反思、科系連結」。",
+        "3. 若資訊不足，請明確標示「需學生補充」，不要自行編造。",
+        "4. 使用專業、自然、符合高中生可說明的繁體中文。",
+        "5. 所有回應請使用純文字，不要使用 Markdown 語法，不要使用井字標題、星號粗體、表格或項目符號。",
+        "6. 最後提供可執行的修改清單，請用一般編號與段落呈現。",
+        "7. 如果任務是升學自傳優化，請特別檢查：黃金開場是否有個人標籤與核心優勢；高中學習反思是否有 O 模組；就讀動機是否有 P 模組；未來學習計畫是否有 Q 模組；關鍵經歷是否使用 STAR；是否避免流水帳、抽象形容詞、過度膨脹與一稿多投。",
+        "8. 如果任務是第二階段申請深度優化，請特別檢查：是否重素養、重校內、重真實；是否避免追求數量與樣樣具備；是否具有完整性、獨特性與關聯性；是否能用統整性文件補足個別成果的脈絡；是否能準備面試追問。",
+        "9. 如果任務是面試準備深度優化，請特別檢查：是否有清楚的一分鐘個人價值主張；是否能用 START 回答經歷；是否能面對不知道的問題；是否能處理團體面試互動；是否具備 MMI 或倫理情境的思考框架；是否能自然說明 AI 協助範圍。",
+        "10. 如果任務是讀書計畫深度優化，請特別檢查：是否由就讀動機延伸到未來規劃；是否有短中長程或大學四年時間軸；是否具體連結目標校系資源；是否可行且不過度承諾；是否避免罐頭模板；是否標示需要學生查證的校系資訊。",
+        "11. 如果有 PDF 圖文檢核摘要，請先分析 PDF 的頁面、圖片、圖表、表格、數據與文字自述是否互相支撐，再提出修改建議。請特別指出哪些成果需要補文字說明，哪些文字主張需要補圖片、圖表、數據或作品證據。",
+        "",
+        `檔案類型：${ctx.portfolioType}`,
+        `檔案名稱：${ctx.fileName || "未填"}`,
+        `申請校系：${ctx.universityName || "未填"} ${ctx.departmentName || "未填"}`,
+        `想凸顯能力：${ctx.abilities || "未填"}`,
+        `可佐證素材：${ctx.evidence || "未填"}`,
+        ctx.pdfReport ? `PDF 圖文檢核摘要：\n${ctx.pdfReport}` : "PDF 圖文檢核摘要：未上傳 PDF 或尚未建立圖文檢核。",
+        "",
+        "學生原始草稿：",
+        ctx.text
+      ].join("\n");
+
+      setText("prompt-output", prompt);
+      switchTab("prompt");
+    }
+
+    async function copyFrom(id) {
+      const text = document.getElementById(id).innerText || document.getElementById(id).textContent;
+      try {
+        await navigator.clipboard.writeText(text);
+        alert("已複製到剪貼簿");
+      } catch (error) {
+        alert("瀏覽器不允許自動複製，請手動選取文字複製。");
+      }
+    }
+
+    async function openExternalAI(target) {
+      buildPrompt();
+      await copyFrom("prompt-output");
+      const url = target === "chatgpt" ? "https://chatgpt.com/" : "https://gemini.google.com/app";
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+
+    function syncProviderDefaults() {
+      const provider = getValue("provider");
+      const preset = modelPresets[provider] || modelPresets.openai;
+      document.getElementById("model").value = preset.default;
+      renderModelSuggestions(provider);
+      updateModelHint();
+    }
+
+    function renderModelSuggestions(provider = getValue("provider") || "openai") {
+      const datalist = document.getElementById("model-suggestions");
+      const preset = modelPresets[provider] || modelPresets.openai;
+      datalist.innerHTML = preset.options
+        .map(option => `<option value="${option.value}" label="${option.label}"></option>`)
+        .join("");
+    }
+
+    function updateModelHint() {
+      const provider = getValue("provider") || "openai";
+      const model = getValue("model");
+      const preset = modelPresets[provider] || modelPresets.openai;
+      const hint = document.getElementById("model-hint");
+      const providerName = provider === "gemini" ? "Gemini" : "OpenAI";
+      hint.textContent = `目前使用 ${providerName} 模型：${model || preset.default}。若遇到高需求、額度或速度問題，建議改用快速模型 ${preset.fallback}，或複製提示詞到外部 ChatGPT/Gemini。`;
+    }
+
+    function useFallbackModel() {
+      const provider = getValue("provider") || "openai";
+      const preset = modelPresets[provider] || modelPresets.openai;
+      document.getElementById("model").value = preset.fallback;
+      updateModelHint();
+      setText("ai-output", `已切換為快速模型：${preset.fallback}\n\n請再按「重新呼叫 AI」。若仍失敗，請使用「複製提示詞」貼到外部 ChatGPT 或 Gemini。`);
+      switchTab("ai");
+    }
+
+    function saveApiSettings() {
+      const mode = getValue("api-storage-mode") || "session";
+      const settings = {
+        provider: getValue("provider"),
+        model: getValue("model"),
+        key: getValue("api-key"),
+        temperature: getValue("temperature"),
+        storageMode: mode
+      };
+      if (mode === "local") {
+        localStorage.setItem("ai-portfolio-api", JSON.stringify(settings));
+        sessionStorage.removeItem("ai-portfolio-api");
+        alert("API 設定已永久儲存在這台電腦的瀏覽器。若是共用電腦，請改用暫時儲存或手動清除。");
+      } else {
+        sessionStorage.setItem("ai-portfolio-api", JSON.stringify(settings));
+        localStorage.removeItem("ai-portfolio-api");
+        alert("API 設定已暫時儲存於目前瀏覽器工作階段。");
+      }
+    }
+
+    function loadApiSettings() {
+      const localRaw = localStorage.getItem("ai-portfolio-api");
+      const sessionRaw = sessionStorage.getItem("ai-portfolio-api");
+      const raw = localRaw || sessionRaw;
+      if (!raw) return;
+      try {
+        const settings = JSON.parse(raw);
+        document.getElementById("provider").value = settings.provider || "openai";
+        renderModelSuggestions(settings.provider || "openai");
+        document.getElementById("model").value = settings.model || modelPresets[settings.provider || "openai"].default;
+        document.getElementById("api-key").value = settings.key || "";
+        document.getElementById("temperature").value = settings.temperature || "0.4";
+        document.getElementById("api-storage-mode").value = localRaw ? "local" : (settings.storageMode || "session");
+        updateModelHint();
+      } catch (error) {
+        sessionStorage.removeItem("ai-portfolio-api");
+        localStorage.removeItem("ai-portfolio-api");
+      }
+    }
+
+    async function callAI() {
+      buildPrompt();
+      const provider = getValue("provider");
+      const model = getValue("model");
+      const key = getValue("api-key");
+      const prompt = document.getElementById("prompt-output").textContent;
+      const temperature = Number(getValue("temperature") || 0.4);
+
+      if (!key) {
+        setText("ai-output", "請先輸入 API Key，或改用複製提示詞到外部 ChatGPT/Gemini。");
+        openAiSettings();
+        switchTab("ai");
+        return;
+      }
+
+      setText("ai-output", "正在呼叫 AI，請稍候...");
+      switchTab("ai");
+
+      try {
+        const text = provider === "gemini"
+          ? await callGemini({ key, model, prompt, temperature })
+          : await callOpenAI({ key, model, prompt, temperature });
+        setText("ai-output", text);
+      } catch (error) {
+        setText("ai-output", formatAIError(error, { provider, model }));
+      }
+    }
+
+    function formatAIError(error, { provider, model }) {
+      const message = String(error.message || error);
+      const lower = message.toLowerCase();
+      const preset = modelPresets[provider] || modelPresets.openai;
+      const providerName = provider === "gemini" ? "Gemini" : "OpenAI";
+      const lines = [
+        `AI 呼叫失敗（${providerName} / ${model}）`,
+        "",
+        `原始訊息：${message}`,
+        ""
+      ];
+
+      if (lower.includes("high demand") || lower.includes("overloaded") || lower.includes("temporarily") || lower.includes("try again later") || lower.includes("503")) {
+        lines.push(
+          "判斷：目前模型需求量太高，通常是暫時狀況，不代表你的提示詞或 API Key 一定有錯。",
+          "",
+          "建議處理：",
+          `1. 按「改用快速模型」，切到 ${preset.fallback} 後再按「重新呼叫 AI」。`,
+          "2. 若仍失敗，切換 OpenAI/Gemini 另一個服務再試。",
+          "3. 趕時間時，按「複製提示詞」貼到外部 ChatGPT 或 Gemini 網站。"
+        );
+      } else if (lower.includes("rate limit") || lower.includes("quota") || lower.includes("billing") || lower.includes("429")) {
+        lines.push(
+          "判斷：可能是 API 額度、速率限制或帳單設定問題。",
+          "",
+          "建議處理：",
+          "1. 到 API 後台確認額度、帳單與使用限制。",
+          `2. 改用較省額度的快速模型 ${preset.fallback}。`,
+          "3. 若是班級大量使用，建議改由學校後端代理並做排隊機制。"
+        );
+      } else if (lower.includes("api key") || lower.includes("unauthorized") || lower.includes("invalid") || lower.includes("401") || lower.includes("403")) {
+        lines.push(
+          "判斷：API Key 可能錯誤、過期、權限不足，或此模型未開通。",
+          "",
+          "建議處理：",
+          "1. 重新申請或貼上正確 API Key。",
+          "2. 確認目前帳號有此模型的使用權限。",
+          "3. 可以先改用外部網站複製提示詞完成修飾。"
+        );
+      } else if (lower.includes("cors") || lower.includes("failed to fetch") || lower.includes("networkerror") || lower.includes("load failed")) {
+        lines.push(
+          "判斷：瀏覽器直連 API 可能被 CORS、網路或學校防火牆擋住。",
+          "",
+          "建議處理：",
+          "1. 使用「複製提示詞」貼到外部網站。",
+          "2. 正式部署時改由學校後端代理 API，避免瀏覽器 CORS 與金鑰暴露問題。",
+          "3. 檢查目前網路是否允許連線到 AI API。"
+        );
+      } else {
+        lines.push(
+          "建議處理：",
+          `1. 先按「改用快速模型」切到 ${preset.fallback} 後重試。`,
+          "2. 或複製提示詞到外部 ChatGPT/Gemini。",
+          "3. 若多位學生同時使用，建議改由學校後端代理 API。"
+        );
+      }
+
+      return lines.join("\n");
+    }
+
+    async function callOpenAI({ key, model, prompt, temperature }) {
+      const response = await fetch("https://api.openai.com/v1/responses", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${key}`
+        },
+        body: JSON.stringify({ model, input: prompt, temperature })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error?.message || response.statusText);
+      return data.output_text || extractOpenAIText(data) || "AI 已回覆，但無法解析文字內容。";
+    }
+
+    function extractOpenAIText(data) {
+      return (data.output || [])
+        .flatMap(item => item.content || [])
+        .map(part => part.text || "")
+        .filter(Boolean)
+        .join("\n");
+    }
+
+    async function callGemini({ key, model, prompt, temperature }) {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature }
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error?.message || response.statusText);
+      return (data.candidates || [])
+        .flatMap(candidate => candidate.content?.parts || [])
+        .map(part => part.text || "")
+        .filter(Boolean)
+        .join("\n") || "AI 已回覆，但無法解析文字內容。";
+    }
+
+    function saveRecord() {
+      const studentName = getValue("student-name");
+      if (!studentName) {
+        alert("請先輸入學生姓名。");
+        return;
+      }
+      const data = {};
+      fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) data[id] = el.value !== undefined ? el.value : el.textContent;
+      });
+      data.checkedAbilities = getCheckedValues("ability-option");
+      data.checkedEvidence = getCheckedValues("evidence-option");
+      ["review-output", "summary-output", "prompt-output", "ai-output"].forEach(id => {
+        data[id] = document.getElementById(id).textContent;
+      });
+      localStorage.setItem(storagePrefix + studentName, JSON.stringify(data));
+      updateStudentDropdown();
+      alert("已儲存。");
+    }
+
+    function loadRecord() {
+      const selected = getValue("student-select");
+      if (!selected) {
+        alert("請先選擇學生。");
+        return;
+      }
+      const raw = localStorage.getItem(storagePrefix + selected);
+      if (!raw) {
+        alert("找不到資料。");
+        return;
+      }
+      const data = JSON.parse(raw);
+      fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el || data[id] === undefined) return;
+        if (el.value !== undefined) el.value = data[id];
+      });
+      setCheckedValues("ability-option", data.checkedAbilities || []);
+      setCheckedValues("evidence-option", data.checkedEvidence || []);
+      ["review-output", "summary-output", "prompt-output", "ai-output"].forEach(id => {
+        if (data[id] !== undefined) setText(id, data[id]);
+      });
+      document.getElementById("student-name").value = selected;
+      updateStats();
+      alert("資料已載入。");
+    }
+
+    function deleteRecord() {
+      const selected = getValue("student-select");
+      if (!selected) {
+        alert("請先選擇學生。");
+        return;
+      }
+      if (!confirm(`確定刪除 ${selected} 的資料？`)) return;
+      localStorage.removeItem(storagePrefix + selected);
+      updateStudentDropdown();
+      alert("已刪除。");
+    }
+
+    function updateStudentDropdown() {
+      const dropdown = document.getElementById("student-select");
+      const current = dropdown.value;
+      dropdown.innerHTML = '<option value="">選擇已儲存學生</option>';
+      Object.keys(localStorage)
+        .filter(key => key.startsWith(storagePrefix))
+        .map(key => key.replace(storagePrefix, ""))
+        .sort((a, b) => a.localeCompare(b, "zh-Hant"))
+        .forEach(name => {
+          const option = document.createElement("option");
+          option.value = name;
+          option.textContent = name;
+          dropdown.appendChild(option);
+        });
+      dropdown.value = current;
+    }
+
+    function exportRecord() {
+      const ctx = currentContext();
+      const html = buildWordDocument(ctx);
+      const blob = new Blob(["\ufeff", html], { type: "application/msword;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${safeFileName(ctx.studentName || "學生")}-${safeFileName(ctx.fileName || ctx.portfolioType)}-學習歷程輔助.doc`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function buildWordDocument(ctx) {
+      const sections = [
+        ["學生姓名", ctx.studentName || "未填"],
+        ["檔案類型", ctx.portfolioType || "未填"],
+        ["檔案名稱", ctx.fileName || "未填"],
+        ["申請校系", `${ctx.universityName || "未填"} ${ctx.departmentName || "未填"}`],
+        ["想凸顯能力", ctx.abilities || "未填"],
+        ["佐證素材", ctx.evidence || "未填"],
+        ["原始草稿", ctx.text || "未填"],
+        ["本機診斷", document.getElementById("review-output").textContent || "未填"],
+        ["摘要或聲明", document.getElementById("summary-output").textContent || "未填"],
+        ["AI 提示詞", document.getElementById("prompt-output").textContent || "未填"],
+        ["AI 回覆", document.getElementById("ai-output").textContent || "未填"]
+      ];
+
+      return `<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>${escapeHtml(ctx.fileName || "學習歷程輔助")}</title>
+  <style>
+    body { font-family: "Microsoft JhengHei", "Noto Sans TC", sans-serif; line-height: 1.7; color: #1d2528; }
+    h1 { font-size: 22pt; margin-bottom: 18px; }
+    h2 { font-size: 15pt; margin: 18px 0 8px; color: #166b5c; }
+    p { margin: 0 0 10px; white-space: pre-wrap; }
+    .meta { border-collapse: collapse; width: 100%; margin-bottom: 18px; }
+    .meta th, .meta td { border: 1px solid #bfc8c4; padding: 8px; text-align: left; vertical-align: top; }
+    .meta th { width: 120px; background: #eef5f2; }
+  </style>
+</head>
+<body>
+  <h1>AI智慧輔助升學系統輸出</h1>
+  <table class="meta">
+    ${sections.slice(0, 6).map(([title, value]) => `<tr><th>${escapeHtml(title)}</th><td>${escapeHtml(value)}</td></tr>`).join("")}
+  </table>
+  ${sections.slice(6).map(([title, value]) => `<h2>${escapeHtml(title)}</h2><p>${escapeHtml(value)}</p>`).join("")}
+</body>
+</html>`;
+    }
+
+    function printReferencePage() {
+      switchPage("reference");
+      document.body.classList.add("print-reference");
+      window.print();
+      setTimeout(() => document.body.classList.remove("print-reference"), 300);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function safeFileName(value) {
+      return String(value).trim().replace(/[\\/:*?"<>|]/g, "_").slice(0, 80) || "學習歷程";
+    }
+
+    function clearWorkspace() {
+      if (!confirm("確定清空目前工作區？已儲存資料不會被刪除。")) return;
+      ["file-name", "university-name", "department-name", "target-abilities", "evidence-notes", "main-text"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+      setCheckedValues("ability-option", []);
+      setCheckedValues("evidence-option", []);
+      document.getElementById("file-upload").value = "";
+      document.getElementById("file-status").textContent = "支援 PDF 與 Word .docx。舊版 .doc 檔建議先另存成 .docx 或 PDF 後再上傳。";
+      resetPdfState();
+      setText("review-output", "尚未診斷。請輸入草稿後按「本機快速診斷」。");
+      setText("summary-output", "尚未產生摘要。");
+      setText("prompt-output", "尚未產生提示詞。");
+      setText("ai-output", "尚未呼叫 AI。可在右側設定 API，或先使用「複製提示詞」到 ChatGPT/Gemini。");
+      updateStats();
+    }
+
+    function switchTab(tab) {
+      const workspace = document.getElementById("page-workspace");
+      if (workspace && workspace.hidden) switchPage("workspace");
+      document.querySelectorAll(".tab-content").forEach(el => {
+        el.hidden = el.id !== `tab-${tab}`;
+      });
+      document.querySelectorAll(".tabbar button").forEach(button => {
+        button.classList.toggle("active", button.dataset.tab === tab);
+      });
+    }
+
+    function switchPage(page) {
+      document.querySelectorAll(".app-page").forEach(el => {
+        el.hidden = el.id !== `page-${page}`;
+      });
+      document.querySelectorAll(".page-nav button").forEach(button => {
+        button.classList.toggle("active", button.dataset.page === page);
+      });
+    }
+
+    function renderChecklist() {
+      document.getElementById("portfolio-checklist").innerHTML = checklistItems
+        .map(item => `<li>${item}</li>`)
+        .join("");
+    }
+
+    Object.assign(window, {
+      loadRecord,
+      saveRecord,
+      deleteRecord,
+      exportRecord,
+      printReferencePage,
+      openAiSettings,
+      closeAiSettings,
+      openPdfViewer,
+      closePdfViewer,
+      readUploadedFile,
+      runPdfVisualReview,
+      runLocalReview,
+      runDeepPortfolioAnalysis,
+      runInterviewPrepAnalysis,
+      runStudyPlanAnalysis,
+      optimizeAutobiography,
+      createIntegrityStatement,
+      buildPrompt,
+      clearWorkspace,
+      switchTab,
+      switchPage,
+      copyFrom,
+      openExternalAI,
+      syncProviderDefaults,
+      useFallbackModel,
+      saveApiSettings,
+      callAI,
+      formatAIError
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      renderOptionGroup("ability-options", "ability-option", abilityOptions);
+      renderOptionGroup("evidence-options", "evidence-option", evidenceOptions);
+      renderModelSuggestions();
+      updateModelHint();
+      renderChecklist();
+      updateStudentDropdown();
+      loadApiSettings();
+      updateStats();
+      document.getElementById("main-text").addEventListener("input", updateStats);
+      document.getElementById("model").addEventListener("input", updateModelHint);
+      document.querySelectorAll(".dialog-backdrop").forEach(backdrop => {
+        backdrop.addEventListener("click", event => {
+          if (event.target !== backdrop) return;
+          backdrop.hidden = true;
+        });
+      });
+      document.addEventListener("keydown", event => {
+        if (event.key !== "Escape") return;
+        document.getElementById("ai-settings-dialog").hidden = true;
+        document.getElementById("pdf-viewer-dialog").hidden = true;
+      });
+      ["portfolio-type", "file-name", "university-name", "department-name", "target-abilities", "evidence-notes"].forEach(id => {
+        document.getElementById(id).addEventListener("input", () => {
+          if (document.getElementById("prompt-output").textContent !== "尚未產生提示詞。") buildPrompt();
+        });
+      });
+    });
+  </script>
+</body>
+</html>
