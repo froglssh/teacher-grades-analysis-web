@@ -22,6 +22,7 @@
     /* 五大分類色 */
     --c-class:#3B6FD4;   --c-class-t:#EAF0FE;
     --c-grade:#7B57E6;   --c-grade-t:#F0ECFD;
+    --c-comment:#E0407E; --c-comment-t:#FDF2F7;
     --c-career:#118A5E;  --c-career-t:#E3F5ED;
     --c-event:#D98318;   --c-event-t:#FBF0DD;
     --c-life:#D44C72;    --c-life-t:#FCE9EF;
@@ -288,6 +289,7 @@
 const CATS = {
   class:  {name:"班級經營", desc:"導師日常", color:"var(--c-class)",  tint:"var(--c-class-t)"},
   grade:  {name:"成績與評量", desc:"打分・統計", color:"var(--c-grade)",  tint:"var(--c-grade-t)"},
+  comment:{name:"德性評語", desc:"評語撰寫・優化", color:"var(--c-comment)", tint:"var(--c-comment-t)"},
   career: {name:"生涯與升學", desc:"學習歷程・升學", color:"var(--c-career)", tint:"var(--c-career-t)"},
   event:  {name:"課堂與活動", desc:"上課・辦活動", color:"var(--c-event)",  tint:"var(--c-event-t)"},
   life:   {name:"生活與國際", desc:"出國・旅遊", color:"var(--c-life)",   tint:"var(--c-life-t)"},
@@ -306,7 +308,10 @@ const TOOLS = [
   {cat:"grade", icon:"📈", name:"學生成績 AI 分析研習網頁", desc:"學生成績 AI 分析與探究實作研習網頁，包含班級與個人分析工具、教學說明與簡報素材。", url:"成績分析/學生成績AI分析研習教學網頁.html"},
   {cat:"grade", icon:"🧮", name:"學期成績計算", desc:"依各項權重計算學期總成績。", url:"https://app.notion.com/p/12daf21fa89580f39d7fc377081fcc8c"},
   {cat:"grade", icon:"📊", name:"成績統計分析", desc:"班級成績分布、排名與趨勢圖表一次看。", url:"https://app.notion.com/p/12daf21fa8958055a281edc55bf98390"},
-  {cat:"grade", icon:"✍️", name:"德性評語優化", desc:"AI 協助潤飾學期德性評語的措辭。", url:"https://app.notion.com/p/12daf21fa89580d2aaece85e719ee326"},
+
+  // 德性評語
+  {cat:"comment", icon:"📝", name:"AI 輔助德性評語教學", desc:"AI 輔助德性評語寫作研習網頁，提供評語資料庫與生成系統。", url:"https://froglssh.github.io/ai-homeroom-comment-workshop/"},
+  {cat:"comment", icon:"✍️", name:"德性評語優化", desc:"AI 協助潤飾學期德性評語的措辭。", url:"https://app.notion.com/p/12daf21fa89580d2aaece85e719ee326"},
 
   // 生涯與升學
   {cat:"career", icon:"🧭", name:"自主學習規劃", desc:"引導學生規劃自主學習計畫與進度。", url:"https://app.notion.com/p/12eaf21fa8958020bf1cf187ada62cfd"},
