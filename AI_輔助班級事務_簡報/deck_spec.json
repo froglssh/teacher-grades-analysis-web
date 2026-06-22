@@ -1,0 +1,340 @@
+{
+  "goal": "AI 協助導師處理班級事務簡報重新製作，結合 17 個工具、APK 封裝與 Office 檔案資源，突出 NotebookLM 與 Nano Banana 水墨生圖。",
+  "language": "Chinese",
+  "style": {
+    "name": "Style A: 科技藍綠與溫暖留白",
+    "visual_direction": "Minimalist modern, clean layout, ample whitespace, high-end design. Flat vector illustrations, no skeumorphism.",
+    "color_palette": "Clean deep indigo, emerald green accents, and large areas of warm off-white background.",
+    "typography": "Giant, extremely large, bold and highly readable sans-serif font for classroom projector presentation. Very low text density, ample whitespace. Consistent, clean typography.",
+    "texture_and_finish": "Flat vector dashboard cards, professional editorial look, smooth gradients."
+  },
+  "deck_context": {
+    "source_summary": "導師知能研習，介紹 17 個由麗山高中林獻升老師開發的 AI 班經與教學輔助工具，並展示如何使用 Notion、NotebookLM 與 AI 生圖提升工作效能。",
+    "core_claim": "AI 的本質是 IA (智能增強)，導師藉由數位工具可以公平分配、行政減量、資料留存，從而更專注於學生關懷。",
+    "canonical_terms": [
+      "智能增強 (IA)",
+      "NotebookLM",
+      "Notion教育版",
+      "APK封裝",
+      "自主學習",
+      "德行評語資料庫"
+    ]
+  },
+  "sample_generation_method": {
+    "backend_used": "scripts/image_gen.py --backend auto (codex-oauth)",
+    "tool_name": "scripts/image_gen.py",
+    "mode": "generate",
+    "approved_sample_path": "/Users/froglssh/Library/CloudStorage/GoogleDrive-frog@lssh.tp.edu.tw/我的雲端硬碟/0AI應用/0-導師知能研習＿AI/AI_輔助班級事務_簡報/origin_image/slide_15.png"
+  },
+  "slides": [
+    {
+      "number": 1,
+      "title": "AI 協助導師處理班級事務",
+      "key_points": [
+        "從智能增強 (IA) 到班級管理數位革命",
+        "主講人：林獻升 老師",
+        "臺北市立麗山高級中學"
+      ],
+      "layout": {
+        "role": "cover",
+        "intent": "大標題與封面，塑造研習主題與講師介紹。",
+        "composition": "中心超大標題與講師名稱，右側帶有象徵教育與 AI 結合的溫暖教室插畫。"
+      }
+    },
+    {
+      "number": 2,
+      "title": "AI 轉化為 IA (智能增強)",
+      "key_points": [
+        "AI 的本質是增強 (IA) 導師效能",
+        "教學、實驗、導師、行政四大維度",
+        "本機瀏覽器運作，守護學生個資安全"
+      ],
+      "layout": {
+        "role": "concept explanation",
+        "intent": "介紹核心概念 IA，說明 AI 與關懷的平衡。",
+        "composition": "左側文字，右側為天平插圖，一邊是智能科技，一邊是教師的關懷，完美平衡。"
+      }
+    },
+    {
+      "number": 3,
+      "title": "導師的日常痛點與數位轉型",
+      "key_points": [
+        "時間碎片化：日常班務與行政量大",
+        "表單零散：紙本與 Excel 檔案混亂",
+        "解決方案：建立統一學生資料與分配工具箱"
+      ],
+      "layout": {
+        "role": "concept explanation",
+        "intent": "分析痛點，引出數位轉型的必要性。",
+        "composition": "左側文字，右側插圖展示雜亂的文件夾自動整理至乾淨平板電腦的過程。"
+      }
+    },
+    {
+      "number": 4,
+      "title": "數據基石：00 學生資料管理系統",
+      "key_points": [
+        "學期初建立一次全班個人名冊",
+        "作為座位、打掃、評語的統一輸入源",
+        "支援 JSON 檔案備份與本地瀏覽器儲存"
+      ],
+      "layout": {
+        "role": "architecture",
+        "intent": "說明整個工具箱的核心資料樞紐。",
+        "composition": "中心為「學生資料庫」，以箭頭分流至「座位安排」、「打掃分配」、「幹部改選」等模組的結構圖。"
+      }
+    },
+    {
+      "number": 5,
+      "title": "公平分工：01 幹部設定與小老師選取",
+      "key_points": [
+        "支援隨機抽籤與手動指定",
+        "防範重複任職，保障參與公平性",
+        "自動輸出 Word、Excel 服務紀錄與名冊"
+      ],
+      "layout": {
+        "role": "process",
+        "intent": "介紹幹部改選工具的功能與價值。",
+        "composition": "左側文字，右側為色彩活潑的班級幹部與小老師輪盤選取介面。"
+      }
+    },
+    {
+      "number": 6,
+      "title": "空間管理：02 座位選取抽籤程式",
+      "key_points": [
+        "自訂教室座位格局與走道配置",
+        "支援鎖定特殊位置（如視力、學習需求）",
+        "一鍵生成教師座位表與學生張貼版"
+      ],
+      "layout": {
+        "role": "comparison",
+        "intent": "座位排法的彈性配置與示範。",
+        "composition": "左側文字，右側展示模擬教室座位配置圖，部分座位帶有特殊鎖定（Lock）標記。"
+      }
+    },
+    {
+      "number": 7,
+      "title": "環境責任：03 學生打掃抽籤系統",
+      "key_points": [
+        "整合內掃、外掃與特殊掃區",
+        "公開抽籤流程，減少同學分配爭議",
+        "保存歷史打掃紀錄，實現定期輪替"
+      ],
+      "layout": {
+        "role": "process",
+        "intent": "打掃分配的公開與輪替流程。",
+        "composition": "左側文字，右側展示校園掃區示意圖與人員輪值流程。"
+      }
+    },
+    {
+      "number": 8,
+      "title": "課堂經營：04 學生選取分組與紀錄",
+      "key_points": [
+        "隨機點名與搶答，激發課堂參與度",
+        "即時加減分，記錄學生回答表現",
+        "自訂分組抽籤，整合為形成性評量數據"
+      ],
+      "layout": {
+        "role": "data evidence",
+        "intent": "點名與計分工具的課堂應用。",
+        "composition": "左側文字，右側展示課堂互動計分板，有學生頭像與加減分按鈕的插圖。"
+      }
+    },
+    {
+      "number": 9,
+      "title": "班費收支：05 班費收支記帳程式",
+      "key_points": [
+        "直覺收支登錄，自動計算即時餘額",
+        "生成視覺化圖表，帳目隨時公開透明",
+        "隨附班費核銷、收支登錄 Word 與 PDF 表格"
+      ],
+      "layout": {
+        "role": "comparison",
+        "intent": "財務公開與透明化工具。",
+        "composition": "左側文字，右側展示班費記帳儀表板，有收入/支出圓餅圖與核銷範本圖示。"
+      }
+    },
+    {
+      "number": 10,
+      "title": "節慶活動：06 校慶園遊會攤位規劃",
+      "key_points": [
+        "估算進貨成本與訂定商品售價",
+        "班級分工與人員排班表規劃",
+        "盈虧模擬分析，建立學生基礎財務素養"
+      ],
+      "layout": {
+        "role": "process",
+        "intent": "校慶活動規劃與成本模擬。",
+        "composition": "左側文字，右側為繽紛的園遊會攤位排班表與利潤模擬分析圖表。"
+      }
+    },
+    {
+      "number": 11,
+      "title": "實務資源：Office 範本與 APK 封裝",
+      "key_points": [
+        "隨附座位表、打掃工作、幹部 Word/PDF 表單",
+        "所有程式提供 Android APK 下載安裝",
+        "離線網頁與行動版 App 協同，隨時離線管理"
+      ],
+      "layout": {
+        "role": "architecture",
+        "intent": "彙整實體檔案與行動應用程式資源。",
+        "composition": "一個數位工具箱，裝有 Word、Excel 標誌，以及代表 Android 的 APK 安裝包標誌。"
+      }
+    },
+    {
+      "number": 12,
+      "title": "成績登打：07 多班級成績管理",
+      "key_points": [
+        "多班級成績匯入與統一登打",
+        "支援校務系統下載之 Excel 成績練習檔",
+        "彈性設定平時與定期權重，自動計算總分"
+      ],
+      "layout": {
+        "role": "process",
+        "intent": "任課教師多班級成績管理流程。",
+        "composition": "左側文字，右側為成績登錄與公式加權計算至報表輸出的流程圖。"
+      }
+    },
+    {
+      "number": 13,
+      "title": "數據診斷：08 班級與個別成績分析",
+      "key_points": [
+        "直方圖統計班級成績分佈與合格率",
+        "雷達圖診斷個別學生之學科強弱表現",
+        "段考成績退步警訊，提前介入輔導關懷"
+      ],
+      "layout": {
+        "role": "data evidence",
+        "intent": "大數據診斷學生成績表現。",
+        "composition": "左側文字，右側展示雷達圖（學生個體分析）與直方圖（班級成績分佈）的精緻呈現。"
+      }
+    },
+    {
+      "number": 14,
+      "title": "統計科學：成績計量診斷方法學",
+      "key_points": [
+        "結合多維評量統計診斷計量方法設計",
+        "利用統計學標準差、信度分析教學成效",
+        "數據驅動，精準診斷教學落差與調整策略"
+      ],
+      "layout": {
+        "role": "concept explanation",
+        "intent": "計量統計在教育評量上的深度研究。",
+        "composition": "左側文字，右側展示科學統計公式、常態分佈曲線與折線圖結合的計量藍圖。"
+      }
+    },
+    {
+      "number": 15,
+      "title": "成績分析革命：NotebookLM 應用",
+      "key_points": [
+        "匯入段考成績與分析報告",
+        "自動摘要弱勢學科與退步名單",
+        "結合週記與成績，產出個案分析"
+      ],
+      "approved_sample": true,
+      "layout": {
+        "role": "architecture",
+        "intent": "樣張投影片，導入 NotebookLM 成績革命。",
+        "composition": "NotebookLM 筆記本介面，左側是成績與週記文檔，右側是 AI 自動產出的學習預警分析報告。"
+      }
+    },
+    {
+      "number": 16,
+      "title": "日常記錄：Notion 整理日常表現",
+      "key_points": [
+        "Notion 彙整學生表現、獎懲與出缺席",
+        "配合 Excel 自評表與 Google 表單線上回傳",
+        "引導學生省思自我，自評與社團資料一鍵匯入"
+      ],
+      "layout": {
+        "role": "process",
+        "intent": "如何將日常表現數位化並結合學生自評。",
+        "composition": "左側文字，右側為表單提交、自評表匯入、流向 Notion 行為資料庫看板的示意圖。"
+      }
+    },
+    {
+      "number": 17,
+      "title": "評語生成：09 導師評語生成系統",
+      "key_points": [
+        "匯入 Notion 表現，自動組裝評語架構",
+        "依學生特質（領導、熱心等）套用不同語氣",
+        "客觀高效地生成期末德行評語初稿"
+      ],
+      "layout": {
+        "role": "comparison",
+        "intent": "特質標籤對評語生成的關聯。",
+        "composition": "左側文字，右側展示學生行為標籤與生成後的德行評語卡片對比。"
+      }
+    },
+    {
+      "number": 18,
+      "title": "文字修飾：NotebookLM 評語資料庫",
+      "key_points": [
+        "匯入德性評語總整理與麗山高中評語對照表",
+        "配合優化 GPTs 提示詞，進行精細語氣潤飾",
+        "讓評語溫暖正面，具備教育引導與啟發意義"
+      ],
+      "layout": {
+        "role": "concept explanation",
+        "intent": "利用 NotebookLM 提升評語文字品質。",
+        "composition": "左側文字，右側為評語文本資料庫與 NotebookLM 處理、潤飾評語文字的插圖。"
+      }
+    },
+    {
+      "number": 19,
+      "title": "學習支持：10 自主學習與歷程檔案",
+      "key_points": [
+        "自主學習計畫撰寫：提供鷹架式自主引導",
+        "學習歷程輔助：引導 IMRD 科學寫作結構",
+        "系統化引導整理，拒絕食譜式研究報告"
+      ],
+      "layout": {
+        "role": "process",
+        "intent": "自主學習與歷程檔案寫作支持流程。",
+        "composition": "左側文字，右側展示從假說、實驗、數據到 IMRD 報告產出的成長路徑插圖。"
+      }
+    },
+    {
+      "number": 20,
+      "title": "生涯引導：11 升學系統與 12 翻譯",
+      "key_points": [
+        "AI 智慧升學系統：分析歷年落點與志願抉擇",
+        "多功能翻譯工具：即時協助英文學術文獻閱讀",
+        "生涯輔導與國際學習資源的雙向支持"
+      ],
+      "layout": {
+        "role": "concept explanation",
+        "intent": "生涯輔導與學習工具。",
+        "composition": "左側文字，右側為羅盤（指向學系）與英文文獻翻譯處理的 AI 助手引導插畫。"
+      }
+    },
+    {
+      "number": 21,
+      "title": "生活小幫手：行李、計時與記帳",
+      "key_points": [
+        "12 行李打包清單：校外教學與畢旅必備",
+        "13 報告計時器：學生口語表達訓練好幫手",
+        "14 旅遊記帳與貨幣轉換：遊學團財務管理"
+      ],
+      "layout": {
+        "role": "comparison",
+        "intent": "生活實用工具與班級常務。",
+        "composition": "左側文字，右側展示行李箱、計時碼錶與旅遊記帳圓餅圖的可愛拼貼。"
+      }
+    },
+    {
+      "number": 22,
+      "title": "結語：AI 智慧創作與生命幸福",
+      "key_points": [
+        "樹蛙升歌夜色麗，蜓蜥華行映青山",
+        "蛺蝶偉姿飛影高，紅葉楓情秋意中",
+        "精神：Love biology, Love yourself, Love nature."
+      ],
+      "layout": {
+        "role": "summary",
+        "intent": "結語與核心精神傳達。",
+        "composition": "左側文字，右側展示一幅精美雅緻的中國水墨國畫（含樹蛙唱歌、蜥蜴爬行、蝴蝶飛舞與楓葉秋意）。"
+      }
+    }
+  ]
+}

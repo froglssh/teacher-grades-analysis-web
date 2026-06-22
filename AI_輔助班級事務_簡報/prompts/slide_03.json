@@ -1,0 +1,40 @@
+{
+  "slide": 3,
+  "title": "導師的日常痛點與數位轉型",
+  "prompt": "# Codex PPT Slide Image Prompt\n\n## Canvas\n{\n  \"type\": \"16:9 full-slide PowerPoint image\",\n  \"language\": \"Chinese\",\n  \"slide_number\": 3,\n  \"render_slide_number\": false\n}\n\n## Deck Goal\nAI 協助導師處理班級事務簡報重新製作，結合 17 個工具、APK 封裝與 Office 檔案資源，突出 NotebookLM 與 Nano Banana 水墨生圖。\n\n## Required Background\n{\n  \"deck_context\": {\n    \"source_summary\": \"導師知能研習，介紹 17 個由麗山高中林獻升老師開發的 AI 班經與教學輔助工具，並展示如何使用 Notion、NotebookLM 與 AI 生圖提升工作效能。\",\n    \"core_claim\": \"AI 的本質是 IA (智能增強)，導師藉由數位工具可以公平分配、行政減量、資料留存，從而更專注於學生關懷。\",\n    \"canonical_terms\": [\n      \"智能增強 (IA)\",\n      \"NotebookLM\",\n      \"Notion教育版\",\n      \"APK封裝\",\n      \"自主學習\",\n      \"德行評語資料庫\"\n    ]\n  }\n}\n\n## Global Style\n{\n  \"name\": \"Style A: 科技藍綠與溫暖留白\",\n  \"visual_direction\": \"Minimalist modern, clean layout, ample whitespace, high-end design. Flat vector illustrations, no skeumorphism.\",\n  \"color_palette\": \"Clean deep indigo, emerald green accents, and large areas of warm off-white background.\",\n  \"typography\": \"Giant, extremely large, bold and highly readable sans-serif font for classroom projector presentation. Very low text density, ample whitespace. Consistent, clean typography.\",\n  \"texture_and_finish\": \"Flat vector dashboard cards, professional editorial look, smooth gradients.\"\n}\n\n## Slide\n{\n  \"number\": 3,\n  \"title\": \"導師的日常痛點與數位轉型\",\n  \"role\": null,\n  \"intent\": null\n}\n\n## Text\n{\n  \"title\": \"導師的日常痛點與數位轉型\",\n  \"key_points\": [\n    \"時間碎片化：日常班務與行政量大\",\n    \"表單零散：紙本與 Excel 檔案混亂\",\n    \"解決方案：建立統一學生資料與分配工具箱\"\n  ],\n  \"speaker_focus\": null\n}\n\n## Layout\n{\n  \"role\": \"concept explanation\",\n  \"intent\": \"分析痛點，引出數位轉型的必要性。\",\n  \"composition\": \"左側文字，右側插圖展示雜亂的文件夾自動整理至乾淨平板電腦的過程。\"\n}\n\n## Universal Constraints\n- The final image itself must contain the title and key points.\n- Render Chinese text exactly and legibly; avoid garbled characters.\n- Keep the confirmed deck style consistent while varying layout by slide role.\n- No watermark, unrelated logo, or extra slide number.\n",
+  "out": "slide_03.png",
+  "candidate_out": "drafts/slide_03_candidate.png",
+  "input_images": [],
+  "style_reference_images": [],
+  "requires_context_images": false,
+  "expected_generation_mode": "generate",
+  "expected_backend": "scripts/image_gen.py --backend auto (codex-oauth)",
+  "sample_generation_method": {
+    "backend_used": "scripts/image_gen.py --backend auto (codex-oauth)",
+    "tool_name": "scripts/image_gen.py",
+    "mode": "generate",
+    "approved_sample_path": "/Users/froglssh/Library/CloudStorage/GoogleDrive-frog@lssh.tp.edu.tw/我的雲端硬碟/0AI應用/0-導師知能研習＿AI/AI_輔助班級事務_簡報/origin_image/slide_15.png"
+  },
+  "generation_contract": {
+    "must_use_selected_image_backend": true,
+    "must_match_sample_generation_method": true,
+    "default_mode": "generate",
+    "use_edit_only_when": [
+      "input_images is non-empty",
+      "repairing an existing generated slide"
+    ],
+    "must_inspect_style_reference_images": false,
+    "forbidden_final_image_methods": [
+      "local drawing/rendering scripts",
+      "Pillow-generated slides",
+      "SVG/HTML/CSS/canvas screenshots",
+      "python-pptx/PptxGenJS/native PPT layout screenshots",
+      "manually composited text/image overlays"
+    ],
+    "must_return": [
+      "backend_used",
+      "selected_source",
+      "qa_note"
+    ]
+  }
+}
