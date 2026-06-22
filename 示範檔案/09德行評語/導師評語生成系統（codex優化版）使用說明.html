@@ -75,7 +75,7 @@ th {
 <body>
 <h1>導師評語生成系統（codex優化版）使用說明</h1>
 
-<p>本系統協助導師快速整理學生德行評語、特殊優良表現與日常生活表現資料，並可使用 Gemini AI 進行文字潤飾。老師可以先用結構化欄位輸入學生資料，再產生基礎評語，最後視需要使用 AI 優化成較完整、自然的成績單評語。</p>
+<p>本系統協助導師快速整理學生德行評語、特殊優良表現與日常生活表現資料，並可使用本機規則、Google Gemini API 或 ChatGPT／OpenAI API 進行文字潤飾。老師可以先用結構化欄位輸入學生資料，再產生基礎評語，最後視需要使用 AI 優化成較完整、自然的成績單評語。</p>
 
 <p><strong>線上版網址：</strong><br>
 <a href="https://froglssh.github.io/homeroom-comment-generator-online/">https://froglssh.github.io/homeroom-comment-generator-online/</a></p>
@@ -89,6 +89,10 @@ th {
 
 <h2>二、基本設定</h2>
 <p>在左側「基本設定」區填寫學生姓名、性別與語氣風格。語氣風格可選擇「溫暖鼓勵」、「客觀中立」或「委婉規勸」，這些設定會影響基礎評語與 AI 潤飾後的文字語氣。</p>
+
+<h3>匯入單一學生 Excel</h3>
+<p>若老師手上有其他校務系統匯出的單一學生 Excel 檔，可在「基本設定」區使用匯入功能。系統會分析 Excel 內的工作表、欄位標題與儲存格文字，嘗試比對學生姓名、學號、評語代碼、幹部職務、競賽活動、學生自評、特殊表現等資料，並列出可匯入的欄位與位置，讓老師確認或手動調整後再套用。</p>
+<div class="note">此功能適合匯入單一學生的完整資料；若是整班 Google 表單回覆或學生自評總表，請使用「學生德行自評資料」區的 Excel 匯入功能。</div>
 
 <h2>三、選擇學校評語代碼</h2>
 <p>「學校評語代碼」區可多選學生適合的德行特質，例如性情、向學、進取、紀律、交友、服務、擅長等類別。點選分類後，再點選代碼項目即可加入；若選錯，可按標籤上的叉號移除。</p>
@@ -120,27 +124,46 @@ th {
 <h2>八、產生基礎評語</h2>
 <p>填寫左側資料後，按右側「生成基礎評語」。系統會整合學生姓名與性別、評語代碼、智慧生成選項、學生自評資料、幹部職務、活動競賽與導師勉勵，產生初稿。</p>
 
-<h2>九、使用 Gemini AI 潤飾評語</h2>
-<p>系統提供「本機規則合併」與「Google Gemini」兩種潤飾模式。</p>
+<h2>九、使用 AI 潤飾評語</h2>
+<p>系統提供「本機規則合併」、「Google Gemini API」與「ChatGPT／OpenAI API」三種潤飾模式。若不想把學生資料送到雲端，請使用本機規則合併；若希望由外部 AI 協助潤飾，可選擇 Gemini 或 ChatGPT／OpenAI。</p>
 
 <h3>本機規則合併</h3>
 <p>不需要 API Key，所有文字只在瀏覽器內處理，不會送到雲端，適合快速合併基礎評語與補充觀察。</p>
 
-<h3>Google Gemini</h3>
+<h3>Google Gemini API</h3>
 <ol>
-  <li>在「AI 設定」中選擇「Google Gemini」。</li>
+  <li>在「AI 設定」中選擇「Google Gemini API」。</li>
   <li>按「取得 API Key」前往 Google AI Studio。</li>
   <li>建立並複製 API Key。</li>
   <li>回到系統，貼到 API Key 欄位。</li>
   <li>可按「儲存 Key」將 API Key 儲存在本機瀏覽器。</li>
   <li>按「AI 智慧潤飾與合併」產生最終德行評語。</li>
 </ol>
-<div class="note">若使用 Gemini 潤飾，評語內容會送至 Google Gemini API。若不想送出資料，請使用「本機規則合併」。</div>
+
+<h3>ChatGPT／OpenAI API</h3>
+<ol>
+  <li>在「AI 設定」中選擇「ChatGPT／OpenAI API」。</li>
+  <li>按「取得 API Key」前往 OpenAI API Key 頁面。</li>
+  <li>建立並複製 API Key。</li>
+  <li>回到系統，貼到 OpenAI API Key 欄位。</li>
+  <li>可按「儲存 Key」將 API Key 儲存在本機瀏覽器。</li>
+  <li>按「AI 智慧潤飾與合併」產生最終德行評語。</li>
+</ol>
+
+<h3>模型自動選擇與自訂模型</h3>
+<p>Gemini 與 ChatGPT／OpenAI 模式都不再固定顯示預設模型名稱。系統會在使用 API Key 時查詢該服務目前可用的模型，並自動選擇適合文字生成的模型，以降低日後模型升級或舊模型停用造成失敗的機率。</p>
+<p>若老師需要指定特定模型，可在「自訂模型名稱（選填）」欄位輸入模型名稱。此欄位留空時，系統會自動查詢並選擇模型；此欄位有填寫時，系統會優先使用老師輸入的模型名稱。</p>
+<p>若不確定模型名稱，可按「查模型名稱」連到官方模型清單查詢：</p>
+<ul>
+  <li>Gemini 模型清單：<a href="https://ai.google.dev/gemini-api/docs/models">https://ai.google.dev/gemini-api/docs/models</a></li>
+  <li>OpenAI 模型清單：<a href="https://platform.openai.com/docs/models">https://platform.openai.com/docs/models</a></li>
+</ul>
+<div class="note">若使用 Gemini 或 ChatGPT／OpenAI API 潤飾，評語內容會送至對應 AI 服務進行生成。若不想送出資料，請使用「本機規則合併」。API Key 只會儲存在本機瀏覽器，不會上傳到本系統伺服器。</div>
 
 <h2>十、最終德行評語</h2>
-<p>「最終德行評語」是正式使用的主要評語欄位。建議先生成基礎評語，再加入補充觀察，接著使用本機規則或 Gemini AI 潤飾，最後由老師檢查並手動微調。</p>
+<p>「最終德行評語」是正式使用的主要評語欄位。建議先生成基礎評語，再加入補充觀察，接著使用本機規則、Gemini API 或 ChatGPT／OpenAI API 潤飾，最後由老師檢查並手動微調。</p>
 
-<h2>十一、日常生活表現總表</h2>
+<h2>十一、日常生活表現總表（附表選用）</h2>
 <p>按「同步所有資料至表格」後，系統會整理右側表格，包含評語代碼、幹部經歷、競賽與活動、德行評語、特殊優良表現。</p>
 
 <h3>德行評語</h3>
@@ -150,12 +173,12 @@ th {
 <p>此欄位會整理學生具體的特殊表現與成就，避免和最終德行評語重複稱讚。</p>
 <div class="example">林獻升特殊優良表現：擔任衛生服務隊，協助環境打掃；生物社長，辦理採集活動；段考經常前三名；校內科展獲得特優；學科能力競賽獲得一等獎。</div>
 
-<h2>十二、複製與匯出</h2>
+<h2>十二、步驟四：複製與匯出評語資料</h2>
 <h3>複製</h3>
 <p>可使用「複製基礎評語」、「複製最終德行評語」或「複製整張表格」。</p>
 
 <h3>匯出 Excel</h3>
-<p>按「匯出 Excel」後，系統會下載 Excel 檔。Excel 採直向排列，內容欄位會自動換行，避免文字橫向過長。</p>
+<p>按「匯出 Excel」後，系統會下載 Excel 檔。Excel 採直向排列，每一個輸出項目由上到下排列，並將內容欄位設定為自動換行，避免長評語橫向過寬。</p>
 <table>
   <thead><tr><th>項目</th><th>內容</th></tr></thead>
   <tbody>
@@ -170,8 +193,11 @@ th {
 <p>按「匯出 PDF」後，瀏覽器會開啟列印視窗。在列印視窗中選擇「另存為 PDF」即可。</p>
 
 <h2>十三、常見問題</h2>
-<h3>Gemini API Key 輸入後仍無法潤飾？</h3>
-<p>請確認 API Key 是否完整複製、Google AI Studio 專案是否已啟用 Gemini API、網路是否可連線到 Google Gemini API。若仍失敗，可先改用「本機規則合併」。</p>
+<h3>Gemini 或 OpenAI API Key 輸入後仍無法潤飾？</h3>
+<p>請確認 API Key 是否完整複製、帳號或專案是否已啟用對應 API、是否有可用額度，並確認網路可連線到 Gemini 或 OpenAI API。若仍失敗，可先改用「本機規則合併」。</p>
+
+<h3>系統顯示模型不支援或模型不存在？</h3>
+<p>可能是原本的模型已停用、帳號權限不支援該模型，或自訂模型名稱輸入錯誤。建議清空「自訂模型名稱」欄位，讓系統自動查詢目前可用模型；若要指定模型，請按「查模型名稱」到官方文件確認最新名稱後再填入。</p>
 
 <h3>AI 生成文字太短或不完整？</h3>
 <p>系統已加入回覆長度檢查與自動重試。若仍覺得不夠完整，可在「補充觀察」加入更多具體資料，再重新潤飾。</p>
@@ -188,7 +214,7 @@ th {
   <li>點選智慧生成選項。</li>
   <li>生成基礎評語。</li>
   <li>補充導師觀察。</li>
-  <li>使用本機規則或 Gemini AI 潤飾。</li>
+  <li>使用本機規則、Gemini API 或 ChatGPT／OpenAI API 潤飾。</li>
   <li>同步日常生活表現總表。</li>
   <li>檢查德行評語與特殊優良表現。</li>
   <li>匯出 Excel 或 PDF。</li>
@@ -197,7 +223,8 @@ th {
 <h2>十五、資料與隱私提醒</h2>
 <ul>
   <li>若使用「本機規則合併」，文字只在瀏覽器內處理。</li>
-  <li>若使用「Google Gemini」，評語內容會送至 Google Gemini API 進行生成。</li>
+  <li>若使用「Google Gemini API」，評語內容會送至 Google Gemini API 進行生成。</li>
+  <li>若使用「ChatGPT／OpenAI API」，評語內容會送至 OpenAI API 進行生成。</li>
   <li>請避免輸入不必要的敏感個資。</li>
   <li>API Key 請妥善保管，不要公開分享。</li>
 </ul>

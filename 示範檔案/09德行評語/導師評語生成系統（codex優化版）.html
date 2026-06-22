@@ -6,6 +6,7 @@
 <title>導師評語生成系統（codex優化版）</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Noto+Serif+TC:wght@400;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root {
@@ -519,6 +520,39 @@ textarea.form-input {
 @media (max-width: 640px) {
   .api-key-row { grid-template-columns: 1fr; }
 }
+.single-import-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  margin-top: 10px;
+  background: white;
+  border: 1px solid var(--paper-dark);
+}
+.single-import-table th,
+.single-import-table td {
+  border-bottom: 1px solid var(--paper-dark);
+  padding: 6px 8px;
+  vertical-align: top;
+}
+.single-import-table th {
+  background: var(--blue-bg);
+  color: var(--blue);
+  text-align: left;
+  font-weight: 700;
+}
+.single-import-table textarea {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--paper-dark);
+  border-radius: 6px;
+  padding: 6px;
+  font-family: 'Noto Sans TC', sans-serif;
+  resize: vertical;
+}
+.single-import-table select {
+  width: 100%;
+  min-width: 130px;
+}
 
 /* === RIGHT PANEL - OUTPUT === */
 .output-step {
@@ -762,6 +796,21 @@ textarea.form-input {
           </div>
         </div>
       </div>
+      <div class="import-tools">
+        <div class="form-row" style="align-items:end;">
+          <div class="form-group">
+            <label>單一學生 Excel 智慧匯入</label>
+            <input type="file" class="file-input" id="singleStudentExcelFile" accept=".xlsx,.xls,.csv" onchange="analyzeSingleStudentExcel(event)">
+          </div>
+          <div class="form-group">
+            <label>匯入方式</label>
+            <button class="btn btn-teal" onclick="applySingleStudentMappings()">套用勾選欄位</button>
+          </div>
+        </div>
+        <div class="tool-hint">適用其他系統匯出的單一學生 Excel。系統會先智慧判斷欄位對應，老師可手動調整「匯入位置」與內容後再套用。</div>
+        <div class="status-line" id="singleImportStatus"></div>
+        <div id="singleImportPreview"></div>
+      </div>
     </div>
 
     <!-- 2. 學校評語代碼 -->
@@ -824,8 +873,8 @@ textarea.form-input {
         <div class="import-tools">
           <div class="form-row" style="align-items:end;">
             <div class="form-group">
-              <label>從 Excel 匯入學生德性自評</label>
-              <input type="file" class="file-input" id="selfEvalExcelFile" accept=".xlsx,.xls,.csv" onchange="importSelfEvalExcel(event)">
+              <label>從 Excel／Word 匯入學生德性自評</label>
+              <input type="file" class="file-input" id="selfEvalExcelFile" accept=".xlsx,.xls,.csv,.docx" onchange="importSelfEvalExcel(event)">
             </div>
             <div class="form-group">
               <label>選擇學生列</label>
@@ -838,7 +887,7 @@ textarea.form-input {
             <button class="btn btn-outline" onclick="applySelectedSelfEvalRow()">套用選取學生資料</button>
             <button class="btn btn-outline" onclick="clearSelfEvalFields()">清空自評欄位</button>
           </div>
-          <div class="tool-hint">匯入後會依「姓名／學生姓名」欄位自動比對目前學生；表單中沒有填寫的項目會保留空白，方便老師再補寫。</div>
+          <div class="tool-hint">可匯入全班 Excel/CSV 回覆表，或單一學生 Word 自評表。匯入後會依「姓名／學生姓名」欄位自動比對目前學生；沒有填寫的項目會保留空白，方便老師再補寫。</div>
           <div class="status-line" id="selfEvalImportStatus"></div>
         </div>
         <div class="self-eval-group">
@@ -926,15 +975,28 @@ textarea.form-input {
             <label>使用模式</label>
             <select class="form-input" id="aiProvider" onchange="updateAiProviderUI()">
               <option value="local">本機規則合併（免 API Key）</option>
-              <option value="gemini">Google Gemini（自行輸入 API Key）</option>
+              <option value="gemini">Google Gemini API</option>
+              <option value="openai">ChatGPT／OpenAI API</option>
             </select>
           </div>
+          <div class="form-group" id="customModelGroup" style="display:none;">
+            <label>自訂模型名稱（選填）</label>
+            <input type="text" class="form-input" id="customAiModel" placeholder="不填則由系統查詢目前可用模型">
+          </div>
         </div>
-        <div class="api-key-row" id="apiKeyRow" style="display:none;">
+        <div class="api-key-row" id="geminiApiKeyRow" style="display:none;">
           <input type="password" class="form-input" id="geminiApiKey" placeholder="輸入您的 Gemini API Key">
-          <button class="btn btn-gold" onclick="saveGeminiApiKey()">儲存 Key</button>
-          <button class="btn btn-teal" onclick="loadGeminiApiKey()">讀取 Key</button>
+          <button class="btn btn-gold" onclick="saveProviderApiKey('gemini')">儲存 Key</button>
+          <button class="btn btn-teal" onclick="loadProviderApiKey('gemini')">讀取 Key</button>
           <button class="btn btn-outline" onclick="openGeminiApiKeyPage()">取得 API Key</button>
+          <button class="btn btn-outline" onclick="openModelDocs('gemini')">查模型名稱</button>
+        </div>
+        <div class="api-key-row" id="openaiApiKeyRow" style="display:none;">
+          <input type="password" class="form-input" id="openaiApiKey" placeholder="輸入您的 OpenAI API Key">
+          <button class="btn btn-gold" onclick="saveProviderApiKey('openai')">儲存 Key</button>
+          <button class="btn btn-teal" onclick="loadProviderApiKey('openai')">讀取 Key</button>
+          <button class="btn btn-outline" onclick="openOpenAiApiKeyPage()">取得 API Key</button>
+          <button class="btn btn-outline" onclick="openModelDocs('openai')">查模型名稱</button>
         </div>
         <div class="tool-hint" id="aiProviderHint">本機規則合併會直接在瀏覽器內完成，不會把文字送到雲端。</div>
       </div>
@@ -945,7 +1007,7 @@ textarea.form-input {
     <!-- Step 3: 最終評語 -->
     <div class="output-step highlight" id="step3">
       <div class="step-label">步驟三</div>
-      <div class="step-title" id="step3Title">✨ 最終德行評語 <span id="aiModeBadge" style="font-size:0.65rem;background:var(--teal-bg);color:var(--teal);padding:2px 8px;border-radius:12px;margin-left:6px;">本機規則／Gemini 潤飾</span></div>
+      <div class="step-title" id="step3Title">✨ 最終德行評語 <span id="aiModeBadge" style="font-size:0.65rem;background:var(--teal-bg);color:var(--teal);padding:2px 8px;border-radius:12px;margin-left:6px;">本機規則潤飾</span></div>
       <textarea class="output-textarea final" id="finalComment" placeholder="點擊下方按鈕進行合併與潤飾..."></textarea>
       <div class="char-count" id="finalCharCount"></div>
       <div class="btn-row">
@@ -958,9 +1020,9 @@ textarea.form-input {
 
     <div class="step-connector">⬇</div>
 
-    <!-- Step 4: 日常生活表現 -->
+    <!-- Optional Daily Life Summary -->
     <div class="output-step" id="step4">
-      <div class="step-label">步驟四 (選用)</div>
+      <div class="step-label">附表（選用）</div>
       <div class="step-title">📊 日常生活表現總表</div>
       <table class="daily-life-table">
         <thead><tr><th style="width:120px;">項目</th><th>內容</th></tr></thead>
@@ -978,9 +1040,9 @@ textarea.form-input {
       </div>
     </div>
 
-    <!-- Step 5: Export -->
+    <!-- Step 4: Export -->
     <div class="output-step" id="step5">
-      <div class="step-label">步驟五</div>
+      <div class="step-label">步驟四</div>
       <div class="step-title">📤 匯出評語資料</div>
       <div class="export-tools">
         <div class="btn-row" style="margin-top:0;">
@@ -1010,6 +1072,7 @@ const state = {
   activities: [],
   traits: { academic: {}, social: {}, habit: {}, personality: {} },
   importedSelfEvalRows: [],
+  singleStudentMappings: [],
   roleFilter: 'all'
 };
 
@@ -1027,17 +1090,21 @@ const cadreRoleGroups = {
 const selfEvalFields = [
   {id:'selfSchoolService', label:'學校服務', aliases:['學校服務','校內服務','服務學習','校內表現-學校服務','校內表現']},
   {id:'selfClub', label:'社團表現', aliases:['社團表現','社團','社團活動']},
-  {id:'selfAcademic', label:'學業表現', aliases:['學業表現','學習表現','成績表現','課業表現']},
+  {id:'selfAcademic', label:'學業表現', aliases:['學業表現','學習表現','成績表現','課業表現','學業成就']},
   {id:'selfDailyLife', label:'生活常規', aliases:['生活常規','日常生活','生活表現','出缺席','守法表現']},
   {id:'selfSpecialIn', label:'校內其他特殊表現', aliases:['其他特殊表現','校內其他特殊表現','校內特殊表現','特殊表現']},
   {id:'selfSocialService', label:'社會服務', aliases:['社會服務','校外服務','志工服務']},
   {id:'selfPerformance', label:'活動表演', aliases:['活動表演','校外活動','表演活動','活動參與']},
-  {id:'selfScienceFair', label:'科學展覽', aliases:['科學展覽','科展','科學競賽']},
-  {id:'selfSpecialOut', label:'校外其他特殊表現', aliases:['校外其他特殊表現','校外特殊表現','其他校外表現']}
+  {id:'selfScienceFair', label:'科學展覽', aliases:['科學展覽','科展','科學競賽','競賽展覽']},
+  {id:'selfSpecialOut', label:'校外其他特殊表現', aliases:['校外其他特殊表現','校外特殊表現','其他校外表現','研習聽講','其他表現']}
 ];
 
-const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+const GEMINI_FALLBACK_MODELS = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.5-flash-lite'];
+const OPENAI_FALLBACK_MODELS = ['gpt-5.5', 'gpt-5.5-mini', 'gpt-5.4', 'gpt-5', 'gpt-4.1'];
 const GEMINI_API_KEY_URL = 'https://aistudio.google.com/app/apikey';
+const GEMINI_MODEL_DOCS_URL = 'https://ai.google.dev/gemini-api/docs/models';
+const OPENAI_API_KEY_URL = 'https://platform.openai.com/api-keys';
+const OPENAI_MODEL_DOCS_URL = 'https://platform.openai.com/docs/models';
 
 const schoolCommentDB = {
   nature1: {
@@ -1244,7 +1311,6 @@ function init() {
   renderRoleFilters();
   renderQuickRoles();
   renderTraits();
-  loadGeminiApiKey(false);
   updateAiProviderUI();
   
   // Char counts
@@ -1465,6 +1531,242 @@ function toggleCollapse(header, bodyId) {
 }
 
 // ============================
+// SINGLE STUDENT EXCEL SMART IMPORT
+// ============================
+const singleImportTargets = [
+  ['ignore','不匯入'],
+  ['studentName','基本設定：學生姓名'],
+  ['gender','基本設定：性別'],
+  ['codes','學校評語代碼'],
+  ['cadres','職務與特殊表現：擔任職務'],
+  ['activities','職務與特殊表現：校內外活動／競賽'],
+  ['selfSchoolService','學生自評：學校服務'],
+  ['selfClub','學生自評：社團表現'],
+  ['selfAcademic','學生自評：學業表現'],
+  ['selfDailyLife','學生自評：生活常規'],
+  ['selfSpecialIn','學生自評：校內其他特殊表現'],
+  ['selfSocialService','學生自評：社會服務'],
+  ['selfPerformance','學生自評：活動表演'],
+  ['selfScienceFair','學生自評：科學展覽'],
+  ['selfSpecialOut','學生自評：校外其他特殊表現'],
+  ['finalComment','正式欄位：文字描述評語／德行評語'],
+  ['specialPerformance','正式欄位：特殊優良表現'],
+  ['freeInput','補充觀察']
+];
+
+function analyzeSingleStudentExcel(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  if (!window.XLSX) {
+    showToast('⚠️ Excel 函式庫尚未載入，請確認網路後重新開啟檔案');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const matrix = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '' });
+      const candidates = extractSingleStudentCandidates(matrix, sheetName);
+      state.singleStudentMappings = candidates.map(candidate => ({
+        ...candidate,
+        target: guessSingleImportTarget(candidate.source, candidate.value)
+      }));
+      renderSingleImportPreview();
+      document.getElementById('singleImportStatus').textContent = `已分析 ${file.name}，工作表：${sheetName}，可匯入欄位 ${state.singleStudentMappings.filter(m => m.target !== 'ignore').length} 筆`;
+      showToast('✅ 單一學生 Excel 已分析');
+    } catch (err) {
+      console.error(err);
+      showToast('⚠️ 單一學生 Excel 分析失敗：' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function extractSingleStudentCandidates(matrix, sheetName) {
+  const candidates = [];
+  let currentSection = '';
+  const addCandidate = (source, value, cell = '') => {
+    const cleanSource = String(source || '').replace(/\s+/g, ' ').trim();
+    const cleanValue = String(value || '').replace(/\r\n/g, '\n').trim();
+    if (!isMeaningfulImportValue(cleanSource) || !isMeaningfulImportValue(cleanValue)) return;
+    if (isSensitiveSingleImportSource(cleanSource)) return;
+    const id = `${cleanSource}::${cleanValue}`;
+    if (candidates.some(item => `${item.source}::${item.value}` === id)) return;
+    candidates.push({ source: cleanSource, value: cleanValue, cell, sheetName });
+  };
+
+  matrix.forEach((row, rIdx) => {
+    const cells = row.map(cell => String(cell ?? '').trim());
+    const first = cells.find(Boolean) || '';
+    if (/^[一二三四五六七八九十]、/.test(first)) currentSection = first;
+
+    for (let c = 0; c < cells.length - 1; c += 1) {
+      if (isLikelySingleImportLabel(cells[c]) && isMeaningfulImportValue(cells[c + 1])) {
+        addCandidate(cells[c], cells[c + 1], `${rIdx + 1}:${c + 1}`);
+      }
+    }
+
+    const nonEmpty = cells.filter(Boolean);
+    if (nonEmpty.length >= 2 && isLikelySingleImportLabel(nonEmpty[0])) {
+      addCandidate(currentSection ? `${currentSection}／${nonEmpty[0]}` : nonEmpty[0], nonEmpty.slice(1).join('；'), `${rIdx + 1}:1`);
+    }
+
+    if (cells.includes('學期')) {
+      const headers = cells;
+      for (let rr = rIdx + 1; rr < matrix.length; rr += 1) {
+        const data = (matrix[rr] || []).map(cell => String(cell ?? '').trim());
+        const firstData = data.find(Boolean) || '';
+        if (!firstData) continue;
+        if (/^[一二三四五六七八九十]、/.test(firstData)) break;
+        headers.forEach((header, cIdx) => {
+          if (cIdx === 0 || !isMeaningfulImportValue(header)) return;
+          const value = data[cIdx];
+          if (isMeaningfulImportValue(value)) addCandidate(currentSection ? `${currentSection}／${header}` : header, value, `${rr + 1}:${cIdx + 1}`);
+        });
+        break;
+      }
+    }
+  });
+  return candidates;
+}
+
+function isSensitiveSingleImportSource(source) {
+  return /手機|住址|身分證|生日|父|母|電子郵件|email/i.test(source);
+}
+
+function isLikelySingleImportLabel(text) {
+  if (!isMeaningfulImportValue(text)) return false;
+  return /姓名|性別|幹部|小老師|評語|日常表現|特殊表現|個性|性情|向學|進取|紀律|交友|服務|擅長|學校服務|社團|學業|生活常規|科學展覽|研習|其他表現|成績|班排|類組排|較強科目|較弱科目|活動|競賽|專題研究/.test(text);
+}
+
+function guessSingleImportTarget(source, value) {
+  const text = `${source} ${value}`;
+  if (/姓名/.test(source)) return 'studentName';
+  if (/性別/.test(source)) return 'gender';
+  if (/評語代號|性情描述|向學描述|進取描述|紀律描述|交友描述|服務描述|擅長描述/.test(source)) return 'codes';
+  if (/幹部|小老師|職位工作/.test(source)) return 'cadres';
+  if (/文字描述評語/.test(source)) return 'finalComment';
+  if (/特殊表現/.test(source) && /^[三四五六七八九十]、導師評語/.test(source)) return 'specialPerformance';
+  if (/特殊表現/.test(source) && /五、特殊表現/.test(source)) return 'specialPerformance';
+  if (/日常表現/.test(source)) return 'codes';
+  if (/學校服務/.test(source)) return 'selfSchoolService';
+  if (/社團/.test(source)) return 'selfClub';
+  if (/學業|成績|班排|類組排|較強科目|較弱科目/.test(source)) return 'selfAcademic';
+  if (/生活常規/.test(source)) return 'selfDailyLife';
+  if (/社會服務/.test(source)) return 'selfSocialService';
+  if (/活動表演/.test(source)) return 'selfPerformance';
+  if (/科學展覽|專題研究|科展/.test(source)) return 'selfScienceFair';
+  if (/研習聽講|其他表現/.test(source)) return 'selfSpecialOut';
+  if (/活動|競賽/.test(source) || /獲得|榮獲|比賽|競賽|科展/.test(text)) return 'activities';
+  return 'ignore';
+}
+
+function renderSingleImportPreview() {
+  const container = document.getElementById('singleImportPreview');
+  if (!state.singleStudentMappings.length) {
+    container.innerHTML = '';
+    return;
+  }
+  const targetOptions = singleImportTargets.map(([value, label]) => `<option value="${value}">${label}</option>`).join('');
+  const rows = state.singleStudentMappings.map((item, index) => `
+    <tr>
+      <td><input type="checkbox" data-single-check="${index}" ${item.target !== 'ignore' ? 'checked' : ''}></td>
+      <td>${escapeHtml(item.source)}<div style="color:var(--ink-muted);font-size:0.7rem;">${escapeHtml(item.sheetName)} ${escapeHtml(item.cell)}</div></td>
+      <td><textarea data-single-value="${index}">${escapeHtml(item.value)}</textarea></td>
+      <td><select class="form-input" data-single-target="${index}">${targetOptions}</select></td>
+    </tr>
+  `).join('');
+  container.innerHTML = `
+    <table class="single-import-table">
+      <thead><tr><th style="width:44px;">用</th><th style="width:28%;">來源欄位</th><th>內容</th><th style="width:190px;">匯入位置</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+  state.singleStudentMappings.forEach((item, index) => {
+    const select = container.querySelector(`[data-single-target="${index}"]`);
+    if (select) select.value = item.target;
+  });
+}
+
+function applySingleStudentMappings() {
+  if (!state.singleStudentMappings.length) {
+    showToast('請先選擇並分析單一學生 Excel');
+    return;
+  }
+  const container = document.getElementById('singleImportPreview');
+  let applied = 0;
+  state.singleStudentMappings.forEach((item, index) => {
+    const checked = container.querySelector(`[data-single-check="${index}"]`)?.checked;
+    const target = container.querySelector(`[data-single-target="${index}"]`)?.value || 'ignore';
+    const value = container.querySelector(`[data-single-value="${index}"]`)?.value?.trim() || '';
+    if (!checked || target === 'ignore' || !isMeaningfulImportValue(value)) return;
+    applySingleImportTarget(target, value, item.source);
+    applied += 1;
+  });
+  renderCodeItems();
+  renderCodeTags();
+  renderCadreTags();
+  renderActTags();
+  updateCharCount('finalComment','finalCharCount');
+  document.getElementById('singleImportStatus').textContent = `已套用 ${applied} 筆欄位。`;
+  showToast(`✅ 已套用 ${applied} 筆單一學生資料`);
+}
+
+function applySingleImportTarget(target, value, source) {
+  const appendField = id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.value = compactImportText([el.value, value]);
+  };
+  if (target === 'studentName') document.getElementById('studentName').value = value;
+  else if (target === 'gender') applyImportedGender(value);
+  else if (target === 'codes') applySingleImportCodes(value);
+  else if (target === 'cadres') {
+    const type = /小老師/.test(source) ? 'teacher' : 'cadre';
+    splitImportItems(value).forEach(item => addImportedCadre(item, type));
+  } else if (target === 'activities') {
+    splitImportItems(value).forEach(item => addImportedActivity(item));
+  } else if (target === 'finalComment') {
+    document.getElementById('finalComment').value = value;
+    document.getElementById('dlComment').value = value;
+  } else if (target === 'specialPerformance') {
+    document.getElementById('dlSpecialPerformance').value = value;
+  } else if (target === 'freeInput') appendField('freeInput');
+  else appendField(target);
+}
+
+function compactImportText(items) {
+  return items
+    .flatMap(item => String(item || '').split(/[；;\n]+/))
+    .map(item => item.trim())
+    .filter(isMeaningfulImportValue)
+    .filter((item, index, arr) => arr.indexOf(item) === index)
+    .join('；');
+}
+
+function applySingleImportCodes(value) {
+  const codes = String(value || '').match(/\d{3}/g) || [];
+  codes.forEach(code => {
+    if (findSchoolCommentText(code) && !state.selectedCodes.includes(code)) state.selectedCodes.push(code);
+  });
+  if (!codes.length) {
+    Object.values(schoolCommentDB).forEach(cat => {
+      cat.items.forEach(item => {
+        if (String(value).includes(item.text) && !state.selectedCodes.includes(item.code)) state.selectedCodes.push(item.code);
+      });
+    });
+  }
+}
+
+function applyImportedGender(value) {
+  const gender = /女/.test(value) ? 'girl' : /男/.test(value) ? 'boy' : '';
+  if (!gender) return;
+  const button = document.querySelector(`#genderToggle [data-val="${gender}"]`);
+  if (button) setToggle('gender', gender, button);
+}
+
+// ============================
 // SELF-EVAL EXCEL IMPORT
 // ============================
 function normalizeHeader(text) {
@@ -1478,18 +1780,149 @@ function getRowValue(row, aliases) {
   });
   for (const alias of aliases) {
     const value = normalizedMap[normalizeHeader(alias)];
-    if (value !== undefined && value !== null && String(value).trim() !== '') return String(value).trim();
+    if (isMeaningfulImportValue(value)) return String(value).trim();
   }
   return '';
+}
+
+function getCombinedRowValue(row, aliases) {
+  const normalizedMap = {};
+  Object.keys(row).forEach(key => {
+    normalizedMap[normalizeHeader(key)] = row[key];
+  });
+  const values = [];
+  aliases.forEach(alias => {
+    const value = normalizedMap[normalizeHeader(alias)];
+    if (isMeaningfulImportValue(value)) values.push(String(value).trim());
+  });
+  return [...new Set(values)].join('；');
 }
 
 function getStudentNameFromRow(row) {
   return getRowValue(row, ['學生姓名','姓名','學生','名字','name']);
 }
 
+function isMeaningfulImportValue(value) {
+  const text = String(value ?? '').trim();
+  return text && !/^(no|none|無|沒有|否|na|n\/a)$/i.test(text);
+}
+
+function splitImportItems(value) {
+  if (!isMeaningfulImportValue(value)) return [];
+  return String(value)
+    .split(/[、,，；;\n]+/)
+    .map(item => item.trim())
+    .filter(isMeaningfulImportValue);
+}
+
+function findSchoolCommentText(code) {
+  for (const cat of Object.values(schoolCommentDB)) {
+    const found = cat.items.find(item => item.code === code);
+    if (found) return found.text;
+  }
+  return '';
+}
+
+function applyImportedCodes(row) {
+  const codeValues = [
+    getRowValue(row, ['性情描述(正向)','性情描述正向','性情正向']),
+    getRowValue(row, ['性情描述(負向)','性情描述負向','性情負向']),
+    getRowValue(row, ['向學描述','向學']),
+    getRowValue(row, ['進取描述','進取']),
+    getRowValue(row, ['紀律描述','紀律']),
+    getRowValue(row, ['交友描述','交友']),
+    getRowValue(row, ['服務描述','服務']),
+    getRowValue(row, ['擅長描述','擅長'])
+  ];
+  let added = 0;
+  codeValues.forEach(value => {
+    const matches = String(value || '').match(/\d{3}/g) || [];
+    matches.forEach(code => {
+      if (findSchoolCommentText(code) && !state.selectedCodes.includes(code)) {
+        state.selectedCodes.push(code);
+        added += 1;
+      }
+    });
+  });
+  renderCodeItems();
+  renderCodeTags();
+  return added;
+}
+
+function normalizeCadreRole(role, type) {
+  let text = String(role || '').trim();
+  if (!isMeaningfulImportValue(text)) return '';
+  text = text.replace(/\s+/g, '');
+  if (type === 'teacher' && !/小老師$/.test(text)) return `${text}小老師`;
+  if (type === 'cadre') {
+    if (/^(風紀|學藝|衛生|總務|康樂|圖資)$/.test(text)) return `${text}股長`;
+    if (/^(副風紀|副學藝|副衛生|副總務|副康樂|副圖資)$/.test(text)) return `${text}股長`;
+  }
+  return text;
+}
+
+function addImportedCadre(role, type) {
+  const normalizedRole = normalizeCadreRole(role, type);
+  if (!normalizedRole) return false;
+  if (state.cadres.some(cadre => cadre.role === normalizedRole)) return false;
+  state.cadres.push({ id: Date.now() + Math.random(), role: normalizedRole, perf: 'responsible' });
+  return true;
+}
+
+function applyImportedCadres(row) {
+  let added = 0;
+  splitImportItems(getRowValue(row, ['擔任幹部','擔任幹部 ','班級幹部','幹部'])).forEach(role => {
+    if (addImportedCadre(role, 'cadre')) added += 1;
+  });
+  splitImportItems(getRowValue(row, ['擔任小老師','小老師','科目小老師'])).forEach(role => {
+    if (addImportedCadre(role, 'teacher')) added += 1;
+  });
+  renderCadreTags();
+  return added;
+}
+
+function parseActivityText(text) {
+  const clean = String(text || '').trim().replace(/^參加/, '');
+  const match = clean.match(/^(.+?)(?:獲得|榮獲|得到|取得)(.+)$/);
+  if (match) return { name: match[1].trim(), result: match[2].trim() };
+  return { name: clean, result: '' };
+}
+
+function addImportedActivity(text) {
+  if (!isMeaningfulImportValue(text)) return false;
+  const parsed = parseActivityText(text);
+  if (!parsed.name) return false;
+  const exists = state.activities.some(activity => activity.name === parsed.name && activity.result === parsed.result);
+  if (exists) return false;
+  state.activities.push({ id: Date.now() + Math.random(), name: parsed.name, result: parsed.result });
+  return true;
+}
+
+function applyImportedActivities(row) {
+  const activityValues = [
+    getRowValue(row, ['競賽展覽','科學展覽','科展','科學競賽']),
+    getRowValue(row, ['活動表演','校外活動','表演活動','活動參與']),
+    getRowValue(row, ['研習聽講','研習','講座']),
+    getRowValue(row, ['其他表現','校外其他特殊表現','其他校外表現'])
+  ];
+  let added = 0;
+  activityValues.forEach(value => {
+    splitImportItems(value).forEach(item => {
+      if (addImportedActivity(item)) added += 1;
+    });
+  });
+  renderActTags();
+  return added;
+}
+
 function importSelfEvalExcel(event) {
   const file = event.target.files?.[0];
   if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'docx') {
+    importSelfEvalDocx(file);
+    return;
+  }
   if (!window.XLSX) {
     showToast('⚠️ Excel 函式庫尚未載入，請確認網路後重新開啟檔案');
     return;
@@ -1515,14 +1948,143 @@ function importSelfEvalExcel(event) {
   reader.readAsArrayBuffer(file);
 }
 
+async function importSelfEvalDocx(file) {
+  if (!window.JSZip) {
+    showToast('⚠️ Word 解析函式庫尚未載入，請確認網路後重新開啟檔案');
+    return;
+  }
+  try {
+    const buffer = await file.arrayBuffer();
+    const zip = await JSZip.loadAsync(buffer);
+    const documentFile = zip.file('word/document.xml');
+    if (!documentFile) throw new Error('找不到 Word 文件內容');
+    const xmlText = await documentFile.async('text');
+    const doc = new DOMParser().parseFromString(xmlText, 'application/xml');
+    const row = parseDocxSelfEvalRow(doc, file.name);
+    state.importedSelfEvalRows = [row];
+    renderSelfEvalStudentOptions(state.importedSelfEvalRows);
+    document.getElementById('selfEvalStudentSelect').value = '0';
+    applySelectedSelfEvalRow();
+    document.getElementById('selfEvalImportStatus').textContent = `已匯入 Word 自評表：${file.name}`;
+    showToast('✅ Word 自評表已匯入');
+  } catch (err) {
+    console.error(err);
+    showToast('⚠️ Word 匯入失敗：' + err.message);
+  }
+}
+
+function parseDocxSelfEvalRow(doc, fileName) {
+  const ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+  const tables = Array.from(doc.getElementsByTagNameNS(ns, 'tbl')).map(table =>
+    Array.from(table.getElementsByTagNameNS(ns, 'tr')).map(row =>
+      Array.from(row.getElementsByTagNameNS(ns, 'tc')).map(cell =>
+        Array.from(cell.getElementsByTagNameNS(ns, 'p'))
+          .map(p => Array.from(p.getElementsByTagNameNS(ns, 't')).map(t => t.textContent || '').join('').trim())
+          .filter(Boolean)
+          .join(' ')
+          .trim()
+      )
+    )
+  );
+  const paragraphs = Array.from(doc.getElementsByTagNameNS(ns, 'p'))
+    .map(p => Array.from(p.getElementsByTagNameNS(ns, 't')).map(t => t.textContent || '').join('').trim())
+    .filter(Boolean);
+  const row = {};
+  paragraphs.forEach(text => extractInlineDocxFields(text, row));
+  tables.forEach((table, index) => {
+    if (index === 0) parseDocxCodeTable(table, row);
+    else parseDocxPerformanceTable(table, row, index);
+  });
+  if (!row['姓名']) {
+    const guessed = fileName.replace(/\.[^.]+$/, '').match(/([\u4e00-\u9fa5]{2,4})/);
+    if (guessed) row['姓名'] = guessed[1];
+  }
+  return row;
+}
+
+function extractInlineDocxFields(text, row) {
+  const pairs = [
+    ['座號', /座號[:：]\s*([^姓名]+)/],
+    ['姓名', /姓名[:：]\s*(.+)$/],
+    ['個性描述', /個性描述[:：]\s*(.+)$/],
+    ['性情描述(正向)', /性情描述[:：]\s*(.+)$/],
+    ['向學描述', /向學描述[:：]\s*(.+)$/],
+    ['進取描述', /進取描述[:：]\s*(.+)$/],
+    ['紀律描述', /紀律描述[:：]\s*(.+)$/],
+    ['交友描述', /交友描述[:：]\s*(.+)$/],
+    ['服務描述', /服務描述[:：]\s*(.+)$/],
+    ['擅長描述', /擅長描述[:：]\s*(.+)$/]
+  ];
+  pairs.forEach(([key, regex]) => {
+    const match = text.match(regex);
+    if (match && isMeaningfulImportValue(match[1])) row[key] = cleanDocxValue(match[1]);
+  });
+}
+
+function parseDocxCodeTable(table, row) {
+  const keyMap = {
+    '性情描述': '性情描述(正向)',
+    '向學描述': '向學描述',
+    '進取描述': '進取描述',
+    '紀律描述': '紀律描述',
+    '交友描述': '交友描述',
+    '服務描述': '服務描述',
+    '擅長描述': '擅長描述'
+  };
+  table.flat().forEach(cell => {
+    Object.keys(keyMap).forEach(label => {
+      if (cell.includes(label)) {
+        const value = cleanDocxValue(cell.replace(label, '').replace(/^[:：]/, ''));
+        if (isMeaningfulImportValue(value)) row[keyMap[label]] = value;
+      }
+    });
+  });
+}
+
+function parseDocxPerformanceTable(table, row, tableIndex) {
+  const categoryMap = {
+    '學校服務類': '學校服務',
+    '社團表現類': '社團表現',
+    '學業表現類': '學業表現',
+    '生活常規類': '生活常規',
+    '社會服務類': '社會服務',
+    '活動表演類': '活動表演',
+    '科學展覽類': '科學展覽',
+    '其他特殊表現': tableIndex === 1 ? '校內其他特殊表現' : '校外其他特殊表現'
+  };
+  let currentKey = '';
+  table.forEach(rowCells => {
+    const categoryLabel = Object.keys(categoryMap).find(label => rowCells.some(cell => cell.includes(label)));
+    if (categoryLabel) currentKey = categoryMap[categoryLabel];
+    if (!currentKey) return;
+    const values = rowCells
+      .filter(cell => !Object.keys(categoryMap).some(label => cell.includes(label)))
+      .map(cleanDocxValue)
+      .filter(isMeaningfulImportValue);
+    if (!values.length) return;
+    const oldValue = row[currentKey] || '';
+    row[currentKey] = [oldValue, ...values].filter(Boolean).join('；');
+  });
+}
+
+function cleanDocxValue(value) {
+  return String(value || '')
+    .replace(/^(一|二|三|四|五|六|七|八|九|十)$/g, '')
+    .replace(/高[一二三][上下]/g, '')
+    .replace(/^(個性描述|性情描述|向學描述|進取描述|紀律描述|交友描述|服務描述|擅長描述)[:：]?/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function renderSelfEvalStudentOptions(rows) {
   const select = document.getElementById('selfEvalStudentSelect');
   select.innerHTML = '<option value="">請選擇學生</option>';
   rows.forEach((row, index) => {
     const name = getStudentNameFromRow(row) || `第 ${index + 1} 筆`;
+    const seat = getRowValue(row, ['座號','座位','號碼']);
     const option = document.createElement('option');
     option.value = String(index);
-    option.textContent = name;
+    option.textContent = seat ? `${seat} ${name}` : name;
     select.appendChild(option);
   });
 }
@@ -1548,9 +2110,12 @@ function applySelectedSelfEvalRow() {
     document.getElementById('studentName').value = rowName;
   }
   selfEvalFields.forEach(field => {
-    document.getElementById(field.id).value = getRowValue(row, field.aliases);
+    document.getElementById(field.id).value = getCombinedRowValue(row, field.aliases);
   });
-  document.getElementById('selfEvalImportStatus').textContent = `已套用：${rowName || `第 ${idx + 1} 筆資料`}`;
+  const codeCount = applyImportedCodes(row);
+  const cadreCount = applyImportedCadres(row);
+  const activityCount = applyImportedActivities(row);
+  document.getElementById('selfEvalImportStatus').textContent = `已套用：${rowName || `第 ${idx + 1} 筆資料`}；評語代碼 ${codeCount} 筆、職務 ${cadreCount} 筆、活動競賽 ${activityCount} 筆`;
   showToast('✅ 已套用學生自評資料');
 }
 
@@ -1656,36 +2221,86 @@ function generateBase() {
 // ============================
 function updateAiProviderUI() {
   const provider = document.getElementById('aiProvider')?.value || 'local';
-  const apiKeyRow = document.getElementById('apiKeyRow');
+  const geminiRow = document.getElementById('geminiApiKeyRow');
+  const openaiRow = document.getElementById('openaiApiKeyRow');
+  const customModelGroup = document.getElementById('customModelGroup');
   const hint = document.getElementById('aiProviderHint');
   const badge = document.getElementById('aiModeBadge');
+
+  geminiRow.style.display = provider === 'gemini' ? 'grid' : 'none';
+  openaiRow.style.display = provider === 'openai' ? 'grid' : 'none';
+  customModelGroup.style.display = provider === 'local' ? 'none' : 'block';
+
   if (provider === 'gemini') {
-    apiKeyRow.style.display = 'grid';
-    hint.textContent = 'Gemini 模式會使用您輸入的 API Key 直接從瀏覽器送出文字，Key 僅儲存在本機瀏覽器。';
+    hint.textContent = 'Gemini API 會先用 API Key 查詢目前可用模型並自動選擇；若自訂模型欄有填寫，則優先使用自訂模型。Key 與自訂模型只儲存在本機瀏覽器。';
     badge.textContent = 'Gemini AI 潤飾';
+    loadProviderApiKey('gemini', false);
+    loadCustomModelSetting('gemini');
+  } else if (provider === 'openai') {
+    hint.textContent = 'ChatGPT／OpenAI API 會先用 API Key 查詢目前可用模型並自動選擇；若自訂模型欄有填寫，則優先使用自訂模型。Key 與自訂模型只儲存在本機瀏覽器。';
+    badge.textContent = 'ChatGPT API 潤飾';
+    loadProviderApiKey('openai', false);
+    loadCustomModelSetting('openai');
   } else {
-    apiKeyRow.style.display = 'none';
     hint.textContent = '本機規則合併會直接在瀏覽器內完成，不會把文字送到雲端。';
     badge.textContent = '本機規則潤飾';
+    document.getElementById('customAiModel').value = '';
   }
 }
 
-function saveGeminiApiKey() {
-  const key = document.getElementById('geminiApiKey').value.trim();
-  if (!key) { showToast('⚠️ 請先輸入 Gemini API Key'); return; }
-  localStorage.setItem('homeroomGeminiApiKey', key);
+function providerStorageKey(provider, type) {
+  return `homeroom_${provider}_${type}`;
+}
+
+function getProviderApiKey(provider) {
+  const inputId = provider === 'openai' ? 'openaiApiKey' : 'geminiApiKey';
+  return document.getElementById(inputId).value.trim();
+}
+
+function saveProviderApiKey(provider) {
+  const key = getProviderApiKey(provider);
+  if (!key) { showToast('⚠️ 請先輸入 API Key'); return; }
+  localStorage.setItem(providerStorageKey(provider, 'apiKey'), key);
+  saveCustomModelSetting(provider, false);
   showToast('🔐 API Key 已儲存在本機瀏覽器');
 }
 
-function loadGeminiApiKey(showMessage = true) {
-  const key = localStorage.getItem('homeroomGeminiApiKey') || '';
-  const input = document.getElementById('geminiApiKey');
+function loadProviderApiKey(provider, showMessage = true) {
+  const key = localStorage.getItem(providerStorageKey(provider, 'apiKey')) || '';
+  const inputId = provider === 'openai' ? 'openaiApiKey' : 'geminiApiKey';
+  const input = document.getElementById(inputId);
   if (input) input.value = key;
   if (showMessage) showToast(key ? '🔐 已讀取本機儲存的 API Key' : '目前沒有已儲存的 API Key');
 }
 
+function saveCustomModelSetting(provider, showMessage = true) {
+  const value = document.getElementById('customAiModel')?.value?.trim() || '';
+  localStorage.setItem(providerStorageKey(provider, 'customModel'), value);
+  if (showMessage) showToast(value ? '✅ 自訂模型名稱已儲存' : '已清空自訂模型，將由系統自動選擇模型');
+}
+
+function loadCustomModelSetting(provider) {
+  const value = localStorage.getItem(providerStorageKey(provider, 'customModel')) || '';
+  const input = document.getElementById('customAiModel');
+  if (input) input.value = value;
+}
+
+function getCustomAiModel(provider) {
+  const currentProvider = document.getElementById('aiProvider')?.value;
+  if (currentProvider === provider) return document.getElementById('customAiModel')?.value?.trim() || '';
+  return localStorage.getItem(providerStorageKey(provider, 'customModel')) || '';
+}
+
 function openGeminiApiKeyPage() {
   window.open(GEMINI_API_KEY_URL, '_blank', 'noopener,noreferrer');
+}
+
+function openOpenAiApiKeyPage() {
+  window.open(OPENAI_API_KEY_URL, '_blank', 'noopener,noreferrer');
+}
+
+function openModelDocs(provider) {
+  window.open(provider === 'openai' ? OPENAI_MODEL_DOCS_URL : GEMINI_MODEL_DOCS_URL, '_blank', 'noopener,noreferrer');
 }
 
 async function mergeAndPolish() {
@@ -1697,11 +2312,14 @@ async function mergeAndPolish() {
   const name = document.getElementById('studentName').value.trim() || '該生';
   const toneDesc = state.tone === 'strict' ? '委婉規勸但堅定' : state.tone === 'neutral' ? '客觀中立' : '溫暖鼓勵';
   const provider = document.getElementById('aiProvider').value;
+  saveCustomModelSetting(provider, false);
   
   btn.disabled = true;
   btn.innerHTML = provider === 'gemini'
-    ? '<span class="spinner"></span> Gemini AI 潤飾中...'
-    : '<span class="spinner"></span> 本機合併中...';
+    ? '<span class="spinner"></span> Gemini API 潤飾中...'
+    : provider === 'openai'
+      ? '<span class="spinner"></span> ChatGPT API 潤飾中...'
+      : '<span class="spinner"></span> 本機合併中...';
 
   const prompt = `角色：你是一位資深且溫暖的台灣高中班導師，熟悉台灣高中成績單德行評語寫法。
 任務：請將以下「基礎評語」與「導師補充筆記」合併，並改寫成一篇完整、流暢、具備教育專業語氣的期末德行評語。
@@ -1728,7 +2346,12 @@ async function mergeAndPolish() {
       const result = await callGemini(prompt);
       document.getElementById('finalComment').value = result;
       updateCharCount('finalComment','finalCharCount');
-      showToast('✨ Gemini AI 潤飾完成');
+      showToast('✨ Gemini API 潤飾完成');
+    } else if (provider === 'openai') {
+      const result = await callOpenAi(prompt);
+      document.getElementById('finalComment').value = result;
+      updateCharCount('finalComment','finalCharCount');
+      showToast('✨ ChatGPT API 潤飾完成');
     }
   } catch (e) {
     console.error('AI polish error:', e);
@@ -1741,11 +2364,11 @@ async function mergeAndPolish() {
 }
 
 async function callGemini(prompt) {
-  const key = document.getElementById('geminiApiKey').value.trim();
+  const key = getProviderApiKey('gemini');
   if (!key) throw new Error('請先輸入 Gemini API Key');
 
   const errors = [];
-  for (const model of GEMINI_MODELS) {
+  for (const model of await getGeminiModelFallbackList()) {
     try {
       return await callGeminiModel(model, prompt);
     } catch (err) {
@@ -1755,20 +2378,49 @@ async function callGemini(prompt) {
   throw new Error(errors.join('；'));
 }
 
+async function getGeminiModelFallbackList() {
+  const custom = getCustomAiModel('gemini');
+  if (custom) return [custom, ...GEMINI_FALLBACK_MODELS.filter(model => model !== custom)];
+  const discovered = await discoverGeminiModels().catch(() => []);
+  return [...new Set([...discovered, ...GEMINI_FALLBACK_MODELS])];
+}
+
+async function discoverGeminiModels() {
+  const key = getProviderApiKey('gemini');
+  const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models', {
+    headers: { 'x-goog-api-key': key }
+  });
+  if (!response.ok) return [];
+  const data = await response.json();
+  return (data.models || [])
+    .filter(model => (model.supportedGenerationMethods || []).includes('generateContent'))
+    .map(model => String(model.name || '').replace(/^models\//, ''))
+    .sort((a, b) => scoreGeminiModel(b) - scoreGeminiModel(a));
+}
+
+function scoreGeminiModel(model) {
+  let score = 0;
+  if (/latest/i.test(model)) score += 1000;
+  if (/flash/i.test(model)) score += 500;
+  if (/pro/i.test(model)) score += 300;
+  if (/lite/i.test(model)) score -= 100;
+  const nums = model.match(/\d+(?:\.\d+)?/g) || [];
+  score += nums.reduce((sum, n, idx) => sum + Number(n) * (idx === 0 ? 100 : 10), 0);
+  return score;
+}
+
 async function callGeminiModel(model, prompt) {
   const firstText = await requestGemini(model, prompt);
   if (isPolishedCommentAcceptable(firstText)) return firstText;
 
-  const retryPrompt = `${prompt}
-
-注意：上一版回覆過短或太接近原文。請重新生成一段完整導師評語，務必達到 180-300 字、至少 4 個完整句子，並保留所有已提供事實。`;
+  const retryPrompt = `${prompt}\n\n注意：上一版回覆過短或太接近原文。請重新生成一段完整導師評語，務必達到 180-300 字、至少 4 個完整句子，並保留所有已提供事實。`;
   const retryText = await requestGemini(model, retryPrompt);
   if (isPolishedCommentAcceptable(retryText)) return retryText;
   throw new Error(`Gemini 回覆過短或不完整（${retryText.length}字）`);
 }
 
 async function requestGemini(model, prompt) {
-  const key = document.getElementById('geminiApiKey').value.trim();
+  const key = getProviderApiKey('gemini');
   const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
     method: 'POST',
     headers: {
@@ -1793,6 +2445,81 @@ async function requestGemini(model, prompt) {
   if (candidate?.finishReason && !['STOP', 'FINISH_REASON_UNSPECIFIED'].includes(candidate.finishReason)) {
     throw new Error(`回應未完整結束（${candidate.finishReason}）`);
   }
+  return text;
+}
+
+async function callOpenAi(prompt) {
+  const key = getProviderApiKey('openai');
+  if (!key) throw new Error('請先輸入 OpenAI API Key');
+  const errors = [];
+  for (const model of await getOpenAiModelFallbackList()) {
+    try {
+      const text = await requestOpenAi(model, prompt);
+      if (isPolishedCommentAcceptable(text)) return text;
+      const retryText = await requestOpenAi(model, `${prompt}\n\n注意：上一版回覆過短或太接近原文。請重新生成一段完整導師評語，務必達到 180-300 字、至少 4 個完整句子，並保留所有已提供事實。`);
+      if (isPolishedCommentAcceptable(retryText)) return retryText;
+      throw new Error(`OpenAI 回覆過短或不完整（${retryText.length}字）`);
+    } catch (err) {
+      errors.push(`${model}: ${err.message}`);
+    }
+  }
+  throw new Error(errors.join('；'));
+}
+
+async function getOpenAiModelFallbackList() {
+  const custom = getCustomAiModel('openai');
+  if (custom) return [custom, ...OPENAI_FALLBACK_MODELS.filter(model => model !== custom)];
+  const discovered = await discoverOpenAiModels().catch(() => []);
+  return [...new Set([...discovered, ...OPENAI_FALLBACK_MODELS])];
+}
+
+async function discoverOpenAiModels() {
+  const key = getProviderApiKey('openai');
+  const response = await fetch('https://api.openai.com/v1/models', {
+    headers: { Authorization: `Bearer ${key}` }
+  });
+  if (!response.ok) return [];
+  const data = await response.json();
+  return (data.data || [])
+    .map(model => model.id)
+    .filter(id => /^gpt-/.test(id) && !/audio|image|realtime|transcribe|tts|search|instruct/i.test(id))
+    .sort((a, b) => scoreOpenAiModel(b) - scoreOpenAiModel(a));
+}
+
+function scoreOpenAiModel(model) {
+  let score = 0;
+  if (/latest/i.test(model)) score += 1000;
+  if (/gpt-\d/.test(model)) score += 500;
+  if (/mini/i.test(model)) score += 80;
+  if (/nano/i.test(model)) score -= 100;
+  const nums = model.match(/\d+(?:\.\d+)?/g) || [];
+  score += nums.reduce((sum, n, idx) => sum + Number(n) * (idx === 0 ? 100 : 10), 0);
+  return score;
+}
+
+async function requestOpenAi(model, prompt) {
+  const key = getProviderApiKey('openai');
+  const response = await fetch('https://api.openai.com/v1/responses', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${key}`
+    },
+    body: JSON.stringify({
+      model,
+      input: prompt,
+      temperature: 0.45,
+      max_output_tokens: 1200
+    })
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error?.message || 'OpenAI API Error');
+  const text = data.output_text || (data.output || [])
+    .flatMap(item => item.content || [])
+    .map(part => part.text || '')
+    .join('')
+    .trim();
+  if (!text) throw new Error('未取得有效文字回應');
   return text;
 }
 
@@ -2098,6 +2825,9 @@ function showToast(msg) {
 function clearAll() {
   if (!confirm('確定要重置所有資料嗎？')) return;
   document.getElementById('studentName').value = '';
+  document.getElementById('singleStudentExcelFile').value = '';
+  document.getElementById('singleImportPreview').innerHTML = '';
+  document.getElementById('singleImportStatus').textContent = '';
   document.getElementById('baseComment').value = '';
   document.getElementById('freeInput').value = '';
   document.getElementById('finalComment').value = '';
@@ -2122,6 +2852,7 @@ function clearAll() {
   state.cadres = [];
   state.activities = [];
   state.importedSelfEvalRows = [];
+  state.singleStudentMappings = [];
   state.roleFilter = 'all';
   state.traits = { academic:{}, social:{}, habit:{}, personality:{} };
   state.gender = 'boy';
