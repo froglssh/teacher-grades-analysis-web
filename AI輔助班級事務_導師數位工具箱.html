@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 協助導師處理班級事務｜導師數位工具箱</title>
+<style>
+  :root{
+    --ink:#1c2430;
+    --ink-soft:#44526a;
+    --paper:#f6f4ef;
+    --card:#ffffff;
+    --line:#e3ddd2;
+    --blue:#1b3a6b;
+    --blue-soft:#2f5aa0;
+    --orange:#e0730c;
+    --orange-soft:#f4a43a;
+    --green:#2e7d5b;
+    --green-soft:#4aa77e;
+    --red:#c0392b;
+    --amber:#f2b705;
+    --shadow:0 6px 24px rgba(28,36,48,.10);
+    --shadow-lg:0 14px 40px rgba(28,36,48,.16);
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei","Segoe UI",system-ui,sans-serif;
+    color:var(--ink);
+    background:var(--paper);
+    line-height:1.9;
+    font-size:20px;
+    letter-spacing:.01em;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--blue-soft);text-decoration:none;}
+  a:hover{text-decoration:underline;}
+
+  /* ---------- 導覽 ---------- */
+  header.nav{
+    position:sticky;top:0;z-index:100;
+    background:rgba(246,244,239,.92);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{
+    max-width:1200px;margin:0 auto;padding:11px 22px;
+    display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+  }
+  .brand{display:flex;align-items:center;gap:11px;font-weight:800;color:var(--blue);font-size:20px;}
+  .brand .mark{
+    width:38px;height:38px;border-radius:10px;flex:none;
+    background:radial-gradient(circle at 35% 30%,var(--orange-soft),var(--orange));
+    display:grid;place-items:center;color:#fff;font-size:21px;box-shadow:var(--shadow);
+  }
+  nav.links{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap;}
+  nav.links a{
+    color:var(--ink-soft);font-size:16px;font-weight:600;
+    padding:7px 12px;border-radius:9px;white-space:nowrap;
+  }
+  nav.links a:hover{background:#eae4d8;color:var(--blue);text-decoration:none;}
+
+  /* ---------- 版心 ---------- */
+  main{max-width:1200px;margin:0 auto;padding:0 22px;}
+  section{padding:66px 0 24px;scroll-margin-top:80px;}
+  .eyebrow{
+    display:inline-block;font-weight:800;letter-spacing:.14em;font-size:15px;
+    color:var(--orange);text-transform:uppercase;margin-bottom:12px;
+  }
+  h2.sec{font-size:36px;line-height:1.35;margin:0 0 10px;color:var(--blue);font-weight:800;}
+  h2.sec .en{color:var(--ink-soft);font-weight:600;font-size:19px;letter-spacing:.02em;}
+  .lead{font-size:21px;color:var(--ink-soft);max-width:860px;margin:0 0 8px;}
+  .divider{height:5px;width:70px;border-radius:4px;background:linear-gradient(90deg,var(--orange),var(--orange-soft));margin:18px 0 30px;}
+  h3.blk{color:var(--blue);font-size:24px;font-weight:800;margin:36px 0 10px;}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    position:relative;overflow:hidden;
+    background:
+      radial-gradient(1100px 480px at 82% -8%,rgba(224,115,12,.16),transparent 60%),
+      radial-gradient(900px 520px at 6% 108%,rgba(46,125,91,.16),transparent 60%),
+      linear-gradient(160deg,#0f2444 0%,#1b3a6b 46%,#244a86 100%);
+    color:#fff;
+  }
+  .hero-inner{max-width:1200px;margin:0 auto;padding:70px 22px 62px;}
+  .hero .kicker{
+    display:inline-flex;align-items:center;gap:9px;font-weight:700;font-size:16px;
+    background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.25);
+    padding:8px 16px;border-radius:999px;margin-bottom:22px;letter-spacing:.03em;
+  }
+  .hero h1{
+    font-size:clamp(38px,5.6vw,62px);line-height:1.15;margin:0 0 16px;font-weight:900;
+    letter-spacing:.01em;
+  }
+  .hero h1 .hl{color:var(--orange-soft);}
+  .hero .sub{font-size:clamp(19px,2.4vw,24px);color:#dce6f5;max-width:800px;margin:0 0 26px;font-weight:500;}
+  .hero-meta{display:flex;gap:26px;flex-wrap:wrap;font-size:17px;color:#c9d6ea;}
+  .hero-meta b{color:#fff;}
+  .hero-stats{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:40px;
+  }
+  .hstat{
+    background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);
+    border-radius:14px;padding:18px 16px;
+  }
+  .hstat .n{font-size:34px;font-weight:900;color:#fff;line-height:1;}
+  .hstat .n small{font-size:18px;font-weight:700;}
+  .hstat .l{font-size:15px;color:#c3d1e8;margin-top:8px;}
+
+  /* ---------- 卡片系 ---------- */
+  .grid{display:grid;gap:20px;}
+  .g2{grid-template-columns:repeat(2,1fr);}
+  .g3{grid-template-columns:repeat(3,1fr);}
+  .g4{grid-template-columns:repeat(4,1fr);}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:24px 22px;box-shadow:var(--shadow);
+  }
+  .card h3{margin:0 0 8px;font-size:21px;color:var(--blue);font-weight:800;}
+  .card p{margin:0;color:var(--ink-soft);font-size:18px;}
+
+  .tag{display:inline-block;font-size:14px;font-weight:700;padding:3px 12px;border-radius:999px;margin:0 6px 6px 0;}
+  .t-blue{background:#e7eefa;color:var(--blue);}
+  .t-green{background:#e3f3ec;color:var(--green);}
+  .t-orange{background:#fdeede;color:#b05a05;}
+  .t-red{background:#fbe7e4;color:var(--red);}
+
+  /* ---------- 痛點 ---------- */
+  .pain-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  .pain{
+    background:#fff;border:1px solid var(--line);border-left:5px solid var(--orange);
+    border-radius:12px;padding:18px 18px;box-shadow:var(--shadow);
+  }
+  .pain .ic{font-size:29px;margin-bottom:6px;}
+  .pain h4{margin:0 0 4px;font-size:19px;color:var(--ink);}
+  .pain p{margin:0;font-size:16.5px;color:var(--ink-soft);}
+
+  /* ---------- 中樞圖 ---------- */
+  .hub{
+    background:linear-gradient(150deg,#102a52,#1e4079);color:#fff;border-radius:22px;
+    padding:34px;box-shadow:var(--shadow-lg);
+  }
+  .hub-core{
+    text-align:center;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);
+    border-radius:16px;padding:20px;max-width:360px;margin:0 auto 26px;
+  }
+  .hub-core .db{font-size:38px;}
+  .hub-core h4{margin:8px 0 4px;font-size:23px;}
+  .hub-core p{margin:0;color:#bccdea;font-size:16px;}
+  .hub-spokes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .spoke{
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
+    border-radius:13px;padding:15px;
+  }
+  .spoke b{display:block;font-size:18px;margin-bottom:3px;}
+  .spoke span{font-size:15px;color:#c3d1e8;}
+
+  /* ---------- 工具箱 ---------- */
+  .tool{
+    background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;
+    transition:transform .16s ease,box-shadow .16s ease;
+  }
+  .tool:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);}
+  .tool .top{padding:20px 20px 6px;display:flex;align-items:flex-start;gap:13px;}
+  .tool .num{
+    flex:none;width:48px;height:48px;border-radius:12px;display:grid;place-items:center;
+    font-weight:900;font-size:21px;color:#fff;
+  }
+  .n-blue{background:linear-gradient(135deg,var(--blue),var(--blue-soft));}
+  .n-green{background:linear-gradient(135deg,var(--green),var(--green-soft));}
+  .n-orange{background:linear-gradient(135deg,var(--orange),var(--orange-soft));}
+  .tool .cat{font-size:14.5px;font-weight:700;color:var(--orange);letter-spacing:.05em;}
+  .tool h3{margin:2px 0 0;font-size:21px;color:var(--blue);font-weight:800;}
+  .tool .body{padding:6px 20px 20px;}
+  .tool .body>p{margin:0;color:var(--ink-soft);font-size:17px;}
+  .tool ul{margin:8px 0 0;padding-left:20px;}
+  .tool ul li{font-size:16.5px;color:var(--ink-soft);margin-bottom:5px;}
+  .tool .out{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);font-size:15px;color:var(--ink-soft);}
+
+  /* ---------- 資訊盒 ---------- */
+  .note{
+    border-radius:14px;padding:20px 22px;margin:18px 0;font-size:17.5px;
+    border:1px solid var(--line);box-shadow:var(--shadow);
+  }
+  .note b{color:var(--ink);}
+  .note.tip{background:#eef7f1;border-color:#c8e6d6;}
+  .note.warn{background:#fdf3e6;border-color:#f3d9ad;}
+  .note.info{background:#eaf1fb;border-color:#c9dcf6;}
+  .note .h{font-weight:800;display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:18.5px;}
+  .note.tip .h{color:var(--green);}
+  .note.warn .h{color:#b05a05;}
+  .note.info .h{color:var(--blue);}
+
+  /* ---------- 提示詞 + 複製 ---------- */
+  .prompt{
+    background:#0f1b2d;color:#e6edf6;border-radius:13px;padding:15px 18px 17px;margin:14px 0;
+    border:1px solid #22344d;position:relative;
+  }
+  .prompt-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px;}
+  .prompt .lbl{
+    display:inline-block;background:var(--orange);color:#fff;font-weight:800;
+    font-size:14px;padding:3px 12px;border-radius:7px;letter-spacing:.04em;
+  }
+  .copy-btn{
+    background:rgba(255,255,255,.12);color:#eaf0f8;border:1px solid rgba(255,255,255,.28);
+    font-size:14.5px;font-weight:700;padding:6px 14px;border-radius:9px;cursor:pointer;
+    font-family:inherit;white-space:nowrap;transition:background .15s,border-color .15s;
+    display:inline-flex;align-items:center;gap:6px;
+  }
+  .copy-btn:hover{background:rgba(255,255,255,.24);}
+  .copy-btn.done{background:var(--green);border-color:var(--green);color:#fff;}
+  .ptext{
+    white-space:pre-wrap;
+    font-family:"SFMono-Regular",Consolas,"Noto Sans TC",monospace;
+    font-size:16px;line-height:1.75;
+  }
+  .ptext code{color:var(--orange-soft);}
+  .prompt .ex{margin-top:11px;padding-top:11px;border-top:1px dashed #2a3d57;font-size:15.5px;color:#aebfd6;font-style:italic;}
+
+  /* ---------- 平台鏈 ---------- */
+  .flow{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap;}
+  .flow .step{
+    flex:1;min-width:160px;background:#fff;border:1px solid var(--line);border-radius:12px;
+    padding:16px;box-shadow:var(--shadow);position:relative;
+  }
+  .flow .step .s{font-size:14px;font-weight:800;color:var(--orange);}
+  .flow .step b{display:block;font-size:18px;color:var(--blue);margin:3px 0;}
+  .flow .step p{margin:0;font-size:15px;color:var(--ink-soft);}
+  .arrow{align-self:center;color:var(--orange);font-size:24px;font-weight:900;}
+
+  /* ---------- 統計公式 ---------- */
+  .formula{
+    background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 22px;
+    box-shadow:var(--shadow);text-align:center;font-size:22px;color:var(--blue);
+    font-family:"Cambria Math",Georgia,serif;
+  }
+  .formula small{display:block;font-size:15px;color:var(--ink-soft);margin-top:8px;font-family:inherit;}
+
+  /* ---------- 德性表 ---------- */
+  table.virtue{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:var(--shadow);font-size:17px;}
+  table.virtue th{background:var(--blue);color:#fff;padding:12px 14px;text-align:left;font-size:16.5px;}
+  table.virtue td{padding:12px 14px;border-top:1px solid var(--line);color:var(--ink-soft);vertical-align:top;}
+  table.virtue td:first-child{font-weight:800;color:var(--blue);white-space:nowrap;}
+  table.virtue tr:nth-child(even) td{background:#faf8f3;}
+
+  /* ---------- 結語詩 ---------- */
+  .poem{
+    background:linear-gradient(150deg,#1a3b2c,#2e7d5b);color:#fff;border-radius:22px;
+    padding:44px 34px;text-align:center;box-shadow:var(--shadow-lg);
+  }
+  .poem .verse{font-size:clamp(24px,3.6vw,34px);line-height:1.9;font-weight:700;letter-spacing:.14em;}
+  .poem .verse span{color:var(--orange-soft);}
+  .poem .motto{margin-top:22px;font-size:20px;color:#d6ecdf;letter-spacing:.1em;font-style:italic;}
+
+  footer{
+    background:#0f2444;color:#c3d1e8;margin-top:60px;padding:36px 22px;text-align:center;font-size:16.5px;
+  }
+  footer b{color:#fff;}
+  footer .mrow{margin-top:8px;}
+
+  .kbd{background:#eef0f4;border:1px solid #d6dae2;border-bottom-width:2px;border-radius:6px;padding:1px 7px;font-size:15px;font-weight:700;color:var(--ink);}
+
+  /* ---------- RWD ---------- */
+  @media(max-width:900px){
+    .g3,.g4,.pain-grid,.hub-spokes{grid-template-columns:repeat(2,1fr);}
+    .hero-stats{grid-template-columns:repeat(2,1fr);}
+  }
+  @media(max-width:620px){
+    body{font-size:18.5px;}
+    .g2,.g3,.g4,.pain-grid,.hub-spokes{grid-template-columns:1fr;}
+    .hero-stats{grid-template-columns:repeat(2,1fr);}
+    nav.links{display:none;}
+    h2.sec{font-size:29px;}
+    section{padding:48px 0 18px;}
+    .ptext{font-size:15px;}
+  }
+  @media print{
+    header.nav{position:static;}
+    .tool:hover{transform:none;}
+    section{page-break-inside:avoid;}
+    .copy-btn{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ 導覽 ============ -->
+<header class="nav">
+  <div class="nav-inner">
+    <div class="brand"><span class="mark">🐸</span> AI × 導師班級經營</div>
+    <nav class="links">
+      <a href="#idea">核心理念</a>
+      <a href="#pain">導師痛點</a>
+      <a href="#hub">資料基石</a>
+      <a href="#tools">工具箱</a>
+      <a href="#platform">平台應用</a>
+      <a href="#comment">評語系統</a>
+      <a href="#stat">統計方法</a>
+      <a href="#practice">實務範例</a>
+      <a href="#ending">結語</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<div class="hero">
+  <div class="hero-inner">
+    <span class="kicker">🎓 導師知能研習 · 臺北市立麗山高級中學</span>
+    <h1>AI 協助導師<br><span class="hl">處理班級事務</span></h1>
+    <p class="sub">從「智能增強（IA）」到班級管理的數位革命 —— 用一套本機、離線、保護個資的數位工具箱，把導師從瑣碎行政中解放出來，把時間留給真正重要的「陪伴與引導」。</p>
+    <div class="hero-meta">
+      <span>主講人：<b>林獻升 老師</b></span>
+      <span>單位：<b>麗山高中 生物科／班級導師</b></span>
+      <span>信箱：<b>frog@lssh.tp.edu.tw</b></span>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat"><div class="n">14<small> 大</small></div><div class="l">導師實務數位工具</div></div>
+      <div class="hstat"><div class="n">4<small> 維</small></div><div class="l">教學・實驗・導師・行政</div></div>
+      <div class="hstat"><div class="n">100%<small></small></div><div class="l">本機運作・守護個資</div></div>
+      <div class="hstat"><div class="n">30+<small></small></div><div class="l">可複製提示詞範例</div></div>
+    </div>
+  </div>
+</div>
+
+<main>
+
+<!-- ============ 核心理念 ============ -->
+<section id="idea">
+  <span class="eyebrow">Core Idea</span>
+  <h2 class="sec">AI → IA：從人工智慧到「智能增強」<span class="en">Artificial Intelligence → Intelligence Augmentation</span></h2>
+  <div class="divider"></div>
+  <p class="lead">本研習的核心主張是：AI 對導師的價值，不在「取代」，而在「增強」。天平一端是<b>智能科技</b>（效率提升、行政減量、資料留存），另一端是<b>教師關懷</b>（理解陪伴、品格引導、學生成長）。工具負責處理可被自動化的瑣事，導師才能專注於機器做不到的溫度。</p>
+
+  <div class="grid g3" style="margin-top:26px">
+    <div class="card">
+      <span class="tag t-blue">本質</span>
+      <h3>增強，而非取代</h3>
+      <p>AI 的定位是導師的「智能副手」。它幫你抽籤、記帳、算成績、擬初稿，但最後的判斷、對話與決定，永遠握在老師手上。</p>
+    </div>
+    <div class="card">
+      <span class="tag t-green">維度</span>
+      <h3>四大應用面向</h3>
+      <p>教學、實驗、<b>導師</b>、行政。本研習聚焦最「阿雜」、最耗時、最零散的<b>導師班務</b>，這也是 AI 投報率最高的戰場。</p>
+    </div>
+    <div class="card">
+      <span class="tag t-orange">底線</span>
+      <h3>本機運作・個資安全</h3>
+      <p>所有工具皆在<b>本機瀏覽器</b>運算，資料存在你自己的電腦，可匯出 JSON 備份，不上傳雲端，從源頭守護學生個資。</p>
+    </div>
+  </div>
+
+  <h3 class="blk">🤖 提示詞範例：把 AI 設定成你的「導師智能副手」</h3>
+  <p class="lead">在開始任何對話前，先給 AI 一段「角色設定」，之後的回答會更貼近導師需求。以下三段可直接複製使用。</p>
+
+  <div class="prompt">
+    <div class="prompt-head"><span class="lbl">角色設定・導師助手</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+    <div class="ptext">你現在是一位資深高中班級導師的智能助手。
+請以<code>務實、溫暖、具教育專業</code>的口吻協助我。
+回答時請注意：（1）優先考量學生的身心發展與公平性；
+（2）遇到需要個資的情境，主動提醒我先去識別化；
+（3）產出可直接使用的成品（公告、表格、對話稿），並附一句使用提醒。</div>
+  </div>
+
+  <div class="prompt">
+    <div class="prompt-head"><span class="lbl">角色設定・班級經營顧問</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+    <div class="ptext">請扮演我的班級經營顧問。我帶的是高中普通班，共 30 位學生。
+當我描述一個班級狀況時，請用這個結構回覆我：
+1. 這件事的核心問題是什麼（一句話）
+2. 三個可行的處理方向（含優缺點）
+3. 你建議先做哪一個，為什麼
+語氣請保持中立、不批判，把最終決定權留給我。</div>
+  </div>
+
+  <div class="prompt">
+    <div class="prompt-head"><span class="lbl">觀念釐清・AI vs IA</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+    <div class="ptext">請用一個高中導師聽得懂的生活比喻，
+解釋「AI（人工智慧）」與「IA（智能增強）」的差別，
+並各舉一個班級經營的例子。最後用一句話總結，
+為什麼導師應該把 AI 當成「增強工具」而非「代理決策者」。</div>
+  </div>
+</section>
+
+<!-- ============ 導師痛點 ============ -->
+<section id="pain">
+  <span class="eyebrow">Pain Points</span>
+  <h2 class="sec">導師責任制：包羅萬象的日常</h2>
+  <div class="divider"></div>
+  <p class="lead">「導師工作包羅萬象，哪個工作最阿雜呢？」一位高中導師，一天之內可能要當偵探、當調解人、聽任課老師抱怨、與家長溝通、還要收錢管錢。這些工作零散、重複、卻又不能出錯。</p>
+
+  <div class="pain-grid" style="margin-top:24px">
+    <div class="pain"><div class="ic">🕵️</div><h4>偵探與調解</h4><p>釐清同學糾紛、還原事件經過，扮演公正的第三方。</p></div>
+    <div class="pain"><div class="ic">📢</div><h4>課堂與秩序</h4><p>經營班級氣氛、處理任課老師回饋的班級狀況。</p></div>
+    <div class="pain"><div class="ic">🐲</div><h4>親師溝通</h4><p>面對各式家長期待與情緒，維持理性而溫暖的對話。</p></div>
+    <div class="pain"><div class="ic">💰</div><h4>收錢與管錢</h4><p>班費繳交、核銷、公開帳目，一分一毫都要清楚。</p></div>
+    <div class="pain"><div class="ic">🗂️</div><h4>表單零散</h4><p>紙本與 Excel 檔案四散各處，找一份資料翻半天。</p></div>
+    <div class="pain"><div class="ic">⏳</div><h4>時間碎片化</h4><p>日常班務與行政量龐大，時間被切成無數小碎片。</p></div>
+  </div>
+
+  <div class="note info" style="margin-top:26px">
+    <div class="h">💡 數位轉型的三個目標</div>
+    導師數位化不是為了「用很多軟體」，而是為了三件事：<b>公平分配</b>（提升班務透明度、減少爭議）、<b>行政減量</b>（把重複勞動交給程式）、<b>資料留存</b>（完整、安全、易查找）。以下所有工具，都圍繞這三個目標設計。
+  </div>
+
+  <h3 class="blk">🧩 提示詞範例：把混亂的班務快速理清</h3>
+
+  <div class="prompt">
+    <div class="prompt-head"><span class="lbl">每日待辦・優先排序</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+    <div class="ptext">以下是我今天的班務待辦，請幫我依「緊急×重要」四象限分類，
+並建議處理順序與預估時間，最後標出哪些可以交給程式或學生幹部處理：
+- 收下週校外教學同意書
+- 兩位同學昨天下課有口角要了解
+- 任課老師反映第五節班上很吵
+- 班費核銷單要整理
+- 三位家長昨天傳訊息還沒回</div>
+    <div class="ex">用途：早自習花 2 分鐘貼上待辦，馬上得到一份有順序的行動清單。</div>
+  </div>
+
+  <div class="prompt">
+    <div class="prompt-head"><span class="lbl">學生糾紛・事件釐清</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+    <div class="ptext">我要處理兩位同學的糾紛（先以 A 生、B 生代稱，不用真名）。
+請幫我設計一份「中立的事件釐清訪談表」，
+包含：發生時間地點、各自陳述、旁證、雙方感受、期待的解決方式。
+問句要中性、不預設對錯，適合我分別與兩位同學一對一使用。</div>
+    <div class="ex">提醒：務必以代稱處理，訪談紀錄留存本機，不上傳雲端。</div>
+  </div>
+
+  <div class="prompt">
+    <div class="prompt-head"><span class="lbl">任課老師回饋・因應</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+    <div class="ptext">任課老師反映我班上第五節課秩序不佳、上課愛講話。
+請以導師立場，幫我擬一個「不指名、對全班」的三分鐘晨間談話稿，
+先同理、再說明影響、最後和全班約定兩個具體改善行為，語氣堅定但不情緒化。</div>
+  </div>
+</section>
+
+<!-- ============ 資料基石 ============ -->
+<section id="hub">
+  <span class="eyebrow">Data Foundation</span>
+  <h2 class="sec">數據基石：學生資料管理系統</h2>
+  <div class="divider"></div>
+  <p class="lead">整個工具箱的核心，是「一次建檔、處處可用」。學期初只要建立一次全班個人名冊，它就成為座位、打掃、幹部、評語、成績的<b>統一輸入源</b>，避免每個功能都要重打一次名單。</p>
+
+  <div class="hub" style="margin-top:26px">
+    <div class="hub-core">
+      <div class="db">🗄️</div>
+      <h4>學生資料庫</h4>
+      <p>統一輸入源 · JSON 備份 + 本機瀏覽器儲存</p>
+    </div>
+    <div class="hub-spokes">
+      <div class="spoke"><b>🪑 座位安排</b><span>依資料快速編排座位</span></div>
+      <div class="spoke"><b>🧹 打掃分配</b><span>自動分組、公平分配</span></div>
+      <div class="spoke"><b>📋 幹部改選</b><span>名單管理與紀錄留存</span></div>
+      <div class="spoke"><b>💬 德行評語</b><span>連結德行評語資料庫</span></div>
+      <div class="spoke"><b>📚 自主學習</b><span>名單匯入與時數追蹤</span></div>
+      <div class="spoke"><b>📊 各式統計</b><span>出席、獎懲、成績等</span></div>
+    </div>
+  </div>
+
+  <div class="note tip" style="margin-top:22px">
+    <div class="h">✅ 為什麼要「本機 + JSON 備份」</div>
+    資料存在本機瀏覽器，代表<b>不需上傳雲端、隱私安全</b>；同時支援匯出 JSON 檔案備份，可多設備還原、換電腦不怕資料不見。建議每學期初建檔後，養成「處理完就匯出一次 JSON」的習慣。
+  </div>
+
+  <h3 class="blk">🗃️ 提示詞範例：整理與檢查學生名冊</h3>
+
+  <div class="prompt">
+    <div class="prompt-head"><span class="lbl">名冊整理・格式標準化</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+    <div class="ptext">以下是我雜亂貼上的班級名單，請幫我整理成「座號,姓名」的標準格式，
+一行一位、依座號由小到大排序，補齊缺漏的座號並標記出來，
+若有明顯重複或空白也一併列出提醒我確認。</div>
+    <div class="ex">用途：把手機備忘錄、舊 Excel 貼過來的亂名單，一鍵變乾淨。</div>
+  </div>
+
+  <div class="prompt">
+    <div class="prompt-head"><span class="lbl">資料欄位・規劃建議</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+    <div class="ptext">我要建立一份高中班級的學生資料表，會用在座位、打掃、幹部、評語、成績。
+請建議應該包含哪些欄位（含必填與選填），
+並提醒哪些欄位屬於敏感個資、應特別保護或避免上雲端。
+最後給我一個可以直接複製到試算表的欄位標題列。</div>
+  </div>
+
+  <div class="prompt">
+    <div class="prompt-head"><span class="lbl">去識別化・雲端前處理</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+    <div class="ptext">我準備把班級資料交給雲端 AI 分析，請幫我做「去識別化」：
+把姓名改成座號、移除身分證字號、電話、地址與家長姓名，
+只保留分析需要的欄位（座號、各科成績、出缺席次數）。
+處理後請回傳去識別化的版本，並列出你移除了哪些欄位。</div>
+  </div>
+</section>
+
+<!-- ============ 工具箱 ============ -->
+<section id="tools">
+  <span class="eyebrow">Digital Toolbox</span>
+  <h2 class="sec">導師數位工具箱：十四大實務工具</h2>
+  <div class="divider"></div>
+  <p class="lead">以下工具皆為麗山高中林獻升老師自製，涵蓋班務分配、財務、活動、成績到生涯輔導。每一項都提供 <b>Android APK 封裝</b> 與 <b>離線網頁</b>，並可匯出 Word / Excel / PDF 表單。</p>
+
+  <div class="grid g2" style="margin-top:26px">
+
+    <div class="tool">
+      <div class="top"><div class="num n-green">01</div><div><div class="cat">公平分工</div><h3>幹部與小老師分配工具</h3></div></div>
+      <div class="body">
+        <p>支援單筆／批次貼上名單，也可由 Excel 匯入班級清單，隨機抽籤或手動指派。</p>
+        <ul>
+          <li>支援<b>隨機抽籤</b>與<b>手動指定</b>兩種模式</li>
+          <li>自動<b>防範重複任職</b>，保障參與公平性</li>
+          <li>一鍵輸出 Word 幹部名冊、Excel 服務紀錄</li>
+        </ul>
+        <div class="out">📎 輸出：幹部名冊.docx · 服務紀錄.xlsx · 小老師名冊.pdf</div>
+      </div>
+    </div>
+
+    <div class="tool">
+      <div class="top"><div class="num n-blue">02</div><div><div class="cat">空間管理</div><h3>教室座位分配工具</h3></div></div>
+      <div class="body">
+        <p>自訂教室橫列與直行格局、走道配置，隨機或手動排位，並提供教師視角預覽。</p>
+        <ul>
+          <li>自訂座位格局（例如 5×6＝30 位）與走道</li>
+          <li>可<b>鎖定特殊座位</b>（視力、學習需求）</li>
+          <li>一鍵生成<b>教師座位表</b>與<b>學生張貼版</b></li>
+        </ul>
+        <div class="out">📎 輸出：可列印／匯出 PDF、Excel；教師版含姓名、學生版僅座號</div>
+      </div>
+    </div>
+
+    <div class="tool">
+      <div class="top"><div class="num n-green">03</div><div><div class="cat">環境責任</div><h3>學生打掃抽籤系統</h3></div></div>
+      <div class="body">
+        <p>整合學年學期、班級資料與工作位置，公開抽籤、保存歷史紀錄，實現定期輪替。</p>
+        <ul>
+          <li>整合<b>內掃、外掃與特殊掃區</b></li>
+          <li>公開抽籤流程，減少同學分配爭議</li>
+          <li>保存歷史紀錄，每週／每月自動重新輪替</li>
+        </ul>
+        <div class="out">📎 流程：建立清單 → 公開抽籤 → 確認分配 → 定期輪替 → 查詢統計</div>
+      </div>
+    </div>
+
+    <div class="tool">
+      <div class="top"><div class="num n-orange">04</div><div><div class="cat">課堂經營</div><h3>學生選取、分組與紀錄</h3></div></div>
+      <div class="body">
+        <p>課堂互動計分板：隨機點名、搶答模式，即時加減分並保存紀錄。</p>
+        <ul>
+          <li><b>隨機點名與搶答</b>，激發課堂參與度</li>
+          <li>即時加減分，記錄學生回答表現</li>
+          <li>自訂分組抽籤，整合為<b>形成性評量</b>數據</li>
+        </ul>
+        <div class="out">📎 應用：日常課堂即時回饋、分組合作、參與度追蹤</div>
+      </div>
+    </div>
+
+    <div class="tool">
+      <div class="top"><div class="num n-green">05</div><div><div class="cat">班費收支</div><h3>班費收支記帳程式</h3></div></div>
+      <div class="body">
+        <p>智能化班級財務管理：班費繳交、收入、支出、結餘一目了然。</p>
+        <ul>
+          <li>直覺收支登錄，自動計算<b>即時餘額</b></li>
+          <li>生成收入／支出占比圖表，帳目<b>公開透明</b></li>
+          <li>隨附班費核銷、收支登錄 Word 與 PDF 表格</li>
+        </ul>
+        <div class="out">📎 輸出：班費核銷單（Word/PDF）· 收支登錄表（Word/PDF）</div>
+      </div>
+    </div>
+
+    <div class="tool">
+      <div class="top"><div class="num n-orange">06</div><div><div class="cat">節慶活動</div><h3>校慶園遊會攤位規劃</h3></div></div>
+      <div class="body">
+        <p>智能化攤位管理與活動規劃：食物主題、工作排班、盈虧模擬一次搞定。</p>
+        <ul>
+          <li>估算進貨成本並訂定商品售價</li>
+          <li>班級分工與<b>人員排班表</b>規劃</li>
+          <li><b>盈虧模擬分析</b>，建立學生基礎財務素養</li>
+        </ul>
+        <div class="out">📎 產出：攤位分工表、時段排班表、樂觀／預估／保守三情境盈虧圖</div>
+      </div>
+    </div>
+
+    <div class="tool">
+      <div class="top"><div class="num n-blue">07</div><div><div class="cat">成績登打</div><h3>多班級成績管理系統</h3></div></div>
+      <div class="body">
+        <p>Excel 匯入、分項配分、平均權位與統計分析，支援多學年多班級。</p>
+        <ul>
+          <li>多班級成績匯入與統一登打</li>
+          <li>支援校務系統下載之 Excel 成績練習檔</li>
+          <li>彈性設定<b>平時／定期權重</b>，自動計算總分</li>
+        </ul>
+        <div class="out">📎 流程：選班 → 匯入 → 登打 → 設權重 → 算總分 → 總覽 → 匯出 → 列印</div>
+      </div>
+    </div>
+
+    <div class="tool">
+      <div class="top"><div class="num n-blue">08</div><div><div class="cat">數據診斷</div><h3>班級與個別成績分析</h3></div></div>
+      <div class="body">
+        <p>五標統計、圖表分析、多次考試比較，把數字轉成可行動的洞察。</p>
+        <ul>
+          <li><b>直方圖</b>統計班級成績分佈與合格率</li>
+          <li><b>雷達圖</b>診斷個別學生學科強弱表現</li>
+          <li>段考成績退步警訊，<b>提前介入輔導關懷</b></li>
+        </ul>
+        <div class="out">📎 洞察：找出「加分」與「失分」的具體額度，避免單科崩盤拖垮總成績</div>
+      </div>
+    </div>
+
+    <div class="tool">
+      <div class="top"><div class="num n-green">09</div><div><div class="cat">評語生成</div><h3>導師評語生成系統</h3></div></div>
+      <div class="body">
+        <p>德行評語 × 日常生活表現 —— 結構化生成 + AI 智慧潤飾（本機規則）。</p>
+        <ul>
+          <li>匯入 Notion 表現紀錄，自動組裝評語架構</li>
+          <li>依學生特質（領導、熱心…）套用不同語氣</li>
+          <li>客觀高效地生成<b>期末德行評語初稿</b></li>
+        </ul>
+        <div class="out">📎 語氣可選：溫暖鼓勵 / 客觀中立 / 委婉規勸；搭配學校評語代碼</div>
+      </div>
+    </div>
+
+    <div class="tool">
+      <div class="top"><div class="num n-green">10</div><div><div class="cat">學習支持</div><h3>自主學習與學習歷程檔案</h3></div></div>
+      <div class="body">
+        <p>以鷹架式引導取代「食譜式」研究，陪學生把歷程寫成亮點。</p>
+        <ul>
+          <li>自主學習計畫撰寫：提供<b>鷹架式自主引導</b></li>
+          <li>學習歷程輔助：引導 <b>IMRD</b> 科學寫作結構</li>
+          <li>系統化引導整理，拒絕食譜式研究報告</li>
+        </ul>
+        <div class="out">📎 IMRD：Introduction 引言 → Methods 方法 → Results 結果 → Discussion 討論</div>
+      </div>
+    </div>
+
+    <div class="tool">
+      <div class="top"><div class="num n-blue">11</div><div><div class="cat">生涯引導</div><h3>AI 智慧輔助升學系統</h3></div></div>
+      <div class="body">
+        <p>以學習歷程檔案為核心的 AI 輔助工具，協助志願抉擇與科系連結。</p>
+        <ul>
+          <li>分析歷年落點與志願抉擇</li>
+          <li>協助課程成果、多元表現、自述整理清楚、有反思</li>
+          <li>AI 用於發想、檢核、修辭與模擬審查，<b>核心經驗仍由學生親自判斷改寫</b></li>
+        </ul>
+        <div class="out">📎 產出：可下載 Word 檔的學習歷程草稿與升學規劃</div>
+      </div>
+    </div>
+
+    <div class="tool">
+      <div class="top"><div class="num n-orange">12</div><div><div class="cat">語言支持</div><h3>多功能翻譯工具</h3></div></div>
+      <div class="body">
+        <p>即時翻譯、語音輸入、雙向對話、逐字稿，支援學術文獻閱讀。</p>
+        <ul>
+          <li>句子翻譯 / 多語言 / 連續翻譯 / 語音轉錄</li>
+          <li>即時協助英文<b>學術文獻閱讀</b></li>
+          <li>生涯輔導與國際學習資源的雙向支持</li>
+        </ul>
+        <div class="out">📎 適用：專題研究讀原文、國際交流、跨語溝通</div>
+      </div>
+    </div>
+
+    <div class="tool">
+      <div class="top"><div class="num n-orange">13</div><div><div class="cat">生活小幫手</div><h3>行李打包清單 · 報告計時器</h3></div></div>
+      <div class="body">
+        <p>校外教學、畢旅與口語表達訓練的貼身小工具。</p>
+        <ul>
+          <li><b>行李打包清單</b>：校外教學與畢旅必備</li>
+          <li><b>報告計時器</b>：口語表達訓練好幫手（準備・發表・Q&A）</li>
+        </ul>
+        <div class="out">📎 應用：畢旅前置、班級報告、面試模擬</div>
+      </div>
+    </div>
+
+    <div class="tool">
+      <div class="top"><div class="num n-green">14</div><div><div class="cat">財務素養</div><h3>旅遊記帳與貨幣轉換</h3></div></div>
+      <div class="body">
+        <p>遊學團與校外活動的財務管理工具，兼顧生活教育。</p>
+        <ul>
+          <li>旅遊記帳，分類統計交通／住宿／餐飲／購物</li>
+          <li>即時<b>貨幣轉換</b>（TWD / JPY / USD / EUR…）</li>
+          <li>遊學團財務管理，培養學生金錢觀</li>
+        </ul>
+        <div class="out">📎 應用：遊學團、國際交流、班級旅遊分帳</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="note tip" style="margin-top:26px">
+    <div class="h">🧰 實務資源：Office 範本與 APK 封裝</div>
+    所有工具都<b>隨附座位表、打掃工作、幹部的 Word / PDF 表單</b>，並提供 <b>Android APK 下載安裝</b>；離線網頁與行動版 App 可協同，<b>不受網路限制、隨時離線管理</b>，多端同步、資料備份更安心。
+  </div>
+
+  <h3 class="blk">🛠️ 提示詞範例：搭配各工具一起用</h3>
+  <p class="lead">工具負責運算與輸出，AI 負責把結果變成可用的文字、規則或方案。以下依工具主題各給一組。</p>
+
+  <div class="grid g2">
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">01 幹部・職務說明</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">請幫我為高中班級這 8 個幹部（班長、副班長、學藝、風紀、總務、
+體育、輔導、環保股長）各寫 2 句職務說明，
+第一句講「主要職責」，第二句講「這個職務能培養的能力」，
+語氣正向，讓同學願意承擔。</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">02 座位・編排原則</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">請幫我列一份「高中換座位的原則清單」，
+兼顧視力需求、專注力、同儕互動與公平性，
+並提醒哪些狀況適合鎖定固定座位。
+最後給我一段可以對全班說明換座位規則的短講稿。</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">03 打掃・掃區公約</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">請幫我制定一份「班級掃區公約」，
+內容包含：內掃／外掃／特殊掃區的驗收標準、
+遲到或缺席的補救方式、以及定期輪替的規則。
+用條列式，語氣明確但不嚴厲，適合張貼在教室。</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">04 課堂・分組規則</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">我用計分板做課堂搶答與分組。
+請幫我設計一套「加減分規則」與「分組合作評分標準」，
+讓分數同時反映個人參與與團隊貢獻，避免搭便車，
+並附一句對學生說明規則的話。</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">05 班費・公告與說明</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">請幫我寫一則「班費本學期收支結算」的公告，
+語氣清楚、透明，包含：期初餘額、本期收入、本期支出、
+結餘，以及一句感謝同學配合的話。
+格式適合貼在班級群組，並提醒家長可隨時查閱明細。</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">06 園遊會・企劃與定價</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">我們班校慶園遊會要賣飲品。預算 15000 元、班上 30 人。
+請幫我做一份簡易企劃：建議品項、每份成本與定價、
+預估銷量與淨利（樂觀／預估／保守三情境）、
+以及一張分四時段的人員排班建議表。</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">07 成績・權重試算說明</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">我的成績計算是「平時 40% + 定期 60%」。
+請用一個具體例子（某生平時 85、定期 72）示範總分怎麼算，
+並幫我寫一段給學生與家長看的「成績組成說明」，
+讓大家清楚每一部分的比重與意義。</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">10 自主學習・鷹架引導</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">有位學生想做「校園植物觀察」自主學習計畫，但不知從何下手。
+請用鷹架式提問，一步步引導他釐清：研究問題、假設、
+觀察方法、預計進度與成果形式。
+只給引導問題，不要直接幫他寫完，讓他自己思考。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 平台應用 ============ -->
+<section id="platform">
+  <span class="eyebrow">Platforms & AI</span>
+  <h2 class="sec">平台與 AI 技術應用</h2>
+  <div class="divider"></div>
+  <p class="lead">除了自製工具，導師也能善用現成平台，把訊息、影像、文件與查詢自動化。以下是研習中示範的實用組合。</p>
+
+  <div class="grid g3" style="margin-top:24px">
+    <div class="card">
+      <span class="tag t-green">訊息公告</span>
+      <h3>LINE ＋ Google 教室</h3>
+      <p>LINE 用於學生與家長的即時聯繫；<b>Google 教室</b>公告訊息可分類、可互動，還能出週記作業。</p>
+    </div>
+    <div class="card">
+      <span class="tag t-blue">影像資料</span>
+      <h3>相簿與智慧鏡頭</h3>
+      <p>LINE 相簿、Google Photo 集中管理班級活動影像；<b>Google 智慧鏡頭</b>可辨識影像文字與物件。</p>
+    </div>
+    <div class="card">
+      <span class="tag t-orange">資料存放</span>
+      <h3>Google 硬碟 ＋ Notion</h3>
+      <p>Google 硬碟 PC 版同步班級檔案；<b>Notion 教育版</b>建立班級資料庫，彙整表現、獎懲與出缺席。</p>
+    </div>
+    <div class="card">
+      <span class="tag t-blue">查詢問答</span>
+      <h3>NotebookLM 校規問答</h3>
+      <p>把<b>學生手冊、校規</b>匯入 NotebookLM，變成一個「隨問隨答」的知識庫，處理學生事務時秒查依據。</p>
+    </div>
+    <div class="card">
+      <span class="tag t-green">畫面擷取</span>
+      <h3>GoFullPage 長截圖</h3>
+      <p>Chrome 擴充程式，一鍵把整頁網頁截成單張圖片，方便保存分析結果、繳交作業或製作紀錄。</p>
+    </div>
+    <div class="card">
+      <span class="tag t-orange">視覺辨識</span>
+      <h3>AI 手寫文字辨識</h3>
+      <p>用 AI 視覺模型辨識<b>直式手寫稿</b>（從右到左、上到下），把學生自傳、週記數位化。</p>
+    </div>
+  </div>
+
+  <h3 class="blk">📝 提示詞範例：把平台功能發揮到位</h3>
+
+  <div class="grid g2">
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">手寫辨識・直式稿</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">直式文字辨識，<code>從右到左、上到下</code>辨識手寫文字。
+辨識完成後請直接輸出純文字，保留原本的段落與標點，
+看不清楚的字用「□」標示，不要自行臆測。</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">LINE 公告・家長版</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">請把以下事項改寫成給家長的 LINE 群組公告：
+「本週五校外教學，請帶健保卡、雨具、悠遊卡，07:30 到校」。
+要求：開頭問候、重點分點、結尾請家長回覆「已讀」確認，
+語氣親切有禮，長度適中。</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">Google 教室・週記作業</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">請幫我出一份高中週記作業說明，主題「這週的一個小進步」。
+包含：作業目的、字數建議、三個引導問題、繳交方式，
+語氣鼓勵、降低學生下筆壓力，適合貼在 Google 教室。</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">NotebookLM・校規查詢</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">（已匯入學生手冊）請根據手冊內容回答：
+學生請病假的流程與應繳證明為何？
+請條列步驟，並註明依據的條文或頁碼；
+若手冊沒有明確規定，請直接說明「手冊未載明」，不要臆測。</div>
+    </div>
+  </div>
+
+  <h3 class="blk">📈 成績分析革命：NotebookLM 應用</h3>
+  <p class="lead">把「段考成績 PDF ＋ 學生週記文檔」一起丟進 NotebookLM，讓 AI 做內容理解、關鍵資訊整合與推論生成，產出一份「學習預警分析報告」。</p>
+
+  <div class="flow" style="margin-top:18px">
+    <div class="step"><div class="s">STEP 1 · 輸入</div><b>成績 PDF</b><p>段考成績單、班級排名表、學科成績統計</p></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="s">STEP 2 · 輸入</div><b>週記文檔</b><p>學生週記、學習心得、生活紀錄</p></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="s">STEP 3 · 處理</div><b>NotebookLM</b><p>語言理解、資料關聯、風險預警偵測</p></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="s">STEP 4 · 產出</div><b>分析報告</b><p>弱勢學科、退步名單、綜合輔導建議</p></div>
+  </div>
+
+  <div class="prompt" style="margin-top:20px">
+    <div class="prompt-head"><span class="lbl">NotebookLM・學習預警報告</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+    <div class="ptext">（已匯入去識別化的段考成績與週記）
+請產出一份「班級學習預警報告」，包含：
+1. 全班三大弱勢學科（附平均分）
+2. 較上次段考退步的座號清單與退步幅度
+3. 結合週記內容，指出可能的學習或情緒狀態
+4. 對前三名需關注的座號，各給一句具體輔導建議
+請用表格與條列呈現，語氣客觀、就事論事。</div>
+    <div class="ex">提醒：上傳前務必去識別化，只用座號、不用姓名。</div>
+  </div>
+</section>
+
+<!-- ============ 評語系統 ============ -->
+<section id="comment">
+  <span class="eyebrow">Comment System</span>
+  <h2 class="sec">德行評語：從日常紀錄到期末初稿</h2>
+  <div class="divider"></div>
+  <p class="lead">期末打評語常常是導師最頭痛的工作之一。這套流程把「平時紀錄」與「期末生成」串起來：紙本或 Google 表單先蒐集日常表現，彙整到班級 Notion，再由評語系統與 NotebookLM 產出溫暖、正向、具教育意義的初稿。</p>
+
+  <div class="flow" style="margin-top:20px">
+    <div class="step"><div class="s">日常</div><b>Google 表單 / Excel 自評</b><p>學生自評、社團、獎懲、出缺席線上回傳</p></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="s">彙整</div><b>Notion 行為資料庫</b><p>表現優良、待加強、獎勵紀錄一鍵看板</p></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="s">生成</div><b>評語生成系統</b><p>依特質標籤組裝德行評語初稿</p></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="s">潤飾</div><b>NotebookLM 評語庫</b><p>對照麗山評語表，精細語氣潤飾</p></div>
+  </div>
+
+  <h3 class="blk">🏷️ 德行評語代碼對照（節錄）</h3>
+  <p style="color:var(--ink-soft);margin:0 0 14px;font-size:18px">評語系統以「德性類別 + 評語代碼」為基礎，先組出結構化初稿，再由 AI 潤色。以下為對照表節錄：</p>
+  <div style="overflow-x:auto">
+  <table class="virtue">
+    <thead><tr><th>德性類別</th><th>評語・描述（代碼）</th></tr></thead>
+    <tbody>
+      <tr><td>個性</td><td>110 誠正勤樸　120 內向自律　142 能知自勉</td></tr>
+      <tr><td>性情</td><td>103 稟性善良　127 穩健練達　149 善體人意</td></tr>
+      <tr><td>向學</td><td>303 敦品勵學　307 學習認真　329 勤學多問</td></tr>
+      <tr><td>進取</td><td>404 積極奮勉　410 刻苦自勵　412 循序漸進</td></tr>
+      <tr><td>紀律</td><td>501 循規蹈矩　507 有守有為　517 能知進退　521 自勉自律　522 慎思明辨</td></tr>
+      <tr><td>交友</td><td>602 待人謙和　605 敬師睦友　607 樂群合作　609 謹言慎行　617 能忍讓人</td></tr>
+      <tr><td>服務</td><td>703 熱心助人　706 任勞任怨　708 服務盡責　712 熱心負責　715 勤勉合作</td></tr>
+      <tr><td>擅長</td><td>801 擅長文史　804 擅長演說</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3 class="blk">💬 提示詞範例：一次涵蓋各種學生類型與語氣</h3>
+
+  <div class="grid g2">
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">溫暖鼓勵・領導型</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">請為一位「具領導力、熱心助人、認真負責」的學生，
+撰寫一段 80–120 字的德行評語。
+語氣溫暖鼓勵，先肯定他的帶班貢獻與學習態度，
+再以期待語氣鼓勵他持續發揮影響力。</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">委婉規勸・待加強型</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">請為一位「本性善良但上課易分心、作業偶爾遲交」的學生，
+撰寫一段 80–120 字的德行評語。
+語氣委婉正向，先肯定他的優點與潛力，
+再以溫和方式點出一個可以努力的方向，避免責備字眼。</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">客觀中立・穩定型</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">請為一位「表現穩定、循規蹈矩、默默努力」的學生，
+撰寫一段 80–120 字的德行評語。
+語氣客觀中立、具體，避免空泛套語，
+點出他穩定可靠的特質與一個持續成長的建議。</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">批次生成・依代碼組裝</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">我會提供每位學生的「德性代碼 + 一句特殊表現」。
+請依代碼意涵，為每人各生成一段 80 字德行評語，
+語氣溫暖正向、每段用字不重複、避免罐頭句，
+最後提醒我哪幾段建議再親自確認真實性。</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">評語潤飾・NotebookLM</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">（已匯入德性評語總整理與麗山高中評語對照表）
+請根據學生表現撰寫一段溫暖正向、具教育引導意義的評語，
+語氣親切、具啟發性，字數約 80–120 字，
+先肯定既有優點，再以鼓勵語氣提出一個具體成長方向。</div>
+      <div class="ex">產出示例：「你待人真誠、樂於助人，在團隊中總能帶來正面的影響力。面對挑戰時，展現堅持與勇氣，值得肯定與期待。持續保持這份熱忱，你的未來將更加閃耀！」</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">親師版・給家長的回饋</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">請把這段德行評語，改寫成一段給家長看的學期回饋，
+補充孩子在校的具體表現，並提出 1 個家庭可以配合支持的方向，
+語氣誠懇、正向、像在跟家長面對面聊天，約 150 字。</div>
+    </div>
+  </div>
+
+  <div class="note warn" style="margin-top:20px">
+    <div class="h">⚠️ 使用倫理提醒</div>
+    AI 只負責<b>初稿與潤飾</b>，導師務必逐字核對，確認評語<b>符合該生真實表現</b>、避免套語與過度美化。評語是師生關係的延伸，最終文字應由老師定稿，讓每一句話都真正屬於這個孩子。
+  </div>
+</section>
+
+<!-- ============ 統計方法 ============ -->
+<section id="stat">
+  <span class="eyebrow">Measurement Science</span>
+  <h2 class="sec">統計科學：成績計量診斷方法學</h2>
+  <div class="divider"></div>
+  <p class="lead">成績分析要有說服力，就要有方法學支撐。這套系統結合多維評量與計量統計，用平均數、標準差與信度分析，把「感覺學生退步了」變成「數據顯示落差在哪、該怎麼調整」。</p>
+
+  <div class="grid g3" style="margin-top:22px">
+    <div class="formula">
+      x̄ = (1/n) Σ x<sub>i</sub>
+      <small>平均數：全班表現的中心位置</small>
+    </div>
+    <div class="formula">
+      s = √[ (1/(n−1)) Σ (x<sub>i</sub> − x̄)² ]
+      <small>標準差：分數的離散程度（是否兩極化）</small>
+    </div>
+    <div class="formula">
+      α = (k/(k−1))·(1 − Σσ<sub>i</sub>²/σ<sub>total</sub>²)
+      <small>Cronbach's α：試題信度（測驗一致性）</small>
+    </div>
+  </div>
+
+  <div class="grid g3" style="margin-top:20px">
+    <div class="card"><h3>📊 常態分佈解讀</h3><p>以 μ±1σ（約 68%）、±2σ（約 95%）判斷學生落點，快速找出需要關注的尾端群體。</p></div>
+    <div class="card"><h3>📈 多次考試趨勢</h3><p>把班級平均與個別表現逐次疊圖，看的是「趨勢」而非單次分數，避免被一次失常誤導。</p></div>
+    <div class="card"><h3>🎯 數據驅動決策</h3><p>結合學科成績、學習歷程、態度表現與綜合能力四維指標，精準診斷教學落差與調整策略。</p></div>
+  </div>
+
+  <div class="note info" style="margin-top:22px">
+    <div class="h">🧭 診斷矩陣：把全班分成四群來看</div>
+    用「排名軌跡 × 成績穩定度」把學生分為四群，讓輔導更有方向：
+    <b>🚀 突破黑馬群</b>（單次進步幅度大、部分科目仍有波動）、
+    <b>👑 穩健頂尖群</b>（穩居前段、持續自我突破）、
+    <b>⚠️ 震盪關注群</b>（部分科目雙位數失血、排名衰退，需優先介入）、
+    <b>🌱 潛步成長群</b>（名次未變但總體實質正向轉變、基礎漸紮實）。
+  </div>
+
+  <h3 class="blk">📐 提示詞範例：讓 AI 幫你讀懂數據</h3>
+
+  <div class="grid g2">
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">五標統計・白話解讀</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">我班數學這次段考：平均 62、標準差 18、最高 98、最低 21。
+請用白話幫我解讀這組數據代表什麼（集中或分散、是否兩極化），
+並給我兩個可行的教學調整建議。</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">四象限・分群輔導</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">我會給你去識別化的多次段考成績（座號＋各次總分）。
+請用「排名軌跡 × 成績穩定度」把學生分成四群
+（突破黑馬、穩健頂尖、震盪關注、潛步成長），
+列出各群座號，並對「震盪關注群」給優先輔導建議。</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">單科崩盤・增減分析</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">某生兩次段考各科變化：數學 +7、物理 +6、生物 +1、
+國文 −4、地科 −9、化學 −18。
+請幫我算出總增減，指出「進步被哪一科抵銷」，
+並用一句話點出他最該優先處理的科目。</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">趨勢判讀・是否需介入</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">某生近五次段考總分：410、398、372、365、340。
+請判讀這是偶發波動還是持續下滑趨勢，
+估算下滑的大致速度，並建議我是否該安排個別談話、何時談。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 實務範例 ============ -->
+<section id="practice">
+  <span class="eyebrow">Practice & Tips</span>
+  <h2 class="sec">導師實務：一學年的數位工作節奏</h2>
+  <div class="divider"></div>
+  <p class="lead">工具再多，關鍵是「什麼時候用」。以下以班級經營專家與現場導師的視角，把工具箱編成一份可直接套用的學年行事節奏，並補充實用提示詞。</p>
+
+  <div class="grid g2" style="margin-top:24px">
+    <div class="card" style="border-top:4px solid var(--orange)">
+      <h3>📅 開學週（第 1–2 週）</h3>
+      <ul style="margin:8px 0 0;padding-left:20px;color:var(--ink-soft);font-size:18px">
+        <li>建立<b>學生資料管理系統</b>全班名冊，匯出 JSON 備份</li>
+        <li>用<b>座位分配工具</b>編第一輪座位，鎖定視力需求座位</li>
+        <li>用<b>幹部工具</b>抽籤／指派幹部與小老師，輸出名冊</li>
+        <li>用<b>打掃抽籤系統</b>建立掃區與輪替表</li>
+        <li>把<b>學生手冊、校規</b>丟進 NotebookLM 備查</li>
+      </ul>
+    </div>
+    <div class="card" style="border-top:4px solid var(--green)">
+      <h3>🗓️ 平時（每週 / 每月）</h3>
+      <ul style="margin:8px 0 0;padding-left:20px;color:var(--ink-soft);font-size:18px">
+        <li>Google 教室出<b>週記作業</b>，蒐集學習與生活狀態</li>
+        <li><b>課堂計分板</b>累積形成性評量與參與紀錄</li>
+        <li><b>班費記帳程式</b>即時登錄收支，帳目公開</li>
+        <li>Google 表單回收<b>日常表現</b>，彙整到 Notion</li>
+        <li>打掃掃區<b>定期輪替</b>，保存歷史紀錄</li>
+      </ul>
+    </div>
+    <div class="card" style="border-top:4px solid var(--blue)">
+      <h3>📝 段考後</h3>
+      <ul style="margin:8px 0 0;padding-left:20px;color:var(--ink-soft);font-size:18px">
+        <li>校務系統下載成績練習檔，匯入<b>成績管理系統</b></li>
+        <li>用<b>成績分析</b>看直方圖、雷達圖與退步名單</li>
+        <li>NotebookLM 結合週記，產出<b>個案輔導建議</b></li>
+        <li>對「震盪關注群」安排一對一談話</li>
+      </ul>
+    </div>
+    <div class="card" style="border-top:4px solid var(--orange)">
+      <h3>🎉 學期末 / 活動期</h3>
+      <ul style="margin:8px 0 0;padding-left:20px;color:var(--ink-soft);font-size:18px">
+        <li>校慶用<b>園遊會攤位規劃</b>做分工與盈虧模擬</li>
+        <li>期末用<b>評語生成系統</b>＋Notion 表現產初稿</li>
+        <li>NotebookLM 潤飾評語，導師逐字定稿</li>
+        <li>畢旅／校外教學用<b>行李清單、旅遊記帳</b></li>
+        <li>學期結束匯出全班 JSON，完整資料留存</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 class="blk">🧠 更多好用的導師提示詞</h3>
+
+  <div class="grid g2">
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">親師溝通・訊息潤稿</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">我要通知家長「本週五校外教學，請準備健保卡與雨具」。
+請幫我改寫成語氣親切、條列清楚的家長群組公告，
+開頭問候、中間重點分點、結尾提醒回覆確認。</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">情緒家長・回應草稿</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">一位家長情緒較激動，質疑我對孩子的座位安排不公平。
+請幫我擬一段回覆，先同理情緒、再說明座位安排的原則與考量，
+最後邀請家長約時間當面談，語氣誠懇、堅定、不卑不亢。</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">學生個案・輔導對話</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">某生近兩次段考數學 63→70 進步，但化學 76→58 大幅退步。
+請以正向、不責備的導師口吻，幫我擬 3 個開場問句，
+引導他自己說出化學退步的原因，並一起找出下一步。</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">班會・活動設計</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">幫我設計一節 45 分鐘的班會，主題「班級公約與掃區責任」，
+要有暖身活動、小組討論、公約表決三段，
+並產出一張可張貼的班級公約海報大綱。</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">請假關懷・慰問訊息</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">班上一位同學生病請假三天，請幫我寫一則簡短的關懷訊息，
+內容溫暖、不造成壓力，附上一句「課業不用擔心、回來我們一起補」，
+並提醒他好好休息、有需要隨時找老師。</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">生涯輔導・選組談話</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">一位高一學生在「二類（理工）」與「三類（醫農）」之間猶豫。
+請幫我準備一份選組諮詢談話架構：先了解興趣與特質、
+再分析兩條路的課程與出路差異、最後引導他自己做決定，
+只提供引導問題與資訊，不替他決定。</div>
+    </div>
+  </div>
+
+  <div class="note warn" style="margin-top:22px">
+    <div class="h">🔐 個資與倫理紅線</div>
+    使用任何雲端 AI（如需上傳資料）時，<b>務必去識別化</b>：以座號代替姓名、移除身分證字號與聯絡方式。涉及學生敏感資訊的分析，<b>優先使用本機工具</b>；需要雲端協助時，只上傳「去識別化後的統計數據」，不上傳可指認個人的原始檔案。
+  </div>
+</section>
+
+<!-- ============ 結語 ============ -->
+<section id="ending">
+  <span class="eyebrow">Closing</span>
+  <h2 class="sec">結語：AI 智慧創作與生命幸福</h2>
+  <div class="divider"></div>
+  <p class="lead">研習的最後，回到教育的初衷。林老師以一首藏頭七言絕句作結——把樹蛙、蜓蜥、蛺蝶、楓葉寫進詩裡，也把生態之美與生命教育寫進班級經營的精神裡。</p>
+
+  <div class="poem" style="margin-top:24px">
+    <div class="verse">
+      樹蛙<span>升</span>歌夜色<span>麗</span>，<br>
+      蜓蜥<span>華</span>行映青<span>山</span>。<br>
+      蛺蝶<span>偉</span>姿飛影<span>高</span>，<br>
+      紅葉<span>楓</span>情秋意<span>中</span>。
+    </div>
+    <div class="motto">Love biology　·　Love yourself　·　Love nature</div>
+  </div>
+
+  <h3 class="blk">🎨 提示詞範例：帶學生玩 AI 創作</h3>
+
+  <div class="grid g2">
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">藏頭詩・條件創作</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">寫一首包含<code>樹蛙、蜓蜥、蛺蝶、楓葉</code>的七言絕句，
+只要四句、每句七個字。
+第一句要有「升」字且結尾是「麗」；第二句要有「華」字且結尾是「山」；
+第三句要有「偉」字且結尾是「高」；第四句要有「楓」字且結尾是「中」。</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">詩意賞析・生態連結</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">請詳細解釋這首詩每一句的意義、創作境界，
+並描述詩中動物（樹蛙、蜥蜴、蝴蝶）的習性與詩句的關聯：
+「樹蛙升歌夜色麗，蜓蜥華行映青山。蛺蝶偉姿飛影高，紅葉楓情秋意中。」</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">AI 生圖・國畫意境</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">依照以下詩詞意境，生成一幅中國書法山水風格國畫，
+畫中要有一隻樹蛙在唱歌、一隻蜥蜴在爬行、一隻蝴蝶在向上飛：
+「樹蛙升歌夜色麗，蜥蜴華行映青山。蛺蝶偉姿飛影高，紅葉楓情秋意中。」</div>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span class="lbl">班級應用・專屬創作</span><button class="copy-btn" onclick="copyPrompt(this)">📋 複製</button></div>
+      <div class="ptext">請以我們班的班級精神「探尋繽紛美妙的生物、編織幸福圓滿的生命」
+為主題，寫一段 4 句的班級勉勵短詩，
+用字正向、有畫面感，適合印在班服或畢業紀念冊上。</div>
+    </div>
+  </div>
+
+  <div class="note tip" style="margin-top:20px">
+    <div class="h">🌱 核心精神</div>
+    工具的盡頭是人。AI 幫導師省下的每一分鐘，都應該還給學生——多一次談話、多一點觀察、多一份理解。<b>科技增強效率，關懷成就教育</b>，這正是「智能增強（IA）」的真義。
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div><b>AI 協助導師處理班級事務 · 導師數位工具箱</b></div>
+  <div class="mrow">主講／製作：林獻升 老師　|　臺北市立麗山高級中學　生物科・班級導師</div>
+  <div class="mrow">聯絡信箱：frog@lssh.tp.edu.tw</div>
+  <div class="mrow" style="margin-top:14px;color:#8ea3c2;font-size:15px">本頁為研習內容之數位可視化整理，適合課堂播放與線上閱讀。工具皆於本機運作、守護學生個資。</div>
+</footer>
+
+<script>
+  function copyPrompt(btn){
+    var box = btn.closest('.prompt').querySelector('.ptext');
+    var text = box ? box.innerText.replace(/ /g,' ') : '';
+    function done(){
+      var old = btn.innerHTML;
+      btn.innerHTML = '✓ 已複製';
+      btn.classList.add('done');
+      setTimeout(function(){ btn.innerHTML = old; btn.classList.remove('done'); }, 1600);
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(function(){ fallback(); });
+    } else { fallback(); }
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      try{ document.execCommand('copy'); }catch(e){}
+      document.body.removeChild(ta); done();
+    }
+  }
+</script>
+
+</body>
+</html>
