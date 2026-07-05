@@ -1,908 +1,481 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI 輔助班級事務小幫手</title>
+<title>AI 輔助班級事務</title>
 <style>
-  :root {
-    --primary: #1a6fa8;
-    --primary-dark: #124e78;
-    --accent: #e8f4fd;
-    --text: #1e2d3d;
-    --text-light: #5a6a7a;
-    --border: #d0e4f0;
-    --bg: #f5f9fd;
-    --white: #ffffff;
-    --shadow: 0 4px 24px rgba(26,111,168,0.10);
-    --radius: 14px;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* ── Header ── */
-  header {
-    background: linear-gradient(135deg, #124e78 0%, #1a6fa8 60%, #2596d4 100%);
-    color: white;
-    padding: 18px 36px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 2px 16px rgba(18,78,120,0.25);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-
-  .header-left h1 {
-    font-size: 1.55rem;
-    font-weight: 700;
-    letter-spacing: 0.03em;
-    line-height: 1.2;
-  }
-
-  .header-left .subtitle {
-    font-size: 0.82rem;
-    opacity: 0.78;
-    margin-top: 3px;
-    letter-spacing: 0.04em;
-  }
-
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .btn-play {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(255,255,255,0.18);
-    border: 1.5px solid rgba(255,255,255,0.5);
-    color: white;
-    padding: 9px 20px;
-    border-radius: 30px;
-    cursor: pointer;
-    font-size: 0.92rem;
-    font-weight: 600;
-    letter-spacing: 0.03em;
-    transition: background 0.2s, transform 0.15s;
-    backdrop-filter: blur(4px);
-  }
-  .btn-play:hover { background: rgba(255,255,255,0.30); transform: scale(1.04); }
-  .btn-play svg { width: 18px; height: 18px; flex-shrink: 0; }
-
-  /* ── Main Layout ── */
-  main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 28px 32px 24px;
-    gap: 16px;
-    max-width: 1400px;
-    width: 100%;
-    margin: 0 auto;
-  }
-
-  /* Progress bar */
-  .progress-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
-  .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #1a6fa8, #2596d4);
-    border-radius: 2px;
-    transition: width 0.35s ease;
-  }
-
-  /* ── Slide View ── */
-  .slide-view { display: flex; gap: 28px; flex: 1; min-height: 0; }
-
-  .panel-image {
-    flex: 0 0 58%;
-    background: var(--white);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    border: 1.5px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    min-height: 460px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .panel-image img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    border-radius: 6px;
-    display: block;
-    transition: opacity 0.25s ease;
-  }
-
-  .slide-badge {
-    position: absolute;
-    top: 14px;
-    left: 14px;
-    background: var(--primary);
-    color: white;
-    font-size: 0.72rem;
-    font-weight: 700;
-    padding: 3px 10px;
-    border-radius: 20px;
-    letter-spacing: 0.06em;
-    opacity: 0.88;
-  }
-
-  .panel-speech {
-    flex: 1;
-    background: var(--white);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    border: 1.5px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .speech-header {
-    padding: 16px 22px 14px;
-    border-bottom: 1.5px solid var(--accent);
-    background: var(--accent);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .speech-header .icon {
-    width: 32px; height: 32px;
-    background: var(--primary);
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-  .speech-header .icon svg { width: 17px; height: 17px; }
-
-  .speech-header h2 {
-    font-size: 1.0rem;
-    font-weight: 700;
-    color: var(--primary-dark);
-  }
-
-  .speech-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 26px 28px;
-    line-height: 2.05;
-    font-size: 1.18rem;
-    color: var(--text);
-    letter-spacing: 0.03em;
-  }
-  .speech-body::-webkit-scrollbar { width: 6px; }
-  .speech-body::-webkit-scrollbar-track { background: transparent; }
-  .speech-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-  /* ── Navigation ── */
-  .nav-bar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    padding: 4px 0;
-  }
-
-  .btn-nav {
-    display: flex; align-items: center; gap: 6px;
-    background: var(--white);
-    border: 1.5px solid var(--border);
-    color: var(--primary);
-    padding: 10px 22px;
-    border-radius: 30px;
-    cursor: pointer;
-    font-size: 0.93rem;
-    font-weight: 600;
-    transition: all 0.18s;
-    box-shadow: 0 2px 8px rgba(26,111,168,0.07);
-  }
-  .btn-nav:hover:not(:disabled) {
-    background: var(--primary); color: white;
-    border-color: var(--primary);
-    box-shadow: 0 4px 14px rgba(26,111,168,0.22);
-    transform: translateY(-1px);
-  }
-  .btn-nav:disabled { opacity: 0.35; cursor: not-allowed; }
-  .btn-nav svg { width: 16px; height: 16px; }
-
-  .slide-counter {
-    font-size: 0.98rem; font-weight: 700;
-    color: var(--primary-dark);
-    min-width: 90px; text-align: center;
-    letter-spacing: 0.05em;
-  }
-
-  /* ── Auto-play Bar (main) ── */
-  .autoplay-bar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-    padding: 10px 20px;
-    background: var(--white);
-    border: 1.5px solid var(--border);
-    border-radius: 50px;
-    box-shadow: var(--shadow);
-    width: fit-content;
-    margin: 0 auto;
-  }
-
-  /* Countdown ring */
-  .ring-wrap {
-    position: relative;
-    width: 40px; height: 40px;
-    flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .ring-svg { width: 40px; height: 40px; }
-  .ring-count {
-    position: absolute;
-    font-size: 0.65rem;
-    font-weight: 800;
-    color: var(--primary-dark);
-    line-height: 1;
-    pointer-events: none;
-  }
-
-  .btn-auto {
-    display: flex; align-items: center; gap: 7px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    padding: 9px 18px;
-    border-radius: 24px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 700;
-    letter-spacing: 0.03em;
-    transition: background 0.18s, transform 0.12s, box-shadow 0.18s;
-    box-shadow: 0 3px 10px rgba(26,111,168,0.25);
-    white-space: nowrap;
-  }
-  .btn-auto:hover { background: var(--primary-dark); transform: scale(1.04); }
-  .btn-auto.paused { background: #e67e22; box-shadow: 0 3px 10px rgba(230,126,34,0.30); }
-  .btn-auto.paused:hover { background: #ca6f1e; }
-  .btn-auto svg { width: 15px; height: 15px; flex-shrink: 0; }
-
-  .auto-seconds-wrap {
-    display: flex; align-items: center; gap: 5px;
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: var(--text-light);
-    white-space: nowrap;
-  }
-
-  .auto-input {
-    width: 50px;
-    padding: 5px 8px;
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: var(--primary-dark);
-    text-align: center;
-    outline: none;
-    transition: border-color 0.15s;
-    background: var(--bg);
-  }
-  .auto-input:focus { border-color: var(--primary); }
-  .auto-input::-webkit-inner-spin-button { opacity: 0.5; }
-
-  /* ── Dot Navigation ── */
-  .dot-nav {
-    display: flex; justify-content: center;
-    gap: 6px; flex-wrap: wrap;
-    padding: 4px 20px;
-    max-width: 700px; margin: 0 auto;
-  }
-  .dot {
-    width: 9px; height: 9px;
-    border-radius: 50%; background: var(--border);
-    cursor: pointer; transition: all 0.2s;
-    border: none; padding: 0; flex-shrink: 0;
-  }
-  .dot:hover { background: #8bbdd9; transform: scale(1.2); }
-  .dot.active {
-    background: var(--primary); transform: scale(1.3);
-    box-shadow: 0 0 0 3px rgba(26,111,168,0.2);
-  }
-
-  /* ── Footer ── */
-  footer {
-    text-align: center; padding: 14px;
-    font-size: 0.78rem; color: var(--text-light);
-    border-top: 1px solid var(--border);
-    background: var(--white);
-  }
-
-  /* ── Fullscreen Overlay ── */
-  .fullscreen-overlay {
-    display: none;
-    position: fixed; inset: 0;
-    background: #0a0d12;
-    z-index: 1000;
-    flex-direction: column;
-    align-items: center; justify-content: center;
-  }
-  .fullscreen-overlay.active { display: flex; }
-
-  .fs-image-wrap {
-    flex: 1;
-    display: flex; align-items: center; justify-content: center;
-    width: 100%;
-    padding: 20px 80px;
-    position: relative;
-  }
-
-  .fs-image-wrap img {
-    max-width: 100%; max-height: 100%;
-    object-fit: contain;
-    border-radius: 8px;
-    box-shadow: 0 8px 60px rgba(0,0,0,0.5);
-    transition: opacity 0.25s;
-  }
-
-  .fs-arrow {
-    position: absolute; top: 50%; transform: translateY(-50%);
-    background: rgba(255,255,255,0.10);
-    border: 1.5px solid rgba(255,255,255,0.25);
-    color: white; width: 54px; height: 54px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.15s;
-    backdrop-filter: blur(6px);
-  }
-  .fs-arrow:hover { background: rgba(255,255,255,0.22); transform: translateY(-50%) scale(1.08); }
-  .fs-arrow:disabled { opacity: 0.2; cursor: not-allowed; }
-  .fs-arrow.left { left: 18px; }
-  .fs-arrow.right { right: 18px; }
-  .fs-arrow svg { width: 22px; height: 22px; }
-
-  /* Fullscreen top bar */
-  .fs-bar {
-    width: 100%;
-    padding: 12px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    background: rgba(0,0,0,0.50);
-    backdrop-filter: blur(8px);
-  }
-
-  .fs-title {
-    color: rgba(255,255,255,0.75);
-    font-size: 0.88rem; font-weight: 600;
-    letter-spacing: 0.05em;
-    flex-shrink: 0;
-  }
-
-  .fs-counter {
-    color: white; font-size: 0.95rem; font-weight: 700;
-    letter-spacing: 0.08em; flex-shrink: 0;
-  }
-
-  /* Fullscreen auto-play controls */
-  .fs-auto-controls {
-    display: flex; align-items: center; gap: 10px;
-    flex: 1; justify-content: center;
-  }
-
-  .ring-wrap-fs {
-    position: relative;
-    width: 34px; height: 34px;
-    flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .ring-svg-fs { width: 34px; height: 34px; }
-  .ring-count-fs {
-    position: absolute;
-    font-size: 0.58rem; font-weight: 800;
-    color: white; line-height: 1;
-    pointer-events: none;
-  }
-
-  .btn-auto-fs {
-    display: flex; align-items: center; gap: 6px;
-    background: rgba(26,111,168,0.7);
-    color: white;
-    border: 1px solid rgba(37,150,212,0.6);
-    padding: 7px 14px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 0.82rem; font-weight: 700;
-    transition: background 0.18s, transform 0.12s;
-    white-space: nowrap;
-    backdrop-filter: blur(4px);
-  }
-  .btn-auto-fs:hover { background: rgba(26,111,168,0.9); transform: scale(1.04); }
-  .btn-auto-fs.paused { background: rgba(230,126,34,0.7); border-color: rgba(230,126,34,0.6); }
-  .btn-auto-fs.paused:hover { background: rgba(202,111,30,0.9); }
-  .btn-auto-fs svg { width: 13px; height: 13px; flex-shrink: 0; }
-
-  .auto-input-fs {
-    width: 44px; padding: 4px 6px;
-    border: 1px solid rgba(255,255,255,0.3);
-    border-radius: 7px;
-    font-size: 0.85rem; font-weight: 700;
-    color: white; text-align: center;
-    background: rgba(255,255,255,0.12);
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  .auto-input-fs:focus { border-color: rgba(37,150,212,0.8); }
-  .auto-input-fs::-webkit-inner-spin-button { opacity: 0.4; }
-
-  .auto-sec-label-fs {
-    color: rgba(255,255,255,0.65);
-    font-size: 0.8rem; font-weight: 600;
-    white-space: nowrap;
-  }
-
-  .fs-close {
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.3);
-    color: white; padding: 7px 14px;
-    border-radius: 20px; cursor: pointer;
-    font-size: 0.82rem; font-weight: 600;
-    display: flex; align-items: center; gap: 5px;
-    transition: background 0.2s;
-    flex-shrink: 0;
-  }
-  .fs-close:hover { background: rgba(220,50,50,0.45); border-color: rgba(220,50,50,0.7); }
-
-  .fs-progress {
-    position: absolute; bottom: 0; left: 0;
-    height: 3px; background: var(--primary);
-    transition: width 0.1s linear;
-  }
-
-  /* Fade animation */
-  .fade-out { opacity: 0 !important; }
-
-  /* Responsive */
-  @media (max-width: 900px) {
-    .slide-view { flex-direction: column; }
-    .panel-image { flex: none; min-height: 260px; }
-    header { padding: 14px 18px; }
-    main { padding: 16px 14px; }
-    .header-left h1 { font-size: 1.15rem; }
-    .fs-title { display: none; }
-  }
+:root{
+  --bg:#f4f5f7; --panel:#ffffff; --text:#1a1a1a; --sub:#4a4a4a;
+  --accent:#2563eb; --accent2:#1d4ed8; --border:#e2e5ea; --shadow:rgba(0,0,0,.10);
+  --barbg:#ffffff; --thumbbg:#eceef2; --thumbactive:#2563eb;
+}
+html[data-theme="dark"]{
+  --bg:#0d0f14; --panel:#161a22; --text:#f3f4f6; --sub:#c2c7d0;
+  --accent:#60a5fa; --accent2:#3b82f6; --border:#2a2f3a; --shadow:rgba(0,0,0,.5);
+  --barbg:#12151c; --thumbbg:#1f2430; --thumbactive:#60a5fa;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:"PingFang TC","Microsoft JhengHei","Noto Sans TC",system-ui,sans-serif;
+  background:var(--bg); color:var(--text);
+  height:100vh; display:flex; flex-direction:column; overflow:hidden;
+  transition:background .3s,color .3s;
+}
+/* ---- Top bar ---- */
+header{
+  display:flex; align-items:center; gap:14px; padding:12px 20px;
+  background:var(--barbg); border-bottom:1px solid var(--border);
+  box-shadow:0 2px 10px var(--shadow); z-index:20; flex-wrap:wrap;
+}
+.brand{display:flex;align-items:center;gap:12px;margin-right:auto}
+.logo{
+  width:40px;height:40px;border-radius:11px;flex:none;
+  background:linear-gradient(135deg,#2563eb,#7c3aed);
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+}
+h1{font-size:22px;font-weight:800;letter-spacing:.5px;line-height:1.1}
+.subttl{font-size:12px;color:var(--sub);font-weight:500}
+.controls{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.btn{
+  border:1px solid var(--border); background:var(--panel); color:var(--text);
+  padding:9px 15px; border-radius:10px; font-size:14px; font-weight:600;
+  cursor:pointer; display:inline-flex; align-items:center; gap:7px;
+  transition:transform .12s,background .2s,border-color .2s;
+}
+.btn:hover{transform:translateY(-1px);border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.sec-input{
+  display:flex;align-items:center;gap:6px;font-size:13px;color:var(--sub);
+  background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:6px 11px;
+}
+.sec-input input{
+  width:52px;border:none;background:transparent;color:var(--text);
+  font-size:15px;font-weight:700;text-align:center;outline:none;
+}
+.chk{
+  display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--sub);
+  background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:7px 12px;cursor:pointer;user-select:none;
+}
+.chk input{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
+.sec-input select{
+  border:none;background:transparent;color:var(--text);
+  font-size:13px;font-weight:700;outline:none;cursor:pointer;max-width:170px;
+}
+.sec-input select option{color:#111}
+/* ---- Main split ---- */
+main{flex:1;display:flex;min-height:0;position:relative}
+.slide-pane{
+  flex:0 0 66%; max-width:66%; background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  padding:26px; position:relative; overflow:hidden;
+}
+.slide-pane img{
+  max-width:100%;max-height:100%;object-fit:contain;
+  border-radius:12px; box-shadow:0 10px 34px var(--shadow);
+  background:#fff;
+}
+.text-pane{
+  flex:1; min-width:0; background:var(--panel); border-left:1px solid var(--border);
+  padding:24px 26px; overflow-y:auto; display:flex;flex-direction:column;
+}
+.pagechip{
+  align-self:flex-start; font-size:12px; font-weight:700; color:#fff;
+  background:var(--accent); padding:3px 12px; border-radius:20px; margin-bottom:12px;
+}
+.text-pane h2{
+  font-size:22px; font-weight:800; line-height:1.3; margin-bottom:14px;
+  color:var(--text); border-bottom:3px solid var(--accent); padding-bottom:11px;
+}
+.text-pane p{
+  font-size:16px; line-height:1.7; color:var(--sub); margin-bottom:13px;
+  letter-spacing:.2px;
+}
+.text-pane p:last-child{margin-bottom:0}
+/* Nav arrows over slide */
+.nav-arrow{
+  position:absolute; top:50%; transform:translateY(-50%);
+  width:48px;height:48px;border-radius:50%;border:none; cursor:pointer;
+  background:rgba(37,99,235,.85); color:#fff; font-size:24px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 14px rgba(0,0,0,.3); transition:background .2s,transform .12s; z-index:6;
+}
+.nav-arrow:hover{background:var(--accent2);transform:translateY(-50%) scale(1.08)}
+.nav-arrow.prev{left:16px}
+.nav-arrow.next{right:16px}
+/* ---- Thumbnail strip ---- */
+.filmstrip{
+  background:var(--barbg); border-top:1px solid var(--border);
+  padding:9px 12px; display:flex; align-items:center; gap:10px; z-index:15;
+}
+.strip-scroll{
+  display:flex; gap:8px; overflow-x:auto; overflow-y:hidden; padding:3px 2px 7px;
+  scroll-behavior:smooth; flex:1;
+}
+.strip-scroll::-webkit-scrollbar{height:8px}
+.strip-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.thumb{
+  flex:none; width:118px; height:67px; border-radius:7px; cursor:pointer;
+  border:3px solid transparent; background:var(--thumbbg); position:relative;
+  overflow:hidden; transition:border-color .15s,transform .12s;
+}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb:hover{transform:translateY(-2px)}
+.thumb.active{border-color:var(--thumbactive)}
+.thumb .tn{
+  position:absolute;left:0;bottom:0;background:rgba(0,0,0,.62);color:#fff;
+  font-size:11px;font-weight:700;padding:1px 6px;border-top-right-radius:6px;
+}
+.jump{
+  display:flex;align-items:center;gap:7px;font-size:13px;color:var(--sub);flex:none;
+}
+.jump input{
+  width:56px;padding:6px;border-radius:8px;border:1px solid var(--border);
+  background:var(--panel);color:var(--text);text-align:center;font-size:14px;font-weight:700;
+}
+/* ---- Fullscreen presentation ---- */
+#fs{
+  position:fixed;inset:0;background:#000;z-index:100;display:none;
+  align-items:center;justify-content:center;
+}
+#fs.show{display:flex}
+#fs img{max-width:100%;max-height:100%;object-fit:contain}
+.fs-ui{
+  position:fixed;top:18px;right:18px;display:flex;gap:10px;align-items:center;
+  z-index:110; opacity:.25; transition:opacity .25s;
+}
+#fs:hover .fs-ui{opacity:1}
+.fs-btn{
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);color:#fff;
+  padding:9px 14px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;
+  backdrop-filter:blur(6px);
+}
+.fs-btn:hover{background:rgba(255,255,255,.28)}
+.fs-count{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  color:#fff;background:rgba(0,0,0,.5);padding:6px 18px;border-radius:20px;
+  font-size:15px;font-weight:700;z-index:110;opacity:.3;transition:opacity .25s;
+}
+#fs:hover .fs-count{opacity:1}
+.fs-arrow{
+  position:fixed;top:50%;transform:translateY(-50%);width:56px;height:56px;border-radius:50%;
+  background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.25);color:#fff;
+  font-size:28px;cursor:pointer;z-index:110;opacity:.2;transition:opacity .25s;
+  display:flex;align-items:center;justify-content:center;
+}
+#fs:hover .fs-arrow{opacity:.85}
+.fs-arrow.p{left:22px}.fs-arrow.n{right:22px}
+/* ---- Footer ---- */
+footer{
+  background:var(--barbg);border-top:1px solid var(--border);
+  text-align:center;padding:8px;font-size:13px;color:var(--sub);font-weight:600;letter-spacing:.5px;
+}
+footer b{color:var(--accent);font-weight:800}
+/* ---- Responsive ---- */
+@media(max-width:860px){
+  main{flex-direction:column}
+  .slide-pane{flex:0 0 52%;max-width:100%;padding:14px}
+  .text-pane{border-left:none;border-top:1px solid var(--border);padding:16px}
+  .text-pane h2{font-size:19px}
+  .text-pane p{font-size:15px;line-height:1.65}
+  h1{font-size:18px}
+  .thumb{width:92px;height:52px}
+}
+.playing-badge{
+  position:absolute;top:16px;left:16px;background:rgba(37,99,235,.9);color:#fff;
+  padding:5px 13px;border-radius:20px;font-size:13px;font-weight:700;z-index:6;display:none;
+}
+.playing-badge.show{display:block}
 </style>
 </head>
-<body>
-
-<!-- ── Header ── -->
+<body data-theme="light">
 <header>
-  <div class="header-left">
-    <h1>🤖 AI 輔助班級事務小幫手</h1>
-    <div class="subtitle">臺北市立麗山高中　林獻升老師　導師知能研習</div>
+  <div class="brand">
+    <div class="logo">✈️</div>
+    <div>
+      <h1>AI 輔助班級事務</h1>
+      <div class="subttl">研習教學簡報 · 圖文對照瀏覽</div>
+    </div>
   </div>
-  <div class="header-right">
-    <button class="btn-play" onclick="openFullscreen()">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-      全螢幕播放
-    </button>
+  <div class="controls">
+    <div class="sec-input" title="設定自動播放秒數">
+      <span>秒數</span><input id="secIn" type="number" min="1" max="120" value="8"><span>秒</span>
+    </div>
+    <button class="btn" id="autoBtn">▶ 自動播放</button>
+    <label class="chk" title="開啟後，自動播放會唸完整頁旁白才換頁；關閉則依上方秒數換頁">
+      <input type="checkbox" id="waitSpeak" checked> 朗讀完才換頁
+    </label>
+    <div class="sec-input" title="選擇朗讀語音（清單依你電腦已安裝的語音而定，建議挑「Google」或加強版語音最自然）">
+      <span>語音</span><select id="voiceSel"></select>
+    </div>
+    <div class="sec-input" title="設定朗讀語速">
+      <span>語速</span><input id="rateIn" type="number" min="0.5" max="2" step="0.05" value="0.95"><span>×</span>
+    </div>
+    <div class="sec-input" title="設定音調高低（1 為原音，低一點較沉穩、高一點較活潑）">
+      <span>音調</span><input id="pitchIn" type="number" min="0.5" max="1.5" step="0.05" value="1.0"><span>♪</span>
+    </div>
+    <button class="btn" id="speakBtn">🔊 朗讀旁白</button>
+    <button class="btn primary" id="fsBtn">⛶ 全螢幕播放</button>
+    <button class="btn" id="themeBtn">🌙 深色</button>
   </div>
 </header>
 
-<!-- ── Main ── -->
 <main>
-  <!-- Progress -->
-  <div class="progress-bar">
-    <div class="progress-fill" id="progressFill" style="width: 4.5%"></div>
-  </div>
-
-  <!-- Slide View -->
-  <div class="slide-view">
-    <div class="panel-image">
-      <div class="slide-badge" id="slideBadge">SLIDE 01</div>
-      <img id="slideImg" src="origin_image/slide_01.png" alt="簡報第 1 頁">
-    </div>
-
-    <div class="panel-speech">
-      <div class="speech-header">
-        <div class="icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-          </svg>
-        </div>
-        <h2 id="speechTitle">講者說明 ── 第 1 頁</h2>
-      </div>
-      <div class="speech-body" id="speechBody"></div>
-    </div>
-  </div>
-
-  <!-- Navigation -->
-  <div class="nav-bar">
-    <button class="btn-nav" id="btnPrev" onclick="manualNavigate(-1)" disabled>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-      上一頁
-    </button>
-    <span class="slide-counter" id="slideCounter">1 / 22</span>
-    <button class="btn-nav" id="btnNext" onclick="manualNavigate(1)">
-      下一頁
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-    </button>
-  </div>
-
-  <!-- Auto-play Bar (main view) -->
-  <div class="autoplay-bar">
-    <!-- Countdown Ring -->
-    <div class="ring-wrap">
-      <svg class="ring-svg" viewBox="0 0 36 36">
-        <circle cx="18" cy="18" r="15" fill="none" stroke="var(--border)" stroke-width="3.5"/>
-        <circle id="mainRing" cx="18" cy="18" r="15" fill="none"
-          stroke="var(--primary)" stroke-width="3.5"
-          stroke-dasharray="94.25" stroke-dashoffset="94.25"
-          stroke-linecap="round" transform="rotate(-90 18 18)"/>
-      </svg>
-      <span class="ring-count" id="mainRingCount"></span>
-    </div>
-    <!-- Toggle button -->
-    <button class="btn-auto" id="btnAutoMain" onclick="toggleAutoPlay()">
-      <svg id="mainPlayIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-      <svg id="mainPauseIcon" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
-      <span id="mainBtnLabel">自動播放</span>
-    </button>
-    <!-- Seconds input -->
-    <div class="auto-seconds-wrap">
-      每
-      <input type="number" id="mainSeconds" value="5" min="1" max="99"
-        class="auto-input" oninput="syncSeconds('main')">
-      秒換頁
-    </div>
-  </div>
-
-  <!-- Dot Nav -->
-  <div class="dot-nav" id="dotNav"></div>
+  <section class="slide-pane">
+    <div class="playing-badge" id="badge">自動播放中…</div>
+    <button class="nav-arrow prev" id="prev">‹</button>
+    <img id="mainImg" src="" alt="投影片">
+    <button class="nav-arrow next" id="next">›</button>
+  </section>
+  <section class="text-pane" id="textPane">
+    <span class="pagechip" id="chip">第 1 / 70 頁</span>
+    <h2 id="title"></h2>
+    <div id="body"></div>
+  </section>
 </main>
 
-<!-- ── Footer ── -->
-<footer>
-  臺北市立麗山高中 林獻升老師　|　AI 輔助班級事務導師知能研習　|　本網頁圖文版權所有
-</footer>
-
-<!-- ── Fullscreen Overlay ── -->
-<div class="fullscreen-overlay" id="fsOverlay">
-  <!-- Top bar -->
-  <div class="fs-bar">
-    <span class="fs-title">🤖 AI 輔助班級事務小幫手</span>
-
-    <!-- Fullscreen auto-play controls -->
-    <div class="fs-auto-controls">
-      <div class="ring-wrap-fs">
-        <svg class="ring-svg-fs" viewBox="0 0 36 36">
-          <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="3.5"/>
-          <circle id="fsRing" cx="18" cy="18" r="15" fill="none"
-            stroke="#2596d4" stroke-width="3.5"
-            stroke-dasharray="94.25" stroke-dashoffset="94.25"
-            stroke-linecap="round" transform="rotate(-90 18 18)"/>
-        </svg>
-        <span class="ring-count-fs" id="fsRingCount"></span>
-      </div>
-      <button class="btn-auto-fs" id="btnAutoFs" onclick="toggleAutoPlay()">
-        <svg id="fsPlayIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-        <svg id="fsPauseIcon" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
-        <span id="fsBtnLabel">自動播放</span>
-      </button>
-      <input type="number" id="fsSeconds" value="5" min="1" max="99"
-        class="auto-input-fs" oninput="syncSeconds('fs')">
-      <span class="auto-sec-label-fs">秒換頁</span>
-    </div>
-
-    <span class="fs-counter" id="fsCounter">1 / 22</span>
-    <button class="fs-close" onclick="closeFullscreen()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      關閉（ESC）
-    </button>
+<div class="filmstrip">
+  <div class="jump">
+    <span>跳頁</span>
+    <input id="jumpIn" type="number" min="1" max="70" value="1">
+    <span>/ 70</span>
   </div>
+  <div class="strip-scroll" id="strip"></div>
+</div>
 
-  <!-- Image area -->
-  <div class="fs-image-wrap">
-    <button class="fs-arrow left" id="fsArrowLeft" onclick="manualNavigate(-1)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-    </button>
-    <img id="fsImg" src="origin_image/slide_01.png" alt="簡報全螢幕">
-    <button class="fs-arrow right" id="fsArrowRight" onclick="manualNavigate(1)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-    </button>
-    <div class="fs-progress" id="fsSlideProgress"></div>
+<footer>臺北市立麗山高中 · <b>林獻升老師</b></footer>
+
+<!-- Fullscreen -->
+<div id="fs">
+  <button class="fs-arrow p" id="fsPrev">‹</button>
+  <img id="fsImg" src="" alt="">
+  <button class="fs-arrow n" id="fsNext">›</button>
+  <div class="fs-ui">
+    <button class="fs-btn" id="fsSpeak">🔊 朗讀旁白</button>
+    <button class="fs-btn" id="fsAuto">▶ 自動播放</button>
+    <button class="fs-btn" id="fsExit">✕ 離開全螢幕</button>
   </div>
+  <div class="fs-count" id="fsCount"></div>
 </div>
 
 <script>
-// ─────────────────────────────────────────
-// Data
-// ─────────────────────────────────────────
-const TOTAL = 22;
-const CIRC  = 94.25; // 2π × 15
+const SLIDES = [{"n": 1, "title": "第 1 頁", "paras": ["各位老師、導師夥伴，大家好。今天想跟大家分享的，是這段時間我們在「AI 協助導師處理班級事務」上的一些嘗試與心得。人工智慧的浪潮來得很快，而導師工作該如何因應這波數位轉型，其實是我們一直在思考的課題。我們會從「智能增強（IA）」的角度出發，介紹一系列為高中導師量身設計的實用工具，希望能幫大家把行政負擔卸下一些，把更多心力留給教育現場真正重要的事——對學生的關懷與陪伴。"]}, {"n": 2, "title": "第 2 頁", "paras": ["在開始之前，我們想先釐清一個觀念：AI 在班級經營裡，從來不是要取代導師，而是要把 AI 轉化為 IA，也就是「智能增強（Intelligence Augmentation）」。我們所建立的這套工具箱，涵蓋了教學引導、科學實驗、導師事務與行政減量四個面向，而且每一套程式都在本機瀏覽器運行，不需要上傳到任何伺服器。這一點我們特別堅持，因為學生的個資隱私，必須百分之百被守護。"]}, {"n": 3, "title": "第 3 頁", "paras": ["導師的日常痛點，相信在座的每一位都心有戚戚焉：時間總是被各種碎片化的班務行政切割，各式各樣的 Excel 表單散落各處，版本也常常混亂不一。為了解決這個困境，我們整理出了 17 個常用工具，背後的核心策略其實很單純——建立一份「統一學生名冊」資料庫，再搭配「模組化分配工具箱」，把導師日常的行政工作串接起來。"]}, {"n": 4, "title": "第 4 頁", "paras": ["數位化的第一步，我們稱之為「數據基石」。透過「00 學生資料管理系統」，導師只需要在學期初花一次時間，建立全班的個人名冊，這份名冊之後便能自動成為所有工具的統一輸入來源。資料完全儲存在瀏覽器本地，也支援匯出成 JSON 檔案備份，避免個資外洩的風險。"]}, {"n": 5, "title": "第 5 頁", "paras": ["班級組織建立起來之後，接下來要面對的是任務的公平分配。「01 幹部設定與小老師選取系統」支援隨機抽籤與手動指定兩種模式，並能主動防止學生重複任職。系統還會自動把服務紀錄與幹部名冊輸出成 Word 或 Excel 檔案，方便期末獎勵時直接使用。"]}, {"n": 6, "title": "第 6 頁", "paras": ["排座位，恐怕是每位導師都會遇到的挑戰。「02 座位選取抽籤程式」讓導師可以彈性自訂教室格局，包括列數、欄數，甚至走道的位置都能調整。最重要的是，它能鎖定有特殊需求的座位——例如視力不佳或身高較矮的學生——一鍵就能同時生成教師視角的座位表，以及張貼版供學生查看。"]}, {"n": 7, "title": "第 7 頁", "paras": ["打掃工作常常是學生爭議的來源。「03 學生打掃抽籤系統」把內掃、外掃與特殊掃區的分配流程公開透明化，系統會保存歷史打掃紀錄，實現定期的公平輪替，避免某些學生長期負擔較重的掃區，無形中也減少了不少師生之間的摩擦。"]}, {"n": 8, "title": "第 8 頁", "paras": ["回到課堂教學現場，「04 學生選取分組與紀錄系統」是課堂經營很實用的幫手。它支援隨機點名與搶答，打破了教師主觀點名容易產生的盲點，同時能即時記錄學生的加減分表現。系統也提供分組抽籤功能，把點名、計分與分組三件事完整整合在一起。"]}, {"n": 9, "title": "第 9 頁", "paras": ["談到財務管理，公開透明永遠是第一原則。「05 班費收支記帳程式」提供了直覺的記帳介面，只要登錄收支，系統便會自動計算即時餘額並生成視覺化圖表。資源箱裡也附上了班費收支登錄表與核銷用的 Word／PDF 範本，對帳這件事就輕鬆許多。"]}, {"n": 10, "title": "第 10 頁", "paras": ["校慶活動期間，「06 校慶園遊會攤位規劃」能協助班級進行財務模擬。學生可以練習預估進貨成本、訂定商品售價、規劃人員排班表，並透過系統模擬盈虧分析。這套工具不只是班級管理的輔助，更可以說是培養學生財務素養的一份實用教材。"]}, {"n": 11, "title": "第 11 頁", "paras": ["為了讓老師能在行動端隨時管理班務，我們也準備了「Office 範本與 APK 封裝」。除了座位表、打掃工作、幹部表格等 Word／Excel 範本之外，所有程式都已經打包成 Android APK 行動 App 安裝檔，讓股長與導師可以在手機上離線協同管理，不受場地與網路限制。"]}, {"n": 12, "title": "第 12 頁", "paras": ["對任課老師而言，我們提供了「07 多班級成績管理系統」。它可以直接匯入校務行政系統下載的 Excel 成績檔，並支援自訂平時、期中、期末的成績加權比例，自動且精確地算出多個班級的學期總分，省下不少人工核算的時間。"]}, {"n": 13, "title": "第 13 頁", "paras": ["算出成績之後，更重要的其實是「數據診斷」。「08 班級與個別成績分析」提供了班級合格率的直方圖，以及個體強弱的雷達圖。雷達圖能讓導師一目了然地看出個別學生的學科表現，並自動標示退步與警訊，讓我們能提前介入輔導與關懷，而不是等到期末才發現問題。"]}, {"n": 14, "title": "第 14 頁", "paras": ["這套系統的背後，其實有一定的科學基礎在支撐。我們結合了「評量統計診斷計量方法設計」，利用標準差、信度與效度，把教學成效科學化地呈現出來。這讓導師的輔導判斷不再只憑主觀感覺，而能透過數據，更精準地定位教學與學力之間的落差。"]}, {"n": 15, "title": "第 15 頁", "paras": ["近期最受關注的成績分析應用，當屬 NotebookLM 的導入。導師可以直接把段考成績檔案與分析報告匯入 NotebookLM，AI 會自動摘要出班級的弱勢學科與退步名單，再結合學生的週記反思，快速生成相當精準的個案分析報告，這對輔導關懷的時效性幫助很大。"]}, {"n": 16, "title": "第 16 頁", "paras": ["成績之外，學生的日常表現同樣需要被數位化記錄。「Notion 日常表現整理」能協助導師記錄學生的日常行為、獎懲與出缺席，並結合線上 Google 表單與學生德性自評 Excel 表，引導學生練習自我省思，最後一鍵將資料匯入 Notion 看板，留存與查找都方便許多。"]}, {"n": 17, "title": "第 17 頁", "paras": ["期末登打評語，向來是讓導師頭痛的一件事。「09 導師評語生成系統」能結合 Notion 裡的日常紀錄，依據學生的特質——例如領導型、熱心服務型——套用不同的語氣模組，客觀且高效地生成期末德行評語初稿，希望能跳脫過去千篇一律的八股文字。"]}, {"n": 18, "title": "第 18 頁", "paras": ["我們還進一步建立了「NotebookLM 評語資料庫」。把歷年德性評語總整理與麗山高中評語對照表這類專業文本匯入，搭配我們設計的「高中導師德性評語優化提示詞」，由 AI 進行更細緻的字句優化，讓最終呈現的評語能夠優雅、正面，也具備教育上的啟發意義。"]}, {"n": 19, "title": "第 19 頁", "paras": ["在自主學習這個面向，我們提供了「10 AI 輔助自主學習」與「11 學習歷程檔案輔助程式」。它採用引導式探究鷹架，一步一步帶著學生設定假說、設計實驗、分析數據，並輔導學生以 IMRD 的科學寫作結構，完成一份品質扎實的學習歷程檔案。"]}, {"n": 20, "title": "第 20 頁", "paras": ["生涯引導方面，「11 AI 智慧輔助升學系統」能協助分析歷年落點與志願抉擇，搭配「12 多功能翻譯工具」，即時協助學生閱讀英文國際學術文獻，甚至潤飾英文自傳，提供學生升學與語言能力雙向的學習支持。"]}, {"n": 21, "title": "第 21 頁", "paras": ["除了班級經營本身，這套工具箱也附帶了一些生活輔助小幫手。包括出國與畢旅必備的「12 行李打包清單」、用來訓練學生演說口語表達的「13 報告計時器」，以及跨國遊學時相當實用的「14 旅遊記帳與貨幣轉換」工具，照顧到的是學生更全面的生活能力。"]}, {"n": 22, "title": "第 22 頁", "paras": ["最後，AI 也能為班級活動帶來一些有趣的創作可能。我們嘗試用 Nano Banana（Gemini 圖像生成）引導學生創作麗山高中藏頭詩——「樹蛙升歌夜色麗，蜓蜥華行映青山。蛺蝶偉姿飛影高，紅葉楓情秋意中」——並生成相應的中國書法水墨畫。", "結語，我想用這句話跟大家分享：探尋繽紛美妙的生物，編織幸福圓滿的生命。Love biology, Love yourself, Love nature life. 謝謝大家。"]}];
+const imgPath = n => `origin_image/slide_${String(n).padStart(2,'0')}.png`;
+let cur = 0;              // 0-indexed
+let autoTimer = null;     // inline autoplay
+let fsTimer = null;       // fullscreen autoplay
 
-const speeches = [
-  `各位老師、導師夥伴，大家好。今天想跟大家分享的，是這段時間我們在「AI 協助導師處理班級事務」上的一些嘗試與心得。人工智慧的浪潮來得很快，而導師工作該如何因應這波數位轉型，其實是我們一直在思考的課題。我們會從「智能增強（IA）」的角度出發，介紹一系列為高中導師量身設計的實用工具，希望能幫大家把行政負擔卸下一些，把更多心力留給教育現場真正重要的事——對學生的關懷與陪伴。`,
-  `在開始之前，我們想先釐清一個觀念：AI 在班級經營裡，從來不是要取代導師，而是要把 AI 轉化為 IA，也就是「智能增強（Intelligence Augmentation）」。我們所建立的這套工具箱，涵蓋了教學引導、科學實驗、導師事務與行政減量四個面向，而且每一套程式都在本機瀏覽器運行，不需要上傳到任何伺服器。這一點我們特別堅持，因為學生的個資隱私，必須百分之百被守護。`,
-  `導師的日常痛點，相信在座的每一位都心有戚戚焉：時間總是被各種碎片化的班務行政切割，各式各樣的 Excel 表單散落各處，版本也常常混亂不一。為了解決這個困境，我們整理出了 17 個常用工具，背後的核心策略其實很單純——建立一份「統一學生名冊」資料庫，再搭配「模組化分配工具箱」，把導師日常的行政工作串接起來。`,
-  `數位化的第一步，我們稱之為「數據基石」。透過「00 學生資料管理系統」，導師只需要在學期初花一次時間，建立全班的個人名冊，這份名冊之後便能自動成為所有工具的統一輸入來源。資料完全儲存在瀏覽器本地，也支援匯出成 JSON 檔案備份，避免個資外洩的風險。`,
-  `班級組織建立起來之後，接下來要面對的是任務的公平分配。「01 幹部設定與小老師選取系統」支援隨機抽籤與手動指定兩種模式，並能主動防止學生重複任職。系統還會自動把服務紀錄與幹部名冊輸出成 Word 或 Excel 檔案，方便期末獎勵時直接使用。`,
-  `排座位，恐怕是每位導師都會遇到的挑戰。「02 座位選取抽籤程式」讓導師可以彈性自訂教室格局，包括列數、欄數，甚至走道的位置都能調整。最重要的是，它能鎖定有特殊需求的座位——例如視力不佳或身高較矮的學生——一鍵就能同時生成教師視角的座位表，以及張貼版供學生查看。`,
-  `打掃工作常常是學生爭議的來源。「03 學生打掃抽籤系統」把內掃、外掃與特殊掃區的分配流程公開透明化，系統會保存歷史打掃紀錄，實現定期的公平輪替，避免某些學生長期負擔較重的掃區，無形中也減少了不少師生之間的摩擦。`,
-  `回到課堂教學現場，「04 學生選取分組與紀錄系統」是課堂經營很實用的幫手。它支援隨機點名與搶答，打破了教師主觀點名容易產生的盲點，同時能即時記錄學生的加減分表現。系統也提供分組抽籤功能，把點名、計分與分組三件事完整整合在一起。`,
-  `談到財務管理，公開透明永遠是第一原則。「05 班費收支記帳程式」提供了直覺的記帳介面，只要登錄收支，系統便會自動計算即時餘額並生成視覺化圖表。資源箱裡也附上了班費收支登錄表與核銷用的 Word／PDF 範本，對帳這件事就輕鬆許多。`,
-  `校慶活動期間，「06 校慶園遊會攤位規劃」能協助班級進行財務模擬。學生可以練習預估進貨成本、訂定商品售價、規劃人員排班表，並透過系統模擬盈虧分析。這套工具不只是班級管理的輔助，更可以說是培養學生財務素養的一份實用教材。`,
-  `為了讓老師能在行動端隨時管理班務，我們也準備了「Office 範本與 APK 封裝」。除了座位表、打掃工作、幹部表格等 Word／Excel 範本之外，所有程式都已經打包成 Android APK 行動 App 安裝檔，讓股長與導師可以在手機上離線協同管理，不受場地與網路限制。`,
-  `對任課老師而言，我們提供了「07 多班級成績管理系統」。它可以直接匯入校務行政系統下載的 Excel 成績檔，並支援自訂平時、期中、期末的成績加權比例，自動且精確地算出多個班級的學期總分，省下不少人工核算的時間。`,
-  `算出成績之後，更重要的其實是「數據診斷」。「08 班級與個別成績分析」提供了班級合格率的直方圖，以及個體強弱的雷達圖。雷達圖能讓導師一目了然地看出個別學生的學科表現，並自動標示退步與警訊，讓我們能提前介入輔導與關懷，而不是等到期末才發現問題。`,
-  `這套系統的背後，其實有一定的科學基礎在支撐。我們結合了「評量統計診斷計量方法設計」，利用標準差、信度與效度，把教學成效科學化地呈現出來。這讓導師的輔導判斷不再只憑主觀感覺，而能透過數據，更精準地定位教學與學力之間的落差。`,
-  `近期最受關注的成績分析應用，當屬 NotebookLM 的導入。導師可以直接把段考成績檔案與分析報告匯入 NotebookLM，AI 會自動摘要出班級的弱勢學科與退步名單，再結合學生的週記反思，快速生成相當精準的個案分析報告，這對輔導關懷的時效性幫助很大。`,
-  `成績之外，學生的日常表現同樣需要被數位化記錄。「Notion 日常表現整理」能協助導師記錄學生的日常行為、獎懲與出缺席，並結合線上 Google 表單與學生德性自評 Excel 表，引導學生練習自我省思，最後一鍵將資料匯入 Notion 看板，留存與查找都方便許多。`,
-  `期末登打評語，向來是讓導師頭痛的一件事。「09 導師評語生成系統」能結合 Notion 裡的日常紀錄，依據學生的特質——例如領導型、熱心服務型——套用不同的語氣模組，客觀且高效地生成期末德行評語初稿，希望能跳脫過去千篇一律的八股文字。`,
-  `我們還進一步建立了「NotebookLM 評語資料庫」。把歷年德性評語總整理與麗山高中評語對照表這類專業文本匯入，搭配我們設計的「高中導師德性評語優化提示詞」，由 AI 進行更細緻的字句優化，讓最終呈現的評語能夠優雅、正面，也具備教育上的啟發意義。`,
-  `在自主學習這個面向，我們提供了「10 AI 輔助自主學習」與「11 學習歷程檔案輔助程式」。它採用引導式探究鷹架，一步一步帶著學生設定假說、設計實驗、分析數據，並輔導學生以 IMRD 的科學寫作結構，完成一份品質扎實的學習歷程檔案。`,
-  `生涯引導方面，「11 AI 智慧輔助升學系統」能協助分析歷年落點與志願抉擇，搭配「12 多功能翻譯工具」，即時協助學生閱讀英文國際學術文獻，甚至潤飾英文自傳，提供學生升學與語言能力雙向的學習支持。`,
-  `除了班級經營本身，這套工具箱也附帶了一些生活輔助小幫手。包括出國與畢旅必備的「12 行李打包清單」、用來訓練學生演說口語表達的「13 報告計時器」，以及跨國遊學時相當實用的「14 旅遊記帳與貨幣轉換」工具，照顧到的是學生更全面的生活能力。`,
-  `最後，AI 也能為班級活動帶來一些有趣的創作可能。我們嘗試用 Nano Banana（Gemini 圖像生成）引導學生創作麗山高中藏頭詩——「樹蛙升歌夜色麗，蜓蜥華行映青山。蛺蝶偉姿飛影高，紅葉楓情秋意中」——並生成相應的中國書法水墨畫。\n\n結語，我想用這句話跟大家分享：探尋繽紛美妙的生物，編織幸福圓滿的生命。Love biology, Love yourself, Love nature life. 謝謝大家。`,
-];
+const $ = id => document.getElementById(id);
+const mainImg=$('mainImg'), titleEl=$('title'), bodyEl=$('body'),
+      chip=$('chip'), strip=$('strip'), jumpIn=$('jumpIn'),
+      fsImg=$('fsImg'), fsCount=$('fsCount'), fs=$('fs'), badge=$('badge');
 
-// ─────────────────────────────────────────
-// State
-// ─────────────────────────────────────────
-let current    = 0;
-let fsActive   = false;
+// build thumbnails
+SLIDES.forEach((s,i)=>{
+  const d=document.createElement('div');
+  d.className='thumb'; d.dataset.i=i;
+  d.innerHTML=`<img loading="lazy" src="${imgPath(s.n)}"><span class="tn">${s.n}</span>`;
+  d.onclick=()=>{ go(i); };
+  strip.appendChild(d);
+});
+const thumbs=[...strip.children];
 
-// Auto-play
-let autoPlaying  = false;
-let autoSec      = 5;       // seconds per slide
-let autoRemainMs = 0;       // ms remaining for this slide
-let autoTimer    = null;    // setInterval handle (100ms ticks)
-const TICK_MS    = 100;
-
-// ─────────────────────────────────────────
-// Init
-// ─────────────────────────────────────────
-function init() {
-  const dotNav = document.getElementById('dotNav');
-  for (let i = 0; i < TOTAL; i++) {
-    const dot = document.createElement('button');
-    dot.className = 'dot' + (i === 0 ? ' active' : '');
-    dot.title = `第 ${i+1} 頁`;
-    dot.onclick = () => { manualGoTo(i); };
-    dotNav.appendChild(dot);
-  }
-  render();
+function render(){
+  const s=SLIDES[cur];
+  mainImg.src=imgPath(s.n);
+  titleEl.textContent=s.title;
+  bodyEl.innerHTML=s.paras.map(p=>`<p>${p}</p>`).join('');
+  chip.textContent=`第 ${s.n} / 70 頁`;
+  jumpIn.value=s.n;
+  $('textPane').scrollTop=0;
+  thumbs.forEach((t,i)=>t.classList.toggle('active',i===cur));
+  const at=thumbs[cur];
+  if(at) at.scrollIntoView({inline:'center',block:'nearest'});
+  if(fs.classList.contains('show')){ fsImg.src=imgPath(s.n); fsCount.textContent=`${s.n} / 70`; }
 }
+function go(i){ cur=(i+SLIDES.length)%SLIDES.length; render(); if(narrating) speakCurrent(); }
+function nextS(){ go(cur+1); }
+function prevS(){ go(cur-1); }
 
-function pad(n) { return String(n).padStart(2, '0'); }
-
-// ─────────────────────────────────────────
-// Render
-// ─────────────────────────────────────────
-function render() {
-  const num = current + 1;
-
-  // Main image
-  const img = document.getElementById('slideImg');
-  img.classList.add('fade-out');
-  setTimeout(() => {
-    img.src = `origin_image/slide_${pad(num)}.png`;
-    img.alt = `簡報第 ${num} 頁`;
-    img.classList.remove('fade-out');
-  }, 200);
-
-  document.getElementById('slideBadge').textContent = `SLIDE ${pad(num)}`;
-  document.getElementById('speechTitle').textContent = `講者說明 ── 第 ${num} 頁`;
-  document.getElementById('speechBody').textContent = speeches[current];
-  document.getElementById('speechBody').scrollTop = 0;
-  document.getElementById('slideCounter').textContent = `${num} / ${TOTAL}`;
-  document.getElementById('progressFill').style.width = (num / TOTAL * 100) + '%';
-  document.getElementById('btnPrev').disabled = current === 0;
-  document.getElementById('btnNext').disabled = current === TOTAL - 1;
-
-  document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
-
-  renderFs();
+// ---- 旁白朗讀 (Web Speech API) ----
+let narrating=false, zhVoice=null, advanceTimer=null, allVoices=[];
+const synth=window.speechSynthesis;
+// 語音「自然度」評分：線上 Google、加強版、Siri、神經網路語音優先
+function voiceScore(v){
+  const n=(v.name||'')+' '+(v.voiceURI||''); let s=0;
+  if(/zh[-_]TW|zh[-_]Hant|cmn/i.test(v.lang)) s+=40;       // 繁中臺灣優先
+  else if(/^zh|zh[-_]CN|zh[-_]HK/i.test(v.lang)) s+=20;    // 其他中文次之
+  if(/google/i.test(n)) s+=30;                             // Chrome 線上 Google 語音最自然
+  if(/enhanced|premium|加強|進階|neural|natural/i.test(n)) s+=25;
+  if(/siri/i.test(n)) s+=20;
+  if(/美嘉|meijia|台湾|臺灣|taiwan/i.test(n)) s+=10;
+  return s;
 }
-
-function renderFs() {
-  const num = current + 1;
-  const fsImg = document.getElementById('fsImg');
-  fsImg.classList.add('fade-out');
-  setTimeout(() => {
-    fsImg.src = `origin_image/slide_${pad(num)}.png`;
-    fsImg.alt = `簡報第 ${num} 頁`;
-    fsImg.classList.remove('fade-out');
-  }, 200);
-  document.getElementById('fsCounter').textContent = `${num} / ${TOTAL}`;
-  document.getElementById('fsSlideProgress').style.width = (num / TOTAL * 100) + '%';
-  document.getElementById('fsArrowLeft').disabled  = current === 0;
-  document.getElementById('fsArrowRight').disabled = current === TOTAL - 1;
-}
-
-// ─────────────────────────────────────────
-// Navigation
-// ─────────────────────────────────────────
-function navigate(dir) {
-  const next = current + dir;
-  if (next < 0 || next >= TOTAL) return false;
-  current = next;
-  render();
-  return true;
-}
-
-// Manual navigation: reset countdown timer
-function manualNavigate(dir) {
-  navigate(dir);
-  if (autoPlaying) resetCountdown();
-}
-
-function manualGoTo(idx) {
-  current = idx;
-  render();
-  if (autoPlaying) resetCountdown();
-}
-
-// ─────────────────────────────────────────
-// Fullscreen
-// ─────────────────────────────────────────
-function openFullscreen() {
-  fsActive = true;
-  renderFs();
-  document.getElementById('fsOverlay').classList.add('active');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeFullscreen() {
-  fsActive = false;
-  document.getElementById('fsOverlay').classList.remove('active');
-  document.body.style.overflow = '';
-}
-
-// ─────────────────────────────────────────
-// Auto-play
-// ─────────────────────────────────────────
-function toggleAutoPlay() {
-  if (autoPlaying) {
-    pauseAutoPlay();
-  } else {
-    startAutoPlay();
+function buildVoiceList(){
+  if(!synth) return;
+  allVoices=synth.getVoices();
+  // 只保留「Google 國語（臺灣）」語音
+  const gtw=allVoices.filter(v=>/google/i.test(v.name) && /zh[-_]TW|zh[-_]Hant|國語|臺灣|台灣/i.test((v.name||'')+' '+v.lang));
+  const sel=$('voiceSel');
+  sel.innerHTML='';
+  if(gtw.length){
+    gtw.forEach(v=>{
+      const o=document.createElement('option');
+      o.value=allVoices.indexOf(v);
+      o.textContent=`${v.name} (${v.lang}) ✨線上`;
+      sel.appendChild(o);
+    });
+    sel.value=allVoices.indexOf(gtw[0]); zhVoice=gtw[0];
+  }else{
+    // 找不到時給提示（多半是沒用 Chrome 或未連網），仍以系統預設繁中發音
+    const o=document.createElement('option');
+    o.value=''; o.textContent='找不到 Google 國語（臺灣）— 請用 Chrome 並連網';
+    sel.appendChild(o); zhVoice=null;
   }
 }
-
-function startAutoPlay() {
-  autoPlaying = true;
-  resetCountdown();
-  autoTimer = setInterval(tick, TICK_MS);
-  updateAutoUI();
+if(synth){
+  buildVoiceList();
+  synth.onvoiceschanged=buildVoiceList;   // 語音清單常延遲載入，載好再補上
+  $('voiceSel').addEventListener('change',()=>{
+    zhVoice=allVoices[parseInt($('voiceSel').value)]||null;
+    if(narrating) speakCurrent();          // 立即試聽新語音
+  });
 }
-
-function pauseAutoPlay() {
-  autoPlaying = false;
-  clearInterval(autoTimer);
-  autoTimer = null;
-  updateAutoUI();
-  setRingOffset(CIRC, CIRC);   // empty ring
-  document.getElementById('mainRingCount').textContent = '';
-  document.getElementById('fsRingCount').textContent   = '';
+// 將整頁（標題＋各段）切成短句，標題只在最前面唸一次，
+// 短句可避開 Chrome 長語句會從頭重播的已知問題（造成標題重複）。
+function buildChunks(s){
+  const out=[];
+  [s.title, ...s.paras].forEach(t=>{
+    (t||'').split(/(?<=[。！？!?；;：])/).forEach(p=>{ p=p.trim(); if(p) out.push(p); });
+  });
+  return out;
 }
-
-function resetCountdown() {
-  autoRemainMs = autoSec * 1000;
-  updateRing();
-}
-
-function tick() {
-  autoRemainMs -= TICK_MS;
-  updateRing();
-
-  if (autoRemainMs <= 0) {
-    const advanced = navigate(1);
-    if (!advanced) {
-      // Reached last slide — stop
-      pauseAutoPlay();
-    } else {
-      resetCountdown();
+let speakGen=0;   // 世代編號，讓被取消的舊回呼失效，避免重播/重複
+function speakCurrent(){
+  if(!synth){ alert('您的瀏覽器不支援語音朗讀，請改用 Chrome 或 Edge。'); return; }
+  const gen=++speakGen;
+  synth.cancel(); clearTimeout(advanceTimer);
+  const chunks=buildChunks(SLIDES[cur]);
+  const rate=Math.min(2,Math.max(0.5,parseFloat($('rateIn').value)||0.95));
+  const pitch=Math.min(1.5,Math.max(0.5,parseFloat($('pitchIn').value)||1));
+  let i=0;
+  (function next(){
+    if(gen!==speakGen) return;                 // 已被新的朗讀取代
+    if(i>=chunks.length){                       // 本頁唸完
+      if(narrating && cur<SLIDES.length-1){ advanceTimer=setTimeout(()=>{ if(narrating && gen===speakGen) go(cur+1); },900); }
+      else if(narrating){ stopPlay(); }         // 最後一頁停止
+      return;
     }
-  }
+    const u=new SpeechSynthesisUtterance(chunks[i]);
+    u.lang='zh-TW'; if(zhVoice) u.voice=zhVoice; u.rate=rate; u.pitch=pitch;
+    u.onend=()=>{ if(gen!==speakGen) return; i++;
+      // 句與句之間留一點自然停頓，聽起來比較像人在說話
+      const gap = /[。！？!?]$/.test(chunks[i-1]) ? 260 : 90;
+      setTimeout(()=>{ if(gen===speakGen) next(); }, gap);
+    };
+    u.onerror=()=>{};                           // 取消時的 error 忽略
+    synth.speak(u);
+  })();
 }
-
-function updateRing() {
-  const totalMs   = autoSec * 1000;
-  const fraction  = Math.max(0, autoRemainMs / totalMs);
-  const offset    = CIRC * (1 - fraction);
-  const secLeft   = Math.ceil(autoRemainMs / 1000);
-  setRingOffset(offset, CIRC);
-  document.getElementById('mainRingCount').textContent = autoPlaying ? secLeft : '';
-  document.getElementById('fsRingCount').textContent   = autoPlaying ? secLeft : '';
+// ---- 統一播放控制 ----
+// 模式一：勾選「朗讀完才換頁」→ 由旁白驅動，唸完整頁才換頁（不受秒數限制）
+// 模式二：取消勾選 → 依上方秒數固定換頁（無旁白）
+function secs(){ let v=parseInt($('secIn').value)||8; return Math.max(1,v)*1000; }
+function uiReset(){
+  $('autoBtn').classList.remove('on'); $('autoBtn').innerHTML='▶ 自動播放';
+  $('speakBtn').classList.remove('on'); $('speakBtn').innerHTML='🔊 朗讀旁白';
+  $('fsAuto').innerHTML='▶ 自動播放'; $('fsSpeak').innerHTML='🔊 朗讀旁白';
+  badge.classList.remove('show');
 }
-
-function setRingOffset(offset) {
-  document.getElementById('mainRing').style.strokeDashoffset = offset;
-  document.getElementById('fsRing').style.strokeDashoffset   = offset;
+function stopPlay(){                     // 停止所有播放（計時＋旁白）
+  clearInterval(autoTimer); autoTimer=null;
+  narrating=false; if(synth) synth.cancel(); clearTimeout(advanceTimer);
+  uiReset();
 }
-
-function updateAutoUI() {
-  const playing = autoPlaying;
-
-  // Main
-  document.getElementById('mainPlayIcon').style.display  = playing ? 'none' : '';
-  document.getElementById('mainPauseIcon').style.display = playing ? ''     : 'none';
-  document.getElementById('mainBtnLabel').textContent    = playing ? '暫停播放' : '自動播放';
-  document.getElementById('btnAutoMain').classList.toggle('paused', playing);
-
-  // Fullscreen
-  document.getElementById('fsPlayIcon').style.display    = playing ? 'none' : '';
-  document.getElementById('fsPauseIcon').style.display   = playing ? ''     : 'none';
-  document.getElementById('fsBtnLabel').textContent      = playing ? '暫停' : '自動播放';
-  document.getElementById('btnAutoFs').classList.toggle('paused', playing);
+function startTimer(){                   // 秒數驅動（無旁白）
+  stopPlay(); autoTimer=setInterval(nextS,secs());
+  $('autoBtn').classList.add('on'); $('autoBtn').innerHTML='⏸ 停止播放';
+  $('fsAuto').innerHTML='⏸ 停止播放';
+  badge.textContent='自動播放中…'; badge.classList.add('show');
 }
-
-// Sync seconds between main and fullscreen inputs
-function syncSeconds(source) {
-  const mainInput = document.getElementById('mainSeconds');
-  const fsInput   = document.getElementById('fsSeconds');
-
-  let val = parseInt(source === 'main' ? mainInput.value : fsInput.value) || 5;
-  val = Math.max(1, Math.min(99, val));
-
-  mainInput.value = val;
-  fsInput.value   = val;
-  autoSec = val;
-
-  if (autoPlaying) resetCountdown();
+function startNarrate(){                 // 旁白驅動：唸完才換頁
+  stopPlay(); narrating=true;
+  $('speakBtn').classList.add('on'); $('speakBtn').innerHTML='⏹ 停止朗讀';
+  $('autoBtn').classList.add('on'); $('autoBtn').innerHTML='⏸ 停止播放';
+  $('fsSpeak').innerHTML='⏹ 停止朗讀'; $('fsAuto').innerHTML='⏸ 停止播放';
+  badge.textContent='旁白朗讀中…'; badge.classList.add('show');
+  speakCurrent();
 }
+function isPlaying(){ return !!autoTimer || narrating; }
+function startPlay(){ $('waitSpeak').checked ? startNarrate() : startTimer(); }
+function togglePlay(){ isPlaying()?stopPlay():startPlay(); }
 
-// ─────────────────────────────────────────
-// Keyboard
-// ─────────────────────────────────────────
-document.addEventListener('keydown', (e) => {
-  const tag = document.activeElement.tagName;
-  if (tag === 'INPUT') return;   // don't hijack number input
+$('autoBtn').onclick=togglePlay;
+$('fsAuto').onclick=togglePlay;
+$('speakBtn').onclick=()=>{ narrating?stopPlay():startNarrate(); };
+$('fsSpeak').onclick=()=>{ narrating?stopPlay():startNarrate(); };
+// 調整語速或音調時，若正在朗讀則即時套用到本頁
+$('rateIn').addEventListener('change',()=>{ if(narrating) speakCurrent(); });
+$('pitchIn').addEventListener('change',()=>{ if(narrating) speakCurrent(); });
 
-  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-    e.preventDefault(); manualNavigate(1);
-  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-    e.preventDefault(); manualNavigate(-1);
-  } else if (e.key === ' ') {
-    e.preventDefault();
-    if (fsActive || document.getElementById('btnAutoMain')) toggleAutoPlay();
-  } else if (e.key === 'Escape' && fsActive) {
-    closeFullscreen();
-  }
+$('next').onclick=nextS; $('prev').onclick=prevS;
+$('fsNext').onclick=nextS; $('fsPrev').onclick=prevS;
+
+jumpIn.addEventListener('change',()=>{
+  let v=parseInt(jumpIn.value)||1; v=Math.max(1,Math.min(70,v)); go(v-1);
 });
 
-// ─────────────────────────────────────────
-// Touch / swipe
-// ─────────────────────────────────────────
-let touchStartX = 0;
-document.getElementById('fsOverlay').addEventListener('touchstart', e => {
-  touchStartX = e.touches[0].clientX;
-}, { passive: true });
-document.getElementById('fsOverlay').addEventListener('touchend', e => {
-  const dx = e.changedTouches[0].clientX - touchStartX;
-  if (Math.abs(dx) > 50) manualNavigate(dx < 0 ? 1 : -1);
-}, { passive: true });
+// ---- fullscreen ----
+function openFS(){
+  fs.classList.add('show'); render();
+  if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
+}
+function closeFS(){
+  fs.classList.remove('show');
+  if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+}
+$('fsBtn').onclick=openFS; $('fsExit').onclick=closeFS;
+document.addEventListener('fullscreenchange',()=>{ if(!document.fullscreenElement && fs.classList.contains('show')) closeFS(); });
 
-// ─────────────────────────────────────────
-init();
+// ---- theme ----
+$('themeBtn').onclick=()=>{
+  const h=document.documentElement, b=document.body;
+  const dark=b.getAttribute('data-theme')!=='dark';
+  b.setAttribute('data-theme',dark?'dark':'light');
+  h.setAttribute('data-theme',dark?'dark':'light');
+  $('themeBtn').innerHTML=dark?'☀️ 淺色':'🌙 深色';
+};
+// sync html attr initially
+document.documentElement.setAttribute('data-theme','light');
+
+// ---- keyboard ----
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='PageDown'){ nextS(); }
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'){ prevS(); }
+  else if(e.key==='Escape'){ if(fs.classList.contains('show')) closeFS(); }
+  else if(e.key==='f'||e.key==='F'){ fs.classList.contains('show')?closeFS():openFS(); }
+});
+
+// ---- swipe (touch) on slide & fullscreen ----
+function addSwipe(el){
+  let x0=null;
+  el.addEventListener('touchstart',e=>{ x0=e.touches[0].clientX; },{passive:true});
+  el.addEventListener('touchend',e=>{
+    if(x0===null)return; const dx=e.changedTouches[0].clientX-x0;
+    if(Math.abs(dx)>45){ dx<0?nextS():prevS(); } x0=null;
+  },{passive:true});
+}
+addSwipe(document.querySelector('.slide-pane'));
+addSwipe(fs);
+
+// mouse wheel on filmstrip -> horizontal scroll
+strip.addEventListener('wheel',e=>{ if(e.deltaY){ strip.scrollLeft+=e.deltaY; e.preventDefault(); } },{passive:false});
+
+// 離開頁面時停止語音
+window.addEventListener('beforeunload',()=>{ if(synth) synth.cancel(); });
+
+render();
 </script>
 </body>
 </html>
