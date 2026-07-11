@@ -2967,24 +2967,38 @@
 
         function assignRandomStudentsToShift(shiftIndex) {
             const shift = shifts[shiftIndex];
-            const allStudents = elements.rotationStudentsInput.value.split('\n')
+            const allStudents = [...new Set(elements.rotationStudentsInput.value.split('\n')
                 .map(s => s.trim())
-                .filter(s => s);
+                .filter(s => s))];
             
             if (allStudents.length === 0) {
                 showNotification('請先輸入人員姓名！', 'warning');
                 return;
             }
             
-            if (allStudents.length < shift.people) {
-                showNotification(`人員數不足，班次 ${shiftIndex + 1} 需要 ${shift.people} 人。`, 'warning');
+            // 保留目前手動選取的人員，只從尚未選取的人員中補足缺額。
+            const currentStudents = [...new Set(shift.students || [])];
+            const vacancies = Math.max(0, shift.people - currentStudents.length);
+
+            if (vacancies === 0) {
+                shift.students = currentStudents;
+                document.getElementById(`shift-students-${shiftIndex}`).textContent = currentStudents.join(', ');
+                showNotification(`班次 ${shiftIndex + 1} 已有足夠人員，保留原有安排。`);
                 return;
             }
             
-            const selectedStudents = [...allStudents].sort(() => 0.5 - Math.random()).slice(0, shift.people);
-            shift.students = selectedStudents;
-            document.getElementById(`shift-students-${shiftIndex}`).textContent = selectedStudents.join(', ');
-            showNotification(`已隨機分配班次 ${shiftIndex + 1}。`);
+            const availableStudents = allStudents.filter(student => !currentStudents.includes(student));
+            const additionalStudents = availableStudents
+                .sort(() => 0.5 - Math.random())
+                .slice(0, vacancies);
+            shift.students = [...currentStudents, ...additionalStudents];
+            document.getElementById(`shift-students-${shiftIndex}`).textContent = shift.students.join(', ');
+
+            if (additionalStudents.length < vacancies) {
+                showNotification(`班次 ${shiftIndex + 1} 已保留原有人員，但可補充分配的人員不足。`, 'warning');
+            } else {
+                showNotification(`班次 ${shiftIndex + 1} 已保留原有人員並隨機補足缺額。`);
+            }
         }
 
         function selectStudentsForShift(shiftIndex) {
