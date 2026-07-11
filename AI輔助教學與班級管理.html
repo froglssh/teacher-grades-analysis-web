@@ -1240,6 +1240,8 @@ const tools = [
     folder: "示範檔案/10自主學習",
     program: "示範檔案/10自主學習/AI輔助自主學習（claude優化）.html",
     guide: "示範檔案/10自主學習/AI輔助自主學習（claude優化）使用說明.html",
+    demoFile: "https://drive.google.com/file/d/1IrKSj_EBjfrhjlK21R0dW6oF6IiEZv2Y/view?usp=drive_link",
+    demoLabel: "示範檔案下載",
     summary: "協助學生從主題發想、目標設定、週次規劃、成果整理到反思撰寫，讓自主學習不只停留在表格填寫，而能轉化為可追蹤的學習計畫。",
     scenario: "適合高一高二自主學習課程、導師或課諮師輔導學生設定主題、學習歷程素材整理，以及研習中示範 AI 如何協助學生聚焦問題。",
     value: [
@@ -1287,6 +1289,8 @@ const tools = [
     folder: "示範檔案/11升學輔導",
     program: "示範檔案/11升學輔導/AI智慧輔助升學系統(codex優化).html",
     guide: "示範檔案/11升學輔導/AI智慧輔助升學系統(codex優化)使用說明.html",
+    demoFile: "https://drive.google.com/file/d/1rkiJOgPwFPBx7tke81OL9D3zcYOAJxxD/view?usp=drive_link",
+    demoLabel: "示範檔案下載",
     summary: "協助學生與導師整理升學條件、興趣方向、校系探索與備審策略，將升學輔導從零散諮詢轉化為有結構的決策流程。",
     scenario: "適合個別升學諮詢、班級升學講座、學生校系探索、備審方向討論，以及導師需要快速建立學生升學輪廓的情境。",
     value: [
@@ -1334,6 +1338,8 @@ const tools = [
     folder: "示範檔案/11學習歷程",
     program: "示範檔案/11學習歷程/學習歷程檔案輔助程式(claude優化).html",
     guide: "",
+    demoFile: "https://drive.google.com/file/d/1-5NdGbRhudtWdL3qKTlm4p6XdiC3fwGU/view?usp=drive_link",
+    demoLabel: "示範檔案下載",
     summary: "協助學生整理課程學習成果、多元表現、反思文字與上傳前檢核，讓學習歷程從檔案堆疊轉為有主題、有證據、有反思的作品集。",
     scenario: "適合學習歷程檔案撰寫課、課諮與導師個別指導、學生整理作品說明，以及期末上傳前的品質檢核。",
     value: [
@@ -1590,7 +1596,7 @@ function renderPrograms(){
         <div class="quick-actions">
           ${quickActions(tool)}
           <a class="btn" href="#resources">檔案資源索引</a>
-          ${tool.demoFile ? `<a class="btn" href="${tool.demoFile}" target="_blank" rel="noopener">程式示範檔案</a>` : ""}
+          ${tool.demoFile ? `<a class="btn" href="${tool.demoFile}" target="_blank" rel="noopener">${tool.demoLabel || "程式示範檔案"}</a>` : ""}
         </div>
       </div>
       <div class="program-body">
