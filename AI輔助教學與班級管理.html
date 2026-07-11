@@ -532,6 +532,7 @@ const tools = [
     folder: "00學生資料",
     program: "https://froglssh.github.io/class-student-data-management-online/",
     guide: "https://froglssh.github.io/class-student-data-management-guide-online/",
+    demoFile: "https://drive.google.com/file/d/1ydjoUfayRNzvdIRsQY_UbgGGm85bOseU/view?usp=drive_link",
     summary: "班級導師可以先建立全班的個人資料，用於後續的班經管理等說明，也可以用於後續德性評語的工作。",
     scenario: "適合每學期初導師建立班級學生基本資料名冊。建立完成的個人資料檔，能作為後續座位安排、幹部改選、打掃分組、成績統計、以及期末德性評語生成等所有管理工具的統一輸入源，避免重複登錄。",
     value: [
@@ -1553,6 +1554,7 @@ function renderPrograms(){
           ${tool.guide ? `<a class="btn" href="${tool.guide}" target="_blank" rel="noopener">查看使用說明</a>` : ""}
           ${tool.resources.filter(res => res[0] === "APK").slice(0, 1).map(res => `<a class="btn" href="${res[2]}" target="_blank" rel="noopener">下載 Android APK</a>`).join("")}
           <a class="btn" href="#resources">檔案資源索引</a>
+          ${tool.demoFile ? `<a class="btn" href="${tool.demoFile}" target="_blank" rel="noopener">程式示範檔案</a>` : ""}
         </div>
       </div>
       <div class="program-body">
