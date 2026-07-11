@@ -971,6 +971,34 @@ const tools = [
     folder: "示範檔案/08成績分析",
     program: "示範檔案/08成績分析/班級成績分析系統_Codex優化.html",
     guide: "示範檔案/08成績分析/班級成績分析系統_Codex優化使用說明.html",
+    actions: [
+      [
+        "班級成績開啟主程式",
+        "示範檔案/08成績分析/班級成績分析系統_Codex優化.html",
+        true
+      ],
+      [
+        "班級成績查看使用說明",
+        "示範檔案/08成績分析/班級成績分析系統_Codex優化使用說明.html"
+      ],
+      [
+        "班級成績下載 Android APK",
+        "示範檔案/08成績分析/班級成績app-release.apk"
+      ],
+      [
+        "個人成績開啟主程式",
+        "示範檔案/08成績分析/學生個人成績分析_codex優化版.html",
+        true
+      ],
+      [
+        "個人成績查看使用說明",
+        "示範檔案/08成績分析/學生個人成績分析_codex使用說明.html"
+      ],
+      [
+        "個人成績下載 Android APK",
+        "https://drive.google.com/file/d/1RCaayPTO0AkRRaQ2Z8G1cK68Zvaal87L/view?usp=drive_link"
+      ]
+    ],
     summary: "整合班級成績分析、個人成績分析、模擬成績檔、NotebookLM 示範成果與深度研究文件，協助教師從分數資料看見班級差異、個別學生需求與後續輔導方向。",
     scenario: "適合段考後班級診斷、學生個別晤談、家長溝通、補救教學規劃、學習策略建議，以及研習中示範如何把成績檔轉成可理解的分析報告。",
     value: [
@@ -1529,6 +1557,16 @@ function resourceLink(res, tool){
     </a>`;
 }
 
+function quickActions(tool){
+  if (tool.actions) {
+    return tool.actions.map(([label, href, primary]) => `<a class="btn${primary ? " primary" : ""}" href="${href}" target="_blank" rel="noopener">${label}</a>`).join("");
+  }
+  return `
+          <a class="btn primary" href="${tool.program}" target="_blank" rel="noopener">開啟主程式</a>
+          ${tool.guide ? `<a class="btn" href="${tool.guide}" target="_blank" rel="noopener">查看使用說明</a>` : ""}
+          ${tool.resources.filter(res => res[0] === "APK").slice(0, 1).map(res => `<a class="btn" href="${res[2]}" target="_blank" rel="noopener">下載 Android APK</a>`).join("")}`;
+}
+
 function renderTabs(){
   tabList.innerHTML = tools.map((tool, index) => `
     <button class="tab" style="--tool:${tool.color}" role="tab" aria-selected="${index === 0 ? "true" : "false"}" aria-controls="panel-${tool.id}" id="tab-${tool.id}" data-id="${tool.id}">
@@ -1550,9 +1588,7 @@ function renderPrograms(){
         <p class="program-desc">${tool.summary}</p>
         <div class="tags">${tool.tags.map(tag => `<span class="tag">${tag}</span>`).join("")}</div>
         <div class="quick-actions">
-          <a class="btn primary" href="${tool.program}" target="_blank" rel="noopener">開啟主程式</a>
-          ${tool.guide ? `<a class="btn" href="${tool.guide}" target="_blank" rel="noopener">查看使用說明</a>` : ""}
-          ${tool.resources.filter(res => res[0] === "APK").slice(0, 1).map(res => `<a class="btn" href="${res[2]}" target="_blank" rel="noopener">下載 Android APK</a>`).join("")}
+          ${quickActions(tool)}
           <a class="btn" href="#resources">檔案資源索引</a>
           ${tool.demoFile ? `<a class="btn" href="${tool.demoFile}" target="_blank" rel="noopener">程式示範檔案</a>` : ""}
         </div>
