@@ -1238,7 +1238,7 @@ const tools = [
     color: "#059669",
     soft: "#e8f8f1",
     folder: "示範檔案/10自主學習",
-    program: "示範檔案/10自主學習/AI輔助自主學習（claude優化）.html",
+    program: "https://froglssh.github.io/ai-assisted-self-learning-online/",
     guide: "示範檔案/10自主學習/AI輔助自主學習（claude優化）使用說明.html",
     demoFile: "https://drive.google.com/file/d/1IrKSj_EBjfrhjlK21R0dW6oF6IiEZv2Y/view?usp=drive_link",
     demoLabel: "示範檔案下載",
@@ -1265,7 +1265,7 @@ const tools = [
       [
         "程式",
         "AI輔助自主學習（claude優化）.html",
-        "示範檔案/10自主學習/AI輔助自主學習（claude優化）.html"
+        "https://froglssh.github.io/ai-assisted-self-learning-online/"
       ],
       [
         "說明",
@@ -1287,7 +1287,7 @@ const tools = [
     color: "#0f766e",
     soft: "#e7f7f4",
     folder: "示範檔案/11升學輔導",
-    program: "示範檔案/11升學輔導/AI智慧輔助升學系統(codex優化).html",
+    program: "https://froglssh.github.io/ai-college-admission-assistant-online/",
     guide: "示範檔案/11升學輔導/AI智慧輔助升學系統(codex優化)使用說明.html",
     demoFile: "https://drive.google.com/file/d/1rkiJOgPwFPBx7tke81OL9D3zcYOAJxxD/view?usp=drive_link",
     demoLabel: "示範檔案下載",
@@ -1314,7 +1314,7 @@ const tools = [
       [
         "程式",
         "AI智慧輔助升學系統(codex優化).html",
-        "示範檔案/11升學輔導/AI智慧輔助升學系統(codex優化).html"
+        "https://froglssh.github.io/ai-college-admission-assistant-online/"
       ],
       [
         "說明",
@@ -1336,10 +1336,16 @@ const tools = [
     color: "#4f46e5",
     soft: "#eef2ff",
     folder: "示範檔案/11學習歷程",
-    program: "示範檔案/11學習歷程/學習歷程檔案輔助程式(claude優化).html",
+    program: "https://froglssh.github.io/learning-portfolio-assistant-online/",
     guide: "",
     demoFile: "https://drive.google.com/file/d/1-5NdGbRhudtWdL3qKTlm4p6XdiC3fwGU/view?usp=drive_link",
     demoLabel: "示範檔案下載",
+    extraButtons: [
+      [
+        "歷程檔案下載",
+        "https://drive.google.com/file/d/1fLO8K69x6pfBWJC17xYF49Zvc0WeHY8N/view?usp=drive_link"
+      ]
+    ],
     summary: "協助學生整理課程學習成果、多元表現、反思文字與上傳前檢核，讓學習歷程從檔案堆疊轉為有主題、有證據、有反思的作品集。",
     scenario: "適合學習歷程檔案撰寫課、課諮與導師個別指導、學生整理作品說明，以及期末上傳前的品質檢核。",
     value: [
@@ -1363,7 +1369,7 @@ const tools = [
       [
         "程式",
         "學習歷程檔案輔助程式(claude優化).html",
-        "示範檔案/11學習歷程/學習歷程檔案輔助程式(claude優化).html"
+        "https://froglssh.github.io/learning-portfolio-assistant-online/"
       ],
       [
         "APK",
@@ -1597,6 +1603,7 @@ function renderPrograms(){
           ${quickActions(tool)}
           <a class="btn" href="#resources">檔案資源索引</a>
           ${tool.demoFile ? `<a class="btn" href="${tool.demoFile}" target="_blank" rel="noopener">${tool.demoLabel || "程式示範檔案"}</a>` : ""}
+          ${tool.extraButtons ? tool.extraButtons.map(([label, href]) => `<a class="btn" href="${href}" target="_blank" rel="noopener">${label}</a>`).join("") : ""}
         </div>
       </div>
       <div class="program-body">
