@@ -553,10 +553,10 @@
     <div class="hero">
         <div class="container">
             <h1>學生選取、分組與紀錄程式<br>教師極簡化操作指南</h1>
-            <p>這是一套專為中小學教師開發的「課堂隨機抽籤、即時小組分組、學生表現評分與紀錄」的一站式教學工具。免安裝、無廣告、完美保密學生隱私，開啟網頁即可輕鬆展開高效率課堂。</p>
+            <p>這是一套專為中小學教師開發的「課堂隨機抽籤、指定與隨機分組、學生表現評分、快速備註與報表輸出」的一站式教學工具。免安裝、無廣告、完美保密學生隱私，開啟網頁即可輕鬆展開高效率課堂。</p>
             <div class="hero-meta">
-                <span>更新版版本：v2026.06 優化升級版</span>
-                <span>核心功能：Excel 多班匯入、不重複抽籤、隨機智慧分組、小組/個人評分、語音轉文字備註</span>
+                <span>更新版版本：v2026.07 強化升級版</span>
+                <span>核心功能：Excel 多班多選匯入、不重複抽籤、指定/隨機分組、分組名冊修改、快速備註、分組與個人報表輸出</span>
             </div>
             <a href="https://froglssh.github.io/student-selection-record/" target="_blank" class="btn-online-link" id="navToApp">
                 🚀 開啟主程式線上版 (由此開啟)
@@ -578,6 +578,7 @@
                     <li><a href="#tab-3-select">🎯 第三步：上課選取與評分</a></li>
                     <li><a href="#tab-4-groups">🧩 第四步：隨機小組分組</a></li>
                     <li><a href="#tab-5-export">📈 第五步：統計與報表匯出</a></li>
+                    <li><a href="#latest-updates">🆕 最新優化重點</a></li>
                     <li><a href="#features">✨ 特色功能專題解說</a></li>
                     <li><a href="#faq">❓ 常見問與答 (FAQ)</a></li>
                 </ul>
@@ -625,6 +626,53 @@
                     </div>
                 </section>
 
+                <!-- 🆕 最新優化重點 -->
+                <section class="guide-section" id="latest-updates">
+                    <h2 class="section-title"><span>🆕</span> 最新優化重點總覽</h2>
+                    <p>以下為最近幾次功能優化後，教師最需要掌握的新操作。若您已使用過舊版，建議先看此區，再依照後續各步驟操作。</p>
+                    <table class="guide-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 24%;">優化項目</th>
+                                <th>新版功能說明</th>
+                                <th style="width: 28%;">實際使用情境</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>多選班級分頁匯入</strong></td>
+                                <td>匯入 Excel 後，除了單一「選擇班級分頁」外，新增「多選班級分頁」。可按住 Command 或 Shift 一次選取多個分頁，再按「匯入選取班級」。</td>
+                                <td>一份 Excel 有 301、302、303 多個班級時，只匯入本週要上課的幾個班，不必匯入全部。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>自訂快速備註</strong></td>
+                                <td>上課選取頁新增「新增快速備註」，老師可以建立自己的常用備註文字。新增後會出現在每位學生紀錄的快速備註選單中，也可刪除。</td>
+                                <td>例如新增「實驗操作熟練」「小組討論積極」「未帶講義」，課堂紀錄可更快完成。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>指定分組</strong></td>
+                                <td>分組安排頁新增「指定分組」。系統會依目前「依每組人數」或「依組數」先產生空白組別，老師再指定學生加入各組。</td>
+                                <td>適合實驗課先安排組長、能力混合分組、特殊學生分組、專題任務分組。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>分組修改 / 完成模式</strong></td>
+                                <td>分組結果平常只顯示乾淨名單、加減分與備註。按「修改」後才顯示新增、移動、置換、移除等名冊編輯工具；按「完成」後工具會收起。</td>
+                                <td>平常檢視名單不被操作按鈕干擾，需要調整座位或組員時再進入修改模式。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>上方名冊直接加入指定組</strong></td>
+                                <td>指定分組或修改模式中，先在某組按「指定加入第 X 組」，再直接點上方學生名冊，即可把學生加入該組。</td>
+                                <td>老師可像點名一樣快速把學生分派到第一組、第二組、第三組。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>分組專用報表輸出</strong></td>
+                                <td>統計輸出頁切到「分組安排資料」後，新增分組統計摘要與「下載 Excel 紀錄」「下載 PDF 報表」「列印報表」三個按鈕。</td>
+                                <td>課後可單獨輸出分組紀錄，不必混在上課選取與個人加減分報表中。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
                 <!-- 📥 第一步：匯入班級 -->
                 <section class="guide-section" id="tab-1-import">
                     <h2 class="section-title"><span>1</span> 第一步：匯入班級資料</h2>
@@ -635,6 +683,7 @@
                         <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
                             <span class="mock-btn mock-btn-primary">📋 開啟選取分頁</span>
                             <span class="mock-btn mock-btn-secondary">💾 儲存此分頁為班級</span>
+                            <span class="mock-btn mock-btn-secondary">✅ 匯入選取班級</span>
                             <span class="mock-btn mock-btn-outline">📚 匯入全部班級</span>
                         </div>
                         <p style="font-size: 0.9rem; color: var(--slate-600);">（您會在「1. 匯入班級」分頁中看到這些按鈕）</p>
@@ -658,6 +707,10 @@
                                 <td>如果上傳的 Excel 擁有多個分頁，此處可下拉切換要解析的分頁。如果只有一頁，系統會自動選取。</td>
                             </tr>
                             <tr>
+                                <td><strong>多選班級分頁</strong><br><small>(多選清單)</small></td>
+                                <td>新版新增的批次匯入欄位。按住 <code>Command</code> 或 <code>Shift</code> 可以一次選取多個 Excel 分頁，再搭配「匯入選取班級」只匯入指定班級。</td>
+                            </tr>
+                            <tr>
                                 <td><strong>匯入格式</strong><br><small>(下拉選單)</small></td>
                                 <td>
                                     告訴系統如何解讀您的表格欄位：
@@ -675,6 +728,10 @@
                             <tr>
                                 <td><span class="mock-btn mock-btn-secondary">💾 儲存此分頁為班級</span></td>
                                 <td>將目前選擇的工作表解析後的名單正式儲存到瀏覽器的本地儲存空間（LocalStorage）中。以後只要打開網頁，即可在「選擇班級」中一鍵開啟。</td>
+                            </tr>
+                            <tr>
+                                <td><span class="mock-btn mock-btn-secondary">✅ 匯入選取班級</span></td>
+                                <td><strong>【多班級精準匯入】</strong> 先在「多選班級分頁」中勾選需要的分頁，再點此按鈕。適合只匯入本學期任教班級，不必把整份 Excel 全部匯入。</td>
                             </tr>
                             <tr>
                                 <td><span class="mock-btn mock-btn-outline">📚 匯入全部班級</span></td>
@@ -758,6 +815,7 @@
                         <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
                             <span class="mock-btn mock-btn-primary">🎲 開始隨機選取</span>
                             <span class="mock-btn mock-btn-warning">🔄 清除選取</span>
+                            <span class="mock-btn mock-btn-secondary">新增快速備註</span>
                             <span class="mock-btn mock-btn-secondary">💾 儲存目前班級紀錄</span>
                         </div>
                         <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; border-top: 1px dashed var(--slate-300); padding-top: 12px;">
@@ -772,6 +830,7 @@
                         <li style="margin-bottom: 10px;"><strong>手動輸入或微調名冊</strong>：在「學生名單」大文字框中，每行輸入一個名字（可加座號，如：<code>01 王大同</code>），修改後按 <span class="mock-btn mock-btn-primary">👀 更新學生預覽</span> 即可反映在下方的名單卡片。</li>
                         <li style="margin-bottom: 10px;"><strong>刪除個別學生</strong>：點選 <span class="mock-btn mock-btn-warning">✂️ 刪除學生模式</span>，卡片會出現 <code>×</code> 按鈕，點擊可直接將該學生從目前名單中剃除。完成後再次點擊該按鈕即可退出刪除模式。</li>
                         <li style="margin-bottom: 10px;"><strong>點擊卡片手動點選</strong>：直接點擊學生名單中的卡片，選中後會變為 <span class="text-secondary">綠色</span>，並在結果區最上方自動跳出該學生的評分列。這也是手動加減分最快的方法。</li>
+                        <li style="margin-bottom: 10px;"><strong>新增自訂快速備註</strong>：在「新增快速備註」欄輸入常用紀錄文字，例如 <code>實驗操作熟練</code>、<code>小組討論積極</code>、<code>未帶講義</code>，按「新增」後會儲存在瀏覽器中，並出現在所有學生紀錄的快速備註選單。若日後不需要，可在快速備註標籤旁按 <code>×</code> 刪除。</li>
                         <li style="margin-bottom: 10px;"><strong>🎲 隨機抽籤（不重複）</strong>：
                             <ol style="margin-left: 24px; margin-top: 4px;">
                                 <li>在「選取學生人數」設定每次抽幾人（1~5人，或選其他自訂人數）。</li>
@@ -799,7 +858,7 @@
                             <tr>
                                 <td><strong>快速備註選單</strong><br><small>(下拉選單)</small></td>
                                 <td>
-                                    點擊下拉選單，可以快速將常見表現語填入備註欄中：
+                                    點擊下拉選單，可以快速將常見表現語填入備註欄中；新版也支援老師自行新增常用備註：
                                     <br>
                                     <span class="quick-tag">表現良好</span>
                                     <span class="quick-tag">積極發言</span>
@@ -807,6 +866,7 @@
                                     <span class="quick-tag">上課遲到</span>
                                     <span class="quick-tag">睡覺吵鬧</span>
                                     <span class="quick-tag">作業缺失</span>
+                                    <span class="quick-tag">自訂備註</span>
                                 </td>
                             </tr>
                             <tr>
@@ -828,15 +888,16 @@
                     </table>
                 </section>
 
-                <!-- 🧩 第四步：隨機小組分組 -->
+                <!-- 🧩 第四步：分組安排 -->
                 <section class="guide-section" id="tab-4-groups">
-                    <h2 class="section-title"><span>4</span> 第四步：隨機小組分組安排 (全新功能)</h2>
-                    <p class="text-purple" style="font-weight: 700; margin-bottom: 8px;">★ 這是本次更新的核心功能！</p>
-                    <p>課堂中需要分組報告、實驗或討論時，本分頁可隨機將學生拆分成不同組別，並可以對「小組整體」進行評分與事件備註。</p>
+                    <h2 class="section-title"><span>4</span> 第四步：指定與隨機小組分組安排</h2>
+                    <p class="text-purple" style="font-weight: 700; margin-bottom: 8px;">★ 新版支援「指定分組」與「隨機分組」雙模式！</p>
+                    <p>課堂中需要分組報告、實驗或討論時，本分頁可將學生拆分成不同組別，並可在分組完成後保留乾淨名單、組別加減分與小組備註。若需要調整名冊，可按「修改」進入編輯模式。</p>
 
                     <div class="mock-ui-card">
-                        <div class="mock-ui-title">🧩 隨機分組設定台</div>
+                        <div class="mock-ui-title">🧩 分組安排設定台</div>
                         <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+                            <span class="mock-btn mock-btn-warning">✍️ 指定分組</span>
                             <span class="mock-btn mock-btn-primary">🎲 產生隨機分組</span>
                             <span class="mock-btn mock-btn-secondary">💾 儲存分組紀錄</span>
                             <span class="mock-btn mock-btn-outline">🖨️ 列印分組名單</span>
@@ -879,13 +940,21 @@
                             </tr>
                             <tr>
                                 <td><strong>名單晶片預覽區</strong><br><small>(分組頁面上方)</small></td>
-                                <td>顯示目前的班級名單。點擊名單中的名字可以「選取/取消選取」學生（綠色代表已選中），這會同步影響您的「分組來源」。</td>
+                                <td>顯示目前的班級名單。一般狀態下，點擊名單中的名字可以「選取/取消選取」學生（綠色代表已選中），這會同步影響您的「分組來源」。若正在修改指定分組，點擊上方學生名冊會直接把學生加入目前指定的組別。</td>
+                            </tr>
+                            <tr>
+                                <td><span class="mock-btn mock-btn-warning">✍️ 指定分組</span></td>
+                                <td>依照目前「分組方式」先建立空白組別。建立後會自動進入修改模式，老師可先按某組的「指定加入第 X 組」，再從上方學生名冊直接點選學生加入該組。</td>
+                            </tr>
+                            <tr>
+                                <td><span class="mock-btn mock-btn-primary">🎲 產生隨機分組</span></td>
+                                <td>依目前分組來源與分組方式自動打散學生。完成後若不滿意，可按分組紀錄上的「修改」進入名冊調整模式。</td>
                             </tr>
                         </tbody>
                     </table>
 
                     <h4 style="margin: 20px 0 10px; font-size: 1.15rem; font-weight: 700;">分組後的結果卡片與小組評分：</h4>
-                    <p>當您點選 <span class="mock-btn mock-btn-primary">🎲 產生隨機分組</span> 後，下方會產生分組大卡。每組的呈現卡片如下圖模擬：</p>
+                    <p>當您點選 <span class="mock-btn mock-btn-primary">🎲 產生隨機分組</span> 或 <span class="mock-btn mock-btn-warning">✍️ 指定分組</span> 後，下方會產生分組大卡。完成狀態下，卡片只保留名單、加減分與備註，畫面簡潔乾淨：</p>
 
                     <div style="display: flex; gap: 16px; margin: 16px 0; flex-wrap: wrap;">
                         <div class="mock-group-card">
@@ -921,6 +990,8 @@
                     <ul style="list-style-position: inside; font-size: 0.95rem; margin-bottom: 20px;">
                         <li style="margin-bottom: 8px;"><strong>小組整體加減分</strong>：點擊組別卡片內的 <code>[ + ]</code> 或 <code>[ − ]</code>，可以為該小組整體加上或扣除分數。這對小組競賽打分極為方便！</li>
                         <li style="margin-bottom: 8px;"><strong>小組表現備註</strong>：可以在小組卡片最下方的「輸入本組備註...」框中為該小組寫下評論（例如：「小組分工極佳」、「討論熱烈」）。</li>
+                        <li style="margin-bottom: 8px;"><strong>修改 / 完成模式</strong>：每筆分組紀錄右上角有「修改」按鈕。按下後才會出現新增組員、移動、置換、移除等控制；調整完畢後按「完成」，系統會收起編輯工具，只留下乾淨名單、加減分與備註。</li>
+                        <li style="margin-bottom: 8px;"><strong>置換與移動組員</strong>：修改模式中，組員旁可選擇移動到其他組，也可用尚未分配的學生進行置換。這適合處理臨時缺席、實驗器材分配、學生能力搭配等課堂現場需求。</li>
                         <li style="margin-bottom: 8px;"><strong>儲存與列印</strong>：
                             <ul>
                                 <li>點擊 <span class="mock-btn mock-btn-secondary">💾 儲存分組紀錄</span> 可手動將分組資料存入系統中。</li>
@@ -969,11 +1040,12 @@
                             <tr>
                                 <td><strong>資料顯示：分組安排資料</strong></td>
                                 <td>
-                                    切換到此項後，下方表格會列出所有的歷史分組資料。
-                                    <br>表格欄位包含：<code>分組名稱</code>、<code>時間</code>、<code>組別</code>、<code>學生名單</code>、<code>組分數</code>、<code>備註</code>。
+                                    切換到此項後，下方會先顯示分組統計摘要，包含分組紀錄數、組別總數、學生人次與最新分組名稱；再列出所有歷史分組資料。
+                                    <br>表格欄位包含：<code>分組名稱</code>、<code>時間</code>、<code>分組方式</code>、<code>組別</code>、<code>學生名單</code>、<code>人數</code>、<code>組分數</code>、<code>備註</code>。
                                     <ul>
-                                        <li>在此模式下，點選 <span class="mock-btn mock-btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;">📊 下載 Excel 紀錄</span>，Excel 當中會額外增添一個名為 <strong>「分組紀錄」</strong> 的 Sheet 工作表。</li>
-                                        <li>在此模式下，點選 <span class="mock-btn mock-btn-primary" style="padding: 4px 8px; font-size: 0.75rem;">📄 下載 PDF 報表</span>，PDF 當中會包含一個名為 <strong>「分組紀錄」</strong> 的大表格，將所有的分組明細、組分數與備註一併打包下載。</li>
+                                        <li><span class="mock-btn mock-btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;">📊 下載 Excel 紀錄</span>：只下載分組安排資料，適合課後整理小組名冊與組別表現。</li>
+                                        <li><span class="mock-btn mock-btn-primary" style="padding: 4px 8px; font-size: 0.75rem;">📄 下載 PDF 報表</span>：輸出分組安排 PDF 報表，包含統計摘要與完整分組明細。</li>
+                                        <li><span class="mock-btn mock-btn-outline" style="padding: 4px 8px; font-size: 0.75rem;">🖨️ 列印報表</span>：直接列印分組安排資料，適合留存紙本紀錄。</li>
                                     </ul>
                                 </td>
                             </tr>
@@ -999,7 +1071,7 @@
                     </div>
 
                     <div style="margin-bottom: 24px; border-top: 1px solid var(--slate-200); padding-top: 20px;">
-                        <h4 style="margin-bottom: 8px; font-weight: 700; color: var(--slate-900);">2. 如何利用「上課選取」與「隨機分組」進行連貫搭配</h4>
+                        <h4 style="margin-bottom: 8px; font-weight: 700; color: var(--slate-900);">2. 如何利用「上課選取」與「指定/隨機分組」進行連貫搭配</h4>
                         <p style="font-size: 0.95rem; margin-bottom: 8px;">
                             這是一個非常實用的教學情境搭配：
                         </p>
@@ -1007,7 +1079,8 @@
                             <li>上課時，先在「3. 上課選取」頁面使用隨機抽取 8 位同學回答問題。</li>
                             <li>隨後，要進行實驗或小組研討。切換到「4. 分組安排」分頁。</li>
                             <li>將「分組來源」設定為 <strong>「目前已選取學生」</strong>，分組方式設定「依組數」分成 2 組。</li>
-                            <li>點選隨機分組，系統便會直接把剛才這 8 位同學隨機均分成 2 組，進行特定的發表或研討。其他沒有被選中的同學則繼續保持，極其方便靈活！</li>
+                            <li>若要完全隨機，點選「產生隨機分組」；若要自己安排組員，點選「指定分組」先建立空白組別。</li>
+                            <li>指定分組時，先按某一組的「指定加入第 X 組」，再從上方學生名冊直接點選學生，即可快速把特定學生放入指定組別。</li>
                         </ol>
                     </div>
 
@@ -1054,6 +1127,16 @@
                                 <li><strong>列印分組名單</strong>：位於「分組安排」分頁中。它是專門為了讓老師們能夠快速印出「乾淨的、不含加減分數與私密備註的純小組組員名單」，方便剪下來貼在教室或實驗室公佈欄。</li>
                                 <li><strong>列印報表</strong>：位於「統計輸出」分頁。它是完整的平時成績與紀錄明細，含有分數、歷史抽籤時間與教師個人備註。</li>
                             </ul>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>Q:</span>
+                            <span>指定分組建立後，為什麼一開始是空白組別？</span>
+                        </div>
+                        <div class="faq-answer">
+                            這是新版設計。指定分組會先依「每組人數」或「組數」建立空白組別，讓老師自行安排學生。操作時先在某一組按「指定加入第 X 組」，再點上方學生名冊，就能把學生加入該組。完成後按「完成」，系統會收起移動、置換、移除等修改工具，只留下乾淨的分組名單、加減分與備註。
                         </div>
                     </div>
 
