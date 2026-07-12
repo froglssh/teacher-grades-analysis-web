@@ -254,22 +254,113 @@
       display: none;
       font-weight: 700;
     }
+    .workflow-tabs {
+      display: flex;
+      gap: 8px;
+      margin: 0 0 18px;
+      padding: 8px;
+      border: 1px solid rgba(23,32,51,.08);
+      background: rgba(255,255,255,.82);
+      border-radius: 8px;
+      box-shadow: 0 10px 28px rgba(23,32,51,.07);
+      overflow-x: auto;
+    }
+    .workflow-tab {
+      flex: 1 0 155px;
+      border: 1px solid transparent;
+      border-radius: 7px;
+      background: transparent;
+      color: #475467;
+      padding: 11px 13px;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+    }
+    .workflow-tab.active { background: #172033; color: white; box-shadow: 0 6px 16px rgba(23,32,51,.18); }
+    .tab-page { display: none; }
+    .tab-page.active { display: block; }
+    .tab-grid { display: grid; grid-template-columns: minmax(300px, .9fr) minmax(0, 1.5fr); gap: 18px; align-items: start; }
+    .export-stack { display: grid; gap: 18px; }
+    .export-actions { display: flex; flex-wrap: nowrap; gap: 10px; align-items: center; overflow-x: auto; }
+    .export-actions .row { display: contents; }
+    .export-actions .btn { min-width: 128px; min-height: 42px; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+    .export-actions #clearAllBtn { margin-left: auto; }
+    .students-grid { align-items: stretch; }
+    .students-grid > .panel { height: 100%; }
+    .students-grid > .panel:last-child { grid-column: 1 / -1; }
+    .student-roster {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(142px, 1fr));
+      gap: 9px;
+    }
+    #assignmentStudentRoster { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .student-chip {
+      min-height: 48px;
+      border: 1px solid #d8e0ea;
+      border-radius: 7px;
+      background: #fff;
+      color: #344054;
+      font-weight: 800;
+      padding: 8px 10px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .student-chip:hover { border-color: #93b4f5; background: #f6f9ff; }
+    .student-chip.selected { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+    .student-chip.assigned { background: #f2f4f7; color: #98a2b3; border-color: #eaecf0; }
+    .assignment-summary { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; color: var(--muted); font-weight: 700; }
+    .assignment-list { display: grid; gap: 6px; }
+    .assignment-card {
+      display: grid;
+      grid-template-columns: 110px minmax(135px, 1fr) minmax(160px, 1fr) minmax(180px, 1.4fr) auto;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid #dbe4ee;
+      border-radius: 8px;
+      background: #fff;
+      padding: 7px 10px;
+      min-height: 50px;
+    }
+    .assignment-card.is-unassigned { border-left: 4px solid #d97706; }
+    .assignment-card .assignment-area { color: #667085; font-size: .84rem; font-weight: 800; }
+    .assignment-card .assignment-task { font-weight: 800; }
+    .assignment-card .assignment-student { color: #0f766e; font-weight: 800; }
+    .assignment-card .assignment-student.empty { color: #b54708; min-height: 0; display: block; text-align: left; padding: 0; place-items: normal; }
+    .assignment-card .assignment-detail { min-width: 0; }
+    .assignment-card .assignment-detail .input { height: 38px; padding-block: 7px; }
+    .assignment-card .assignment-actions { display: flex; gap: 6px; flex-wrap: nowrap; justify-content: flex-end; }
+    .assignment-card .assignment-actions .btn { min-height: 38px; padding: 7px 10px; white-space: nowrap; }
+    .assignment-card.final { grid-template-columns: 110px minmax(160px, 1fr) minmax(170px, 1fr) minmax(180px, 1.4fr); min-height: 0; padding: 12px; }
+    .assignment-card.final .assignment-detail { white-space: pre-wrap; overflow-wrap: anywhere; color: #475467; }
+    .blank-panel { padding: 28px; border: 1px dashed #cbd5e1; border-radius: 8px; text-align: center; color: var(--muted); background: #fafcff; }
     .print-only { display: none; }
     @media (max-width: 1050px) {
-      .topbar, .layout { grid-template-columns: 1fr; }
+      .topbar, .layout, .tab-grid { grid-template-columns: 1fr; }
       .status { min-width: 0; }
+      .assignment-card { grid-template-columns: 1fr 1fr; }
+      .assignment-card .assignment-actions { justify-content: flex-start; flex-wrap: wrap; }
+      .assignment-card.final { grid-template-columns: 1fr 1fr; }
+      #assignmentStudentRoster { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
     @media (max-width: 720px) {
       .shell { padding: 12px; }
       .grid-2, .grid-3, .summary-grid { grid-template-columns: 1fr; }
       .task-card { grid-template-columns: 1fr; }
       .sheet-head { grid-template-columns: 1fr; }
+      .assignment-card, .assignment-card.final { grid-template-columns: 1fr; }
+      #assignmentStudentRoster { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .btn { width: 100%; justify-content: center; }
       .row .btn { width: auto; }
     }
     @media print {
       body { background: white; }
-      .left-col, .topbar, .result-actions, .toast { display: none !important; }
+      .topbar, .workflow-tabs, .toast, .tab-page { display: none !important; }
+      #page-export { display: block !important; }
+      #page-export .tab-grid { display: block !important; }
+      #page-export .tab-grid > .panel:first-child { display: none !important; }
+      #page-export .export-stack { display: block !important; }
+      #page-export .export-panel, #page-export .history-panel { display: none !important; }
+      .left-col, .result-actions { display: none !important; }
       .shell { max-width: none; padding: 0; }
       .layout { display: block; }
       .panel { box-shadow: none; border: 0; }
@@ -293,7 +384,8 @@
       </aside>
     </header>
 
-    <div class="layout">
+    <div id="workflowMount"></div>
+    <div id="legacyLayout" class="layout">
       <div class="left-col">
         <section class="panel">
           <div class="panel-head">
@@ -461,7 +553,7 @@
               <div id="emptyState" class="empty">
                 <div>
                   <strong>尚未產生打掃分配</strong>
-                  <p>請先匯入或輸入學生名單，確認工作項目與人次，再按「抽籤安排」。</p>
+                  <p>請先匯入或輸入學生名單，再於工作設定頁確認工作項目與人次，按「產生工作項目名冊」後進行分配。</p>
                 </div>
               </div>
             </div>
@@ -512,7 +604,10 @@
       history: [],
       settings: { avoidRecent: false, balanceLoad: true },
       excel: { workbook: null, rows: [], headers: [] },
-      selectedHistoryIndex: -1
+      selectedHistoryIndex: -1,
+      selectedStudentName: '',
+      assignmentMode: 'edit',
+      activeTab: 'students'
     };
 
     const $ = (id) => document.getElementById(id);
@@ -572,6 +667,135 @@
       toast: $('toast'),
       autosaveState: $('autosaveState')
     };
+
+    let workflowEls = {};
+
+    function setupWorkflowLayout() {
+      const mount = $('workflowMount');
+      const legacyLayout = $('legacyLayout');
+      const leftCol = legacyLayout.querySelector('.left-col');
+      const sections = [...leftCol.children];
+      const resultPanel = legacyLayout.querySelector(':scope > section.panel');
+      if (!mount || !leftCol || !resultPanel || sections.length < 6) return;
+
+      mount.innerHTML = `
+        <nav class="workflow-tabs" aria-label="工作流程">
+          <button class="workflow-tab active" type="button" data-tab="students">1. 學生名單</button>
+          <button class="workflow-tab" type="button" data-tab="tasks">2. 工作設定</button>
+          <button class="workflow-tab" type="button" data-tab="assign">3. 分配工作</button>
+          <button class="workflow-tab" type="button" data-tab="export">4. 資料儲存與輸出</button>
+        </nav>
+        <div id="workflowPages">
+          <section id="page-students" class="tab-page active"></section>
+          <section id="page-tasks" class="tab-page"></section>
+          <section id="page-assign" class="tab-page"></section>
+          <section id="page-export" class="tab-page"></section>
+        </div>`;
+
+      const pages = {
+        students: $('page-students'),
+        tasks: $('page-tasks'),
+        assign: $('page-assign'),
+        export: $('page-export')
+      };
+      const studentsGrid = document.createElement('div');
+      studentsGrid.className = 'tab-grid students-grid';
+      studentsGrid.append(sections[0], sections[1]);
+      const studentRight = document.createElement('div');
+      studentRight.className = 'panel';
+      studentRight.innerHTML = `
+        <div class="panel-head"><h2>目前班級學生名冊</h2><span class="pill" id="studentRosterSummary">尚未載入</span></div>
+        <div class="panel-body"><div id="studentRoster" class="student-roster"></div></div>`;
+      studentsGrid.append(studentRight);
+      pages.students.append(studentsGrid, sections[2]);
+
+      const taskGrid = document.createElement('div');
+      taskGrid.className = 'tab-grid';
+      taskGrid.append(sections[3]);
+      const workPreview = document.createElement('div');
+      workPreview.className = 'panel';
+      workPreview.innerHTML = `
+        <div class="panel-head"><h2>工作項目名冊</h2><span class="pill" id="workRosterSummary">尚未產生</span></div>
+        <div class="panel-body stack">
+          <p class="field small">確認內掃、外掃工作與人次後，建立每一個可分配的工作位置。建立後請到「分配工作」頁指定學生或隨機分配。</p>
+          <button id="generateWorkRosterBtn" class="btn btn-primary">產生工作項目名冊</button>
+          <div id="workRosterPreview" class="blank-panel">尚未產生工作項目名冊。</div>
+        </div>`;
+      taskGrid.append(workPreview);
+      pages.tasks.append(taskGrid);
+
+      sections[4].style.marginBottom = '18px';
+      const assignmentPanel = document.createElement('div');
+      assignmentPanel.className = 'panel';
+      assignmentPanel.innerHTML = `
+        <div class="panel-head result-actions">
+          <div><h2>班級工作分配</h2><span class="pill" id="assignmentModeLabel">尚未建立工作名冊</span></div>
+          <div class="row">
+            <button id="completeAssignmentBtn" class="btn btn-teal mini">完成分配</button>
+            <button id="classWorkBtn" class="btn btn-soft mini">修改工作</button>
+          </div>
+        </div>
+        <div class="panel-body stack">
+          <div>
+            <div class="result-actions"><h3 style="margin:0">目前班級學生名冊</h3><span id="assignmentSummary" class="assignment-summary"></span></div>
+            <div id="assignmentStudentRoster" class="student-roster" style="margin-top:12px"></div>
+          </div>
+          <div>
+            <div class="result-actions"><h3 style="margin:0">工作項目名冊</h3><span class="pill" id="assignmentProgress">0 / 0 已分配</span></div>
+            <div id="assignmentList" class="assignment-list" style="margin-top:12px"></div>
+          </div>
+          <div class="row">
+            <button id="goExportBtn" class="btn btn-dark">資料儲存與輸出</button>
+            <button id="quickPrintBtn" class="btn btn-soft">列印班級工作</button>
+          </div>
+        </div>`;
+      pages.assign.append(sections[4], assignmentPanel);
+
+      const exportGrid = document.createElement('div');
+      exportGrid.className = 'export-stack';
+      const exportPanel = sections[5];
+      const historyPanel = resultPanel.querySelector(':scope > .panel-body > section.panel');
+      exportPanel.classList.add('export-panel');
+      exportPanel.querySelector('.panel-body')?.classList.add('export-actions');
+      if (historyPanel) {
+        historyPanel.classList.add('history-panel');
+        historyPanel.style.marginTop = '';
+      }
+      exportGrid.append(exportPanel);
+      if (historyPanel) exportGrid.append(historyPanel);
+      exportGrid.append(resultPanel);
+      pages.export.append(exportGrid);
+
+      legacyLayout.remove();
+      workflowEls = {
+        tabs: [...mount.querySelectorAll('.workflow-tab')],
+        pages,
+        studentRoster: $('studentRoster'),
+        studentRosterSummary: $('studentRosterSummary'),
+        workRosterSummary: $('workRosterSummary'),
+        workRosterPreview: $('workRosterPreview'),
+        generateWorkRosterBtn: $('generateWorkRosterBtn'),
+        assignmentStudentRoster: $('assignmentStudentRoster'),
+        assignmentSummary: $('assignmentSummary'),
+        assignmentList: $('assignmentList'),
+        assignmentProgress: $('assignmentProgress'),
+        assignmentModeLabel: $('assignmentModeLabel'),
+        completeAssignmentBtn: $('completeAssignmentBtn'),
+        classWorkBtn: $('classWorkBtn'),
+        goExportBtn: $('goExportBtn'),
+        quickPrintBtn: $('quickPrintBtn')
+      };
+      workflowEls.tabs.forEach(button => button.addEventListener('click', () => switchTab(button.dataset.tab)));
+    }
+
+    function switchTab(tab) {
+      if (!workflowEls.pages?.[tab]) return;
+      state.activeTab = tab;
+      Object.entries(workflowEls.pages).forEach(([name, page]) => page.classList.toggle('active', name === tab));
+      workflowEls.tabs.forEach(button => button.classList.toggle('active', button.dataset.tab === tab));
+      if (tab === 'assign') renderAssignmentWorkspace();
+      if (tab === 'export') renderResult();
+    }
 
     function escapeHtml(value) {
       return String(value ?? '')
@@ -748,6 +972,9 @@
         task.count = Math.max(1, Number(card.querySelector('.task-count').value) || 1);
         task.detail = card.querySelector('.task-detail').value.trim();
         state.current = null;
+        state.assignmentMode = 'edit';
+        renderWorkRosterPreview();
+        renderAssignmentWorkspace();
         renderResult();
         saveLocal();
       });
@@ -761,66 +988,191 @@
       });
     }
 
+    function renderStudentRoster() {
+      if (!workflowEls.studentRoster) return;
+      workflowEls.studentRosterSummary.textContent = state.students.length ? `目前共 ${state.students.length} 位學生` : '尚未載入';
+      workflowEls.studentRoster.innerHTML = state.students.length
+        ? state.students.map(student => `<div class="student-chip" aria-label="${escapeHtml(studentLabel(student))}">${escapeHtml(studentLabel(student))}</div>`).join('')
+        : '<div class="blank-panel">請先匯入或輸入學生名單，載入後會顯示完整學生名冊。</div>';
+    }
+
+    function renderWorkRosterPreview() {
+      if (!workflowEls.workRosterPreview) return;
+      const assignments = getAssignments();
+      workflowEls.workRosterSummary.textContent = assignments.length ? `${assignments.length} 個工作位置` : '尚未產生';
+      workflowEls.workRosterPreview.innerHTML = assignments.length
+        ? `<div class="student-roster">${assignments.map(item => `<div class="student-chip">${escapeHtml(item.area === 'outer' ? '外掃｜' : '內掃｜')}${escapeHtml(item.label)}</div>`).join('')}</div>`
+        : '確認工作項目與人次後，按「產生工作項目名冊」。';
+    }
+
+    function getAssignments() {
+      return state.current?.assignments || [];
+    }
+
+    function getAssignedNames(excludeSlotId = '') {
+      return new Set(getAssignments().filter(item => item.slotId !== excludeSlotId && item.student?.name).map(item => item.student.name));
+    }
+
+    function getUnassignedStudents(excludeSlotId = '') {
+      const assigned = getAssignedNames(excludeSlotId);
+      return state.students.filter(student => !assigned.has(student.name));
+    }
+
+    function createBlankWorkRoster() {
+      syncInfoFromInputs();
+      if (!state.students.length) {
+        toast('請先在學生名單頁載入學生資料', 'warn');
+        switchTab('students');
+        return false;
+      }
+      const slots = taskSlots().filter(slot => slot.label.trim());
+      if (!slots.length) {
+        toast('請先在工作設定頁建立至少一個工作項目', 'warn');
+        switchTab('tasks');
+        return false;
+      }
+      const name = els.historyName.value.trim() || `第 ${state.history.length + 1} 次`;
+      state.current = {
+        id: uid('result'),
+        name,
+        createdAt: new Date().toISOString(),
+        assignments: slots.map(slot => ({
+          slotId: slot.id,
+          taskId: slot.taskId,
+          area: slot.area,
+          baseName: slot.baseName,
+          label: slot.label,
+          detail: slot.detail,
+          student: null
+        }))
+      };
+      state.assignmentMode = 'edit';
+      state.selectedStudentName = '';
+      saveLocal();
+      renderAll();
+      toast('已產生工作項目名冊，請開始指定或隨機分配學生。');
+      return true;
+    }
+
+    function rankStudentsForSlot(slot, pool) {
+      const stats = historyStats();
+      return shuffle(pool).sort((a, b) => {
+        const recentA = state.settings.avoidRecent ? (stats.byStudentTask[`${a.name}::${slot.baseName}`] || 0) : 0;
+        const recentB = state.settings.avoidRecent ? (stats.byStudentTask[`${b.name}::${slot.baseName}`] || 0) : 0;
+        const loadA = state.settings.balanceLoad ? (stats.totalByStudent[a.name] || 0) : 0;
+        const loadB = state.settings.balanceLoad ? (stats.totalByStudent[b.name] || 0) : 0;
+        return (recentA - recentB) || (loadA - loadB);
+      });
+    }
+
+    function assignStudentToSlot(slotId, studentName) {
+      const item = getAssignments().find(row => row.slotId === slotId);
+      const student = state.students.find(row => row.name === studentName);
+      if (!item || !student) return;
+      const previous = getAssignments().find(row => row.slotId !== slotId && row.student?.name === student.name);
+      if (previous) previous.student = null;
+      item.student = clone(student);
+      state.selectedStudentName = '';
+      state.assignmentMode = 'edit';
+      saveLocal();
+      renderAll();
+    }
+
+    function randomAssignSlot(slotId) {
+      const item = getAssignments().find(row => row.slotId === slotId);
+      if (!item) return;
+      const pool = getUnassignedStudents(slotId);
+      if (!pool.length) {
+        toast('目前沒有未選取的學生可分配', 'warn');
+        return;
+      }
+      const student = rankStudentsForSlot(item, pool)[0];
+      assignStudentToSlot(slotId, student.name);
+    }
+
+    function randomAssignAll() {
+      if (!state.current && !createBlankWorkRoster()) return;
+      getAssignments().filter(item => !item.student).forEach(item => {
+        const pool = getUnassignedStudents(item.slotId);
+        if (!pool.length) return;
+        const student = rankStudentsForSlot(item, pool)[0];
+        item.student = clone(student);
+      });
+      state.assignmentMode = 'edit';
+      saveLocal();
+      renderAll();
+      toast('已完成可分配學生的隨機安排。');
+    }
+
+    function renderAssignmentWorkspace() {
+      if (!workflowEls.assignmentList) return;
+      const assignments = getAssignments();
+      const assignedCount = assignments.filter(item => item.student?.name).length;
+      const availableCount = getUnassignedStudents().length;
+      workflowEls.assignmentSummary.textContent = `共 ${state.students.length} 位學生・未選取 ${availableCount} 位・已選取 ${assignedCount} 位`;
+      workflowEls.assignmentProgress.textContent = `${assignedCount} / ${assignments.length} 已分配`;
+      workflowEls.assignmentModeLabel.textContent = !state.current ? '尚未建立工作名冊' : state.assignmentMode === 'final' ? '已完成分配' : '編輯分配中';
+      workflowEls.completeAssignmentBtn.disabled = !state.current || state.assignmentMode === 'final';
+      workflowEls.classWorkBtn.disabled = !state.current;
+
+      const assignedNames = getAssignedNames();
+      workflowEls.assignmentStudentRoster.innerHTML = state.students.length
+        ? state.students.map(student => {
+          const selected = state.selectedStudentName === student.name;
+          const assigned = assignedNames.has(student.name);
+          return `<button type="button" class="student-chip ${selected ? 'selected' : ''} ${assigned ? 'assigned' : ''}" data-student-name="${escapeHtml(student.name)}">${escapeHtml(studentLabel(student))}</button>`;
+        }).join('')
+        : '<div class="blank-panel">請先在學生名單頁載入學生資料。</div>';
+
+      if (!state.current) {
+        workflowEls.assignmentList.innerHTML = '<div class="blank-panel">請先到「工作設定」頁按下「產生工作項目名冊」。</div>';
+        return;
+      }
+      const isFinal = state.assignmentMode === 'final';
+      workflowEls.assignmentList.innerHTML = assignments.map((item, index) => {
+        const studentText = item.student ? studentLabel(item.student) : '尚未分配';
+        const actionHtml = isFinal ? '' : `
+          <div class="assignment-actions">
+            <button type="button" class="btn btn-soft mini assign-selected-btn" data-slot-id="${escapeHtml(item.slotId)}" ${state.selectedStudentName ? '' : 'disabled'}>指定選取學生</button>
+            <button type="button" class="btn btn-primary mini random-slot-btn" data-slot-id="${escapeHtml(item.slotId)}">隨機分配</button>
+            ${item.student ? `<button type="button" class="btn btn-soft mini clear-slot-btn" data-slot-id="${escapeHtml(item.slotId)}">取消</button>` : ''}
+          </div>`;
+        return `
+          <article class="assignment-card ${item.student ? '' : 'is-unassigned'} ${isFinal ? 'final' : ''}">
+            <div class="assignment-area">${index + 1}. ${item.area === 'outer' ? '外掃區域' : '內掃區域'}</div>
+            <div class="assignment-task">${escapeHtml(item.label)}</div>
+            <div class="assignment-student ${item.student ? '' : 'empty'}">${escapeHtml(studentText)}</div>
+            <div class="assignment-detail">${isFinal ? escapeHtml(item.detail || '未填寫細項內容') : `<input class="input assignment-detail-input" data-slot-id="${escapeHtml(item.slotId)}" value="${escapeHtml(item.detail || '')}" placeholder="細項工作內容">`}</div>
+            ${actionHtml}
+          </article>`;
+      }).join('');
+    }
+
     function renderResult() {
-      const slots = taskSlots();
-      const assignments = state.current?.assignments || [];
-      const assignedMap = new Map(assignments.map(item => [item.slotId, item]));
+      const assignments = getAssignments();
       const assignedCount = assignments.filter(item => item.student?.name).length;
       const title = `${classTitle()} 學生打掃工作分配表`;
       els.sheetTitle.textContent = title;
       els.sheetMeta.textContent = [
         state.current?.name ? `結果名稱：${state.current.name}` : '',
         state.current?.createdAt ? `建立時間：${formatDateTime(state.current.createdAt)}` : ''
-      ].filter(Boolean).join('　') || '請先完成抽籤安排。';
+      ].filter(Boolean).join('　') || '請先完成工作分配。';
       els.generatedAt.textContent = state.current?.createdAt ? formatDateTime(state.current.createdAt) : '尚未產生';
       els.metricStudents.textContent = state.students.length;
-      els.metricSlots.textContent = slots.length;
+      els.metricSlots.textContent = assignments.length;
       els.metricAssigned.textContent = assignedCount;
       els.metricHistory.textContent = state.history.length;
-      els.currentBadge.textContent = state.current ? state.current.name : '尚未抽籤';
+      els.currentBadge.textContent = state.current ? state.current.name : '尚未建立';
 
-      if (!slots.length || !state.current) {
+      if (!assignments.length) {
         els.resultTable.innerHTML = '';
         els.emptyState.style.display = 'grid';
       } else {
         els.emptyState.style.display = 'none';
         els.resultTable.innerHTML = `
-          <thead>
-            <tr>
-              <th style="width:70px">序號</th>
-              <th>區域</th>
-              <th>工作項目</th>
-              <th>分配學生</th>
-              <th>細項內容</th>
-              <th class="no-export">手動調整</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${slots.map((slot, index) => {
-              const item = assignedMap.get(slot.id) || {};
-              const selectedName = item.student?.name || '';
-              return `
-                <tr>
-                  <td>${index + 1}</td>
-                  <td>${slot.area === 'outer' ? '外掃區域' : '內掃區域'}</td>
-                  <td>
-                    <div class="slot-name">${escapeHtml(slot.label)}</div>
-                  </td>
-                  <td><span class="student-name">${escapeHtml(item.student ? studentLabel(item.student) : '未分配')}</span></td>
-                  <td>
-                    <input class="input detail-input" data-slot-id="${escapeHtml(slot.id)}" value="${escapeHtml(item.detail ?? slot.detail)}" placeholder="可補充更細的工作內容">
-                    <div class="export-text">${escapeHtml(item.detail ?? slot.detail)}</div>
-                  </td>
-                  <td class="no-export">
-                    <select class="select manual-select" data-slot-id="${escapeHtml(slot.id)}">
-                      <option value="">未分配</option>
-                      ${state.students.map(stu => `<option value="${escapeHtml(stu.name)}" ${stu.name === selectedName ? 'selected' : ''}>${escapeHtml(studentLabel(stu))}</option>`).join('')}
-                    </select>
-                  </td>
-                </tr>`;
-            }).join('')}
-          </tbody>
-        `;
+          <thead><tr><th>序號</th><th>區域</th><th>工作項目</th><th>分配學生</th><th>細項內容</th></tr></thead>
+          <tbody>${assignments.map((item, index) => `
+            <tr><td>${index + 1}</td><td>${item.area === 'outer' ? '外掃區域' : '內掃區域'}</td><td><div class="slot-name">${escapeHtml(item.label)}</div></td><td><span class="student-name">${escapeHtml(item.student ? studentLabel(item.student) : '未分配')}</span></td><td><div class="export-text" style="display:block">${escapeHtml(item.detail || '')}</div></td></tr>`).join('')}</tbody>`;
       }
       updateHeader();
     }
@@ -852,6 +1204,9 @@
     function renderAll() {
       syncInputsFromState();
       renderTasks();
+      renderStudentRoster();
+      renderWorkRosterPreview();
+      renderAssignmentWorkspace();
       renderResult();
       renderHistory();
       updateHeader();
@@ -942,6 +1297,43 @@
       renderAll();
       saveLocal();
       toast(`已紀錄「${name}」。`);
+    }
+
+    function completeAssignment() {
+      const assignments = getAssignments();
+      if (!assignments.length) {
+        toast('請先產生工作項目名冊', 'warn');
+        return;
+      }
+      const remaining = assignments.filter(item => !item.student).length;
+      if (remaining) {
+        toast(`尚有 ${remaining} 個工作位置未分配，請完成指定或隨機分配；若人數不足，請回工作設定調整人次。`, 'warn');
+        return;
+      }
+      state.current.name = els.historyName.value.trim() || state.current.name;
+      state.assignmentMode = 'final';
+      state.selectedStudentName = '';
+      saveLocal();
+      renderAll();
+      toast('已完成分配，現在顯示班級工作清單。');
+    }
+
+    function editClassWork() {
+      if (!state.current) {
+        toast('請先產生工作項目名冊', 'warn');
+        return;
+      }
+      state.assignmentMode = 'edit';
+      renderAll();
+      switchTab('assign');
+    }
+
+    function updateAssignmentDetail(slotId, detail) {
+      const item = getAssignments().find(row => row.slotId === slotId);
+      if (!item) return;
+      item.detail = detail.trim();
+      saveLocal();
+      renderResult();
     }
 
     function updateCurrentFromControls(event) {
@@ -1240,6 +1632,7 @@
       }
       state.students = dedupeStudents(students);
       state.current = null;
+      state.assignmentMode = 'edit';
       if (!state.info.className) state.info.className = sheetName;
       els.className.value = state.info.className;
       renderAll();
@@ -1279,6 +1672,7 @@
     }
 
     function attachEvents() {
+      els.drawBtn.textContent = '全部隨機分配';
       ['schoolYear', 'semester', 'className'].forEach(id => {
         els[id].addEventListener('input', () => { syncInfoFromInputs(); renderResult(); saveLocal(); });
       });
@@ -1287,6 +1681,7 @@
       els.loadStudentsBtn.addEventListener('click', () => {
         state.students = parseStudents(els.studentsInput.value);
         state.current = null;
+        state.assignmentMode = 'edit';
         renderAll();
         saveLocal();
         toast(`已載入 ${state.students.length} 位學生。`);
@@ -1297,6 +1692,7 @@
       els.clearStudentsBtn.addEventListener('click', () => {
         state.students = [];
         state.current = null;
+        state.assignmentMode = 'edit';
         els.studentsInput.value = '';
         renderAll();
         saveLocal();
@@ -1329,7 +1725,7 @@
         renderAll();
         saveLocal();
       });
-      els.drawBtn.addEventListener('click', drawAssignments);
+      els.drawBtn.addEventListener('click', randomAssignAll);
       els.saveHistoryBtn.addEventListener('click', saveCurrentToHistory);
       els.clearCurrentBtn.addEventListener('click', () => {
         state.current = null;
@@ -1337,8 +1733,49 @@
         saveLocal();
         toast('已清除目前結果，歷史紀錄保留。');
       });
-      els.resultTable.addEventListener('change', updateCurrentFromControls);
-      els.resultTable.addEventListener('input', updateCurrentFromControls);
+      workflowEls.generateWorkRosterBtn.addEventListener('click', createBlankWorkRoster);
+      workflowEls.completeAssignmentBtn.addEventListener('click', completeAssignment);
+      workflowEls.classWorkBtn.addEventListener('click', editClassWork);
+      workflowEls.goExportBtn.addEventListener('click', () => switchTab('export'));
+      workflowEls.quickPrintBtn.addEventListener('click', () => {
+        if (!state.current) {
+          toast('請先產生工作項目名冊', 'warn');
+          return;
+        }
+        switchTab('export');
+        setTimeout(() => window.print(), 80);
+      });
+      workflowEls.assignmentStudentRoster.addEventListener('click', event => {
+        const button = event.target.closest('[data-student-name]');
+        if (!button || state.assignmentMode === 'final') return;
+        state.selectedStudentName = button.dataset.studentName;
+        renderAssignmentWorkspace();
+      });
+      workflowEls.assignmentList.addEventListener('click', event => {
+        if (state.assignmentMode === 'final') return;
+        const button = event.target.closest('button[data-slot-id]');
+        if (!button) return;
+        const slotId = button.dataset.slotId;
+        if (button.classList.contains('assign-selected-btn')) {
+          if (!state.selectedStudentName) {
+            toast('請先從上方學生名冊選取一位學生', 'warn');
+            return;
+          }
+          assignStudentToSlot(slotId, state.selectedStudentName);
+        } else if (button.classList.contains('random-slot-btn')) {
+          randomAssignSlot(slotId);
+        } else if (button.classList.contains('clear-slot-btn')) {
+          const item = getAssignments().find(row => row.slotId === slotId);
+          if (item) item.student = null;
+          saveLocal();
+          renderAll();
+        }
+      });
+      workflowEls.assignmentList.addEventListener('input', event => {
+        if (event.target.classList.contains('assignment-detail-input')) {
+          updateAssignmentDetail(event.target.dataset.slotId, event.target.value);
+        }
+      });
       els.historyList.addEventListener('click', (event) => {
         const btn = event.target.closest('.history-item');
         if (!btn) return;
@@ -1352,6 +1789,7 @@
           return;
         }
         state.current = clone(record);
+        state.assignmentMode = 'final';
         renderResult();
         saveLocal();
         toast(`已回復「${record.name}」。`);
@@ -1406,6 +1844,7 @@
       els.importSheetBtn.addEventListener('click', importSelectedSheet);
     }
 
+    setupWorkflowLayout();
     loadLocal();
     attachEvents();
     bindTaskListEvents();
