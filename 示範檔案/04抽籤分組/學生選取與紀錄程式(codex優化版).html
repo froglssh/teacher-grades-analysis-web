@@ -341,6 +341,83 @@
             margin-top: 8px;
         }
 
+        .multi-select {
+            min-height: 128px;
+        }
+
+        .quick-note-manager {
+            display: grid;
+            grid-template-columns: minmax(220px, 1fr) auto;
+            gap: 10px;
+            align-items: end;
+            margin-top: 12px;
+        }
+
+        .quick-note-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .quick-note-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #eef2ff;
+            border: 1px solid #c7d2fe;
+            color: #3730a3;
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+
+        .chip-remove {
+            border: none;
+            background: transparent;
+            color: #991b1b;
+            cursor: pointer;
+            font-weight: 800;
+            padding: 0;
+        }
+
+        .group-edit-panel {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--gray-200);
+            display: grid;
+            gap: 8px;
+        }
+
+        .group-edit-row,
+        .group-member-tools {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .group-member-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 8px;
+            align-items: start;
+            margin-bottom: 6px;
+        }
+
+        .group-member-tools .form-select {
+            min-width: 120px;
+            padding: 6px 8px;
+            font-size: 0.8rem;
+        }
+
+        .btn-xs {
+            padding: 5px 8px;
+            font-size: 0.75rem;
+            min-height: 30px;
+        }
+
         .guide-toggle {
             margin-bottom: 24px;
         }
@@ -1001,6 +1078,13 @@
                             </select>
                         </div>
                         <div class="form-group">
+                            <label class="form-label">多選班級分頁</label>
+                            <select id="multiSheetSelector" class="form-select multi-select" multiple disabled>
+                                <option value="">請先選擇 Excel 檔案</option>
+                            </select>
+                            <div class="action-hint">按住 Command 或 Shift 可一次選取多個分頁。</div>
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">匯入格式</label>
                             <select id="importMode" class="form-select">
                                 <option value="auto">自動判斷座號與姓名</option>
@@ -1012,6 +1096,7 @@
                     <div class="btn-group">
                         <button id="importExcelStudents" class="btn btn-primary">📋 開啟選取分頁</button>
                         <button id="saveImportedSheet" class="btn btn-secondary">💾 儲存此分頁為班級</button>
+                        <button id="saveSelectedImportedSheets" class="btn btn-secondary">✅ 匯入選取班級</button>
                         <button id="saveAllImportedSheets" class="btn btn-outline">📚 匯入全部班級</button>
                     </div>
                     <div class="action-hint">若同一分頁含多班座號，系統會自動拆成不同班級，再由上方班級選單開啟。</div>
@@ -1065,6 +1150,15 @@
                     <div class="btn-group">
                         <button id="randomSelect" class="btn btn-primary">🎲 開始隨機選取</button>
                         <button id="clearSelection" class="btn btn-warning">🔄 清除選取</button>
+                    </div>
+
+                    <div class="form-group" style="min-width: 260px;">
+                        <label class="form-label">新增快速備註</label>
+                        <div class="quick-note-manager">
+                            <input type="text" id="newQuickNote" class="form-input" placeholder="例：小組討論積極">
+                            <button id="addQuickNote" class="btn btn-secondary">新增</button>
+                        </div>
+                        <div id="quickNoteList" class="quick-note-list"></div>
                     </div>
 
                     <div class="btn-group">
@@ -1121,6 +1215,7 @@
                     </div>
                 </div>
                 <div class="btn-group">
+                    <button id="createManualGroups" class="btn btn-warning">✍️ 指定分組</button>
                     <button id="randomGroupStudents" class="btn btn-primary">🎲 產生隨機分組</button>
                     <button id="saveGroupData" class="btn btn-secondary">💾 儲存分組紀錄</button>
                     <button id="printGroupList" class="btn btn-outline">🖨️ 列印分組名單</button>
@@ -1175,6 +1270,12 @@
             </div>
             <div id="groupExportPanel" class="section">
                 <div class="section-title">🧩 分組紀錄輸出</div>
+                <div id="groupStatsSummary" class="stats-summary"></div>
+                <div class="btn-group" style="margin-bottom: 16px;">
+                    <button id="exportGroupExcel" class="btn btn-secondary">📊 下載 Excel 紀錄</button>
+                    <button id="exportGroupPdf" class="btn btn-primary">📄 下載 PDF 報表</button>
+                    <button id="printGroupReport" class="btn btn-outline">🖨️ 列印報表</button>
+                </div>
                 <div class="table-wrap">
                     <table id="groupExportTable" class="stats-table">
                         <thead>
@@ -1224,9 +1325,11 @@
             const selectionCountNumber = document.getElementById('selectionCountNumber');
             const excelFile = document.getElementById('excelFile');
             const sheetSelector = document.getElementById('sheetSelector');
+            const multiSheetSelector = document.getElementById('multiSheetSelector');
             const importMode = document.getElementById('importMode');
             const importExcelStudents = document.getElementById('importExcelStudents');
             const saveImportedSheet = document.getElementById('saveImportedSheet');
+            const saveSelectedImportedSheets = document.getElementById('saveSelectedImportedSheets');
             const saveAllImportedSheets = document.getElementById('saveAllImportedSheets');
             const exportJson = document.getElementById('exportJson');
             const importJsonFile = document.getElementById('importJsonFile');
@@ -1237,17 +1340,25 @@
             const exportExcel = document.getElementById('exportExcel');
             const exportPdf = document.getElementById('exportPdf');
             const printReport = document.getElementById('printReport');
+            const exportGroupExcel = document.getElementById('exportGroupExcel');
+            const exportGroupPdf = document.getElementById('exportGroupPdf');
+            const printGroupReport = document.getElementById('printGroupReport');
             const exportDataView = document.getElementById('exportDataView');
             const selectionExportPanel = document.getElementById('selectionExportPanel');
             const groupExportPanel = document.getElementById('groupExportPanel');
             const statsSummary = document.getElementById('statsSummary');
             const scoreStatsTable = document.getElementById('scoreStatsTable');
             const groupExportTable = document.getElementById('groupExportTable');
+            const groupStatsSummary = document.getElementById('groupStatsSummary');
+            const newQuickNote = document.getElementById('newQuickNote');
+            const addQuickNote = document.getElementById('addQuickNote');
+            const quickNoteList = document.getElementById('quickNoteList');
             const groupPlanName = document.getElementById('groupPlanName');
             const groupMode = document.getElementById('groupMode');
             const groupSizeNumber = document.getElementById('groupSizeNumber');
             const groupCountNumber = document.getElementById('groupCountNumber');
             const groupSource = document.getElementById('groupSource');
+            const createManualGroups = document.getElementById('createManualGroups');
             const randomGroupStudents = document.getElementById('randomGroupStudents');
             const saveGroupData = document.getElementById('saveGroupData');
             const printGroupList = document.getElementById('printGroupList');
@@ -1267,10 +1378,52 @@
             let importedWorkbook = null;
             let activeClassKey = '';
             let groupHistory = [];
+            let activeGroupEditRecordIndex = null;
+            let activeGroupAssignIndex = 0;
 
             const APP_PREFIX = 'StudentPicker_';
             const DEFAULT_SCHOOL_YEAR = '匯入資料';
             const DEFAULT_SEMESTER = '班級資料';
+            const QUICK_NOTES_KEY = 'StudentPicker_QuickNotes';
+            const DEFAULT_QUICK_NOTES = ['上課遲到', '曠課請假', '表現良好', '睡覺吵鬧', '作業缺失', '積極發言', '協助同學'];
+
+            function getCustomQuickNotes() {
+                try {
+                    const notes = JSON.parse(localStorage.getItem(QUICK_NOTES_KEY) || '[]');
+                    return Array.isArray(notes) ? notes.filter(Boolean) : [];
+                } catch (error) {
+                    return [];
+                }
+            }
+
+            function getAllQuickNotes() {
+                return Array.from(new Set([...DEFAULT_QUICK_NOTES, ...getCustomQuickNotes()]));
+            }
+
+            function saveCustomQuickNotes(notes) {
+                localStorage.setItem(QUICK_NOTES_KEY, JSON.stringify(Array.from(new Set(notes.filter(Boolean)))));
+            }
+
+            function getQuickNoteOptionsHtml() {
+                return '<option value="">快速備註</option>' +
+                    getAllQuickNotes().map(note => `<option value="${escapeHtml(note)}">${escapeHtml(note)}</option>`).join('');
+            }
+
+            function renderQuickNoteList() {
+                const customNotes = getCustomQuickNotes();
+                quickNoteList.innerHTML = customNotes.length ? customNotes.map(note => `
+                    <span class="quick-note-chip">
+                        ${escapeHtml(note)}
+                        <button type="button" class="chip-remove delete-quick-note" data-note="${escapeHtml(note)}">×</button>
+                    </span>
+                `).join('') : '<span class="action-hint">尚未新增自訂快速備註</span>';
+            }
+
+            function refreshQuickNoteSelects() {
+                document.querySelectorAll('.note-select').forEach(select => {
+                    select.innerHTML = getQuickNoteOptionsHtml();
+                });
+            }
 
             // 顯示提示訊息
             function showToast(message, type = 'success') {
@@ -1359,6 +1512,8 @@
                 displayStudents();
                 results.innerHTML = '';
                 groupHistory = Array.isArray(data.groupHistory) ? data.groupHistory : [];
+                activeGroupEditRecordIndex = null;
+                activeGroupAssignIndex = 0;
 
                 const loadedResults = Array.isArray(data.results) ? data.results : [];
                 loadedResults.slice().reverse().forEach(result => {
@@ -1488,15 +1643,21 @@
                     const buffer = await file.arrayBuffer();
                     importedWorkbook = XLSX.read(buffer, { type: 'array' });
                     sheetSelector.innerHTML = '<option value="">請選擇班級分頁</option>';
+                    multiSheetSelector.innerHTML = '';
                     importedWorkbook.SheetNames.forEach(sheetName => {
                         const option = document.createElement('option');
                         option.value = sheetName;
                         option.textContent = sheetName;
                         sheetSelector.appendChild(option);
+
+                        const multiOption = option.cloneNode(true);
+                        multiSheetSelector.appendChild(multiOption);
                     });
                     sheetSelector.disabled = false;
+                    multiSheetSelector.disabled = false;
                     if (importedWorkbook.SheetNames.length === 1) {
                         sheetSelector.value = importedWorkbook.SheetNames[0];
+                        multiSheetSelector.options[0].selected = true;
                     }
                     showToast(`已讀取 ${importedWorkbook.SheetNames.length} 個分頁`);
                 } catch (error) {
@@ -1576,6 +1737,47 @@
                     updateActiveClassSelector();
                     showToast(`已儲存 ${savedCount} 個班級資料`);
                 }
+            });
+
+            saveSelectedImportedSheets.addEventListener('click', () => {
+                if (!importedWorkbook) {
+                    showToast('請先選擇 Excel 檔案', 'error');
+                    return;
+                }
+                const selectedSheets = Array.from(multiSheetSelector.selectedOptions).map(option => option.value).filter(Boolean);
+                if (selectedSheets.length === 0) {
+                    showToast('請先在「多選班級分頁」選取至少一個分頁', 'error');
+                    return;
+                }
+                const context = getSchoolContext();
+                const existingMatches = selectedSheets.flatMap(sheetName =>
+                    parseClassGroupsFromSheet(sheetName)
+                        .map(group => group.className)
+                        .filter(className => findSavedDataKey(context.schoolYear, context.semester, className))
+                );
+                if (existingMatches.length > 0) {
+                    const confirmed = confirm(`選取分頁中已有 ${existingMatches.length} 個同名班級資料存在，是否覆蓋？`);
+                    if (!confirmed) return;
+                }
+
+                let savedCount = 0;
+                let skippedCount = 0;
+                selectedSheets.forEach(sheetName => {
+                    const sheetSavedCount = saveImportedSheetData(sheetName, {
+                        overwritePrompt: false,
+                        silent: true,
+                        context
+                    });
+                    if (sheetSavedCount) savedCount += sheetSavedCount;
+                    else skippedCount += 1;
+                });
+
+                updateSavedDataList();
+                clearCurrentClassView();
+                updateActiveClassSelector();
+                displayFilteredData();
+                switchTab('class');
+                showToast(`已匯入選取分頁中的 ${savedCount} 個班級${skippedCount ? `，略過 ${skippedCount} 個空白或無效分頁` : ''}`);
             });
 
             saveAllImportedSheets.addEventListener('click', () => {
@@ -1729,7 +1931,42 @@
             exportExcel.addEventListener('click', exportReportToExcel);
             exportPdf.addEventListener('click', exportReportToPdf);
             printReport.addEventListener('click', printCurrentReport);
+            exportGroupExcel.addEventListener('click', exportGroupReportToExcel);
+            exportGroupPdf.addEventListener('click', exportGroupReportToPdf);
+            printGroupReport.addEventListener('click', printGroupReportOnly);
             exportDataView.addEventListener('change', updateExportDataView);
+
+            addQuickNote.addEventListener('click', () => {
+                const note = newQuickNote.value.trim();
+                if (!note) {
+                    showToast('請先輸入快速備註內容', 'error');
+                    return;
+                }
+                const customNotes = getCustomQuickNotes();
+                if (getAllQuickNotes().includes(note)) {
+                    showToast('此快速備註已存在', 'error');
+                    return;
+                }
+                customNotes.push(note);
+                saveCustomQuickNotes(customNotes);
+                newQuickNote.value = '';
+                renderQuickNoteList();
+                refreshQuickNoteSelects();
+                showToast(`已新增快速備註「${note}」`);
+            });
+
+            quickNoteList.addEventListener('click', (event) => {
+                const button = event.target.closest('.delete-quick-note');
+                if (!button) return;
+                const note = button.dataset.note;
+                const customNotes = getCustomQuickNotes().filter(item => item !== note);
+                saveCustomQuickNotes(customNotes);
+                renderQuickNoteList();
+                refreshQuickNoteSelects();
+                showToast(`已刪除快速備註「${note}」`);
+            });
+
+            createManualGroups.addEventListener('click', createManualGroupRecord);
 
             randomGroupStudents.addEventListener('click', () => {
                 createGroupRecord();
@@ -1753,6 +1990,8 @@
                 }
                 if (!confirm('確定要清除目前班級的所有分組結果嗎？')) return;
                 groupHistory = [];
+                activeGroupEditRecordIndex = null;
+                activeGroupAssignIndex = 0;
                 renderGroupResults();
                 autoSaveCurrentClass();
                 showToast('分組結果已清除');
@@ -1764,6 +2003,94 @@
                 if (event.target.classList.contains('delete-group-record')) {
                     if (!confirm('確定要刪除這筆分組紀錄嗎？')) return;
                     groupHistory.splice(recordIndex, 1);
+                    activeGroupEditRecordIndex = null;
+                    renderGroupResults();
+                    autoSaveCurrentClass();
+                    return;
+                }
+                if (event.target.classList.contains('edit-group-record')) {
+                    groupHistory.forEach(record => record.editMode = false);
+                    groupHistory[recordIndex].editMode = true;
+                    activeGroupEditRecordIndex = recordIndex;
+                    activeGroupAssignIndex = 0;
+                    renderGroupResults();
+                    autoSaveCurrentClass();
+                    return;
+                }
+                if (event.target.classList.contains('finish-group-edit')) {
+                    groupHistory[recordIndex].isDraft = false;
+                    groupHistory[recordIndex].editMode = false;
+                    activeGroupEditRecordIndex = null;
+                    renderGroupResults();
+                    autoSaveCurrentClass();
+                    showToast('分組修改已完成');
+                    return;
+                }
+                if (event.target.classList.contains('set-assign-group')) {
+                    activeGroupEditRecordIndex = recordIndex;
+                    activeGroupAssignIndex = groupIndex;
+                    groupHistory.forEach(record => record.editMode = false);
+                    groupHistory[recordIndex].editMode = true;
+                    renderGroupResults();
+                    showToast(`目前點選學生會加入第 ${groupIndex + 1} 組`);
+                    return;
+                }
+                if (event.target.classList.contains('group-add-student')) {
+                    if (!groupHistory[recordIndex]?.editMode) return;
+                    const select = event.target.closest('.group-edit-row')?.querySelector('.group-add-select');
+                    const student = select?.value;
+                    if (!student) {
+                        showToast('請先選擇要加入的學生', 'error');
+                        return;
+                    }
+                    ensureGroupRecordShape(groupHistory[recordIndex]);
+                    const alreadyAssigned = getAssignedGroupStudents(groupHistory[recordIndex]).includes(student);
+                    if (alreadyAssigned) {
+                        showToast('此學生已在其他組，請先移除或移動', 'error');
+                        return;
+                    }
+                    groupHistory[recordIndex].groups[groupIndex].push(student);
+                    renderGroupResults();
+                    autoSaveCurrentClass();
+                    return;
+                }
+                if (event.target.classList.contains('group-remove-member')) {
+                    if (!groupHistory[recordIndex]?.editMode) return;
+                    const memberIndex = Number(event.target.dataset.memberIndex);
+                    groupHistory[recordIndex].groups[groupIndex].splice(memberIndex, 1);
+                    renderGroupResults();
+                    autoSaveCurrentClass();
+                    return;
+                }
+                if (event.target.classList.contains('group-move-member')) {
+                    if (!groupHistory[recordIndex]?.editMode) return;
+                    const memberIndex = Number(event.target.dataset.memberIndex);
+                    const select = event.target.closest('.group-member-tools')?.querySelector('.group-move-target');
+                    const targetGroupIndex = Number(select?.value);
+                    if (Number.isNaN(targetGroupIndex) || targetGroupIndex === groupIndex) {
+                        showToast('請選擇不同的目標組別', 'error');
+                        return;
+                    }
+                    const [student] = groupHistory[recordIndex].groups[groupIndex].splice(memberIndex, 1);
+                    if (student) groupHistory[recordIndex].groups[targetGroupIndex].push(student);
+                    renderGroupResults();
+                    autoSaveCurrentClass();
+                    return;
+                }
+                if (event.target.classList.contains('group-replace-member')) {
+                    if (!groupHistory[recordIndex]?.editMode) return;
+                    const memberIndex = Number(event.target.dataset.memberIndex);
+                    const select = event.target.closest('.group-member-tools')?.querySelector('.group-replace-select');
+                    const replacement = select?.value;
+                    if (!replacement) {
+                        showToast('請先選擇要置換的人員', 'error');
+                        return;
+                    }
+                    if (getAssignedGroupStudents(groupHistory[recordIndex]).includes(replacement)) {
+                        showToast('此學生已在分組中，不能重複加入', 'error');
+                        return;
+                    }
+                    groupHistory[recordIndex].groups[groupIndex][memberIndex] = replacement;
                     renderGroupResults();
                     autoSaveCurrentClass();
                     return;
@@ -1792,7 +2119,12 @@
             groupStudentPreview.addEventListener('click', (event) => {
                 const chip = event.target.closest('.mini-student-chip');
                 if (!chip) return;
-                toggleGroupingStudentSelection(chip.dataset.student);
+                const student = chip.dataset.student;
+                if (activeGroupEditRecordIndex !== null && groupHistory[activeGroupEditRecordIndex]?.editMode) {
+                    addStudentToActiveGroup(student);
+                    return;
+                }
+                toggleGroupingStudentSelection(student);
             });
 
             activeClassSelector.addEventListener('change', () => {
@@ -2024,6 +2356,8 @@
                 students = [];
                 selectedStudents = [];
                 groupHistory = [];
+                activeGroupEditRecordIndex = null;
+                activeGroupAssignIndex = 0;
                 selectionCount = 0;
                 studentData.value = '';
                 results.innerHTML = '';
@@ -2040,6 +2374,8 @@
                 students = classStudents || [];
                 selectedStudents = [];
                 groupHistory = [];
+                activeGroupEditRecordIndex = null;
+                activeGroupAssignIndex = 0;
                 selectionCount = 0;
                 studentData.value = students.join('\n');
                 results.innerHTML = '';
@@ -2103,6 +2439,28 @@
                 return groups;
             }
 
+            function getConfiguredGroupCount(sourceCount) {
+                if (groupMode.value === 'count') {
+                    return Math.max(1, parseInt(groupCountNumber.value, 10) || 1);
+                }
+                const size = Math.max(1, parseInt(groupSizeNumber.value, 10) || 1);
+                return Math.max(1, Math.ceil(sourceCount / size));
+            }
+
+            function createGroupRecordData(groups, modeLabel, isDraft = false, sourceStudents = null) {
+                return {
+                    groupName: groupPlanName.value.trim() || `${modeLabel} ${new Date().toLocaleString('zh-TW')}`,
+                    timestamp: new Date().toLocaleString('zh-TW'),
+                    mode: modeLabel,
+                    isDraft,
+                    editMode: isDraft,
+                    sourceStudents: Array.isArray(sourceStudents) ? sourceStudents : getGroupingStudents(),
+                    groups,
+                    scores: groups.map(() => 0),
+                    notes: groups.map(() => '')
+                };
+            }
+
             function createGroupRecord() {
                 const sourceStudents = getGroupingStudents();
                 if (sourceStudents.length === 0) {
@@ -2110,18 +2468,74 @@
                     return;
                 }
 
-                const groupName = groupPlanName.value.trim() || `分組 ${new Date().toLocaleString('zh-TW')}`;
                 const groups = buildGroups(sourceStudents);
-                groupHistory.unshift({
-                    groupName,
-                    timestamp: new Date().toLocaleString('zh-TW'),
-                    groups,
-                    scores: groups.map(() => 0),
-                    notes: groups.map(() => '')
-                });
+                groupHistory.unshift(createGroupRecordData(groups, '隨機分組', false, sourceStudents));
+                activeGroupEditRecordIndex = null;
                 renderGroupResults();
                 autoSaveCurrentClass();
                 showToast(`已建立 ${groups.length} 組`);
+            }
+
+            function createManualGroupRecord() {
+                const sourceStudents = getGroupingStudents();
+                if (sourceStudents.length === 0) {
+                    showToast(groupSource.value === 'selected' ? '目前沒有已選取學生可指定分組' : '請先載入班級學生名單', 'error');
+                    return;
+                }
+                const groupCount = getConfiguredGroupCount(sourceStudents.length);
+                const groups = Array.from({ length: groupCount }, () => []);
+                groupHistory.unshift(createGroupRecordData(groups, '指定分組', true, sourceStudents));
+                activeGroupEditRecordIndex = 0;
+                activeGroupAssignIndex = 0;
+                renderGroupResults();
+                autoSaveCurrentClass();
+                showToast(`已建立 ${groupCount} 個空白分組。請在分組卡選擇目標組，並點上方學生名冊加入學生`);
+            }
+
+            function getRecordSourceStudents(record) {
+                const source = Array.isArray(record.sourceStudents) && record.sourceStudents.length ? record.sourceStudents : students;
+                return source.filter(student => students.includes(student));
+            }
+
+            function getAssignedGroupStudents(record) {
+                return (record.groups || []).flat().filter(Boolean);
+            }
+
+            function getAvailableGroupStudents(record) {
+                const assigned = new Set(getAssignedGroupStudents(record));
+                return getRecordSourceStudents(record).filter(student => !assigned.has(student));
+            }
+
+            function addStudentToActiveGroup(student) {
+                const record = groupHistory[activeGroupEditRecordIndex];
+                if (!record || !record.editMode) return;
+                ensureGroupRecordShape(record);
+                if (!record.groups[activeGroupAssignIndex]) {
+                    activeGroupAssignIndex = 0;
+                }
+                if (getAssignedGroupStudents(record).includes(student)) {
+                    showToast('此學生已在目前分組名單中', 'error');
+                    return;
+                }
+                if (!getRecordSourceStudents(record).includes(student)) {
+                    showToast('此學生不在目前分組來源名單中', 'error');
+                    return;
+                }
+                record.groups[activeGroupAssignIndex].push(student);
+                renderGroupResults();
+                autoSaveCurrentClass();
+                showToast(`已將「${student}」加入第 ${activeGroupAssignIndex + 1} 組`);
+            }
+
+            function ensureGroupRecordShape(record) {
+                record.groups = Array.isArray(record.groups) ? record.groups : [];
+                record.scores = Array.isArray(record.scores) ? record.scores : record.groups.map(() => 0);
+                record.notes = Array.isArray(record.notes) ? record.notes : record.groups.map(() => '');
+                while (record.scores.length < record.groups.length) record.scores.push(0);
+                while (record.notes.length < record.groups.length) record.notes.push('');
+                if (!Array.isArray(record.sourceStudents) || record.sourceStudents.length === 0) {
+                    record.sourceStudents = [...students];
+                }
             }
 
             function renderGroupResults() {
@@ -2134,6 +2548,9 @@
 
                 groupResults.innerHTML = '';
                 groupHistory.forEach((record, recordIndex) => {
+                    ensureGroupRecordShape(record);
+                    const isEditing = Boolean(record.editMode);
+                    const availableStudents = getAvailableGroupStudents(record);
                     const container = document.createElement('div');
                     container.className = 'group-record';
                     container.innerHTML = `
@@ -2141,9 +2558,15 @@
                             <div>
                                 <strong>${escapeHtml(record.groupName)}</strong>
                                 <span style="color: #6b7280; margin-left: 8px;">${escapeHtml(record.timestamp || '')}</span>
+                                <span class="action-hint" style="margin-left: 8px;">${escapeHtml(record.mode || '分組')}</span>
+                                ${isEditing ? '<span class="action-hint" style="margin-left: 8px; color:#d97706;">修改中</span>' : ''}
                             </div>
-                            <button class="btn btn-danger btn-sm delete-group-record" data-record-index="${recordIndex}">🗑️ 刪除分組</button>
+                            <div class="btn-group">
+                                ${isEditing ? `<button class="btn btn-secondary btn-sm finish-group-edit" data-record-index="${recordIndex}">✅ 完成</button>` : `<button class="btn btn-outline btn-sm edit-group-record" data-record-index="${recordIndex}">✏️ 修改</button>`}
+                                <button class="btn btn-danger btn-sm delete-group-record" data-record-index="${recordIndex}">🗑️ 刪除分組</button>
+                            </div>
                         </div>
+                        ${isEditing ? `<div class="action-hint">修改模式：可從上方學生名冊點選學生加入目前目標組，也可在各組內新增、移動、置換或移除組員。</div>` : ''}
                         <div class="group-card-grid"></div>
                     `;
 
@@ -2151,13 +2574,46 @@
                     record.groups.forEach((group, groupIndex) => {
                         const score = record.scores?.[groupIndex] || 0;
                         const note = record.notes?.[groupIndex] || '';
+                        const groupOptions = record.groups.map((_, index) =>
+                            `<option value="${index}" ${index === groupIndex ? 'selected' : ''}>第 ${index + 1} 組</option>`
+                        ).join('');
+                        const addOptions = availableStudents.map(student =>
+                            `<option value="${escapeHtml(student)}">${escapeHtml(student)}</option>`
+                        ).join('');
                         const card = document.createElement('div');
                         card.className = 'group-card';
                         card.innerHTML = `
                             <h4>第 ${groupIndex + 1} 組（${group.length}人）</h4>
+                            ${isEditing ? `<button class="btn ${activeGroupEditRecordIndex === recordIndex && activeGroupAssignIndex === groupIndex ? 'btn-secondary' : 'btn-outline'} btn-xs set-assign-group" data-record-index="${recordIndex}" data-group-index="${groupIndex}">指定加入第 ${groupIndex + 1} 組</button>` : ''}
                             <ol class="group-member-list">
-                                ${group.map(student => `<li>${escapeHtml(student)}</li>`).join('')}
+                                ${group.length ? group.map((student, memberIndex) => `
+                                    <li class="group-member-row">
+                                        <span>${escapeHtml(student)}</span>
+                                        ${isEditing ? `<span class="group-member-tools">
+                                            <select class="form-select group-move-target" data-record-index="${recordIndex}" data-group-index="${groupIndex}" data-member-index="${memberIndex}">
+                                                ${groupOptions}
+                                            </select>
+                                            <button class="btn btn-outline btn-xs group-move-member" data-record-index="${recordIndex}" data-group-index="${groupIndex}" data-member-index="${memberIndex}">移動</button>
+                                            <select class="form-select group-replace-select" data-record-index="${recordIndex}" data-group-index="${groupIndex}" data-member-index="${memberIndex}">
+                                                <option value="">置換人員</option>
+                                                ${addOptions}
+                                            </select>
+                                            <button class="btn btn-warning btn-xs group-replace-member" data-record-index="${recordIndex}" data-group-index="${groupIndex}" data-member-index="${memberIndex}">置換</button>
+                                            <button class="btn btn-danger btn-xs group-remove-member" data-record-index="${recordIndex}" data-group-index="${groupIndex}" data-member-index="${memberIndex}">移除</button>
+                                        </span>` : ''}
+                                    </li>
+                                `).join('') : '<li style="color:#6b7280;">尚未加入學生</li>'}
                             </ol>
+                            ${isEditing ? `<div class="group-edit-panel">
+                                <div class="group-edit-row">
+                                    <select class="form-select group-add-select" data-record-index="${recordIndex}" data-group-index="${groupIndex}">
+                                        <option value="">選擇要加入的學生</option>
+                                        ${addOptions}
+                                    </select>
+                                    <button class="btn btn-secondary btn-xs group-add-student" data-record-index="${recordIndex}" data-group-index="${groupIndex}">新增組員</button>
+                                </div>
+                                <div class="action-hint">可新增未分配學生，或將既有組員移動到其他組。</div>
+                            </div>` : ''}
                             <div class="points-control" style="margin-bottom: 8px;">
                                 <button class="points-btn btn-danger group-score-minus" data-record-index="${recordIndex}" data-group-index="${groupIndex}">−</button>
                                 <input type="number" class="points-input group-score-input" data-record-index="${recordIndex}" data-group-index="${groupIndex}" value="${score}">
@@ -2170,6 +2626,7 @@
 
                     groupResults.appendChild(container);
                 });
+                updateGroupStudentPreview();
                 updateGroupExportTable();
             }
 
@@ -2263,7 +2720,11 @@
                     groupStudentPreview.innerHTML = '<div style="color: #6b7280;">請先在「選擇班級」分頁載入班級。</div>';
                     return;
                 }
-                groupStudentCount.textContent = `目前共 ${students.length} 位學生，已選取 ${selectedStudents.length} 位`;
+                if (activeGroupEditRecordIndex !== null && groupHistory[activeGroupEditRecordIndex]?.editMode) {
+                    groupStudentCount.textContent = `修改模式：點選學生會加入第 ${activeGroupAssignIndex + 1} 組`;
+                } else {
+                    groupStudentCount.textContent = `目前共 ${students.length} 位學生，已選取 ${selectedStudents.length} 位`;
+                }
                 groupStudentPreview.innerHTML = students
                     .map(student => `
                         <button type="button" class="mini-student-chip ${selectedStudents.includes(student) ? 'selected' : ''}" data-student="${escapeHtml(student)}">
@@ -2496,12 +2957,15 @@
             function getGroupExportRows() {
                 const rows = [];
                 groupHistory.forEach(record => {
+                    ensureGroupRecordShape(record);
                     (record.groups || []).forEach((group, groupIndex) => {
                         rows.push({
                             分組名稱: record.groupName || '',
                             時間: record.timestamp || '',
+                            分組方式: record.mode || '',
                             組別: `第 ${groupIndex + 1} 組`,
                             學生名單: group.join('、'),
+                            人數: group.length,
                             組分數: record.scores?.[groupIndex] || 0,
                             備註: record.notes?.[groupIndex] || ''
                         });
@@ -2510,9 +2974,44 @@
                 return rows;
             }
 
+            function calculateGroupStats() {
+                const rows = getGroupExportRows();
+                const latest = groupHistory[0]?.groupName || '尚無';
+                return {
+                    recordCount: groupHistory.length,
+                    groupCount: rows.length,
+                    studentPlacements: rows.reduce((sum, row) => sum + (Number(row.人數) || 0), 0),
+                    latest
+                };
+            }
+
+            function updateGroupStatsSummary() {
+                if (!groupStatsSummary) return;
+                const stats = calculateGroupStats();
+                groupStatsSummary.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-label">分組紀錄數</div>
+                        <div class="stat-value">${stats.recordCount}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">組別總數</div>
+                        <div class="stat-value">${stats.groupCount}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">學生人次</div>
+                        <div class="stat-value">${stats.studentPlacements}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">最新分組</div>
+                        <div class="stat-value" style="font-size: 1rem;">${escapeHtml(stats.latest)}</div>
+                    </div>
+                `;
+            }
+
             function updateGroupExportTable() {
                 if (!groupExportTable) return;
                 const rows = getGroupExportRows();
+                updateGroupStatsSummary();
                 const tbody = groupExportTable.querySelector('tbody');
                 if (rows.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #6b7280;">尚無分組紀錄</td></tr>';
@@ -2528,6 +3027,125 @@
                         <td>${escapeHtml(row.備註)}</td>
                     </tr>
                 `).join('');
+            }
+
+            function getGroupReportTableHtml(rows) {
+                const displayRows = rows.length ? rows : [{ 分組名稱: '', 時間: '', 分組方式: '', 組別: '', 學生名單: '', 人數: '', 組分數: '', 備註: '' }];
+                return `
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr>${['分組名稱', '時間', '分組方式', '組別', '學生名單', '人數', '組分數', '備註'].map(text => `<th style="border:1px solid #d1d5db; padding:8px; background:#f3f4f6; text-align:left;">${text}</th>`).join('')}</tr>
+                        </thead>
+                        <tbody>
+                            ${displayRows.map(row => `
+                                <tr>
+                                    <td style="border:1px solid #d1d5db; padding:8px;">${escapeHtml(row.分組名稱)}</td>
+                                    <td style="border:1px solid #d1d5db; padding:8px;">${escapeHtml(row.時間)}</td>
+                                    <td style="border:1px solid #d1d5db; padding:8px;">${escapeHtml(row.分組方式)}</td>
+                                    <td style="border:1px solid #d1d5db; padding:8px;">${escapeHtml(row.組別)}</td>
+                                    <td style="border:1px solid #d1d5db; padding:8px;">${escapeHtml(row.學生名單)}</td>
+                                    <td style="border:1px solid #d1d5db; padding:8px;">${escapeHtml(row.人數)}</td>
+                                    <td style="border:1px solid #d1d5db; padding:8px;">${escapeHtml(row.組分數)}</td>
+                                    <td style="border:1px solid #d1d5db; padding:8px;">${escapeHtml(row.備註)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            }
+
+            function exportGroupReportToExcel() {
+                if (typeof XLSX === 'undefined') {
+                    showToast('Excel 輸出元件尚未載入，請確認網路連線後重新整理頁面', 'error');
+                    return;
+                }
+                const rows = getGroupExportRows();
+                const workbook = XLSX.utils.book_new();
+                const groupSheet = XLSX.utils.json_to_sheet(rows.length ? rows : [{ 分組名稱: '', 時間: '', 分組方式: '', 組別: '', 學生名單: '', 人數: '', 組分數: '', 備註: '' }]);
+                XLSX.utils.book_append_sheet(workbook, groupSheet, '分組安排資料');
+                XLSX.writeFile(workbook, `${sanitizeFileName(`${getCurrentClassName() || '未選班級'}_分組安排資料`)}.xlsx`);
+                showToast('分組 Excel 報表已下載');
+            }
+
+            async function exportGroupReportToPdf() {
+                if (!window.jspdf || !window.jspdf.jsPDF || typeof html2canvas === 'undefined') {
+                    showToast('PDF 輸出元件尚未載入，請確認網路連線後重新整理頁面', 'error');
+                    return;
+                }
+                showToast('正在產生分組 PDF，請稍候...');
+                const rows = getGroupExportRows();
+                const stats = calculateGroupStats();
+                const report = document.createElement('div');
+                report.style.cssText = 'position:absolute; left:-9999px; top:0; width:1120px; padding:32px; background:white; color:#111827; font-family:"Microsoft JhengHei", Arial, sans-serif;';
+                report.innerHTML = `
+                    <h1 style="margin:0 0 8px;">分組安排資料報表</h1>
+                    <div style="color:#4b5563; margin-bottom:16px;">${escapeHtml(getCurrentClassName() || '未選班級')}｜匯出時間：${new Date().toLocaleString('zh-TW')}</div>
+                    <div style="margin-bottom:20px;">分組紀錄數：${stats.recordCount}｜組別總數：${stats.groupCount}｜學生人次：${stats.studentPlacements}</div>
+                    ${getGroupReportTableHtml(rows)}
+                `;
+                document.body.appendChild(report);
+                try {
+                    const canvas = await html2canvas(report, { scale: 2, backgroundColor: '#ffffff' });
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
+                    const pageWidth = pdf.internal.pageSize.getWidth();
+                    const pageHeight = pdf.internal.pageSize.getHeight();
+                    const imgWidth = pageWidth;
+                    const imgHeight = canvas.height * imgWidth / canvas.width;
+                    let heightLeft = imgHeight;
+                    let position = 0;
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                    while (heightLeft > 0) {
+                        position = heightLeft - imgHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+                    }
+                    pdf.save(`${sanitizeFileName(`${getCurrentClassName() || '未選班級'}_分組安排資料`)}.pdf`);
+                    showToast('分組 PDF 報表已下載');
+                } catch (error) {
+                    console.error(error);
+                    showToast('分組 PDF 產生失敗，請稍後再試', 'error');
+                } finally {
+                    document.body.removeChild(report);
+                }
+            }
+
+            function printGroupReportOnly() {
+                const rows = getGroupExportRows();
+                const stats = calculateGroupStats();
+                const printWindow = window.open('', '_blank');
+                if (!printWindow) {
+                    showToast('瀏覽器封鎖了列印視窗，請允許彈出視窗後再試', 'error');
+                    return;
+                }
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html lang="zh-TW">
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>${escapeHtml(getCurrentClassName() || '未選班級')} 分組安排資料</title>
+                        <style>
+                            body { font-family: Arial, "Microsoft JhengHei", sans-serif; padding: 24px; color: #111827; }
+                            h1 { margin-bottom: 8px; }
+                            .meta { color:#4b5563; margin-bottom:16px; }
+                            table { width: 100%; border-collapse: collapse; margin: 16px 0 28px; }
+                            th, td { border: 1px solid #d1d5db; padding: 8px; text-align: left; font-size: 12px; vertical-align: top; }
+                            th { background: #f3f4f6; }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>分組安排資料報表</h1>
+                        <div class="meta">${escapeHtml(getCurrentClassName() || '未選班級')}｜列印時間：${new Date().toLocaleString('zh-TW')}</div>
+                        <div>分組紀錄數：${stats.recordCount}｜組別總數：${stats.groupCount}｜學生人次：${stats.studentPlacements}</div>
+                        ${getGroupReportTableHtml(rows)}
+                    </body>
+                    </html>
+                `);
+                printWindow.document.close();
+                printWindow.focus();
+                setTimeout(() => printWindow.print(), 300);
             }
 
             function exportReportToExcel() {
@@ -2554,7 +3172,7 @@
                     最近紀錄: item.latestRecord
                 })));
                 const groupRows = getGroupExportRows();
-                const groupSheet = XLSX.utils.json_to_sheet(groupRows.length ? groupRows : [{ 分組名稱: '', 時間: '', 組別: '', 學生名單: '', 組分數: '', 備註: '' }]);
+                const groupSheet = XLSX.utils.json_to_sheet(groupRows.length ? groupRows : [{ 分組名稱: '', 時間: '', 分組方式: '', 組別: '', 學生名單: '', 人數: '', 組分數: '', 備註: '' }]);
                 XLSX.utils.book_append_sheet(workbook, studentSheet, '學生名單');
                 XLSX.utils.book_append_sheet(workbook, resultSheet, '選取與個人紀錄');
                 XLSX.utils.book_append_sheet(workbook, statsSheet, '加減分統計');
@@ -2837,10 +3455,11 @@
                             <th>操作</th>
                         </tr>
                     </thead>
-                    <tbody></tbody>
+                <tbody></tbody>
                 `;
                 
                 const tbody = table.querySelector('tbody');
+                const quickNoteOptions = getQuickNoteOptionsHtml();
                 newlySelectedStudents.forEach(student => {
                     const loadedStudent = loadedResult ? loadedResult.students.find(s => s.name === student) : null;
                     const row = document.createElement('tr');
@@ -2857,14 +3476,7 @@
                             <div class="note-control">
                                 <input type="text" class="form-input note-input" value="${escapeHtml(loadedStudent ? loadedStudent.note : '')}" placeholder="輸入備註...">
                                 <select class="form-select note-select" style="min-width: 120px;">
-                                    <option value="">快速備註</option>
-                                    <option value="上課遲到">上課遲到</option>
-                                    <option value="曠課請假">曠課請假</option>
-                                    <option value="表現良好">表現良好</option>
-                                    <option value="睡覺吵鬧">睡覺吵鬧</option>
-                                    <option value="作業缺失">作業缺失</option>
-                                    <option value="積極發言">積極發言</option>
-                                    <option value="協助同學">協助同學</option>
+                                    ${quickNoteOptions}
                                 </select>
                                 <button class="voice-btn" title="語音輸入">🎤</button>
                             </div>
@@ -3020,6 +3632,8 @@
                 students = data.students || [];
                 selectedStudents = data.selectedStudents || [];
                 groupHistory = Array.isArray(data.groupHistory) ? data.groupHistory : [];
+                activeGroupEditRecordIndex = null;
+                activeGroupAssignIndex = 0;
                 studentData.value = students.join('\n');
                 displayStudents();
                 results.innerHTML = '';
@@ -3088,6 +3702,7 @@
             updateExportDataView();
             updateGroupingModeFields();
             updateGroupStudentPreview();
+            renderQuickNoteList();
             renderGroupResults();
 
             // 載入時顯示提示
