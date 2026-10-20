@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>智慧學生成績統計分析系統 3.0</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>智慧學生成績統計分析系統 3.0（v5 優化）</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
@@ -434,6 +434,7 @@
                 <div class="tabs no-print">
                     <button class="tab active" data-tab="overview" onclick="switchTab('overview')">📊 總覽</button>
                     <button class="tab" data-tab="single" onclick="switchTab('single')">🔍 單次考試</button>
+                    <button class="tab" data-tab="classrel" onclick="switchTab('classrel')">🏫 班級相對位置</button>
                     <button class="tab" data-tab="multi" onclick="switchTab('multi')">📈 多次趨勢</button>
                     <button class="tab" data-tab="advanced" onclick="switchTab('advanced')">🧠 進階分析</button>
                     <button class="tab" data-tab="goal" onclick="switchTab('goal')">🎯 目標追蹤</button>
@@ -460,13 +461,18 @@
                     <div id="singleExamResult"></div>
                 </div>
 
+                <!-- Tab: Class relative (v5) -->
+                <div class="tab-content" id="tab-classrel">
+                    <div id="classRelContent"></div>
+                </div>
+
                 <!-- Tab: Multi Exam -->
                 <div class="tab-content" id="tab-multi">
                     <div class="charts-container">
                         <div class="chart-card" style="grid-column:1/-1;"><h3>📈 各科成績變化趨勢</h3><canvas id="trendChart"></canvas></div>
                         <div class="chart-card"><h3>📅 平均成績走勢（含 3 次移動平均）</h3><canvas id="timelineChart"></canvas><div class="chart-note">虛線為 3 次移動平均，可濾除單次波動、看出真實走向。</div></div>
                         <div class="chart-card"><h3>📊 各次考試平均分比較</h3><canvas id="examAvgCompareChart"></canvas></div>
-                        <div class="chart-card" style="grid-column:1/-1;"><h3>🏅 班級 / 類組排名變化（位置越低＝排名越前面）</h3><canvas id="rankTrendChart"></canvas></div>
+                        <div class="chart-card" style="grid-column:1/-1;"><h3>🏅 班級 / 類組排名變化（越上方＝名次越前面）</h3><canvas id="rankTrendChart"></canvas></div>
                     </div>
                     <div id="rankAnalysis"></div>
                     <div id="multiExamStats"></div>
@@ -1464,7 +1470,7 @@
             const scores = Object.values(exam.subjects);
             const avg = exam.average, sd = calcSD(scores), median = calcMedian(scores);
             const classSize = parseInt(document.getElementById('classSize').value) || null;
-            const pr = (exam.rank && classSize) ? Math.round((1 - exam.rank / classSize) * 100) : null;
+            const pr = rankToPR(exam.rank, classSize);
             const prevExam = idx > 0 ? examData[idx - 1] : null;
 
             c.innerHTML = `
@@ -1482,11 +1488,11 @@
                         ${exam.groupRank ? `<div class="mini-stat"><div class="value">${exam.groupRank}</div><div class="label">類組排名</div></div>` : ''}
                     </div>
                     <div class="charts-container" style="margin-top:16px;">
-                        <div class="chart-card"><h3>各科成績（含 Z 分數）</h3><canvas id="singleBarChart"></canvas><div class="chart-note">Z 分數呈現該科在「這次考試所有科目」中的相對位置：Z &gt; 0 表示高於本次自身平均。</div></div>
+                        <div class="chart-card"><h3>各科成績（含 Z 分數）</h3><canvas id="singleBarChart"></canvas><div class="chart-note">此處 Z 是與「自己本次各科平均」比較（看偏科）；與全班同學比較的 Z／PR 請見「🏫 班級相對位置」分頁（需匯入全班 Excel）。</div></div>
                         <div class="chart-card"><h3>與上一次考試比較</h3><canvas id="singleCompareChart"></canvas>${prevExam ? '' : '<div class="chart-note">這是第一次考試，尚無前次可比較。</div>'}</div>
                     </div>
                     <div class="table-scroll"><table class="comparison-table" style="margin-top:12px;">
-                        <tr><th>科目</th><th>分數</th><th>與本次平均差</th><th>Z 分數</th><th>T 分數</th><th>較上次</th><th>評等</th></tr>
+                        <tr><th>科目</th><th>分數</th><th>與本次平均差</th><th>Z（相對自身）</th><th>T（相對自身）</th><th>較上次</th><th>評等</th></tr>
                         ${subjects.map(s => {
                             const sc = exam.subjects[s];
                             const diff = sc - avg;
@@ -1572,8 +1578,8 @@
                     type: 'line',
                     data: { labels, datasets: ds },
                     options: { responsive: true, scales: {
-                        y: { reverse: false, title: { display: true, text: '班級排名' } },
-                        y1: { reverse: false, position: 'right', title: { display: true, text: '類組排名' }, grid: { drawOnChartArea: false } }
+                        y: { reverse: true, title: { display: true, text: '班級排名' }, ticks: { precision: 0 } },
+                        y1: { reverse: true, position: 'right', title: { display: true, text: '類組排名' }, grid: { drawOnChartArea: false } }
                     } }
                 });
             }
@@ -1592,7 +1598,7 @@
                 const prev = i > 0 ? examData[i - 1] : null;
                 const cc = (e.rank && prev?.rank) ? prev.rank - e.rank : null;
                 const gc = (e.groupRank && prev?.groupRank) ? prev.groupRank - e.groupRank : null;
-                const pr = (e.rank && classSize) ? Math.round((1 - e.rank / classSize) * 100) : null;
+                const pr = rankToPR(e.rank, classSize);
                 rows += `<tr><td>${e.label}</td><td>${e.rank ?? '—'}</td><td>${fmtChange(cc)}</td><td>${pr != null ? 'PR ' + pr : '—'}</td><td>${e.groupRank ?? '—'}</td><td>${fmtChange(gc)}</td></tr>`;
             });
             const classRanks = examData.map(e => e.rank).filter(v => v != null);
@@ -1676,32 +1682,34 @@
             const predRows = allSubjects.map(s => {
                 const ys = subjectSeries(s);
                 const r = linReg(ys);
-                return { s, n: ys.length, latest: ys[ys.length - 1], ...r };
+                return { s, n: ys.length, latest: ys[ys.length - 1], ...r, pi: predInterval(seriesPts(s)) };
             }).sort((a, b) => b.slope - a.slope);
             const avgReg = linReg(examData.map(e => e.average));
             let pred = `<div class="analysis-section" style="margin-top:18px;"><h3 style="margin-bottom:6px;">🔮 線性趨勢與下次成績預測</h3>
-                <div style="font-size:0.8rem;color:var(--ink-3);margin-bottom:10px;">以最小平方法擬合各科歷次成績。「斜率」是每次考試的平均變化量；R² 越接近 1 代表趨勢越明確、預測越可信（R² &lt; 0.3 時僅供參考）。</div>
+                <div style="font-size:0.8rem;color:var(--ink-3);margin-bottom:10px;">以最小平方法擬合各科歷次成績。「斜率」是每次考試的平均變化量；R² 越接近 1 代表趨勢越明確、預測越可信（R² &lt; 0.3 時僅供參考）。「95% 預測區間」表示下次分數大約會落在的範圍；區間越寬，代表成績起伏越大、預測越不確定。</div>
                 <div class="table-scroll"><table class="comparison-table">
-                <tr><th>科目</th><th>最新</th><th>趨勢斜率（分/次）</th><th>R²</th><th>下次預測</th><th>解讀</th></tr>
+                <tr><th>科目</th><th>最新</th><th>趨勢斜率（分/次）</th><th>R²</th><th>下次預測</th><th>95% 預測區間</th><th>解讀</th></tr>
                 ${predRows.map(p => {
                     const reliable = p.r2 >= 0.5 ? '趨勢明確' : p.r2 >= 0.3 ? '略有趨勢' : '波動為主';
                     return `<tr><td><strong>${p.s}</strong></td><td>${p.latest}</td>
                         <td class="${p.slope > 0.5 ? 'strength' : p.slope < -0.5 ? 'weakness' : 'neutral-chip'}">${p.slope >= 0 ? '+' : ''}${p.slope.toFixed(2)}</td>
                         <td>${p.r2.toFixed(2)}</td>
                         <td style="font-weight:900;color:var(--violet)">${p.n >= 3 ? p.predictNext.toFixed(1) : '—'}</td>
+                        <td style="font-size:.85em;">${p.pi ? `${p.pi.lo.toFixed(0)} ～ ${p.pi.hi.toFixed(0)}` : '—'}</td>
                         <td>${p.n >= 3 ? reliable : '資料不足（需 ≥3 次）'}</td></tr>`;
                 }).join('')}
                 <tr style="font-weight:700;"><td>整體平均</td><td>${examData[examData.length-1].average.toFixed(1)}</td>
                     <td class="${avgReg.slope > 0.3 ? 'strength' : avgReg.slope < -0.3 ? 'weakness' : 'neutral-chip'}">${avgReg.slope >= 0 ? '+' : ''}${avgReg.slope.toFixed(2)}</td>
                     <td>${avgReg.r2.toFixed(2)}</td>
-                    <td style="color:var(--violet)">${examData.length >= 3 ? avgReg.predictNext.toFixed(1) : '—'}</td><td>—</td></tr>
+                    <td style="color:var(--violet)">${examData.length >= 3 ? avgReg.predictNext.toFixed(1) : '—'}</td>
+                    <td style="font-size:.85em;">${(() => { const q = predInterval(examData.map((e, i) => ({ x: i, y: e.average }))); return q ? `${q.lo.toFixed(0)} ～ ${q.hi.toFixed(0)}` : '—'; })()}</td><td>—</td></tr>
                 </table></div></div>`;
 
             // --- 3. Correlation matrix ---
             let corr = '';
             if (examData.length >= 3 && allSubjects.length >= 2) {
                 corr = `<div class="analysis-section" style="margin-top:18px;"><h3 style="margin-bottom:6px;">🔗 科目相關性矩陣（Pearson r）</h3>
-                    <div style="font-size:0.8rem;color:var(--ink-3);margin-bottom:10px;">藍色＝兩科成績「同進退」（可能共用相同能力或讀書狀態）；紅色＝此消彼長（可能存在時間排擠）。|r| &gt; 0.7 為高度相關。</div>
+                    <div style="font-size:0.8rem;color:var(--ink-3);margin-bottom:10px;">藍色＝兩科成績「同進退」（可能共用相同能力或讀書狀態）；紅色＝此消彼長（可能存在時間排擠）。|r| &gt; 0.7 為高度相關。<b>*</b> 表示達統計顯著（p &lt; .05）：只有 ${examData.length} 次考試時，|r| 需 ≥ ${(rCrit(examData.length) || 0).toFixed(2)} 才顯著，未標 * 的係數多半只是巧合，請保守解讀。</div>
                     <div class="table-scroll"><table class="matrix-table"><thead><tr><th></th>${allSubjects.map(s => `<th>${s}</th>`).join('')}</tr></thead><tbody>`;
                 const seriesMap = {};
                 allSubjects.forEach(s => seriesMap[s] = examData.map(e => e.subjects[s]));
@@ -1711,7 +1719,8 @@
                         if (a === b) { corr += '<td style="background:var(--surface-3);color:var(--ink-3)">1.00</td>'; return; }
                         const pairs = examData.map(e => [e.subjects[a], e.subjects[b]]).filter(p => p[0] != null && p[1] != null);
                         const r = pearson(pairs.map(p => p[0]), pairs.map(p => p[1]));
-                        corr += `<td style="background:${corrColor(r)}">${r == null ? '—' : r.toFixed(2)}</td>`;
+                        const sig = r != null && rCrit(pairs.length) != null && Math.abs(r) >= rCrit(pairs.length);
+                        corr += `<td style="background:${corrColor(r)};${sig ? 'font-weight:900;' : 'opacity:.75;'}">${r == null ? '—' : r.toFixed(2) + (sig ? '*' : '')}</td>`;
                     });
                     corr += '</tr>';
                 });
@@ -2135,7 +2144,7 @@
             });
             chartImgsHTML += '</div>';
 
-            const sections = ['statsOverview','detailedAnalysis','advancedContent','goalContent','strategyContent','multiExamStats','rankAnalysis']
+            const sections = ['statsOverview','detailedAnalysis','advancedContent','goalContent','strategyContent','multiExamStats','rankAnalysis','classRelContent']
                 .map(id => document.getElementById(id)?.innerHTML || '');
             sections[4] = sections[4].replace(/<div class="charts-container" style="margin-top:16px;">[\s\S]*?<canvas id="strengthCompareChart"><\/canvas>[\s\S]*?<\/div>\s*<\/div>/, '');
             if (goalFig) {
@@ -2152,6 +2161,7 @@
 <title>${studentName} 成績分析報告</title>
 <style>
 @page { size: A4; margin: 14mm; }
+* { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 * { box-sizing: border-box; } canvas { display:none; }
 body { font-family: 'Noto Sans TC','Microsoft JhengHei',sans-serif; margin:0; padding:18px; max-width:210mm; color:#1e293b; font-size:12.5px; line-height:1.65; font-variant-numeric: tabular-nums; }
 h1 { font-size:21px; text-align:center; margin-bottom:4px; }
@@ -2205,6 +2215,7 @@ h3 { font-size:13px; color:#334155; margin-top:12px; }
 ${examTablesHTML}
 ${chartImgsHTML}
 <h2>🔍 各科詳細分析</h2>${sections[1]}
+${examData.some(e => e.cls) ? `<h2>🏫 班級相對位置（Z・PR・五標）</h2>${sections[7]}` : ''}
 <h2>🧠 進階分析（熱力圖・趨勢預測・相關性・偏科指數）</h2>${sections[2]}
 <h2>🎯 目標追蹤</h2>${sections[3]}
 <h2>💡 策略診斷</h2>${sections[4]}
@@ -2702,6 +2713,322 @@ ${chartImgsHTML}
             examRowSubjects = [[...DEFAULT_SUBJECTS]];
             renderExamRows();
         })();
+
+        // =====================================================================
+        // ===== v5 升級層（Claude 優化）=====
+        //  1. 🏫 班級相對位置：匯入全班 Excel 後，自動算出各科班平均、標準差、Z/T、科排名、PR、五標位置
+        //  2. 相對進步分析：以 PR 追蹤「扣除考題難易度後」的真實進退
+        //  3. 📅 下次考試行動計畫：診斷分類＋目標分數＋讀書時間比例＋預估均分
+        //  4. 上下學期比較、線性預測 95% 區間、相關係數顯著性
+        // =====================================================================
+        function prMid(vals, x) {
+            const n = vals.length; if (!n) return null;
+            let below = 0, eq = 0; vals.forEach(v => { if (v < x) below++; else if (v === x) eq++; });
+            return Math.round((below + eq / 2) / n * 100);
+        }
+        function pctileAsc(asc, p) {
+            const n = asc.length; if (!n) return null;
+            const idx = (n - 1) * p / 100, lo = Math.floor(idx), hi = Math.ceil(idx);
+            return lo === hi ? asc[lo] : asc[lo] + (asc[hi] - asc[lo]) * (idx - lo);
+        }
+        function rankToPR(rank, size) { return (rank && size) ? Math.round((size - rank + 0.5) / size * 100) : null; }
+        function subjColorOf(s) { const all = getAllSubjects(); return chartColors(all.length)[Math.max(0, all.indexOf(s))]; }
+        // t 臨界值（雙尾 95%）
+        function tCrit(df) { const T = {1:12.71,2:4.30,3:3.18,4:2.78,5:2.57,6:2.45,7:2.36,8:2.31,9:2.26,10:2.23,12:2.18,15:2.13,20:2.09}; if (df <= 0) return null; if (T[df]) return T[df]; const k = Object.keys(T).map(Number).filter(x => x <= df).pop(); return df > 20 ? 2.0 : T[k]; }
+        // Pearson r 雙尾 p<.05 臨界值
+        function rCrit(n) { const R = {3:.997,4:.950,5:.878,6:.811,7:.754,8:.707,9:.666,10:.632,11:.602,12:.576}; return R[n] || (n > 12 ? 2 / Math.sqrt(n) : null); }
+        // 線性預測 95% 預測區間（x = 實際考試序號，缺考不壓縮時間軸）
+        function predInterval(pts) {
+            const n = pts.length; if (n < 3) return null;
+            const mx = mean(pts.map(p => p.x)), my = mean(pts.map(p => p.y));
+            let sxx = 0, sxy = 0; pts.forEach(p => { sxx += (p.x - mx) ** 2; sxy += (p.x - mx) * (p.y - my); });
+            const b = sxx ? sxy / sxx : 0, a = my - b * mx;
+            const x0 = examData.length;
+            const sse = pts.reduce((s, p) => s + (p.y - (a + b * p.x)) ** 2, 0);
+            const se = Math.sqrt(sse / (n - 2));
+            const half = tCrit(n - 2) * se * Math.sqrt(1 + 1 / n + (sxx ? (x0 - mx) ** 2 / sxx : 0));
+            const pred = a + b * x0;
+            return { pred: Math.min(100, Math.max(0, pred)), lo: Math.max(0, pred - half), hi: Math.min(100, pred + half), half };
+        }
+        function seriesPts(subject) {
+            return examData.map((e, i) => ({ x: i, y: e.subjects[subject] })).filter(p => p.y != null);
+        }
+
+        // ---------- 找出每次考試對應的全班成績檔 ----------
+        function yearDigits(t) { const m = String(t || '').match(/\d{3}/); return m ? m[0] : ''; }
+        function findClassExamFor(e) {
+            if (!importedClassExams.length) return null;
+            const name = cleanCell(document.getElementById('studentName').value);
+            const seat = String(parseInt(cleanCell(document.getElementById('studentSeatNumber').value), 10));
+            const yr = yearDigits(document.getElementById('schoolYear').value);
+            const cands = importedClassExams.filter(x => x.meta && x.meta.semester === e.semester && x.meta.examType === e.type);
+            let best = null, bestScore = -1;
+            cands.forEach(x => {
+                const st = x.students.find(s => (name && cleanCell(s.name) === name) && (!seat || seat === 'NaN' || String(parseInt(s.seat, 10)) === seat))
+                       || x.students.find(s => name && cleanCell(s.name) === name);
+                if (!st) return;
+                let sc = 1; if (yr && yearDigits(x.meta.schoolYear) === yr) sc += 1;
+                if (sc > bestScore) { bestScore = sc; best = { exam: x, me: st }; }
+            });
+            return best;
+        }
+        function classSubjectStats(classExam, subject) {
+            const vals = classExam.students.map(s => parseFloat(s.subjects[subject])).filter(v => !isNaN(v));
+            if (vals.length < 3) return null;
+            const asc = [...vals].sort((a, b) => a - b);
+            const m = mean(vals), sd = calcSD(vals);
+            return { n: vals.length, vals, mean: m, sd, max: asc[asc.length - 1], min: asc[0],
+                top: pctileAsc(asc, 88), front: pctileAsc(asc, 75), mid: pctileAsc(asc, 50), back: pctileAsc(asc, 25), bottom: pctileAsc(asc, 12) };
+        }
+        function benchPos(st, sc) {
+            if (sc >= st.top) return '頂標以上';
+            if (sc >= st.front) return '前標～頂標';
+            if (sc >= st.mid) return '均標～前標';
+            if (sc >= st.back) return '後標～均標';
+            if (sc >= st.bottom) return '底標～後標';
+            return '底標以下';
+        }
+        function nextBench(st, sc) {
+            const b = [['底標', st.bottom], ['後標', st.back], ['均標', st.mid], ['前標', st.front], ['頂標', st.top]].find(x => x[1] > sc);
+            if (b) return { name: b[0], target: Math.min(100, Math.ceil(b[1])) };
+            return sc < st.max ? { name: '班級最高', target: Math.ceil(st.max) } : null;
+        }
+        // 每次考試的班級相對資料（快取於 examData）
+        function buildClassRel() {
+            examData.forEach(e => {
+                e.cls = null;
+                const hit = findClassExamFor(e); if (!hit) return;
+                const subj = {};
+                Object.keys(e.subjects).forEach(s => {
+                    const st = classSubjectStats(hit.exam, s); if (!st) return;
+                    const sc = e.subjects[s];
+                    const z = st.sd ? (sc - st.mean) / st.sd : 0;
+                    subj[s] = { ...st, score: sc, z, t: 50 + 10 * z, pr: prMid(st.vals, sc),
+                        rank: st.vals.filter(v => v > sc).length + 1, pos: benchPos(st, sc), next: nextBench(st, sc) };
+                });
+                // 依各科平均推算班排
+                const avgs = hit.exam.students.map(s => { const v = Object.values(s.subjects).map(parseFloat).filter(x => !isNaN(x)); return v.length ? mean(v) : null; }).filter(v => v != null);
+                const myAvg = e.average;
+                e.cls = { exam: hit.exam, subj, size: hit.exam.students.length,
+                    classAvg: mean(avgs), avgRank: avgs.filter(v => v > myAvg + 1e-9).length + 1, avgPR: prMid(avgs, Math.round(myAvg * 100) / 100) };
+            });
+        }
+
+        // ---------- 1+2. 班級相對位置分頁 ----------
+        function renderClassRel() {
+            const c = document.getElementById('classRelContent'); if (!c) return;
+            ['classZChart', 'classPRTrendChart'].forEach(destroyChart);
+            const withCls = examData.map((e, i) => ({ e, i })).filter(x => x.e.cls && Object.keys(x.e.cls.subj).length);
+            if (!withCls.length) {
+                c.innerHTML = `<div class="analysis-section"><h3>🏫 班級相對位置</h3><div class="empty-state" style="text-align:left;line-height:1.9;">
+                    目前沒有可對照的全班成績。按上方「📥 匯入全班 Excel」匯入同次考試的全班成績檔後，系統會自動比對本生的姓名／座號與考試名稱，
+                    計算各科的<b>班平均、標準差、Z／T 分數、科排名、PR 與五標位置</b>，並追蹤扣除考題難易度後的<b>相對進退</b>。<br>
+                    ※ 只有手動輸入成績時，系統只能做「與自己比較」的分析。</div></div>`;
+                return;
+            }
+            const sel = document.getElementById('classRelExam');
+            let pick = sel ? parseInt(sel.value) : NaN;
+            if (!withCls.some(x => x.i === pick)) pick = withCls[withCls.length - 1].i;
+            const e = examData[pick], K = e.cls;
+            const subs = Object.keys(K.subj);
+            const above = subs.filter(s => K.subj[s].z > 0).length;
+            const avgPR = Math.round(mean(subs.map(s => K.subj[s].pr)));
+            let h = `<div class="analysis-section">
+                <h3 style="margin-bottom:8px;">🏫 班級相對位置 <span style="font-size:.78rem;font-weight:400;color:var(--ink-3);">對照全班成績檔：${escapeHTML(K.exam.fileName || '')}（${K.size} 人）</span></h3>
+                <div class="input-group no-print" style="max-width:320px;margin-bottom:12px;"><label>選擇考試</label>
+                    <select id="classRelExam" onchange="renderClassRel()">${withCls.map(x => `<option value="${x.i}" ${x.i === pick ? 'selected' : ''}>${escapeHTML(x.e.label)}</option>`).join('')}</select></div>
+                <div class="single-exam-stats">
+                    <div class="mini-stat"><div class="value">${e.average.toFixed(1)}</div><div class="label">我的平均（${escapeHTML(e.label)}）</div></div>
+                    <div class="mini-stat"><div class="value">${K.classAvg.toFixed(1)}</div><div class="label">全班平均</div></div>
+                    <div class="mini-stat"><div class="value" style="color:var(--violet)">${K.avgRank} / ${K.size}</div><div class="label">依平均推算班排</div></div>
+                    <div class="mini-stat"><div class="value" style="color:var(--violet)">PR ${K.avgPR}</div><div class="label">平均分班內百分等級</div></div>
+                    <div class="mini-stat"><div class="value">${above} / ${subs.length}</div><div class="label">高於班平均的科目</div></div>
+                    <div class="mini-stat"><div class="value">PR ${avgPR}</div><div class="label">各科 PR 平均</div></div>
+                </div>
+                <div class="table-scroll"><table class="comparison-table" style="margin-top:12px;">
+                    <tr><th>科目</th><th>分數</th><th>班平均</th><th>標準差</th><th>Z</th><th>T</th><th>科排名</th><th>PR</th><th>五標位置</th><th>下一個標竿</th></tr>
+                    ${[...subs].sort((a, b) => K.subj[b].z - K.subj[a].z).map(s => { const d = K.subj[s]; return `<tr>
+                        <td><strong>${escapeHTML(s)}</strong></td><td>${d.score}</td><td>${d.mean.toFixed(1)}</td><td>${d.sd.toFixed(1)}</td>
+                        <td class="${d.z >= 0 ? 'strength' : 'weakness'}">${d.z >= 0 ? '+' : ''}${d.z.toFixed(2)}</td><td>${d.t.toFixed(1)}</td>
+                        <td>${d.rank} / ${d.n}</td><td style="font-weight:800;color:var(--violet)">${d.pr}</td><td>${d.pos}</td>
+                        <td>${d.next ? `${d.next.name} ${d.next.target}（差 <b>${Math.max(0, d.next.target - d.score)}</b>）` : '已是班上最高'}</td></tr>`; }).join('')}
+                </table></div>
+                <div class="chart-note">Z＝(個人−班平均)÷班標準差；T＝50＋10Z；PR＝(低於你的人數＋同分人數÷2)÷班級人數×100；五標採大考中心定義（P88/P75/P50/P25/P12）。
+                    同樣 70 分，在班平均 60 的科目與班平均 80 的科目意義完全不同，Z 與 PR 才能公平比較各科強弱。</div>
+                <div class="charts-container" style="margin-top:14px;">
+                    <div class="chart-card" style="grid-column:1/-1;"><h3>📐 各科班級 Z 分數剖面（0＝班平均）</h3><canvas id="classZChart"></canvas></div>
+                    ${withCls.length >= 2 ? `<div class="chart-card" style="grid-column:1/-1;"><h3>📈 各科班內 PR 走勢（排除考題難易度的相對進退）</h3><canvas id="classPRTrendChart"></canvas>
+                        <div class="chart-note">粗黑線為各科 PR 平均。PR 上升代表「在同學中的位置」真的往前，即使原始分數因考題變難而下降。</div></div>` : ''}
+                </div>`;
+            // 相對進退判讀（與前一次有班級資料的考試比）
+            const prevW = withCls.filter(x => x.i < pick).pop();
+            if (prevW) {
+                const P = prevW.e.cls;
+                const rows = subs.filter(s => P.subj[s]).map(s => {
+                    const a = P.subj[s], b = K.subj[s];
+                    const dS = b.score - a.score, dM = b.mean - a.mean, dPR = b.pr - a.pr;
+                    let v, cls = 'neutral-chip';
+                    if (dS < 0 && dPR >= 5) { v = '分數降但位置升：考題變難，其實表現更好'; cls = 'strength'; }
+                    else if (dS > 0 && dPR <= -5) { v = '分數升但位置降：考題變簡單，同學進步更多'; cls = 'weakness'; }
+                    else if (dPR >= 10) { v = '真實進步'; cls = 'strength'; }
+                    else if (dPR <= -10) { v = '真實退步，需關注'; cls = 'weakness'; }
+                    else v = '相對位置持平';
+                    return { s, dS, dM, dPR, v, cls };
+                }).sort((x, y) => y.dPR - x.dPR);
+                const fmt = v => `${v > 0 ? '+' : ''}${v.toFixed ? v.toFixed(1) : v}`;
+                h += `<div class="analysis-section" style="margin-top:16px;"><h3 style="margin-bottom:6px;">🔍 原始分數 vs 相對位置（${escapeHTML(prevW.e.label)} → ${escapeHTML(e.label)}）</h3>
+                    <div style="font-size:.8rem;color:var(--ink-3);margin-bottom:8px;">分數變化會受考題難易影響；看「班平均變化」與「PR 變化」才知道是真進步還是考題變簡單。</div>
+                    <div class="table-scroll"><table class="comparison-table"><tr><th>科目</th><th>我的分數變化</th><th>班平均變化</th><th>PR 變化</th><th>判讀</th></tr>
+                    ${rows.map(r => `<tr><td><strong>${escapeHTML(r.s)}</strong></td><td class="${r.dS >= 0 ? 'strength' : 'weakness'}">${fmt(r.dS)}</td>
+                        <td>${fmt(r.dM)}</td><td class="${r.dPR >= 0 ? 'strength' : 'weakness'}">${r.dPR > 0 ? '+' : ''}${r.dPR}</td><td class="${r.cls}">${r.v}</td></tr>`).join('')}
+                    </table></div></div>`;
+            }
+            // 洞察
+            const best = [...subs].sort((a, b) => K.subj[b].pr - K.subj[a].pr);
+            const hidden = subs.filter(s => K.subj[s].score >= 60 && K.subj[s].z <= -1);
+            h += `<div class="insight-box"><h4>🧭 相對位置洞察</h4><div style="line-height:1.9;">
+                在班上相對最強的是 <b>${best.slice(0, 2).map(escapeHTML).join('、')}</b>（PR ${best.slice(0, 2).map(s => K.subj[s].pr).join('、')}），
+                相對最弱的是 <b>${best.slice(-2).reverse().map(escapeHTML).join('、')}</b>（PR ${best.slice(-2).reverse().map(s => K.subj[s].pr).join('、')}）。
+                ${hidden.length ? `<br>⚠️ <b>${hidden.map(escapeHTML).join('、')}</b> 雖然及格，但落後班平均 1 個標準差以上，屬於「分數看起來還好、其實在班上偏後」的隱性弱科。` : ''}
+                </div></div></div>`;
+            c.innerHTML = h;
+
+            const zs = subs.map(s => +K.subj[s].z.toFixed(2));
+            charts.classZChart = new Chart(document.getElementById('classZChart'), {
+                type: 'bar',
+                data: { labels: subs, datasets: [{ label: 'Z 分數', data: zs, borderRadius: 5,
+                    backgroundColor: zs.map(z => z >= 1 ? 'rgba(16,185,129,0.75)' : z >= 0 ? 'rgba(59,130,246,0.65)' : z > -1 ? 'rgba(245,158,11,0.75)' : 'rgba(239,68,68,0.75)') }] },
+                options: { responsive: true, plugins: { legend: { display: false },
+                    tooltip: { callbacks: { afterLabel: ctx => { const d = K.subj[subs[ctx.dataIndex]]; return `分數 ${d.score}｜班平均 ${d.mean.toFixed(1)}｜PR ${d.pr}`; } } } },
+                    scales: { y: { suggestedMin: -2.5, suggestedMax: 2.5, title: { display: true, text: 'Z 分數' } } } }
+            });
+            if (withCls.length >= 2) {
+                const allS = getAllSubjects();
+                const ds = allS.filter(s => withCls.some(x => x.e.cls.subj[s])).map(s => ({
+                    label: s, data: withCls.map(x => x.e.cls.subj[s]?.pr ?? null), borderColor: subjColorOf(s), backgroundColor: subjColorOf(s),
+                    tension: 0.3, spanGaps: true, pointRadius: 3, borderWidth: 1.6 }));
+                ds.push({ label: 'PR 平均', data: withCls.map(x => { const v = Object.values(x.e.cls.subj).map(d => d.pr); return Math.round(mean(v)); }),
+                    borderColor: getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#0f172a', borderWidth: 3.5, pointRadius: 5, tension: 0.3 });
+                charts.classPRTrendChart = new Chart(document.getElementById('classPRTrendChart'), {
+                    type: 'line', data: { labels: withCls.map(x => x.e.label), datasets: ds },
+                    options: { responsive: true, interaction: { mode: 'index', intersect: false },
+                        plugins: { legend: { position: 'bottom', labels: { usePointStyle: true } } },
+                        scales: { y: { min: 0, max: 100, title: { display: true, text: '班內 PR（越高越前面）' } } } }
+                });
+            }
+        }
+
+        // ---------- 3. 下次考試行動計畫（附加在策略診斷） ----------
+        function actionPlan() {
+            const last = examData[examData.length - 1]; if (!last) return null;
+            const K = last.cls;
+            const items = Object.keys(last.subjects).map(s => {
+                const sc = last.subjects[s];
+                const pts = seriesPts(s);
+                const ys = pts.map(p => p.y);
+                const pAvg = mean(ys), pBest = Math.max(...ys);
+                let slope = 0;
+                if (pts.length >= 2) { const mx = mean(pts.map(p => p.x)), my = pAvg; let a = 0, b = 0; pts.forEach(p => { a += (p.x - mx) * (p.y - my); b += (p.x - mx) ** 2; }); slope = b ? a / b : 0; }
+                const d = K?.subj[s];
+                const z = d ? d.z : null;
+                let cat, why, pri, col;
+                if (sc < 60) { cat = '🔥 優先補強'; why = `未及格，差 ${60 - sc} 分`; pri = 3 + (60 - sc) / 10; col = 'var(--danger)'; }
+                else if (z != null && z <= -1) { cat = '🔥 優先補強'; why = '落後班平均 1 個標準差以上'; pri = 2.5 - z * 0.5; col = 'var(--danger)'; }
+                else if (sc < 65) { cat = '⚠️ 及格邊緣'; why = `只高出及格線 ${sc - 60} 分`; pri = 2; col = 'var(--amber)'; }
+                else if (z != null ? z < 0 : sc < pAvg - 3) { cat = '📈 提升潛力'; why = z != null ? '低於班平均，追上均標最有感' : '低於自己的歷次平均'; pri = 1.3 + (z != null ? -z : (pAvg - sc) / 10); col = 'var(--primary)'; }
+                else if (z != null ? z >= 1 : (sc >= 85 && sc >= last.average + 5)) { cat = '💪 優勢'; why = z != null ? '班上前段，維持手感即可' : '個人強項，維持即可'; pri = 0.45; col = 'var(--violet)'; }
+                else { cat = '✔️ 穩定'; why = '表現穩定，可挑戰更高標竿'; pri = z != null ? 0.6 + Math.max(0, 1 - z) * 0.4 : 0.8; col = 'var(--success)'; }
+                const falling = pts.length >= 3 ? slope <= -1.5 : (pts.length === 2 && ys[1] - ys[0] <= -8);
+                if (falling) { why += '；近期下滑'; pri += 0.8; }
+                // 目標：自訂目標 > 班級下一個標竿 > 個人基準
+                let target, tSrc;
+                if (goals[s] != null) { target = goals[s]; tSrc = '自訂目標'; }
+                else if (d && d.next) { target = d.next.target; tSrc = d.next.name; }
+                else if (sc < 60) { target = 60; tSrc = '及格'; }
+                else if (pBest > sc) { target = Math.min(pBest, sc + 8); tSrc = pBest <= sc + 8 ? '個人最佳' : '個人最佳方向'; }
+                else { target = Math.min(100, sc + 3); tSrc = '再進一步'; }
+                return { s, sc, z, pr: d ? d.pr : null, slope, n: pts.length, cat, why, pri, col, falling, target, tSrc, gap: Math.max(0, target - sc) };
+            });
+            const sum = items.reduce((a, b) => a + b.pri, 0) || 1;
+            items.forEach(i => i.share = i.pri / sum * 100);
+            items.sort((a, b) => b.pri - a.pri);
+            const tgtAvg = mean(items.map(i => Math.max(i.sc, i.target)));
+            let estRank = null;
+            if (K) {
+                const avgs = K.exam.students.map(st => { const v = Object.values(st.subjects).map(parseFloat).filter(x => !isNaN(x)); return v.length ? mean(v) : null; }).filter(v => v != null);
+                estRank = avgs.filter(v => v > tgtAvg + 1e-9).length + 1;
+            }
+            return { last, items, tgtAvg, estRank, hasCls: !!K };
+        }
+        function renderActionPlanHTML() {
+            const P = actionPlan(); if (!P) return '';
+            const maxS = Math.max(...P.items.map(i => i.share));
+            const focus = P.items.filter(i => i.cat.startsWith('🔥') || i.cat.startsWith('⚠️')).slice(0, 3);
+            const quick = P.items.filter(i => i.gap > 0 && i.gap <= 4 && !i.cat.startsWith('💪')).sort((a, b) => a.gap - b.gap).slice(0, 3);
+            const name = escapeHTML(document.getElementById('studentName').value || '同學');
+            const pot = P.items.filter(i => i.cat.startsWith('📈')).slice(0, 2);
+            const pri = focus.length ? focus : pot;
+            let msg = pri.length
+                ? `${name}的下一次考試，建議把讀書時間優先放在 <b>${pri.map(i => escapeHTML(i.s)).join('、')}</b>（合計約 ${Math.round(pri.reduce((a, b) => a + b.share, 0))}% 的時間）。`
+                : `${name}各科都在穩定水準以上，建議各科均衡分配時間，並以下表「下次目標」作為挑戰。`;
+            if (quick.length) msg += `<br>最容易「小步提分」：${quick.map(i => `<b>${escapeHTML(i.s)}</b> 再 ${i.gap} 分可達${i.tSrc}`).join('；')}。`;
+            msg += `<br>🎯 若各科都達到下表目標，平均可由 <b>${P.last.average.toFixed(1)}</b> 提升到 <b>${P.tgtAvg.toFixed(1)}</b>`;
+            if (P.estRank) msg += `，以本次全班成績估算約可到班上第 <b>${P.estRank}</b> 名`;
+            msg += '。';
+            return `<div class="analysis-section" style="margin-top:16px;">
+                <h3 style="margin-bottom:8px;">📅 下次考試行動計畫（依 ${escapeHTML(P.last.label)} 自動產生）</h3>
+                <div class="insight-box" style="margin-top:0;"><div style="line-height:1.9;">${msg}</div></div>
+                <div class="table-scroll"><table class="comparison-table" style="margin-top:10px;">
+                    <tr><th>科目</th><th>最新</th>${P.hasCls ? '<th>班內 PR</th>' : ''}<th>趨勢(分/次)</th><th>下次目標</th><th>還差</th><th>診斷</th><th style="min-width:150px;">讀書時間比例</th></tr>
+                    ${P.items.map(i => `<tr><td><strong>${escapeHTML(i.s)}</strong></td><td>${i.sc}</td>${P.hasCls ? `<td>${i.pr ?? '—'}</td>` : ''}
+                        <td class="${i.slope > 0.5 ? 'strength' : i.slope < -0.5 ? 'weakness' : 'neutral-chip'}">${i.n >= 2 ? (i.slope >= 0 ? '+' : '') + i.slope.toFixed(1) : '—'}</td>
+                        <td>${i.target}<div style="font-size:.72rem;color:var(--ink-3);">${i.tSrc}</div></td><td>${i.gap ? `<b>${i.gap}</b> 分` : '✅'}</td>
+                        <td style="text-align:left;"><b style="color:${i.col}">${i.cat}</b><div style="font-size:.72rem;color:var(--ink-3);">${i.why}</div></td>
+                        <td style="text-align:left;"><div style="display:flex;align-items:center;gap:6px;"><div style="flex:1;height:9px;background:var(--surface-3);border-radius:5px;overflow:hidden;">
+                            <div style="width:${(i.share / maxS * 100).toFixed(0)}%;height:100%;background:${subjColorOf(i.s)};"></div></div><b style="min-width:32px;text-align:right;">${i.share.toFixed(0)}%</b></div></td></tr>`).join('')}
+                </table></div>
+                <div class="chart-note">目標優先順序：自己在「目標追蹤」設定的分數 → 班級下一個五標（需匯入全班 Excel）→ 及格線／個人最佳。
+                    時間比例依「未及格 &gt; 落後班平均 1 個標準差 &gt; 及格邊緣 &gt; 提升潛力 &gt; 穩定 &gt; 優勢」加權，近期下滑的科目再加重。這是參考建議，請依自己的狀況與老師意見調整。</div>
+            </div>`;
+        }
+
+        // ---------- 4a. 上下學期比較 ----------
+        function renderSemesterCmpHTML() {
+            const sems = ['上學期', '下學期'].filter(s => examData.some(e => e.semester === s));
+            if (sems.length < 2) return '';
+            const subs = getAllSubjects();
+            const avgOf = (sem, s) => { const v = examData.filter(e => e.semester === sem).map(e => e.subjects[s]).filter(x => x != null); return v.length ? mean(v) : null; };
+            const rows = subs.map(s => ({ s, a: avgOf('上學期', s), b: avgOf('下學期', s) })).filter(r => r.a != null && r.b != null).map(r => ({ ...r, d: r.b - r.a })).sort((x, y) => y.d - x.d);
+            const oa = mean(examData.filter(e => e.semester === '上學期').map(e => e.average)), ob = mean(examData.filter(e => e.semester === '下學期').map(e => e.average));
+            return `<div class="analysis-section" style="margin-top:18px;"><h3 style="margin-bottom:10px;">🗓️ 上學期 vs 下學期</h3>
+                <div class="table-scroll"><table class="comparison-table"><tr><th>科目</th><th>上學期平均</th><th>下學期平均</th><th>變化</th></tr>
+                ${rows.map(r => `<tr><td><strong>${escapeHTML(r.s)}</strong></td><td>${r.a.toFixed(1)}</td><td>${r.b.toFixed(1)}</td>
+                    <td class="${r.d > 1 ? 'strength' : r.d < -1 ? 'weakness' : 'neutral-chip'}">${r.d >= 0 ? '+' : ''}${r.d.toFixed(1)}</td></tr>`).join('')}
+                <tr style="font-weight:800;"><td>整體平均</td><td>${oa.toFixed(1)}</td><td>${ob.toFixed(1)}</td><td class="${ob >= oa ? 'strength' : 'weakness'}">${ob - oa >= 0 ? '+' : ''}${(ob - oa).toFixed(1)}</td></tr>
+                </table></div>
+                <div style="font-size:.85rem;color:var(--ink-2);margin-top:8px;">學期間進步最多：<b>${escapeHTML(rows[0].s)}</b>（${rows[0].d >= 0 ? '+' : ''}${rows[0].d.toFixed(1)}）；${rows[rows.length - 1].d < 0 ? `退步最多：<b>${escapeHTML(rows[rows.length - 1].s)}</b>（${rows[rows.length - 1].d.toFixed(1)}）` : '各科皆未退步'}。</div></div>`;
+        }
+
+        // ---------- 掛載 ----------
+        const _v4RenderAll = renderAllAnalysis;
+        renderAllAnalysis = function () {
+            buildClassRel();
+            _v4RenderAll();
+            try { renderClassRel(); } catch (err) { console.warn(err); }
+        };
+        const _v4RenderStrategy = renderStrategy;
+        renderStrategy = function () {
+            _v4RenderStrategy();
+            const c = document.getElementById('strategyContent');
+            if (c && examData.length) c.insertAdjacentHTML('beforeend', renderActionPlanHTML());
+        };
+        const _v4RenderMultiStats = renderMultiStats;
+        renderMultiStats = function () {
+            _v4RenderMultiStats();
+            const mc = document.getElementById('multiExamStats');
+            if (mc && examData.length >= 2) mc.insertAdjacentHTML('beforeend', renderSemesterCmpHTML());
+        };
+
     </script>
 </body>
 </html>
