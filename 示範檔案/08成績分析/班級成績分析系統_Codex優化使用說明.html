@@ -605,6 +605,7 @@
         padding: 20px;
       }
     }
+    .badge{white-space:nowrap;}
   </style>
 </head>
 <body>
@@ -616,6 +617,7 @@
     </div>
     <ul class="toc-list">
       <li class="toc-item active" data-target="sec-intro"><a href="#sec-intro">🌟 系統介紹與定位</a></li>
+      <li class="toc-item" data-target="sec-v4"><a href="#sec-v4">🆕 v4 優化新增功能</a></li>
       <li class="toc-item" data-target="sec-startup"><a href="#sec-startup">📁 快速上手與 Excel 需求</a></li>
       <li class="toc-item" data-target="sec-interface"><a href="#sec-interface">🖥️ 介面按鈕與操作指南</a></li>
       <li class="toc-item" data-target="sec-class-report"><a href="#sec-class-report">📊 班級完整報告解讀</a></li>
@@ -625,7 +627,7 @@
       <li class="toc-item" data-target="sec-calculator"><a href="#sec-calculator">🧮 互動式教師計算小工具</a></li>
     </ul>
     <div style="margin-top: auto; padding-top: 15px; border-top: 1px solid var(--border); font-size: 0.78rem; color: var(--mu-light);">
-      智慧班級成績分析系統 v2.0 指南<br>
+      智慧班級成績分析系統 v2.0（v4 優化）指南<br>
       林獻升老師 製作
     </div>
   </aside>
@@ -634,7 +636,7 @@
   <main class="main-content">
     <header class="header-banner">
       <button class="theme-toggle-btn" onclick="toggleTheme()">🌙 深色模式</button>
-      <h1>📊 智慧班級成績分析系統 2.0</h1>
+      <h1>📊 智慧班級成績分析系統 2.0 <span style="font-size:.55em;vertical-align:middle;background:rgba(255,255,255,.2);padding:3px 10px;border-radius:99px;">v4 優化</span></h1>
       <p>林獻升老師專為高中教師打造的計量分析工具。本說明書旨在引導教師精準解讀班級體質、五標統計、預警名單及包含 VAM 與 HLM 在內的進階教育測量指標，讓數據有效支持您的教學決策與學生關懷。</p>
       
       <div class="meta-links">
@@ -660,6 +662,38 @@
           <div class="alert alert-info">
             <strong>💡 教育測量學核心理念：</strong><br>
             學生的學習成效受到起點能力、學術適應、隨機測量誤差的共同影響。一味地比較「絕對分數」或「名次」容易產生認知偏誤。本系統引進 <strong>Z 分數剖面</strong>、<strong>信度衰減校正</strong>、<strong>增值評量（VAM）</strong> 及 <strong>成長軌跡模型（HLM）</strong>，幫助教師撥開隨機誤差與起點效應的迷霧，精準找到學習困難與爆發力成長的學生。
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: v4 New Features -->
+      <section id="sec-v4">
+        <div class="section-title">🆕 v4 優化：新增功能與修正一覽</div>
+        <div class="card">
+          <p>v4 版（檔名 <span class="code-span">班級成績分析系統_v4優化.html</span>）在保留 2.0 所有功能的前提下，強化了「看得懂的圖表」與「能直接行動的建議」。舊版存在瀏覽器中的分析資料可直接沿用，系統讀取時會自動重新計算新增的統計量。</p>
+          <div class="table-container">
+            <table>
+              <thead><tr><th>類別</th><th>功能</th><th>所在位置</th><th>用途</th></tr></thead>
+              <tbody>
+                <tr><td><span class="badge badge-primary">圖表</span></td><td><strong>成績分布圖加上科目圖例</strong></td><td>📈 全班分析</td><td>每種顏色對應一個考科，可點圖例隱藏科目、切換「只看單科」或「堆疊顯示」，圖下附分布對照表。</td></tr>
+                <tr><td><span class="badge badge-primary">圖表</span></td><td><strong>科目固定配色</strong></td><td>所有圖表</td><td>同一科在每張圖都用同一顏色（例如示範資料中數學一律為綠色），跨圖比對不混淆。</td></tr>
+                <tr><td><span class="badge badge-secondary">教師</span></td><td><strong>各科教學診斷表</strong></td><td>📈 全班分析</td><td>新增偏態、臨界人數，並自動產生教學建議與「補救後及格率」試算。</td></tr>
+                <tr><td><span class="badge badge-secondary">教師</span></td><td><strong>臨界學生名單</strong></td><td>📈 全班分析</td><td>各科 55–59（臨界及格）、85–89（衝刺 90）、&lt;40（嚴重落後）名單，可下載 Excel 交給任課教師。</td></tr>
+                <tr><td><span class="badge badge-success">學生</span></td><td><strong>個人讀書策略與下次目標</strong></td><td>🧑‍🎓 個人分析／學生報告</td><td>每科診斷分類、下一個標竿與差距、讀書時間建議比例、目標均分與預估名次。</td></tr>
+                <tr><td><span class="badge badge-danger">預警</span></td><td><strong>兩條新預警規則</strong></td><td>🚨 預警關懷</td><td>臨界不及格 ≥2 科、連續兩次均分下滑。</td></tr>
+                <tr><td><span class="badge badge-primary">匯出</span></td><td><strong>Excel 新增兩張工作表</strong></td><td>💾 匯出</td><td>「學生讀書診斷」（親師座談可直接使用）與「臨界生名單」。</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="alert alert-info">
+            <strong>🔧 v4 同步修正：</strong>
+            <ul>
+              <li>五標頁說明文字改為與實際算法一致（P88／P75／P50／P25／P12 百分位數）。</li>
+              <li>刪除與「各科分數箱型圖」重複的舊版五數摘要圖。</li>
+              <li>個人 PR 改用標準百分等級（中點法），班上第 1 名不再被低估。</li>
+              <li>多次比較中缺考科目不再被畫成 0 分。</li>
+              <li>列印／存 PDF 時保留表格與長條的底色。</li>
+            </ul>
           </div>
         </div>
       </section>
@@ -758,6 +792,21 @@
                   <td>將高度關注與中度關注的學生名單，連同他們的平均、不及格科數與預警原因，匯出成 Excel 檔案。</td>
                 </tr>
                 <tr>
+                  <td><strong>分布圖科目選單／堆疊顯示</strong> <span class="badge badge-primary">v4</span></td>
+                  <td>📈 全班分析</td>
+                  <td>「全班成績分布」圖上方的下拉選單可選「全部科目同時比較」或「只看：某科」；勾選「堆疊顯示」可看各分數帶的總人次。點擊圖例的科目名稱可隱藏／顯示該科。</td>
+                </tr>
+                <tr>
+                  <td><strong>下載臨界生名單 .xlsx</strong> <span class="badge badge-primary">v4</span></td>
+                  <td>📈 全班分析</td>
+                  <td>將各科臨界及格、衝刺 90、嚴重落後學生（含分數與「差幾分」）匯出成 Excel，方便轉交任課教師安排補救或拔尖。</td>
+                </tr>
+                <tr>
+                  <td><strong>下載此次完整成績 .xlsx</strong> <span class="badge badge-primary">v4 擴充</span></td>
+                  <td>💾 匯出</td>
+                  <td>除原有「成績」「五標統計」外，新增「學生讀書診斷」（每位學生的優勢科目、優先補強、及格邊緣、近期下滑、讀書時間分配、目標均分與預估名次）與「臨界生名單」兩張工作表。</td>
+                </tr>
+                <tr>
                   <td><strong>儲存目前分析（命名）</strong></td>
                   <td>💾 匯出</td>
                   <td>將目前解析出的所有多次考試資料，給予自訂名稱（如「3年7班114上學期」）存入瀏覽器 localStorage，方便下次直接讀取。</td>
@@ -832,6 +881,15 @@
 
           <h4>3. 全班分析圖表解讀</h4>
           <ul>
+            <li><strong>全班成績分布（各科人數）</strong> <span class="badge badge-primary">v4</span>：
+              橫軸為分數區間、縱軸為人數，<strong>每種顏色代表一個考科</strong>，對照圖上方的圖例或圖下方「分布對照表」的色塊即可辨識。紅色區間標籤（如 50–59）為不及格區。
+              <ul>
+                <li>滑鼠移到任一分數帶，會列出該區間<strong>各科的人數與占比</strong>（例：數學 60–69：7 人，23%）。</li>
+                <li>科目太多看不清時，可點圖例隱藏部分科目，或用下拉選單「只看：某科」，此時圖上方會顯示該科平均、中位數、標準差、及格率，不及格區間的長條以紅色呈現。</li>
+                <li>所有科目都沒有人的低分區間（如 0–39）會自動省略，讓有資料的區域放大。</li>
+                <li>分布對照表的格子顏色越深代表該區間人數占比越高；最右欄「臨界 55–59」可一眼看出哪科最值得補救。</li>
+              </ul>
+            </li>
             <li><strong>各科分數箱型圖（最小-Q1-Q3-最大，◆=中位數）：</strong>
               箱子（Q1 到 Q3，代表中間 50% 學生）的長度代表「四分位距 (IQR)」。箱子愈長，表示班上中段學生的差距愈大，考題的鑑別度可能偏高或班內程度參差不齊；中位數◆若明顯偏向下方，代表低分群學生較多。
             </li>
@@ -871,6 +929,33 @@
               相關性係數 $r$ 介於 -1.00 到 +1.00。當兩科的 $r$ 越高（如範例中的<strong>生物×地科 $r = 0.91$</strong>，或<strong>數學×物理 $r = 0.88$</strong>），代表全班在這兩科的成績表現高度連動（同強同弱）。這反映了學生底層能力的重疊，或者讀書習慣的共通性。教師在安排跨學科主題教學或共同輔導時，可將高度相關的科目組合在一起考慮。
             </li>
           </ul>
+
+          <h4>4. 各科教學診斷表 <span class="badge badge-primary">v4</span></h4>
+          <p>此表將每科的分布型態與補救效益整合在一起，並自動產生教學建議：</p>
+          <div class="table-container">
+            <table>
+              <thead><tr><th>指標</th><th>判讀方式</th><th>教學意涵</th></tr></thead>
+              <tbody>
+                <tr><td><strong>偏態（Skewness）</strong></td><td>≤ −0.5 負偏；≥ +0.5 正偏；介於之間大致對稱</td><td><strong>負偏</strong>＝高分人多、少數低分拖尾 → 多數已精熟，宜個別補救落後者。<strong>正偏</strong>＝低分人多 → 試題偏難或核心概念尚未建立。</td></tr>
+                <tr><td><strong>標準差</strong></td><td>≥ 15 標示為落差大</td><td>班內程度分散，適合分組或差異化教學。</td></tr>
+                <tr><td><strong>臨界 55–59</strong></td><td>距離及格 1–5 分的人數</td><td>補救投入最少、及格率提升最明顯的一群。系統會試算「若全數補救成功，及格率可由 X% 提升至 Y%」。</td></tr>
+                <tr><td><strong>85–89</strong></td><td>距離 90 分 1–5 分的人數</td><td>拔尖對象，可提供進階題或延伸任務。</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="alert alert-info">
+            <strong>💡 示範資料解讀（1141 第三次段考）：</strong><br>
+            地科及格率 77% 為全班最低，且有 4 位臨界生（55–59 分）；若這 4 人補救成功，及格率可由 77% 提升至 90%。生物同樣有 4 位臨界生，及格率可由 83% 提升至 97%。表格下方的「本次重點」會自動列出及格率最低、落差最大、臨界生最多的科目。
+          </div>
+
+          <h4>5. 臨界學生名單 <span class="badge badge-primary">v4</span></h4>
+          <p>依科目列出三類學生（顯示座號與分數；勾選「顯示學生姓名」時會加上姓名）：</p>
+          <ul>
+            <li><strong>⚠️ 臨界及格（55–59）：</strong>最優先的補救對象。例如示範資料中地科有座號 06、19、26（58 分）與 22（57 分）。</li>
+            <li><strong>🚀 衝刺 90（85–89）：</strong>拔尖對象，稍加挑戰即可進入 90 分群。</li>
+            <li><strong>🆘 嚴重落後（&lt;40）：</strong>需要基礎概念重建，建議個別輔導或轉介。</li>
+          </ul>
+          <p>點「📥 下載臨界生名單 .xlsx」可得到含「差 X 分及格／差 X 分達 90」欄位的名單，直接轉交任課教師。</p>
         </div>
       </section>
 
@@ -894,6 +979,11 @@
             </li>
           </ul>
 
+          <div class="alert alert-success">
+            <strong>📐 PR（班內百分等級）計算方式 <span class="badge badge-primary">v4 修正</span>：</strong><br>
+            PR ＝（成績低於該生的人數 ＋ 與該生同分人數 ÷ 2）÷ 班級人數 × 100。採標準的中點法，同分者 PR 相同，班上最高分不會被低估。PR 80 代表約贏過班上 80% 的同學。
+          </div>
+
           <h4>2. 偏科指數（變異係數 CV）</h4>
           <p>偏科指數是計算學生<strong>個人各科分數的變異係數</strong>（$\text{CV} = \frac{\text{個人各科分數標準差}}{\text{個人各科均分}} \times 100\%$）。</p>
           <ul>
@@ -912,6 +1002,34 @@
               這是一個水平直條圖，以中間的 0 分割線作為全班平均基準。直條向右延伸（綠色）代表超越平均，向左延伸（黃/紅色）代表落後平均。這能最快、最清晰地幫老師定位出該學生的「優勢領域」與「待輔導領域」。
             </li>
           </ul>
+
+          <h4>4. 個人讀書策略與下次目標 <span class="badge badge-primary">v4</span></h4>
+          <p>位於個人分析頁最下方，也會一併印在「學生個人分析報告」中。系統依本次成績，對每一科做出以下判斷：</p>
+          <div class="table-container">
+            <table>
+              <thead><tr><th>診斷分類</th><th>判定條件</th><th>建議</th></tr></thead>
+              <tbody>
+                <tr><td><strong style="color:var(--d)">🔥 優先補強</strong></td><td>未及格（&lt;60），或落後班平均 1 個標準差以上（Z ≤ −1）</td><td>分配最多讀書時間，先補基礎概念</td></tr>
+                <tr><td><strong style="color:var(--w)">⚠️ 及格邊緣</strong></td><td>60–64 分</td><td>剛過及格線，下次容易滑落，需穩固</td></tr>
+                <tr><td><strong style="color:var(--p)">📈 提升潛力</strong></td><td>及格但低於班平均（−1 &lt; Z &lt; 0）</td><td>追上均標最有感，進步空間大</td></tr>
+                <tr><td><strong style="color:var(--s)">✔️ 穩定</strong></td><td>高於班平均（0 ≤ Z &lt; 1）</td><td>維持並挑戰下一個標竿</td></tr>
+                <tr><td><strong style="color:var(--p2)">💪 優勢</strong></td><td>Z ≥ 1（班上前段）</td><td>維持手感即可，可把時間讓給弱科</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <ul>
+            <li><strong>下一個標竿與還差幾分：</strong>找出比目前成績高的最近一個五標（底標→後標→均標→前標→頂標），算出還差幾分，讓學生有具體、可達成的短期目標。</li>
+            <li><strong>與上次比：</strong>顯示該科與上一次考試的分數增減（▲／▼）。若最近三次呈下降趨勢（或兩次間下降 8 分以上），會加註「近期下滑」並提高時間比重。</li>
+            <li><strong>建議讀書時間比例：</strong>依上表分類加權（未及格 &gt; 落後 1 個標準差 &gt; 及格邊緣 &gt; 低於班均 &gt; 穩定 &gt; 優勢），近期下滑或明顯低於自己平均的科目再加重，換算成百分比。</li>
+            <li><strong>目標均分與預估名次：</strong>假設各科都達到「下一個標竿」（優勢科維持原分），試算新的均分，並以本次全班成績估算可達到的班級名次。</li>
+          </ul>
+          <div class="alert alert-info">
+            <strong>💡 示範資料解讀（座號 01，1141 第三次段考）：</strong><br>
+            均分 58.9、班排第 27 名。英語文 46 分（未及格且近期下滑）建議占 22% 讀書時間；地科 53 分占 19%；公民 56 分只差 1 分即達底標。物理、化學只差 1–2 分即可到後標，屬於「小步提分」科目。若各科都達到下一個標竿，均分可由 58.9 提升到約 65.3，約可進步到班上第 22 名。
+          </div>
+          <div class="alert alert-warning">
+            <strong>⚠️ 使用提醒：</strong>讀書策略是依成績分布計算的<strong>參考建議</strong>，請搭配學生自評、作業表現與任課教師意見調整，不宜當作唯一依據。與學生或家長討論時，建議先肯定「💪 優勢」科目，再談「🔥 優先補強」。
+          </div>
         </div>
       </section>
 
@@ -930,7 +1048,10 @@
               <li><strong>均分驟降：</strong>個人均分較上一次考試下降達 8 分以上加 3 分。</li>
               <li><strong>單科崩盤：</strong>任一學科成績低於該生自己的平均分數達 25 分以上加 2 分（即便他其他科目都考好，此單科崩潰可能代表發生特定學習瓶頸）。</li>
               <li><strong>類組末段：</strong>類組百分名次 (PR) 落在後 10% (即百分名次數值 ≥ 90) 加 1 分。</li>
+              <li><strong>臨界不及格多科</strong> <span class="badge badge-primary">v4</span>：有 2 科以上落在 55–59 分加 1 分（離及格只差一點的科目越多，下次越容易出現多科不及格）。</li>
+              <li><strong>連續兩次均分下滑</strong> <span class="badge badge-primary">v4</span>：最近三次考試均分逐次下降，且累計下降 ≥ 5 分加 2 分（需載入 3 次以上考試）。可捕捉「每次只掉一點、但持續往下」的慢性退步。</li>
             </ol>
+            <p style="margin-top:8px;">等級：總分 ≥ 6 為高度關注、3–5 為中度關注、1–2 為持續留意。</p>
           </div>
 
           <div class="alert alert-info">

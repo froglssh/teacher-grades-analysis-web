@@ -479,9 +479,12 @@
           <div class="stat"><b>本機</b><span>多數資料留在瀏覽器</span></div>
         </div>
         <div class="hero-actions">
+          <a class="btn primary" href="https://froglssh.github.io/classroom-management-workstation/" target="_blank" rel="noopener" title="共用學生名冊，開啟幹部、小老師、座位及其他班級工具">整合工作站</a>
           <a class="btn" href="https://froglssh.github.io/teacher-grades-analysis-web/AI_%E8%BC%94%E5%8A%A9%E7%8F%AD%E7%B4%9A%E4%BA%8B%E5%8B%99_%E7%B0%A1%E5%A0%B1/AI_%E8%BC%94%E5%8A%A9%E7%8F%AD%E7%B4%9A%E4%BA%8B%E5%8B%99_%E6%95%99%E5%AD%B8%E7%B6%B2%E9%A0%81.html" target="_blank" rel="noopener">AI輔助班級事務簡報</a>
           <a class="btn" href="https://froglssh.github.io/teacher-grades-analysis-web/%E6%88%90%E7%B8%BE%E5%88%86%E6%9E%90/%E5%AD%B8%E7%94%9F%E6%88%90%E7%B8%BEAI%E5%88%86%E6%9E%90%E7%A0%94%E7%BF%92%E6%95%99%E5%AD%B8%E7%B6%B2%E9%A0%81.html" target="_blank" rel="noopener">運用 AI 分析學生成績表現</a>
           <a class="btn" href="https://froglssh.github.io/ai-homeroom-comment-workshop/" target="_blank" rel="noopener">AI輔助德性評語書寫</a>
+          <a class="btn" href="https://froglssh.github.io/teacher-grades-analysis-web/AI%E8%BC%94%E5%8A%A9%E7%8F%AD%E7%B4%9A%E4%BA%8B%E5%8B%99_%E5%B0%8E%E5%B8%AB%E6%95%B8%E4%BD%8D%E5%B7%A5%E5%85%B7%E7%AE%B1.html" target="_blank" rel="noopener">導師數位工具箱</a>
+          <a class="btn" href="https://youtu.be/A1uqwJzTIaU" target="_blank" rel="noopener">研習簡報影片</a>
         </div>
       </div>
       <figure class="hero-visual" aria-label="生物科圖案示意圖">
@@ -530,6 +533,7 @@ const tools = [
     folder: "00學生資料",
     program: "https://froglssh.github.io/class-student-data-management-online/",
     guide: "https://froglssh.github.io/class-student-data-management-guide-online/",
+    demoFile: "https://drive.google.com/file/d/1ydjoUfayRNzvdIRsQY_UbgGGm85bOseU/view?usp=drive_link",
     summary: "班級導師可以先建立全班的個人資料，用於後續的班經管理等說明，也可以用於後續德性評語的工作。",
     scenario: "適合每學期初導師建立班級學生基本資料名冊。建立完成的個人資料檔，能作為後續座位安排、幹部改選、打掃分組、成績統計、以及期末德性評語生成等所有管理工具的統一輸入源，避免重複登錄。",
     value: [
@@ -968,6 +972,34 @@ const tools = [
     folder: "示範檔案/08成績分析",
     program: "示範檔案/08成績分析/班級成績分析系統_Codex優化.html",
     guide: "示範檔案/08成績分析/班級成績分析系統_Codex優化使用說明.html",
+    actions: [
+      [
+        "班級成績開啟主程式",
+        "示範檔案/08成績分析/班級成績分析系統_Codex優化.html",
+        true
+      ],
+      [
+        "班級成績查看使用說明",
+        "示範檔案/08成績分析/班級成績分析系統_Codex優化使用說明.html"
+      ],
+      [
+        "班級成績下載 Android APK",
+        "示範檔案/08成績分析/班級成績app-release.apk"
+      ],
+      [
+        "個人成績開啟主程式",
+        "示範檔案/08成績分析/學生個人成績分析_codex優化版.html",
+        true
+      ],
+      [
+        "個人成績查看使用說明",
+        "示範檔案/08成績分析/學生個人成績分析_codex使用說明.html"
+      ],
+      [
+        "個人成績下載 Android APK",
+        "https://drive.google.com/file/d/1RCaayPTO0AkRRaQ2Z8G1cK68Zvaal87L/view?usp=drive_link"
+      ]
+    ],
     summary: "整合班級成績分析、個人成績分析、模擬成績檔、NotebookLM 示範成果與深度研究文件，協助教師從分數資料看見班級差異、個別學生需求與後續輔導方向。",
     scenario: "適合段考後班級診斷、學生個別晤談、家長溝通、補救教學規劃、學習策略建議，以及研習中示範如何把成績檔轉成可理解的分析報告。",
     value: [
@@ -1207,8 +1239,10 @@ const tools = [
     color: "#059669",
     soft: "#e8f8f1",
     folder: "示範檔案/10自主學習",
-    program: "示範檔案/10自主學習/AI輔助自主學習（claude優化）.html",
+    program: "https://froglssh.github.io/ai-assisted-self-learning-online/",
     guide: "示範檔案/10自主學習/AI輔助自主學習（claude優化）使用說明.html",
+    demoFile: "https://drive.google.com/file/d/1IrKSj_EBjfrhjlK21R0dW6oF6IiEZv2Y/view?usp=drive_link",
+    demoLabel: "示範檔案下載",
     summary: "協助學生從主題發想、目標設定、週次規劃、成果整理到反思撰寫，讓自主學習不只停留在表格填寫，而能轉化為可追蹤的學習計畫。",
     scenario: "適合高一高二自主學習課程、導師或課諮師輔導學生設定主題、學習歷程素材整理，以及研習中示範 AI 如何協助學生聚焦問題。",
     value: [
@@ -1232,7 +1266,7 @@ const tools = [
       [
         "程式",
         "AI輔助自主學習（claude優化）.html",
-        "示範檔案/10自主學習/AI輔助自主學習（claude優化）.html"
+        "https://froglssh.github.io/ai-assisted-self-learning-online/"
       ],
       [
         "說明",
@@ -1254,8 +1288,10 @@ const tools = [
     color: "#0f766e",
     soft: "#e7f7f4",
     folder: "示範檔案/11升學輔導",
-    program: "示範檔案/11升學輔導/AI智慧輔助升學系統(codex優化).html",
+    program: "https://froglssh.github.io/ai-college-admission-assistant-online/",
     guide: "示範檔案/11升學輔導/AI智慧輔助升學系統(codex優化)使用說明.html",
+    demoFile: "https://drive.google.com/file/d/1rkiJOgPwFPBx7tke81OL9D3zcYOAJxxD/view?usp=drive_link",
+    demoLabel: "示範檔案下載",
     summary: "協助學生與導師整理升學條件、興趣方向、校系探索與備審策略，將升學輔導從零散諮詢轉化為有結構的決策流程。",
     scenario: "適合個別升學諮詢、班級升學講座、學生校系探索、備審方向討論，以及導師需要快速建立學生升學輪廓的情境。",
     value: [
@@ -1279,7 +1315,7 @@ const tools = [
       [
         "程式",
         "AI智慧輔助升學系統(codex優化).html",
-        "示範檔案/11升學輔導/AI智慧輔助升學系統(codex優化).html"
+        "https://froglssh.github.io/ai-college-admission-assistant-online/"
       ],
       [
         "說明",
@@ -1301,8 +1337,16 @@ const tools = [
     color: "#4f46e5",
     soft: "#eef2ff",
     folder: "示範檔案/11學習歷程",
-    program: "示範檔案/11學習歷程/學習歷程檔案輔助程式(claude優化).html",
+    program: "https://froglssh.github.io/learning-portfolio-assistant-online/",
     guide: "",
+    demoFile: "https://drive.google.com/file/d/1-5NdGbRhudtWdL3qKTlm4p6XdiC3fwGU/view?usp=drive_link",
+    demoLabel: "示範檔案下載",
+    extraButtons: [
+      [
+        "歷程檔案下載",
+        "https://drive.google.com/file/d/1fLO8K69x6pfBWJC17xYF49Zvc0WeHY8N/view?usp=drive_link"
+      ]
+    ],
     summary: "協助學生整理課程學習成果、多元表現、反思文字與上傳前檢核，讓學習歷程從檔案堆疊轉為有主題、有證據、有反思的作品集。",
     scenario: "適合學習歷程檔案撰寫課、課諮與導師個別指導、學生整理作品說明，以及期末上傳前的品質檢核。",
     value: [
@@ -1326,7 +1370,7 @@ const tools = [
       [
         "程式",
         "學習歷程檔案輔助程式(claude優化).html",
-        "示範檔案/11學習歷程/學習歷程檔案輔助程式(claude優化).html"
+        "https://froglssh.github.io/learning-portfolio-assistant-online/"
       ],
       [
         "APK",
@@ -1526,6 +1570,16 @@ function resourceLink(res, tool){
     </a>`;
 }
 
+function quickActions(tool){
+  if (tool.actions) {
+    return tool.actions.map(([label, href, primary]) => `<a class="btn${primary ? " primary" : ""}" href="${href}" target="_blank" rel="noopener">${label}</a>`).join("");
+  }
+  return `
+          <a class="btn primary" href="${tool.program}" target="_blank" rel="noopener">開啟主程式</a>
+          ${tool.guide ? `<a class="btn" href="${tool.guide}" target="_blank" rel="noopener">查看使用說明</a>` : ""}
+          ${tool.resources.filter(res => res[0] === "APK").slice(0, 1).map(res => `<a class="btn" href="${res[2]}" target="_blank" rel="noopener">下載 Android APK</a>`).join("")}`;
+}
+
 function renderTabs(){
   tabList.innerHTML = tools.map((tool, index) => `
     <button class="tab" style="--tool:${tool.color}" role="tab" aria-selected="${index === 0 ? "true" : "false"}" aria-controls="panel-${tool.id}" id="tab-${tool.id}" data-id="${tool.id}">
@@ -1547,10 +1601,10 @@ function renderPrograms(){
         <p class="program-desc">${tool.summary}</p>
         <div class="tags">${tool.tags.map(tag => `<span class="tag">${tag}</span>`).join("")}</div>
         <div class="quick-actions">
-          <a class="btn primary" href="${tool.program}" target="_blank" rel="noopener">開啟主程式</a>
-          ${tool.guide ? `<a class="btn" href="${tool.guide}" target="_blank" rel="noopener">查看使用說明</a>` : ""}
-          ${tool.resources.filter(res => res[0] === "APK").slice(0, 1).map(res => `<a class="btn" href="${res[2]}" target="_blank" rel="noopener">下載 Android APK</a>`).join("")}
+          ${quickActions(tool)}
           <a class="btn" href="#resources">檔案資源索引</a>
+          ${tool.demoFile ? `<a class="btn" href="${tool.demoFile}" target="_blank" rel="noopener">${tool.demoLabel || "程式示範檔案"}</a>` : ""}
+          ${tool.extraButtons ? tool.extraButtons.map(([label, href]) => `<a class="btn" href="${href}" target="_blank" rel="noopener">${label}</a>`).join("") : ""}
         </div>
       </div>
       <div class="program-body">

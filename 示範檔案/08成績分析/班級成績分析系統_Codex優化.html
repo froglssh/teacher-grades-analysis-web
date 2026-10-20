@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>智慧班級成績分析系統 2.0</title>
+<title>智慧班級成績分析系統 2.0（v4 優化）</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -287,7 +287,7 @@ select:focus,input:focus{outline:none;border-color:var(--p);box-shadow:0 0 0 3px
         <div class="ct">📏 各科五標統計</div>
         <div class="ctrl"><select id="s2"></select></div>
         <p style="font-size:.79rem;color:var(--mu);margin-bottom:12px;">
-          <strong>頂標</strong>前12%｜<strong>前標</strong>前25%｜<strong>均標</strong>前50%｜<strong>後標</strong>後25%｜<strong>底標</strong>後12%（均為該範圍均值）
+          <strong>頂標</strong>第88百分位｜<strong>前標</strong>第75百分位｜<strong>均標</strong>第50百分位｜<strong>後標</strong>第25百分位｜<strong>底標</strong>第12百分位（大考中心官方定義）
         </p>
         <div id="fmBody"></div>
       </div>
@@ -1157,7 +1157,13 @@ function renderFiveMarks(idx){
 // =====================================================================
 // RENDER: CLASS ANALYSIS
 // =====================================================================
-const CC=['#1a56db','#dc2626','#16a34a','#f59e0b','#7c3aed','#ec4899','#06b6d4','#84cc16','#f97316','#6366f1'];
+const CC=['#2563eb','#dc2626','#16a34a','#f59e0b','#7c3aed','#db2777','#0891b2','#65a30d','#ea580c','#4f46e5','#0d9488','#a16207','#9333ea','#475569'];
+// 同一科目在所有圖表中固定使用同一顏色（依所有考試出現的科目順序指派）
+function subjColor(subj){
+  const all=[...new Set(S.exams.flatMap(e=>e.subjects))];
+  const i=all.indexOf(subj);
+  return CC[(i<0?0:i)%CC.length];
+}
 
 function renderClassAnalysis(idx){
   const e=ex(idx); if(!e) return;
@@ -1200,33 +1206,9 @@ function renderClassAnalysis(idx){
     options:cOpts({y:{min:0,max:100,title:{display:true,text:'%'}}})
   });
 
-  // 3. Distribution histogram
-  addCB(cc,'c3','全班成績分布（各科人數）');
-  const dL=['0–9','10–19','20–29','30–39','40–49','50–59','60–69','70–79','80–89','90–100'];
-  new Chart(document.getElementById('c3'),{type:'bar',
-    data:{labels:dL,datasets:e.subjects.slice(0,10).map((s,i)=>({
-      label:abbr(s),data:e.stats[s]?.dist||new Array(10).fill(0),
-      backgroundColor:CC[i]+'99',borderColor:CC[i],borderWidth:1}))},
-    options:cOpts({y:{beginAtZero:true,title:{display:true,text:'人數'}}})
-  });
-
-  // 4. Box chart
-  addCB(cc,'c4','各科五數摘要（箱型圖）');
-  const bd=e.subjects.map(s=>{
-    const st=e.stats[s]; if(!st)return{min:0,q1:0,med:0,q3:0,max:0};
-    return{min:st.min,q1:st.q1,med:st.median,q3:st.q3,max:st.max};
-  });
-  new Chart(document.getElementById('c4'),{type:'bar',
-    data:{labels:e.subjects.map(abbr),datasets:[
-      {label:'最低–Q1',data:bd.map(d=>[d.min,d.q1]),backgroundColor:'rgba(220,38,38,.35)',borderColor:'rgba(220,38,38,.7)',borderWidth:1,borderSkipped:false},
-      {label:'Q1–中位數',data:bd.map(d=>[d.q1,d.med]),backgroundColor:'rgba(245,158,11,.45)',borderColor:'rgba(245,158,11,.8)',borderWidth:1,borderSkipped:false},
-      {label:'中位數–Q3',data:bd.map(d=>[d.med,d.q3]),backgroundColor:'rgba(26,86,219,.45)',borderColor:'rgba(26,86,219,.8)',borderWidth:1,borderSkipped:false},
-      {label:'Q3–最高',data:bd.map(d=>[d.q3,d.max]),backgroundColor:'rgba(22,163,74,.35)',borderColor:'rgba(22,163,74,.7)',borderWidth:1,borderSkipped:false},
-    ]},
-    options:{responsive:true,indexAxis:'y',scales:{
-      x:{min:0,max:100,stacked:true,title:{display:true,text:'分數'}},y:{stacked:true}
-    }}
-  });
+  // 3. Distribution histogram（v4：圖例＋固定科目顏色＋單科/堆疊切換＋分布對照表）
+  drawDistChart(cc, e);
+  const dL=DIST_LABELS;
 
   // 5. Radar
   addCB(cc,'c5','全班各科平均雷達圖');
@@ -1659,7 +1641,7 @@ function renderClassCmp(div){
   new Chart(document.getElementById('cc1'),{type:'line',
     data:{labels:exLbls,datasets:allSubj.map((s,i)=>({label:abbr(s),
       data:S.exams.map(e=>e.stats[s]?.mean??null),
-      borderColor:CC[i%CC.length],backgroundColor:CC[i%CC.length]+'30',
+      borderColor:subjColor(s),backgroundColor:subjColor(s)+'30',
       tension:.35,fill:false,pointRadius:5,pointHoverRadius:7}))},
     options:{responsive:true,scales:{y:{min:0,max:100,title:{display:true,text:'平均分數'}}},
       plugins:{legend:{position:'bottom'}}}
@@ -1670,7 +1652,7 @@ function renderClassCmp(div){
   new Chart(document.getElementById('cc2'),{type:'line',
     data:{labels:exLbls,datasets:allSubj.map((s,i)=>({label:abbr(s),
       data:S.exams.map(e=>e.stats[s]?.passRate??null),
-      borderColor:CC[i%CC.length],tension:.35,fill:false,pointRadius:5}))},
+      borderColor:subjColor(s),tension:.35,fill:false,pointRadius:5}))},
     options:{responsive:true,scales:{y:{min:0,max:100,title:{display:true,text:'及格率%'}}},
       plugins:{legend:{position:'bottom'}}}
   });
@@ -1680,8 +1662,8 @@ function renderClassCmp(div){
   const firstE=S.exams[0], lastE=S.exams[S.exams.length-1];
   new Chart(document.getElementById('cc3'),{type:'bar',
     data:{labels:allSubj.map(abbr),datasets:[
-      {label:firstE.name,data:allSubj.map(s=>firstE.stats[s]?.mean??0),backgroundColor:'rgba(148,163,184,.65)',borderRadius:5},
-      {label:lastE.name, data:allSubj.map(s=>lastE.stats[s]?.mean??0),
+      {label:firstE.name,data:allSubj.map(s=>firstE.stats[s]?.mean??null),backgroundColor:'rgba(148,163,184,.65)',borderRadius:5},
+      {label:lastE.name, data:allSubj.map(s=>lastE.stats[s]?.mean??null),
         backgroundColor:allSubj.map(s=>{const d=(lastE.stats[s]?.mean??0)-(firstE.stats[s]?.mean??0);
           return d>=0?'rgba(22,163,74,.75)':'rgba(220,38,38,.75)';}),borderRadius:5},
     ]},
@@ -1709,7 +1691,7 @@ function renderClassCmp(div){
   new Chart(document.getElementById('cc5'),{type:'line',
     data:{labels:exLbls,datasets:allSubj.map((s,i)=>({label:abbr(s),
       data:S.exams.map(e=>e.stats[s]?.sd??null),
-      borderColor:CC[i%CC.length],tension:.35,fill:false,pointRadius:4,
+      borderColor:subjColor(s),tension:.35,fill:false,pointRadius:4,
       borderDash:i>4?[5,3]:[]}))},
     options:{responsive:true,scales:{y:{beginAtZero:true,title:{display:true,text:'標準差（越小越齊）'}}},
       plugins:{legend:{position:'bottom'}}}
@@ -1720,9 +1702,9 @@ function renderClassCmp(div){
     addCB(cg,'cc6','全班整體科目能力輪廓（首次 vs 最近）');
     new Chart(document.getElementById('cc6'),{type:'radar',
       data:{labels:allSubj.map(abbr),datasets:[
-        {label:firstE.name,data:allSubj.map(s=>firstE.stats[s]?.mean??0),
+        {label:firstE.name,data:allSubj.map(s=>firstE.stats[s]?.mean??null),
           fill:true,backgroundColor:'rgba(148,163,184,.2)',borderColor:'rgba(148,163,184,.8)',pointBackgroundColor:'#94a3b8'},
-        {label:lastE.name, data:allSubj.map(s=>lastE.stats[s]?.mean??0),
+        {label:lastE.name, data:allSubj.map(s=>lastE.stats[s]?.mean??null),
           fill:true,backgroundColor:'rgba(26,86,219,.18)',borderColor:'rgba(26,86,219,.85)',pointBackgroundColor:'#1a56db'},
       ]},
       options:{responsive:true,scales:{r:{min:0,max:100}},plugins:{legend:{position:'bottom'}}}
@@ -1933,7 +1915,7 @@ function renderStuCmp(div){
   new Chart(document.getElementById('sc1'),{type:'line',
     data:{labels:exLbls,datasets:allSubj.map((s,i)=>({label:abbr(s),
       data:S.exams.map(e=>e.students.find(x=>x.seat===seat)?.scores[s]?.value??null),
-      borderColor:CC[i%CC.length],tension:.35,fill:false,pointRadius:5,pointHoverRadius:7}))},
+      borderColor:subjColor(s),tension:.35,fill:false,pointRadius:5,pointHoverRadius:7}))},
     options:{responsive:true,scales:{y:{min:0,max:100}},plugins:{legend:{position:'bottom'}}}
   });
 
@@ -1983,9 +1965,9 @@ function renderStuCmp(div){
   addCB(cg,'sc5','個人 vs 全班平均科目輪廓（最近一次）');
   new Chart(document.getElementById('sc5'),{type:'radar',
     data:{labels:allSubj.map(abbr),datasets:[
-      {label:'個人',data:allSubj.map(s=>lastE.students.find(x=>x.seat===seat)?.scores[s]?.value??0),
+      {label:'個人',data:allSubj.map(s=>lastE.students.find(x=>x.seat===seat)?.scores[s]?.value??null),
         fill:true,backgroundColor:'rgba(124,58,237,.2)',borderColor:'rgba(124,58,237,.85)',pointBackgroundColor:'#7c3aed'},
-      {label:'班均',data:allSubj.map(s=>lastE.stats[s]?.mean??0),
+      {label:'班均',data:allSubj.map(s=>lastE.stats[s]?.mean??null),
         fill:true,backgroundColor:'rgba(148,163,184,.15)',borderColor:'rgba(148,163,184,.6)',pointBackgroundColor:'#94a3b8'},
     ]},
     options:{responsive:true,scales:{r:{min:0,max:100}},plugins:{legend:{position:'bottom'}}}
@@ -1997,9 +1979,9 @@ function renderStuCmp(div){
     addCB(cg,'sc6','個人科目輪廓對比（首次 vs 最近）');
     new Chart(document.getElementById('sc6'),{type:'radar',
       data:{labels:allSubj.map(abbr),datasets:[
-        {label:firstE.name,data:allSubj.map(s=>firstE.students.find(x=>x.seat===seat)?.scores[s]?.value??0),
+        {label:firstE.name,data:allSubj.map(s=>firstE.students.find(x=>x.seat===seat)?.scores[s]?.value??null),
           fill:true,backgroundColor:'rgba(148,163,184,.2)',borderColor:'rgba(148,163,184,.7)',pointBackgroundColor:'#94a3b8'},
-        {label:lastE.name, data:allSubj.map(s=>lastE.students.find(x=>x.seat===seat)?.scores[s]?.value??0),
+        {label:lastE.name, data:allSubj.map(s=>lastE.students.find(x=>x.seat===seat)?.scores[s]?.value??null),
           fill:true,backgroundColor:'rgba(26,86,219,.18)',borderColor:'rgba(26,86,219,.85)',pointBackgroundColor:'#1a56db'},
       ]},
       options:{responsive:true,scales:{r:{min:0,max:100}},plugins:{legend:{position:'bottom'}}}
@@ -2764,7 +2746,7 @@ function renderStudentAnalysis(examIdx, seat){
     const diff=sc.value-st.mean;
     const z=st.sd?(sc.value-st.mean)/st.sd:0, t=50+10*z;
     const rank=st.values.filter(v=>v>sc.value).length+1;
-    const pr=Math.max(0,Math.round((1-rank/st.n)*100));
+    const pr=prMid(st.values, sc.value);
     const [g,gc]=sc.value>=90?['A+','var(--s)']:sc.value>=80?['A','var(--p)']:sc.value>=70?['B','var(--p2)']:sc.value>=60?['C','var(--w)']:['D','var(--d)'];
     h+=`<tr><td style="text-align:left">${subj}</td>
       <td class="${sc.fail?'fail':sc.value>=90?'hi':''}">${sc.value}</td>
@@ -2776,7 +2758,7 @@ function renderStudentAnalysis(examIdx, seat){
       <td style="font-weight:800;color:${gc}">${g}</td></tr>`;
   });
   h+=`</tbody></table></div>
-  <div class="note" style="font-size:.76rem;color:var(--mu2);margin-top:8px;">Z 分數＝(個人−班均)÷班標準差，呈現在班上的相對位置；T＝50＋10Z。PR 為班內百分等級估算。</div>`;
+  <div class="note" style="font-size:.76rem;color:var(--mu2);margin-top:8px;">Z 分數＝(個人−班均)÷班標準差，呈現在班上的相對位置；T＝50＋10Z。PR＝（低於該生人數＋同分人數÷2）÷班級人數×100，為班內百分等級。</div>`;
 
   h+=`<div class="cg" style="margin-top:16px;">
     <div class="cb"><h3>個人成績 vs 班級平均</h3><canvas id="sb1"></canvas></div>
@@ -3727,6 +3709,408 @@ document.addEventListener('DOMContentLoaded',()=>{
   const sel=document.getElementById('dsList'); if(sel) sel.addEventListener('change',updateDsMeta);
   const so=document.getElementById('saveOv'); if(so) so.addEventListener('click',e=>{ if(e.target===so) so.classList.remove('on'); });
 });
+
+
+// =====================================================================
+// ===== v4 升級層（Claude 優化）=====
+//  1. 全班成績分布圖：圖例（顏色↔考科）、科目固定配色、單科/堆疊切換、分布對照表
+//  2. 統計擴充：偏態、臨界生（55–59 / 85–89）、四分位距；載入舊資料時自動重算
+//  3. 全班「各科教學診斷表」＋「臨界學生名單」（可下載）
+//  4. 個人「讀書策略與下次目標」：診斷分類、下一個標竿與差距、讀書時間建議比例、目標均分與預估名次
+//  5. 預警規則擴充：臨界不及格多科、連續兩次均分下滑
+//  6. Excel 匯出新增「學生讀書診斷」「臨界生名單」工作表；列印保留底色
+// =====================================================================
+
+function escH(t){ return String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function hexA(hex,a){
+  const h=hex.replace('#',''); const n=parseInt(h.length===3?h.split('').map(x=>x+x).join(''):h,16);
+  return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;
+}
+// 百分等級（中點法）：(低於人數 + 同分人數/2) / N × 100
+function prMid(vals, x){
+  const n=vals.length; if(!n) return null;
+  let below=0, eq=0; vals.forEach(v=>{ if(v<x) below++; else if(v===x) eq++; });
+  return Math.round((below+eq/2)/n*100);
+}
+
+// ---------- 統計擴充 ----------
+const _v3CSO = computeStatObj;
+computeStatObj = function(vals){
+  const o=_v3CSO(vals);
+  const n=o.n, m=o.mean, sd=o.sd;
+  // 樣本偏態（調整後 Fisher–Pearson）
+  o.skew = (n>=3 && sd>0) ? (vals.reduce((a,v)=>a+((v-m)/sd)**3,0)/n) * Math.sqrt(n*(n-1))/(n-2) : 0;
+  o.near60 = vals.filter(v=>v>=55&&v<60).length;   // 臨界及格
+  o.near90 = vals.filter(v=>v>=85&&v<90).length;   // 衝刺 90
+  o.failN  = n - o.passCount;
+  o.iqr    = (o.q3??0) - (o.q1??0);
+  return o;
+};
+function recomputeAllStats(){
+  S.exams.forEach(e=>{ try{ e.stats=calcStats(e.students, e.subjects); }catch(err){ console.warn(err); } });
+}
+const _v3Refresh = refresh;
+refresh = function(){ recomputeAllStats(); _v3Refresh(); };
+
+// ---------- 1. 全班成績分布圖（含圖例） ----------
+let DIST_FOCUS='__all', DIST_STACK=false;
+const DIST_LABELS=['0–9','10–19','20–29','30–39','40–49','50–59','60–69','70–79','80–89','90–100'];
+
+function drawDistChart(cc, e){
+  if(DIST_FOCUS!=='__all' && !e.subjects.includes(DIST_FOCUS)) DIST_FOCUS='__all';
+  const box=document.createElement('div'); box.className='cb full';
+  const opts=['<option value="__all">全部科目同時比較</option>']
+    .concat(e.subjects.filter(s=>e.stats[s]).map(s=>`<option value="${escH(s)}">只看：${escH(s)}</option>`)).join('');
+  box.innerHTML=`<h3>全班成績分布（各科人數）<span class="hint" style="font-weight:400;margin-left:8px;">每種顏色代表一個考科，對照圖上方圖例或下方表格色塊</span></h3>
+    <div class="ctrl no-print" style="margin-bottom:6px;">
+      <select id="distFocus">${opts}</select>
+      <label class="switch"><input type="checkbox" id="distStack" ${DIST_STACK?'checked':''}>堆疊顯示</label>
+      <span class="hint">點圖例可隱藏／顯示該科；滑鼠移到長條可看該分數帶各科人數與比例；紅色區間為不及格</span>
+    </div>
+    <canvas id="c3"></canvas>
+    <div id="distTbl" style="margin-top:12px;"></div>`;
+  cc.appendChild(box);
+  const sel=box.querySelector('#distFocus'); sel.value=DIST_FOCUS;
+  sel.addEventListener('change',()=>{ DIST_FOCUS=sel.value; _paintDist(e); });
+  box.querySelector('#distStack').addEventListener('change',ev=>{ DIST_STACK=ev.target.checked; _paintDist(e); });
+  _paintDist(e);
+}
+
+function _paintDist(e){
+  const cv=document.getElementById('c3'); if(!cv) return;
+  const old=Chart.getChart(cv); if(old) old.destroy();
+  const subs = DIST_FOCUS==='__all' ? e.subjects.filter(s=>e.stats[s]) : [DIST_FOCUS];
+  // 自動省略「所有科目都沒有人」的低分區間（但至少從 50–59 開始，保留不及格區）
+  let lo=9;
+  subs.forEach(s=>{ const k=e.stats[s].dist.findIndex(v=>v>0); if(k>=0) lo=Math.min(lo,k); });
+  lo=Math.min(lo,5);
+  const labels=DIST_LABELS.slice(lo);
+  const single = subs.length===1;
+  const datasets=subs.map(s=>{
+    const c=subjColor(s), st=e.stats[s];
+    return {label:s, data:st.dist.slice(lo), _n:st.n,
+      backgroundColor: single ? st.dist.slice(lo).map((_,i)=>i+lo<6?hexA('#dc2626',.75):hexA(c,.8)) : hexA(c,.72),
+      borderColor:c, borderWidth:1.2, borderRadius:3};
+  });
+  const defColor=Chart.defaults.color;
+  const st0=single?e.stats[subs[0]]:null;
+  new Chart(cv,{type:'bar',data:{labels,datasets},
+    options:{responsive:true,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:!single,position:'top',
+          labels:{usePointStyle:true,pointStyle:'rectRounded',padding:14,boxWidth:12,font:{size:12.5,weight:'600'}}},
+        subtitle:{display:single,
+          text:single?`${subs[0]}：平均 ${st0.mean.toFixed(1)}｜中位數 ${st0.median.toFixed(1)}｜標準差 ${st0.sd.toFixed(1)}｜及格率 ${st0.passRate.toFixed(0)}%`:'',
+          padding:{bottom:8}},
+        tooltip:{callbacks:{
+          title:items=>`分數 ${items[0].label}`,
+          label:c=>` ${c.dataset.label}：${c.parsed.y} 人（${c.dataset._n?(c.parsed.y/c.dataset._n*100).toFixed(0):0}%）`,
+          footer:items=>items.length>1?`合計 ${items.reduce((a,b)=>a+b.parsed.y,0)} 人次`:''}}
+      },
+      scales:{
+        x:{stacked:DIST_STACK,title:{display:true,text:'分數區間'},
+           ticks:{color:ctx=>(ctx.index+lo<6)?'#dc2626':defColor,font:{weight:'600'}}},
+        y:{stacked:DIST_STACK,beginAtZero:true,ticks:{precision:0},
+           title:{display:true,text:DIST_STACK?'人次（各科加總）':'人數'}}
+      }}
+  });
+
+  // 分布對照表（同時也是顏色圖例）
+  let t=`<div class="tw"><table class="mx" style="width:100%;"><thead><tr><th style="text-align:left;">科目（圖中顏色）</th>`;
+  labels.forEach((l,i)=>{ t+=`<th style="${i+lo<6?'color:var(--d);':''}">${l}</th>`; });
+  t+=`<th>人數</th><th>平均</th><th>及格率</th><th title="55–59 分，稍加努力即可及格">臨界 55–59</th></tr></thead><tbody>`;
+  subs.forEach(s=>{
+    const st=e.stats[s], c=subjColor(s);
+    t+=`<tr><th style="text-align:left;white-space:nowrap;"><span style="display:inline-block;width:13px;height:13px;border-radius:3px;background:${c};vertical-align:-2px;margin-right:6px;"></span>${escH(s)}</th>`;
+    st.dist.slice(lo).forEach(v=>{
+      const a=v?Math.min(.55,.1+v/st.n*1.1).toFixed(2):0;
+      t+=v?`<td style="background:${hexA(c,a)};">${v}</td>`:`<td style="color:var(--mu2);font-weight:400;">·</td>`;
+    });
+    t+=`<td style="font-weight:400;">${st.n}</td><td>${st.mean.toFixed(1)}</td>
+      <td style="${st.passRate<60?'color:var(--d);':''}">${st.passRate.toFixed(0)}%</td>
+      <td style="${(st.near60||0)>=3?'color:var(--w);':''}">${st.near60??'—'}</td></tr>`;
+  });
+  t+=`</tbody></table></div>`;
+  if(lo>0) t+=`<div class="note">※ ${DIST_LABELS[0].split('–')[0]}–${DIST_LABELS[lo-1].split('–')[1]} 分各科皆無人，已自動省略以放大可讀區域。</div>`;
+  document.getElementById('distTbl').innerHTML=t;
+}
+
+// ---------- 3. 全班：各科教學診斷表＋臨界學生名單 ----------
+function skewText(k){
+  if(k<=-1) return '強烈負偏';
+  if(k<=-0.5) return '負偏';
+  if(k>=1) return '強烈正偏';
+  if(k>=0.5) return '正偏';
+  return '大致對稱';
+}
+function subjectAdvice(st){
+  const tips=[];
+  if(st.mean<60) tips.push('整體未達精熟：建議檢視試題難度與進度，安排全班性複習');
+  if(st.skew<=-0.5) tips.push('負偏（高分集中）：多數已掌握，宜針對少數落後者個別補救');
+  else if(st.skew>=0.5) tips.push('正偏（低分集中）：試題偏難或核心概念尚未建立');
+  if(st.sd>=15) tips.push(`班內落差大（SD ${st.sd.toFixed(1)}）：適合分組／差異化教學`);
+  if((st.near60||0)>=2){
+    const newRate=(st.passCount+st.near60)/st.n*100;
+    tips.push(`臨界生 ${st.near60} 人：若補救成功，及格率可由 ${st.passRate.toFixed(0)}% 提升至 ${newRate.toFixed(0)}%`);
+  }
+  if((st.near90||0)>=3) tips.push(`85–89 分 ${st.near90} 人：可提供進階題拔尖`);
+  if(!tips.length) tips.push('分布正常，維持現行教學節奏');
+  return tips;
+}
+function buildSubjectDiagnosis(e){
+  const subs=e.subjects.filter(s=>e.stats[s]);
+  if(!subs.length) return '';
+  let h=`<div class="cb full"><h3>🩺 各科教學診斷表（分布型態 × 補救效益）</h3>
+    <div class="note" style="margin:0 0 10px;">偏態＜0 表示高分人多、低分拖尾（題目偏易或已精熟）；偏態＞0 表示低分人多、高分拖尾（題目偏難）。
+    「臨界 55–59」是補救投入最少、及格率提升最明顯的一群；「85–89」是最有機會衝上 90 的一群。</div>
+    <div class="tw"><table><thead><tr>
+      <th class="th2">科目</th><th class="th2">平均</th><th class="th2">中位數</th><th class="th2">標準差</th>
+      <th class="th2">偏態</th><th class="th2">及格率</th><th class="th2">不及格</th><th class="th2">臨界55–59</th>
+      <th class="th2">85–89</th><th class="th2">90+</th><th class="th2" style="min-width:300px;">診斷與教學建議</th></tr></thead><tbody>`;
+  subs.forEach(s=>{
+    const st=e.stats[s], c=subjColor(s);
+    h+=`<tr><td style="text-align:left;white-space:nowrap;font-weight:700;"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${c};margin-right:6px;"></span>${escH(s)}</td>
+      <td class="${st.mean<60?'fail':''}">${st.mean.toFixed(1)}</td><td>${st.median.toFixed(1)}</td>
+      <td style="${st.sd>=15?'color:var(--w);font-weight:700;':''}">${st.sd.toFixed(1)}</td>
+      <td>${st.skew.toFixed(2)}<br><span style="font-size:.72rem;color:var(--mu);">${skewText(st.skew)}</span></td>
+      <td style="${st.passRate<60?'color:var(--d);font-weight:700;':''}">${st.passRate.toFixed(0)}%</td>
+      <td>${st.failN}</td><td style="${st.near60>=2?'color:var(--w);font-weight:800;':''}">${st.near60}</td>
+      <td>${st.near90}</td><td>${st.hiCount??'—'}</td>
+      <td style="text-align:left;font-size:.8rem;line-height:1.55;">${subjectAdvice(st).map(x=>'• '+x).join('<br>')}</td></tr>`;
+  });
+  h+=`</tbody></table></div>`;
+  // 摘要洞察
+  const by=(k,dir=1)=>[...subs].sort((a,b)=>dir*(e.stats[a][k]-e.stats[b][k]))[0];
+  const lowPass=by('passRate'), bigSD=by('sd',-1), mostNear=by('near60',-1);
+  const totalNear=subs.reduce((a,s)=>a+e.stats[s].near60,0);
+  h+=`<div class="insight"><h4>📌 本次重點</h4>
+    • 及格率最低：<b>${escH(lowPass)}</b>（${e.stats[lowPass].passRate.toFixed(0)}%）<br>
+    • 班內落差最大：<b>${escH(bigSD)}</b>（標準差 ${e.stats[bigSD].sd.toFixed(1)}）<br>
+    • 臨界生最多：<b>${escH(mostNear)}</b>（${e.stats[mostNear].near60} 人）；全班各科臨界人次合計 <b>${totalNear}</b>，為最具效益的補救對象。
+  </div></div>`;
+  return h;
+}
+function borderlineData(e){
+  return e.subjects.filter(s=>e.stats[s]).map(s=>{
+    const near60=[], near90=[], low=[];
+    e.students.forEach(st=>{
+      const v=st.scores[s]?.value; if(v==null) return;
+      if(v>=55&&v<60) near60.push({st,v});
+      else if(v>=85&&v<90) near90.push({st,v});
+      else if(v<40) low.push({st,v});
+    });
+    near60.sort((a,b)=>b.v-a.v); near90.sort((a,b)=>b.v-a.v); low.sort((a,b)=>a.v-b.v);
+    return {subj:s, near60, near90, low};
+  });
+}
+function buildBorderlineList(e){
+  const data=borderlineData(e);
+  const chip=(x,col)=>`<span style="display:inline-block;margin:2px 4px 2px 0;padding:2px 8px;border-radius:99px;font-size:.76rem;border:1px solid ${col};color:${col};white-space:nowrap;">${escH(stuLabel(x.st))}（${x.v}）</span>`;
+  let h=`<div class="cb full"><h3>🎯 臨界學生名單（可提供任課教師作補救／拔尖參考）</h3>
+    <div class="ctrl no-print" style="margin-bottom:8px;"><button class="btn bo2" onclick="exportBorderline()">📥 下載臨界生名單 .xlsx</button></div>
+    <div class="tw"><table><thead><tr><th class="th4">科目</th><th class="th4" style="min-width:220px;">⚠️ 臨界及格（55–59）</th>
+      <th class="th4" style="min-width:220px;">🚀 衝刺 90（85–89）</th><th class="th4" style="min-width:180px;">🆘 嚴重落後（&lt;40）</th></tr></thead><tbody>`;
+  data.forEach(d=>{
+    h+=`<tr><td style="font-weight:700;white-space:nowrap;">${escH(d.subj)}</td>
+      <td style="text-align:left;">${d.near60.map(x=>chip(x,'#d97706')).join('')||'<span style="color:var(--mu2)">—</span>'}</td>
+      <td style="text-align:left;">${d.near90.map(x=>chip(x,'#059669')).join('')||'<span style="color:var(--mu2)">—</span>'}</td>
+      <td style="text-align:left;">${d.low.map(x=>chip(x,'#dc2626')).join('')||'<span style="color:var(--mu2)">—</span>'}</td></tr>`;
+  });
+  h+=`</tbody></table></div></div>`;
+  return h;
+}
+function exportBorderline(){
+  const e=ex(+document.getElementById('s3')?.value||S.cur); if(!e) return;
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, borderlineSheet(e), '臨界生名單');
+  XLSX.writeFile(wb, `${e.name}_臨界生名單.xlsx`);
+  toast('✅ 臨界生名單已下載');
+}
+function borderlineSheet(e){
+  const rows=[['科目','類別','座號','姓名','分數','距離目標']];
+  borderlineData(e).forEach(d=>{
+    d.near60.forEach(x=>rows.push([d.subj,'臨界及格(55–59)',p2(x.st.seat),x.st.name||'',x.v,`差 ${60-x.v} 分及格`]));
+    d.near90.forEach(x=>rows.push([d.subj,'衝刺90(85–89)',p2(x.st.seat),x.st.name||'',x.v,`差 ${90-x.v} 分達 90`]));
+    d.low.forEach(x=>rows.push([d.subj,'嚴重落後(<40)',p2(x.st.seat),x.st.name||'',x.v,`差 ${60-x.v} 分及格`]));
+  });
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:10},{wch:16},{wch:6},{wch:10},{wch:6},{wch:14}];
+  return ws;
+}
+const _v3RCA = renderClassAnalysis;
+renderClassAnalysis = function(idx){
+  _v3RCA(idx);
+  const e=ex(idx); if(!e) return;
+  const cc=document.getElementById('cc'); if(!cc) return;
+  cc.insertAdjacentHTML('beforeend', buildSubjectDiagnosis(e) + buildBorderlineList(e));
+};
+
+// ---------- 4. 個人：讀書策略與下次目標 ----------
+function studyPlan(e, stu){
+  const ei=S.exams.indexOf(e);
+  const vv=Object.values(stu.scores).map(x=>x.value);
+  const myMean=vv.length?vv.reduce((a,b)=>a+b,0)/vv.length:null;
+  const items=[];
+  e.subjects.forEach(subj=>{
+    const sc=stu.scores[subj]?.value, st=e.stats[subj];
+    if(sc==null||!st) return;
+    const z=st.sd?(sc-st.mean)/st.sd:0;
+    const pr=prMid(st.values, sc);
+    const benches=[['底標',st.bottom],['後標',st.back],['均標',st.mid],['前標',st.front],['頂標',st.top]];
+    let next=benches.find(b=>b[1]!=null && b[1]>sc);
+    if(!next && sc<st.max) next=['班級最高',st.max];
+    const target=next?Math.min(100,Math.ceil(next[1])):sc;
+    const gap=next?Math.max(0,target-sc):0;
+    // 歷次趨勢（到本次為止）
+    const series=S.exams.slice(0,ei+1).map(x=>x.students.find(t=>t.seat===stu.seat)?.scores[subj]?.value??null);
+    const pts=series.filter(v=>v!=null);
+    const slope=pts.length>=2?linSlope(series):null;
+    const lastDelta=pts.length>=2?pts[pts.length-1]-pts[pts.length-2]:null;
+    let cat, why, pri, col;
+    if(sc<60){ cat='🔥 優先補強'; why=`未及格，差 ${60-sc} 分`; pri=3+(60-sc)/10; col='var(--d)'; }
+    else if(z<=-1){ cat='🔥 優先補強'; why='落後班平均 1 個標準差以上'; pri=2.5+(-z)*.5; col='var(--d)'; }
+    else if(sc<65){ cat='⚠️ 及格邊緣'; why=`僅高出及格線 ${sc-60} 分，易滑落`; pri=2; col='var(--w)'; }
+    else if(z<0){ cat='📈 提升潛力'; why='低於班平均，追上均標最有感'; pri=1.3+(-z); col='var(--p)'; }
+    else if(z<1){ cat='✔️ 穩定'; why=next?`可挑戰${next[0]}`:'表現穩定'; pri=0.8; col='var(--s)'; }
+    else { cat='💪 優勢'; why='班上前段，維持手感即可'; pri=0.45; col='var(--p2)'; }
+    const falling = slope!=null && (pts.length>=3 ? slope<=-3 : lastDelta<=-8);
+    if(falling){ why+='；近期下滑'; pri+=0.8; }
+    if(myMean!=null && sc<=myMean-12 && !cat.startsWith('🔥')){ why+='；明顯低於自己的平均'; pri+=0.4; }
+    items.push({subj,sc,z,pr,next,target,gap,slope,lastDelta,nPts:pts.length,cat,why,pri,col,falling});
+  });
+  const sumP=items.reduce((a,b)=>a+b.pri,0)||1;
+  items.forEach(it=>it.share=it.pri/sumP*100);
+  // 目標均分與預估名次
+  const curAvg=sAvg(stu);
+  const tgtVals=items.map(it=>it.cat.startsWith('💪')?it.sc:it.target);
+  const tgtAvg=tgtVals.length?tgtVals.reduce((a,b)=>a+b,0)/tgtVals.length:null;
+  let estRank=null;
+  if(tgtAvg!=null){
+    const others=e.students.filter(s=>s.seat!==stu.seat).map(sAvg).filter(v=>v!=null);
+    estRank=others.filter(v=>v>tgtAvg).length+1;
+  }
+  return {items, myMean, curAvg, tgtAvg, estRank};
+}
+function renderStudyPlanHTML(e, stu, plan){
+  const its=plan.items; if(!its.length) return '';
+  const strong=its.filter(i=>i.cat.startsWith('💪')).map(i=>i.subj);
+  const focus=[...its].sort((a,b)=>b.pri-a.pri).filter(i=>!i.cat.startsWith('💪')&&!i.cat.startsWith('✔️')).slice(0,3);
+  const quick=[...its].filter(i=>i.next&&i.gap>0&&i.gap<=5&&!i.cat.startsWith('💪')).sort((a,b)=>a.gap-b.gap).slice(0,3);
+  const falling=its.filter(i=>i.falling).map(i=>i.subj);
+  const maxShare=Math.max(...its.map(i=>i.share));
+  const nm=SHOW_NAMES&&stu.name?stu.name:`座號 ${p2(stu.seat)}`;
+
+  let msg=`<b>${escH(nm)}</b> 本次`;
+  msg+= strong.length?`的優勢科目是 <b>${strong.map(escH).join('、')}</b>，維持現有讀法即可；`:'各科沒有明顯領先的科目；';
+  msg+= focus.length?`建議把讀書時間優先放在 <b>${focus.map(i=>escH(i.subj)).join('、')}</b>（合計約 ${Math.round(focus.reduce((a,b)=>a+b.share,0))}% 的時間）。`:'各科表現穩定，可均衡分配時間並挑戰更高標竿。';
+  if(quick.length) msg+=`<br>最容易「小步提分」的科目：${quick.map(i=>`<b>${escH(i.subj)}</b> 再 ${i.gap} 分可達${i.next[0]}`).join('；')}。`;
+  if(falling.length) msg+=`<br>⚠️ 近期下滑：<b>${falling.map(escH).join('、')}</b>，請回顧最近的學習方法或上課狀況。`;
+  if(plan.tgtAvg!=null && plan.curAvg!=null){
+    msg+=`<br>🎯 若各科都達到「下一個標竿」，均分可由 <b>${plan.curAvg.toFixed(1)}</b> 提升到 <b>${plan.tgtAvg.toFixed(1)}</b>`;
+    if(plan.estRank!=null) msg+=`，以本次全班成績估算約可達班上第 <b>${plan.estRank}</b> 名`;
+    msg+='。';
+  }
+
+  let h=`<div class="cb full" style="margin-top:16px;"><h3>🎯 個人讀書策略與下次目標（依本次成績自動產生）</h3>
+    <div class="insight" style="margin-top:0;">${msg}</div>
+    <div class="tw" style="margin-top:12px;"><table><thead><tr>
+      <th class="th4">科目</th><th class="th4">成績</th><th class="th4">PR</th><th class="th4">Z</th>
+      <th class="th4">與上次比</th><th class="th4">下一個標竿</th><th class="th4">還差</th>
+      <th class="th4">診斷</th><th class="th4" style="min-width:150px;">建議讀書時間比例</th></tr></thead><tbody>`;
+  [...its].sort((a,b)=>b.pri-a.pri).forEach(i=>{
+    const c=subjColor(i.subj);
+    const dl=i.lastDelta==null?'<span style="color:var(--mu2)">—</span>'
+      :`<span class="${i.lastDelta>0?'up':i.lastDelta<0?'dn':''}">${i.lastDelta>0?'▲+':i.lastDelta<0?'▼':'±'}${Math.abs(i.lastDelta)}</span>`;
+    h+=`<tr><td style="text-align:left;font-weight:700;white-space:nowrap;"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${c};margin-right:6px;"></span>${escH(i.subj)}</td>
+      <td class="${i.sc<60?'fail':i.sc>=90?'hi':''}">${i.sc}</td><td>${i.pr}</td>
+      <td class="${i.z>=0?'up':'dn'}">${i.z>=0?'+':''}${i.z.toFixed(2)}</td><td>${dl}</td>
+      <td>${i.next?`${i.next[0]} ${i.target}`:'已達班級最高'}</td>
+      <td>${i.next&&i.gap>0?`<b>${i.gap}</b> 分`:'—'}</td>
+      <td style="text-align:left;"><b style="color:${i.col}">${i.cat}</b><br><span style="font-size:.74rem;color:var(--mu);">${i.why}</span></td>
+      <td style="text-align:left;"><div style="display:flex;align-items:center;gap:6px;">
+        <div style="flex:1;height:9px;background:var(--card3);border-radius:5px;overflow:hidden;">
+          <div style="width:${(i.share/maxShare*100).toFixed(0)}%;height:100%;background:${c};"></div></div>
+        <span style="min-width:34px;text-align:right;font-weight:700;">${i.share.toFixed(0)}%</span></div></td></tr>`;
+  });
+  h+=`</tbody></table></div>
+    <div class="note">說明：「下一個標竿」為比目前成績高的最近一個五標（底→後→均→前→頂標）；時間比例依「未及格 > 落後 1 個標準差 > 及格邊緣 > 低於班均 > 穩定 > 優勢」加權，
+    並對近期下滑或明顯低於自己平均的科目加重。此為依成績分布計算的參考建議，請搭配學生自評、作業表現與任課教師意見調整。</div></div>`;
+  return h;
+}
+const _v3RSA = renderStudentAnalysis;
+renderStudentAnalysis = function(examIdx, seat){
+  _v3RSA(examIdx, seat);
+  const e=ex(examIdx); const stu=e?.students.find(s=>s.seat===+seat);
+  if(!e||!stu) return;
+  const sb=document.getElementById('sb'); if(!sb) return;
+  sb.insertAdjacentHTML('beforeend', renderStudyPlanHTML(e, stu, studyPlan(e, stu)));
+};
+
+// ---------- 5. 預警規則擴充 ----------
+const _v3CW = computeWarnings;
+computeWarnings = function(idx){
+  const list=_v3CW(idx);
+  const e=ex(idx); if(!e) return list;
+  const ei=S.exams.indexOf(e);
+  list.forEach(w=>{
+    const s=w.stu;
+    const near=Object.values(s.scores).filter(x=>x.value>=55&&x.value<60).length;
+    if(near>=2){ w.reasons.push(`臨界不及格 ${near} 科（55–59）`); w.score+=1; }
+    if(ei>=2){
+      const a=[ei-2,ei-1,ei].map(k=>{const x=S.exams[k].students.find(t=>t.seat===s.seat); return x?sAvg(x):null;});
+      if(a.every(v=>v!=null) && a[1]<a[0] && a[2]<a[1] && a[0]-a[2]>=5){
+        w.reasons.push(`連續兩次均分下滑（累計 ${(a[0]-a[2]).toFixed(1)} 分）`); w.score+=2;
+      }
+    }
+    w.level=w.score>=6?'hi':w.score>=3?'mid':w.score>=1?'low':'ok';
+  });
+  return list;
+};
+const _v3RW = renderWarning;
+renderWarning = function(idx){
+  _v3RW(idx);
+  const ins=document.querySelector('#wbody .insight');
+  if(ins) ins.insertAdjacentHTML('beforeend','<div style="margin-top:6px;">v4 新增規則：臨界不及格（55–59 分）≥2 科 +1；連續兩次考試均分下滑且累計 ≥5 分 +2。</div>');
+};
+
+// ---------- 6. Excel 匯出：學生讀書診斷＋臨界生名單 ----------
+const _v3MWB = makeWB;
+makeWB = function(e){
+  const wb=_v3MWB(e);
+  try{
+    const rows=[['座號','姓名','平均','班級名次','優勢科目','優先補強','及格邊緣','近期下滑','讀書時間建議分配','目標均分(各科達下一標竿)','預估名次']];
+    e.students.forEach(stu=>{
+      const p=studyPlan(e, stu);
+      const pick=pre=>p.items.filter(i=>i.cat.startsWith(pre)).map(i=>i.subj).join('、');
+      rows.push([p2(stu.seat), stu.name||'', p.curAvg!=null?+p.curAvg.toFixed(1):'', stu.classRank??'',
+        pick('💪'), pick('🔥'), pick('⚠️'), p.items.filter(i=>i.falling).map(i=>i.subj).join('、'),
+        [...p.items].sort((a,b)=>b.pri-a.pri).map(i=>`${i.subj}${i.share.toFixed(0)}%`).join('、'),
+        p.tgtAvg!=null?+p.tgtAvg.toFixed(1):'', p.estRank??'']);
+    });
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:6},{wch:10},{wch:7},{wch:8},{wch:18},{wch:18},{wch:14},{wch:14},{wch:60},{wch:12},{wch:8}];
+    XLSX.utils.book_append_sheet(wb, ws, '學生讀書診斷');
+    XLSX.utils.book_append_sheet(wb, borderlineSheet(e), '臨界生名單');
+  }catch(err){ console.warn(err); }
+  return wb;
+};
+
+// ---------- 列印：保留表格／長條底色 ----------
+const _v3BPD = buildPrintDoc;
+buildPrintDoc = function(title, sections){
+  const d=_v3BPD(title, sections);
+  d.css += `*{-webkit-print-color-adjust:exact;print-color-adjust:exact;} .tw{overflow:visible;}`;
+  return d;
+};
+
+// ---------- 啟動：若已自動載入舊資料，重算統計並重繪目前分頁 ----------
+(function initV4(){
+  if(S.exams.length){
+    recomputeAllStats();
+    try{ switchTab(curTab()); renderHero(); }catch(e){ console.warn(e); }
+  }
+})();
 
 </script>
 </body>
