@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#183f3a">
+  <title>升學路徑工作室｜高三升學輔導（人機協作優化版）</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%E5%8D%87%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="升學輔導階段">
+      <a class="brand" href="#top" aria-label="升學路徑工作室首頁">
+        <span class="brand-mark" aria-hidden="true">升</span>
+        <span><strong>升學路徑</strong><small>ADMISSIONS STUDIO</small></span>
+      </a>
+      <div class="side-caption">你的申請工作桌・人機共創</div>
+      <nav class="stage-nav" id="stageNav">
+        <button class="stage-link active" data-stage="1" aria-current="step"><span class="nav-number">01</span><span><b>盤點與探索</b><small>個人資料・目標校系</small></span></button>
+        <button class="stage-link" data-stage="2"><span class="nav-number">02</span><span><b>備審與自我推薦</b><small>經驗證據・資料規劃</small></span></button>
+        <button class="stage-link" data-stage="3"><span class="nav-number">03</span><span><b>筆試與面試</b><small>資訊搜尋・練習反思</small></span></button>
+      </nav>
+      <div class="sidebar-note"><span class="privacy-dot"></span><div><b>資料留在這台裝置</b><small>本機儲存・支援 Claude / ChatGPT / Gemini</small></div></div>
+      <div class="sidebar-bottom">以官方簡章為準<br>把經驗整理成自己的證據</div>
+    </aside>
+
+    <main class="main-content" id="top">
+      <header class="topbar">
+        <div class="breadcrumb">升學輔導 <span>/</span> <b id="stageBreadcrumb">01　盤點與探索</b></div>
+        <div class="top-actions">
+          <span class="progress-badge" id="progressBadge" title="目前填寫進度">進度 0%</span>
+          <button class="button button-outline demo-btn" id="loadDemoButton" type="button" title="一鍵載入真實生醫/跨域示範資料">✨ 載入示範資料</button>
+          <span class="save-state" id="saveState" role="status">本機自動儲存</span>
+          <button class="icon-button" id="printButton" type="button" title="列印或另存 PDF" aria-label="列印或另存 PDF">列印 ↗</button>
+        </div>
+      </header>
+
+      <div class="content-wrap">
+        <div id="storageAlert" class="storage-alert" role="alert" hidden></div>
+        <section class="intro-row">
+          <div>
+            <p class="eyebrow">A PERSONAL GUIDE FOR YOUR NEXT STEP</p>
+            <h1>讓經歷，成為<br><em>適合你的升學路徑。</em></h1>
+            <p class="intro-copy">從校系研究、備審證據整理，到二階筆面試實戰。運用關鍵字點選、AI 靈感引導與人機共創，不再面對空白發呆，把高中真實歷程化為有說服力的申請故事。</p>
+          </div>
+          <div class="compass-card" aria-hidden="true"><span class="compass-label">YOUR<br>NEXT STEP</span><span class="compass-glyph">✳</span><span class="compass-foot">人機協作×真實證據</span></div>
+        </section>
+
+        <!-- 人機協作工作流指引 -->
+        <div class="workflow-guide-bar">
+          <div class="guide-step"><span class="step-num">1</span><b>點選關鍵字</b><small>快速帶入靈感，不再面對空白</small></div>
+          <div class="guide-arrow">→</div>
+          <div class="guide-step"><span class="step-num">2</span><b>✨ 先問 AI 靈感</b><small>Claude / ChatGPT / Gemini 探詢好點子</small></div>
+          <div class="guide-arrow">→</div>
+          <div class="guide-step"><span class="step-num">3</span><b>填寫個人初稿</b><small>聚焦本人角色、數據與真實反思</small></div>
+          <div class="guide-arrow">→</div>
+          <div class="guide-step"><span class="step-num">4</span><b>🤖 給 AI 優化挑錯</b><small>多模式精煉文句、模擬面試挑戰</small></div>
+        </div>
+
+        <div class="privacy-banner"><span class="banner-icon">i</span><p><b>個資保護提醒</b>　此工具在目前瀏覽器儲存資料，不會自行呼叫外部 AI 服務。姓名／班級欄位不會自動加入提示詞，但自由文字不會自動匿名化。每次開啟外部服務或複製前，請檢視完整提示詞預覽，自行移除可識別／敏感資料；第三方服務及網址／瀏覽紀錄可能保留提示內容。</p></div>
+
+        <!-- STAGE 1: 盤點與探索 -->
+        <section class="stage-panel active" id="stage1" aria-labelledby="stage1Title">
+          <div class="section-heading"><div><p class="eyebrow">PHASE 01　/　START WITH YOU</p><h2 id="stage1Title">先盤點自己，再認識校系。</h2></div><span class="section-index">01—03</span></div>
+          <p class="section-lead">填寫你願意留在本機的資料，並加入已報名或正在研究的校系。可點選關鍵字快速帶入，或先點「✨ 先問 AI 靈感」詢問系所建議後再回來填寫。</p>
+          
+          <div class="form-card">
+            <div class="card-heading"><div><span class="card-kicker">A / ABOUT YOU</span><h3>我的升學資料</h3></div><span class="local-tag">僅本機</span></div>
+            <div class="form-grid">
+              <label>升學年度 <select id="schoolYear" data-profile><option value="115">115 學年度</option><option value="116" selected>116 學年度</option><option value="117">117 學年度</option><option value="118">118 學年度</option></select><small>請依實際報考年度調整；簡章與期限每年更新。</small></label>
+              <label>姓名或代號（選填）<input id="studentAlias" data-profile autocomplete="off" placeholder="例如：小林／A同學"><small>只存在此瀏覽器，不會放入搜尋提示詞。</small></label>
+              <label>高中／班級（選填）<input id="schoolClass" data-profile autocomplete="off" placeholder="可只寫校名，避免填座號"><small>不用填學號或其他識別資訊。</small></label>
+              <div></div>
+
+              <!-- 感興趣領域 -->
+              <div class="span-2 field-wrapper">
+                <div class="field-header">
+                  <label for="studentInterests">感興趣的領域／想解決的問題</label>
+                  <button type="button" class="btn-ai-sparkle" data-explore="studentInterests" title="先問 AI 獲取領域靈感與探索建議">
+                    <span class="sparkle-icon">✨</span> 先問 AI 靈感
+                  </button>
+                </div>
+                <div class="tag-cloud" data-target="studentInterests">
+                  <span class="tag-cloud-label">🏷️ 快速關鍵字：</span>
+                  <button type="button" class="tag-pill" data-insert="生命科學與生醫科技">生命科學與生醫</button>
+                  <button type="button" class="tag-pill" data-insert="人工智慧與資訊工程">AI 與資工</button>
+                  <button type="button" class="tag-pill" data-insert="環境永續與水質生態">環境與生態</button>
+                  <button type="button" class="tag-pill" data-insert="奈米材料與化學合成">奈米與化材</button>
+                  <button type="button" class="tag-pill" data-insert="神經認知與心理學">認知與心理</button>
+                  <button type="button" class="tag-pill" data-insert="智慧醫療與公共衛生">智慧醫療</button>
+                  <button type="button" class="tag-pill" data-insert="仿生科技與微流道">仿生科技</button>
+                  <button type="button" class="tag-pill" data-insert="跨領域大數據分析">大數據分析</button>
+                </div>
+                <div class="sentence-starters" data-target="studentInterests">
+                  <span class="starter-label">💡 起手句：</span>
+                  <button type="button" class="starter-btn" data-insert="我長期關注【領域】，希望結合高中探究的【實作能力】，深入解決【核心問題】。">🎯 領域動機起手句</button>
+                  <button type="button" class="starter-btn" data-insert="在接觸【某專題/現象】後，我發現【關鍵痛點】，期待在大學深入探討其解決方案。">🔬 問題意識起手句</button>
+                </div>
+                <textarea id="studentInterests" data-profile rows="3" placeholder="例如：對環境微生物有興趣，想了解研究如何應用在水質監測。"></textarea>
+                <div class="field-footer">
+                  <span class="word-counter" id="count_studentInterests">0 字</span>
+                  <button type="button" class="btn-field-ai" data-refine="studentInterests">🤖 複製此欄給 AI 優化</button>
+                </div>
+              </div>
+
+              <!-- 學習經驗 -->
+              <div class="span-2 field-wrapper">
+                <div class="field-header">
+                  <label for="experienceSummary">可用來說明自己的學習經驗（選填）</label>
+                  <button type="button" class="btn-ai-sparkle" data-explore="experienceSummary" title="先問 AI 梳理經歷與亮點">
+                    <span class="sparkle-icon">✨</span> 先問 AI 靈感
+                  </button>
+                </div>
+                <div class="tag-cloud" data-target="experienceSummary">
+                  <span class="tag-cloud-label">🏷️ 快速關鍵字：</span>
+                  <button type="button" class="tag-pill" data-insert="高中專題研究">高中專題研究</button>
+                  <button type="button" class="tag-pill" data-insert="自主學習計畫(18週)">自主學習計畫</button>
+                  <button type="button" class="tag-pill" data-insert="學科能力競賽">學科能力競賽</button>
+                  <button type="button" class="tag-pill" data-insert="全國/分區科展">科學展覽(科展)</button>
+                  <button type="button" class="tag-pill" data-insert="APX生化數理能力檢定">APX檢定</button>
+                  <button type="button" class="tag-pill" data-insert="班級幹部/社團領導">幹部與領導</button>
+                  <button type="button" class="tag-pill" data-insert="大學先修與實驗營隊">大學營隊/先修</button>
+                  <button type="button" class="tag-pill" data-insert="公民科學野外實察">公民科學實察</button>
+                  <button type="button" class="tag-pill" data-insert="國際交流與發表">國際交流發表</button>
+                </div>
+                <div class="sentence-starters" data-target="experienceSummary">
+                  <span class="starter-label">💡 起手句：</span>
+                  <button type="button" class="starter-btn" data-insert="高中階段我主導了【主題】研究，克服了【挫折/困難】，留下了【作品或數據佐證】。">🏆 成果敘事起手句</button>
+                  <button type="button" class="starter-btn" data-insert="在自主學習時間，我以【主題】為核心，規劃了【具體行動】，建立了【專業能力】。">📚 自主學習起手句</button>
+                </div>
+                <textarea id="experienceSummary" data-profile rows="4" placeholder="列出專題、課程成果、競賽、服務或自主學習。記下你做了什麼、遇到什麼困難、如何調整、留下什麼證據。請不要填入敏感個資。"></textarea>
+                <div class="field-footer">
+                  <span class="word-counter" id="count_experienceSummary">0 字</span>
+                  <button type="button" class="btn-field-ai" data-refine="experienceSummary">🤖 複製此欄給 AI 優化</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-card program-card-wrap">
+            <div class="card-heading"><div><span class="card-kicker">B / YOUR PROGRAMS</span><h3>已報名／目標校系</h3></div><button class="button button-outline" type="button" id="addProgram">＋ 新增校系</button></div>
+            <div id="programList" class="program-list" aria-live="polite"></div>
+            <p class="fine-print">查詢結果請優先核對該校系當年度官方招生簡章、招生資訊網與課程地圖；校友心得只作補充參考。</p>
+          </div>
+          <div class="phase-actions"><button class="button button-primary" type="button" data-go="2">下一步：備審與自我推薦 <span>→</span></button></div>
+        </section>
+
+        <!-- STAGE 2: 備審與自我推薦 -->
+        <section class="stage-panel" id="stage2" aria-labelledby="stage2Title" hidden>
+          <div class="section-heading"><div><p class="eyebrow">PHASE 02　/　MAKE EVIDENCE VISIBLE</p><h2 id="stage2Title">把經歷整理成有根據的故事。</h2></div><span class="section-index">02—03</span></div>
+          <p class="section-lead">從校系官方特色出發，挑選能支持你主張的真實作品與反思。運用標籤快速帶入、AI 靈感引導與多模式優化，不代替學生代寫，而是激發你的最強論點。</p>
+          
+          <div class="form-card">
+            <div class="card-heading"><div><span class="card-kicker">A / PROGRAM FIT</span><h3>先讀校系，再對照證據</h3></div></div>
+            <label class="wide-label">目前要準備的校系<select id="stage2Target" class="target-select"></select></label>
+            
+            <div class="form-grid gap-top">
+              <!-- 報考資格 -->
+              <div class="field-wrapper">
+                <div class="field-header">
+                  <label for="officialRequirements">報考資格／限制</label>
+                  <button type="button" class="btn-ai-sparkle" data-explore="officialRequirements"><span class="sparkle-icon">✨</span> 查資格建議</button>
+                </div>
+                <div class="tag-cloud" data-target="officialRequirements">
+                  <span class="tag-cloud-label">🏷️ 常用項目：</span>
+                  <button type="button" class="tag-pill" data-insert="在校成績前20%">成績前20%</button>
+                  <button type="button" class="tag-pill" data-insert="具備數理/生物專長">數理/生物專長</button>
+                  <button type="button" class="tag-pill" data-insert="曾獲科展/競賽獎項">科展競賽獎項</button>
+                  <button type="button" class="tag-pill" data-insert="APX檢定達銀牌以上">APX銀牌以上</button>
+                  <button type="button" class="tag-pill" data-insert="不限類組/自學生可報考">不限類組</button>
+                  <button type="button" class="tag-pill" data-insert="全民英檢中高級">英檢中高級</button>
+                </div>
+                <textarea id="officialRequirements" rows="3" placeholder="依當年度簡章摘錄資格、限制與適用年度。"></textarea>
+                <div class="field-footer">
+                  <span class="word-counter" id="count_officialRequirements">0 字</span>
+                  <button type="button" class="btn-field-ai" data-refine="officialRequirements">🤖 複製給 AI 優化</button>
+                </div>
+              </div>
+
+              <!-- 審查項目 -->
+              <div class="field-wrapper">
+                <div class="field-header">
+                  <label for="officialEvaluation">審查項目／評量方式</label>
+                  <button type="button" class="btn-ai-sparkle" data-explore="officialEvaluation"><span class="sparkle-icon">✨</span> 查審查重點</button>
+                </div>
+                <div class="tag-cloud" data-target="officialEvaluation">
+                  <span class="tag-cloud-label">🏷️ 常用項目：</span>
+                  <button type="button" class="tag-pill" data-insert="書面審查50%+面試50%">書審50%+面試50%</button>
+                  <button type="button" class="tag-pill" data-insert="學習歷程自述(O)">自述(O)</button>
+                  <button type="button" class="tag-pill" data-insert="高中多元表現(F)">多元表現(F)</button>
+                  <button type="button" class="tag-pill" data-insert="專題研究成果報告(N)">專題成果(N)</button>
+                  <button type="button" class="tag-pill" data-insert="個人專業口試">專業口試</button>
+                  <button type="button" class="tag-pill" data-insert="多站式跑站面試(MMI)">MMI多站面試</button>
+                </div>
+                <textarea id="officialEvaluation" rows="3" placeholder="依官方簡章摘錄採計、評分或檢核項目。未知就標示待確認。"></textarea>
+                <div class="field-footer">
+                  <span class="word-counter" id="count_officialEvaluation">0 字</span>
+                  <button type="button" class="btn-field-ai" data-refine="officialEvaluation">🤖 複製給 AI 優化</button>
+                </div>
+              </div>
+
+              <!-- 指定繳交資料 -->
+              <div class="field-wrapper">
+                <div class="field-header">
+                  <label for="officialMaterials">指定繳交資料／格式</label>
+                  <button type="button" class="btn-ai-sparkle" data-explore="officialMaterials"><span class="sparkle-icon">✨</span> 查格式規範</button>
+                </div>
+                <div class="tag-cloud" data-target="officialMaterials">
+                  <span class="tag-cloud-label">🏷️ 常用格式：</span>
+                  <button type="button" class="tag-pill" data-insert="PDF單檔上限10MB">PDF上限10MB</button>
+                  <button type="button" class="tag-pill" data-insert="自傳限1000字內">自傳限1000字</button>
+                  <button type="button" class="tag-pill" data-insert="作品說明限3件">作品限3件</button>
+                  <button type="button" class="tag-pill" data-insert="歷年成績單(教務處戳章)">成績單含戳章</button>
+                  <button type="button" class="tag-pill" data-insert="師長推薦函2封">推薦函2封</button>
+                </div>
+                <textarea id="officialMaterials" rows="3" placeholder="文件項目、格式、篇幅或上傳要求；請附官方來源。"></textarea>
+                <div class="field-footer">
+                  <span class="word-counter" id="count_officialMaterials">0 字</span>
+                  <button type="button" class="btn-field-ai" data-refine="officialMaterials">🤖 複製給 AI 優化</button>
+                </div>
+              </div>
+
+              <!-- 二階方式 -->
+              <div class="field-wrapper">
+                <div class="field-header">
+                  <label for="officialSecondStage">二階方式／考試範圍</label>
+                  <button type="button" class="btn-ai-sparkle" data-explore="officialSecondStage"><span class="sparkle-icon">✨</span> 查二階重點</button>
+                </div>
+                <div class="tag-cloud" data-target="officialSecondStage">
+                  <span class="tag-cloud-label">🏷️ 常見方式：</span>
+                  <button type="button" class="tag-pill" data-insert="個人口試15分鐘">個人口試15分鐘</button>
+                  <button type="button" class="tag-pill" data-insert="專題簡報5分鐘+問答10分鐘">簡報5分+問答10分</button>
+                  <button type="button" class="tag-pill" data-insert="多站式跑站面試(MMI)">MMI跑站</button>
+                  <button type="button" class="tag-pill" data-insert="筆試(高中基礎專業科目)">學科基礎筆試</button>
+                  <button type="button" class="tag-pill" data-insert="現場實作演練">現場實作演練</button>
+                </div>
+                <textarea id="officialSecondStage" rows="3" placeholder="口試、筆試、實作等；只填官方已公告或通知內容。"></textarea>
+                <div class="field-footer">
+                  <span class="word-counter" id="count_officialSecondStage">0 字</span>
+                  <button type="button" class="btn-field-ai" data-refine="officialSecondStage">🤖 複製給 AI 優化</button>
+                </div>
+              </div>
+
+              <!-- 校系官方特色 -->
+              <div class="span-2 field-wrapper">
+                <div class="field-header">
+                  <label for="departmentTraits">校系官方特色／課程／能力要求</label>
+                  <button type="button" class="btn-ai-sparkle" data-explore="departmentTraits"><span class="sparkle-icon">✨</span> 先問 AI 查系所特色</button>
+                </div>
+                <div class="tag-cloud" data-target="departmentTraits">
+                  <span class="tag-cloud-label">🏷️ 系所特色關鍵字：</span>
+                  <button type="button" class="tag-pill" data-insert="大一大二不分系探索">不分系探索</button>
+                  <button type="button" class="tag-pill" data-insert="跨領域雙主修與學程彈性">跨領域雙主修</button>
+                  <button type="button" class="tag-pill" data-insert="大二專題研究必修機制">專題實驗室制度</button>
+                  <button type="button" class="tag-pill" data-insert="生醫分子與演化核心實驗室">頂尖核心實驗室</button>
+                  <button type="button" class="tag-pill" data-insert="海外名校交換與雙聯學位">海外交換雙聯</button>
+                  <button type="button" class="tag-pill" data-insert="產學合作與生技園區實習">產學園區實習</button>
+                  <button type="button" class="tag-pill" data-insert="重視自主學習與批判思維">批判性思維</button>
+                </div>
+                <div class="sentence-starters" data-target="departmentTraits">
+                  <span class="starter-label">💡 起手句：</span>
+                  <button type="button" class="starter-btn" data-insert="該系注重【核心特色】，提供【特定課程/實驗室】，與我的發展方向【契合點】高度吻合。">🏛️ 校系契合起手句</button>
+                </div>
+                <textarea id="departmentTraits" rows="4" placeholder="先查當年度官方簡章、系所介紹與課程地圖，再把查到的重點貼在這裡。請附上來源或網址。"></textarea>
+                <div class="field-footer">
+                  <span class="word-counter" id="count_departmentTraits">0 字</span>
+                  <button type="button" class="btn-field-ai" data-refine="departmentTraits">🤖 複製給 AI 優化</button>
+                </div>
+              </div>
+
+              <!-- 我的相關經驗 -->
+              <div class="field-wrapper">
+                <div class="field-header">
+                  <label for="fitExperience">我的相關經驗</label>
+                  <button type="button" class="btn-ai-sparkle" data-explore="fitExperience"><span class="sparkle-icon">✨</span> 啟發經歷對接</button>
+                </div>
+                <div class="tag-cloud" data-target="fitExperience">
+                  <span class="tag-cloud-label">🏷️ 經驗案例：</span>
+                  <button type="button" class="tag-pill" data-insert="微藻固定化吸附微塑料專題">微藻微塑料專題</button>
+                  <button type="button" class="tag-pill" data-insert="18週自主學習：生物資訊演算法">生資演算法自主學習</button>
+                  <button type="button" class="tag-pill" data-insert="分區科展動物學科優等作品">科展優等作品</button>
+                  <button type="button" class="tag-pill" data-insert="APX生化檢定全國前10%">APX生化前10%</button>
+                  <button type="button" class="tag-pill" data-insert="校園野外實察解說員">生態實察解說員</button>
+                  <button type="button" class="tag-pill" data-insert="Python數據視覺化專案">Python數據專案</button>
+                </div>
+                <textarea id="fitExperience" rows="4" placeholder="選一至三項真正做過的學習經驗或作品。"></textarea>
+                <div class="field-footer">
+                  <span class="word-counter" id="count_fitExperience">0 字</span>
+                  <button type="button" class="btn-field-ai" data-refine="fitExperience">🤖 複製給 AI 優化</button>
+                </div>
+              </div>
+
+              <!-- 本人角色 -->
+              <div class="field-wrapper">
+                <div class="field-header">
+                  <label for="fitRole">我在作品／研究中的本人角色</label>
+                  <button type="button" class="btn-ai-sparkle" data-explore="fitRole"><span class="sparkle-icon">✨</span> 凸顯個人貢獻</button>
+                </div>
+                <div class="tag-cloud" data-target="fitRole">
+                  <span class="tag-cloud-label">🏷️ 具體角色動詞：</span>
+                  <button type="button" class="tag-pill" data-insert="主要實驗操作與數據採集者">主責實驗操作</button>
+                  <button type="button" class="tag-pill" data-insert="研究假說設計與變因控制">假說與變因設計</button>
+                  <button type="button" class="tag-pill" data-insert="Python/Excel統計與顯著性檢定">統計顯著性檢定</button>
+                  <button type="button" class="tag-pill" data-insert="論文報告全文撰寫與文獻彙整">全文撰寫與彙整</button>
+                  <button type="button" class="tag-pill" data-insert="科展海報製作與公開答辯代表">海報答辯代表</button>
+                  <button type="button" class="tag-pill" data-insert="團隊進度控管與器材耗材管理">進度與耗材管理</button>
+                </div>
+                <div class="sentence-starters" data-target="fitRole">
+                  <span class="starter-label">💡 起手句：</span>
+                  <button type="button" class="starter-btn" data-insert="在研究小組中，我獨立負責【具體工作】，並在【關鍵環節】做出了決定性貢獻。">🧑‍🔬 個人貢獻起手句</button>
+                </div>
+                <textarea id="fitRole" rows="3" placeholder="清楚寫出自己實際負責的工作；區分團隊成果與個人貢獻。"></textarea>
+                <div class="field-footer">
+                  <span class="word-counter" id="count_fitRole">0 字</span>
+                  <button type="button" class="btn-field-ai" data-refine="fitRole">🤖 複製給 AI 優化</button>
+                </div>
+              </div>
+
+              <!-- 可驗證證據 -->
+              <div class="field-wrapper">
+                <div class="field-header">
+                  <label for="fitEvidence">可驗證的證據</label>
+                  <button type="button" class="btn-ai-sparkle" data-explore="fitEvidence"><span class="sparkle-icon">✨</span> 盤點硬核證據</button>
+                </div>
+                <div class="tag-cloud" data-target="fitEvidence">
+                  <span class="tag-cloud-label">🏷️ 客觀證據：</span>
+                  <button type="button" class="tag-pill" data-insert="完整專題成果報告(PDF/40頁)">完整專題報告(PDF)</button>
+                  <button type="button" class="tag-pill" data-insert="三本手寫實驗記錄本與原始數據">手寫實驗記錄本</button>
+                  <button type="button" class="tag-pill" data-insert="自主學習18週歷程紀錄與週誌">自主學習18週週誌</button>
+                  <button type="button" class="tag-pill" data-insert="市級科展得獎證書與評語表">科展得獎證書</button>
+                  <button type="button" class="tag-pill" data-insert="GitHub開源程式碼與成果展示頁">GitHub程式庫/展示頁</button>
+                  <button type="button" class="tag-pill" data-insert="指導老師認證簽名之作品說明書">教師認證成果單</button>
+                </div>
+                <textarea id="fitEvidence" rows="4" placeholder="作品、報告、實驗紀錄、課程成果、競賽證明、服務紀錄等。不要只列形容詞。"></textarea>
+                <div class="field-footer">
+                  <span class="word-counter" id="count_fitEvidence">0 字</span>
+                  <button type="button" class="btn-field-ai" data-refine="fitEvidence">🤖 複製給 AI 優化</button>
+                </div>
+              </div>
+
+              <!-- 反思與學習 -->
+              <div class="field-wrapper">
+                <div class="field-header">
+                  <label for="fitReflection">我從經驗中學到什麼</label>
+                  <button type="button" class="btn-ai-sparkle" data-explore="fitReflection"><span class="sparkle-icon">✨</span> 深度反思引導</button>
+                </div>
+                <div class="tag-cloud" data-target="fitReflection">
+                  <span class="tag-cloud-label">🏷️ 反思核心：</span>
+                  <button type="button" class="tag-pill" data-insert="微球溶解挫折後改以交聯法克服">克服實驗挫折</button>
+                  <button type="button" class="tag-pill" data-insert="從數據偏差中學會多次重複檢驗">重複檢驗偏差</button>
+                  <button type="button" class="tag-pill" data-insert="體會到文獻理論與實驗操作之差距">理論與操作差距</button>
+                  <button type="button" class="tag-pill" data-insert="學會傾聽組員想法並協調分工">團隊協調聆聽</button>
+                  <button type="button" class="tag-pill" data-insert="確立未來投入生醫研究之終身志向">確立研究志向</button>
+                  <button type="button" class="tag-pill" data-insert="體會科學研究需具備誠實與嚴謹">誠實嚴謹體悟</button>
+                </div>
+                <div class="sentence-starters" data-target="fitReflection">
+                  <span class="starter-label">💡 起手句：</span>
+                  <button type="button" class="starter-btn" data-insert="這項經歷讓我體會到【核心體悟】；面對【挫折】，我學會了【應變方法與調整】。">🌱 成長反思起手句</button>
+                </div>
+                <textarea id="fitReflection" rows="4" placeholder="我做了什麼？遇到什麼問題？怎麼修正？哪些地方仍不確定？"></textarea>
+                <div class="field-footer">
+                  <span class="word-counter" id="count_fitReflection">0 字</span>
+                  <button type="button" class="btn-field-ai" data-refine="fitReflection">🤖 複製給 AI 優化</button>
+                </div>
+              </div>
+
+              <!-- 還需要補強 -->
+              <div class="field-wrapper">
+                <div class="field-header">
+                  <label for="fitGap">還需要補強／確認</label>
+                  <button type="button" class="btn-ai-sparkle" data-explore="fitGap"><span class="sparkle-icon">✨</span> 盲點自我檢查</button>
+                </div>
+                <div class="tag-cloud" data-target="fitGap">
+                  <span class="tag-cloud-label">🏷️ 常見缺口：</span>
+                  <button type="button" class="tag-pill" data-insert="需核對當年度簡章是否有最新名額">核對最新名額</button>
+                  <button type="button" class="tag-pill" data-insert="專題報告圖表標註與排版需美化">圖表排版美化</button>
+                  <button type="button" class="tag-pill" data-insert="5分鐘口頭報告簡報需濃縮講稿">口頭報告超時</button>
+                  <button type="button" class="tag-pill" data-insert="系所最新教授之研究方向待深入查閱">教授研究方向待查</button>
+                  <button type="button" class="tag-pill" data-insert="二階專業名詞英文術語需加強">英文專業術語</button>
+                </div>
+                <textarea id="fitGap" rows="4" placeholder="例如：缺少官方課程資料、證據不清楚、反思與校系要求連結薄弱。"></textarea>
+                <div class="field-footer">
+                  <span class="word-counter" id="count_fitGap">0 字</span>
+                  <button type="button" class="btn-field-ai" data-refine="fitGap">🤖 複製給 AI 優化</button>
+                </div>
+              </div>
+
+              <div>
+                <label>備審準備進度<select id="materialStatus"><option>尚未開始</option><option>整理中</option><option>待教師回饋</option><option>已核對</option></select></label>
+                <label style="margin-top:12px">下一步待辦<input id="nextTask" type="text" autocomplete="off" placeholder="例如：查證指定格式；請指導老師確認作品紀錄。"></label>
+              </div>
+            </div>
+
+            <div class="output-box" id="portfolioPlan" aria-live="polite"><span class="output-label">資料規劃草圖</span><p>填寫上方內容後，按「整理我的資料規劃」，產生可修改的準備清單。</p></div>
+            <div class="button-row"><button class="button button-primary" id="makePlan" type="button">整理我的資料規劃</button><button class="button button-outline" id="copyPlan" type="button">複製規劃</button></div>
+          </div>
+
+          <!-- 推薦信區塊 -->
+          <div class="form-card">
+            <div class="card-heading"><div><span class="card-kicker">B / RECOMMENDATION</span><h3>推薦信：先提供具體素材</h3></div><label class="switch-label"><input id="needRecommendation" type="checkbox"><span>需要推薦信</span></label></div>
+            <div id="recommendationFields" class="form-grid" hidden>
+              <!-- 推薦特質 -->
+              <div class="span-2 field-wrapper">
+                <div class="field-header">
+                  <label for="recTraits">希望推薦老師觀察到的個人特質</label>
+                  <button type="button" class="btn-ai-sparkle" data-explore="recTraits"><span class="sparkle-icon">✨</span> 啟發特質事例</button>
+                </div>
+                <div class="tag-cloud" data-target="recTraits">
+                  <span class="tag-cloud-label">🏷️ 特質標籤：</span>
+                  <button type="button" class="tag-pill" data-insert="自主探究與強烈求知欲">自主探究求知欲</button>
+                  <button type="button" class="tag-pill" data-insert="面對研究挫折的堅毅韌性">面對挫折的韌性</button>
+                  <button type="button" class="tag-pill" data-insert="團隊合作與跨領域溝通力">團隊溝通力</button>
+                  <button type="button" class="tag-pill" data-insert="嚴謹求真的科學求證精神">嚴謹求真精神</button>
+                  <button type="button" class="tag-pill" data-insert="高度自律與時間管理">自律與時間管理</button>
+                  <button type="button" class="tag-pill" data-insert="熱心助人與利他服務特質">利他服務特質</button>
+                </div>
+                <textarea id="recTraits" rows="3" placeholder="用具體行為說明，例如：如何面對挫折、如何合作、如何持續投入。避免只寫「認真、負責」。"></textarea>
+                <div class="field-footer">
+                  <span class="word-counter" id="count_recTraits">0 字</span>
+                  <button type="button" class="btn-field-ai" data-refine="recTraits">🤖 複製給 AI 優化</button>
+                </div>
+              </div>
+
+              <!-- 具體事件 -->
+              <div class="field-wrapper">
+                <div class="field-header">
+                  <label for="recStory">一個可說明特質的事件</label>
+                  <button type="button" class="btn-ai-sparkle" data-explore="recStory"><span class="sparkle-icon">✨</span> STAR 事件結構引導</button>
+                </div>
+                <div class="tag-cloud" data-target="recStory">
+                  <span class="tag-cloud-label">🏷️ 事件情境：</span>
+                  <button type="button" class="tag-pill" data-insert="實驗連續三天失敗仍主動留校排查">實驗失敗排查</button>
+                  <button type="button" class="tag-pill" data-insert="主動閱讀英文文獻找出最佳解法">閱讀文獻找解法</button>
+                  <button type="button" class="tag-pill" data-insert="帶領組員克服意見分歧完成任務">團隊分歧協調</button>
+                  <button type="button" class="tag-pill" data-insert="在評審提問時臨危不亂客觀應答">評審提問沉著應答</button>
+                </div>
+                <textarea id="recStory" rows="4" placeholder="情境與任務 → 你採取的行動 → 結果與反思。"></textarea>
+                <div class="field-footer">
+                  <span class="word-counter" id="count_recStory">0 字</span>
+                  <button type="button" class="btn-field-ai" data-refine="recStory">🤖 複製給 AI 優化</button>
+                </div>
+              </div>
+
+              <!-- 老師可核對材料 -->
+              <div class="field-wrapper">
+                <div class="field-header">
+                  <label for="recProof">可提供老師核對的材料</label>
+                  <button type="button" class="btn-ai-sparkle" data-explore="recProof"><span class="sparkle-icon">✨</span> 查核佐證建議</button>
+                </div>
+                <div class="tag-cloud" data-target="recProof">
+                  <span class="tag-cloud-label">🏷️ 佐證清冊：</span>
+                  <button type="button" class="tag-pill" data-insert="歷時一年累積的三本手寫實驗記錄本">手寫實驗記錄本</button>
+                  <button type="button" class="tag-pill" data-insert="自主學習成果紀錄與每週反思日誌">自主學習反思日誌</button>
+                  <button type="button" class="tag-pill" data-insert="校內專題競賽獲獎紀錄與評審回饋">專題競賽評審回饋</button>
+                </div>
+                <textarea id="recProof" rows="4" placeholder="作品、成果、紀錄、時間或具體例子。請確認真實、可查證。"></textarea>
+                <div class="field-footer">
+                  <span class="word-counter" id="count_recProof">0 字</span>
+                  <button type="button" class="btn-field-ai" data-refine="recProof">🤖 複製給 AI 優化</button>
+                </div>
+              </div>
+
+              <div class="span-2 field-wrapper">
+                <label for="recDraft">自我推薦素材草稿</label>
+                <textarea id="recDraft" rows="7" placeholder="按「建立草稿架構」產生填寫提示；請由學生依事實自行補寫，交由推薦老師核對與修改。"></textarea>
+                <div class="field-footer">
+                  <span class="word-counter" id="count_recDraft">0 字</span>
+                  <div class="button-row"><button class="button button-outline" id="makeRecDraft" type="button">建立草稿架構</button></div>
+                </div>
+              </div>
+            </div>
+            <p class="fine-print">推薦信是否需要、格式、推薦人資格與繳交方式，均以該校系當年度簡章為準。草稿是提供老師核對的素材，不得代老師署名或虛構推薦內容。</p>
+          </div>
+
+          <!-- Phase 2 AI 提示詞卡片 -->
+          <div class="form-card prompt-card">
+            <div class="card-heading">
+              <div><span class="card-kicker">C / RESEARCH & REFINEMENT PROMPT</span><h3>請 AI 協助檢視資料・多模式人機共創</h3></div>
+              <div class="mode-select-wrap">
+                <label for="stage2PromptMode" class="mode-label">協作模式：</label>
+                <select id="stage2PromptMode" class="prompt-mode-select">
+                  <option value="framework" selected>模式 1：備審素材架構與缺口診斷（先查規格）</option>
+                  <option value="polish">模式 2：文句潤飾與 STAR 精煉（填寫後優化）</option>
+                  <option value="challenge">模式 3：審查委員挑刺與盲點挑戰（防呆挑錯）</option>
+                </select>
+              </div>
+            </div>
+            <label class="consent-row"><input type="checkbox" id="includeStage2Context"><span><b>我會逐次檢視並自行移除可識別／敏感資料，本次同意將學習內容加入外部 AI 提示詞</b><small>姓名／班級欄位不會自動加入；自由文字不會自動匿名化。未勾選時不加入個人學習背景，但你貼上的官方摘要仍會加入，請一併檢視完整預覽。第三方服務及網址／瀏覽紀錄可能保留提示內容；本網站不會自行呼叫外部服務。</small></span></label>
+            <textarea id="stage2Prompt" class="prompt-preview" rows="8" readonly aria-label="備審規劃提示詞預覽">選擇校系並填寫官方資料後，會在此產生提示詞預覽。</textarea>
+            <div class="button-row">
+              <button class="button button-outline" id="copyStage2Prompt" type="button">複製提示詞</button>
+              <button class="button btn-claude" id="openStage2Claude" type="button">開啟 Claude ↗</button>
+              <button class="button button-dark" id="openStage2ChatGPT" type="button">開啟 ChatGPT ↗</button>
+              <button class="button button-dark" id="openStage2Gemini" type="button">開啟 Gemini ↗</button>
+            </div>
+            
+            <!-- AI 對照筆記盒 -->
+            <div class="ai-compare-wrap">
+              <details class="compare-details">
+                <summary><b>📝 展開「AI 建議暫存與修訂對照盒」（將 AI 回覆貼在這裡，方便左右對照修訂）</b></summary>
+                <div class="compare-content">
+                  <p class="fine-print">到 Claude 或 ChatGPT 獲得建議後，可將 AI 的修改建議、挑錯問題或精修段落貼在下方，邊看邊在上方欄位調整自己的文字：</p>
+                  <textarea id="stage2AiNotes" rows="5" placeholder="將外部 AI 給你的建議、修訂範例或挑錯清單貼在這裡，方便對照..."></textarea>
+                  <div class="button-row">
+                    <button class="button button-outline" type="button" id="clearStage2AiNotes">清空對照筆記</button>
+                    <span class="compare-note">此筆記自動儲存於本機瀏覽器，不會加入提示詞。</span>
+                  </div>
+                </div>
+              </details>
+            </div>
+            <p class="fine-print">外部 AI 服務會依其服務條款處理你送出的內容；提示詞不會自動代替你判斷或核實招生規定。</p>
+          </div>
+          <div class="phase-actions split"><button class="button button-outline" type="button" data-go="1">← 回上一步</button><button class="button button-primary" type="button" data-go="3">下一步：筆試與面試 <span>→</span></button></div>
+        </section>
+
+        <!-- STAGE 3: 筆試與面試 -->
+        <section class="stage-panel" id="stage3" aria-labelledby="stage3Title" hidden>
+          <div class="section-heading"><div><p class="eyebrow">PHASE 03　/　PRACTICE WITH PURPOSE</p><h2 id="stage3Title">進入二階，練習說清楚自己的想法。</h2></div><span class="section-index">03—03</span></div>
+          <p class="section-lead">一階通過後，先核對該校系通知與簡章，再準備筆試、口試、實作或其他指定項目。提供關鍵字、三輪模擬面試與 Claude / ChatGPT 考官模式，幫你從背誦轉為真正理解。</p>
+          
+          <div class="form-card">
+            <div class="card-heading"><div><span class="card-kicker">A / SECOND STAGE</span><h3>選擇校系與甄試項目</h3></div></div>
+            <div class="form-grid">
+              <label>練習校系<select id="stage3Target" class="target-select"></select></label>
+              <label>甄試方式<select id="assessmentType"><option>口試／面試</option><option>筆試</option><option>實作／作品說明</option><option>多站式面試（MMI）</option><option>口試與筆試</option><option>其他，依通知填寫</option></select></label>
+              
+              <!-- 官方規定 -->
+              <div class="span-2 field-wrapper">
+                <div class="field-header">
+                  <label for="stage3OfficialInfo">已核對的官方規定／面試通知／考試範圍</label>
+                  <button type="button" class="btn-ai-sparkle" data-explore="stage3OfficialInfo"><span class="sparkle-icon">✨</span> 查應試規範建議</button>
+                </div>
+                <div class="tag-cloud" data-target="stage3OfficialInfo">
+                  <span class="tag-cloud-label">🏷️ 考試形式標籤：</span>
+                  <button type="button" class="tag-pill" data-insert="個人專業口試每人10-15分鐘">個人口試10-15分</button>
+                  <button type="button" class="tag-pill" data-insert="需自備1頁A4簡報大綱或成果海報">自備A4簡報大綱</button>
+                  <button type="button" class="tag-pill" data-insert="三位教授對一位學生獨立面試">三對一面試</button>
+                  <button type="button" class="tag-pill" data-insert="自選專題報告5分鐘+教授問答10分鐘">報告5分+問答10分</button>
+                  <button type="button" class="tag-pill" data-insert="MMI多站式跑站面試(每站6分鐘)">MMI跑站面試</button>
+                  <button type="button" class="tag-pill" data-insert="筆試科目涵蓋高中基礎專業科目">基礎專業筆試</button>
+                </div>
+                <textarea id="stage3OfficialInfo" rows="4" placeholder="填入當年度官方通知、考試科目、時間、形式、可攜物品或官方連結。"></textarea>
+                <div class="field-footer">
+                  <span class="word-counter" id="count_stage3OfficialInfo">0 字</span>
+                  <button type="button" class="btn-field-ai" data-refine="stage3OfficialInfo">🤖 複製給 AI 優化</button>
+                </div>
+              </div>
+
+              <!-- 練習主題 -->
+              <div class="field-wrapper">
+                <div class="field-header">
+                  <label for="stage3Topics">我想練習的主題</label>
+                  <button type="button" class="btn-ai-sparkle" data-explore="stage3Topics"><span class="sparkle-icon">✨</span> 預測面試考題</button>
+                </div>
+                <div class="tag-cloud" data-target="stage3Topics">
+                  <span class="tag-cloud-label">🏷️ 練習重點：</span>
+                  <button type="button" class="tag-pill" data-insert="1分鐘吸睛自我介紹與報考動機">1分鐘自介與動機</button>
+                  <button type="button" class="tag-pill" data-insert="高中專題研究深水區追問(數據與限制)">專題深水區追問</button>
+                  <button type="button" class="tag-pill" data-insert="專業倫理與社會兩難情境(MMI)">專業倫理情境(MMI)</button>
+                  <button type="button" class="tag-pill" data-insert="高中最具挫折感之經驗與應對方法">挫折感應對反思</button>
+                  <button type="button" class="tag-pill" data-insert="大學四年學習規劃與未來生涯志向">四年規劃與志向</button>
+                  <button type="button" class="tag-pill" data-insert="當前生醫/科技重大時事與見解">重大科技時事見解</button>
+                </div>
+                <textarea id="stage3Topics" rows="3" placeholder="例如：研究方法、科系動機、倫理議題、作品解說。"></textarea>
+                <div class="field-footer">
+                  <span class="word-counter" id="count_stage3Topics">0 字</span>
+                  <button type="button" class="btn-field-ai" data-refine="stage3Topics">🤖 複製給 AI 優化</button>
+                </div>
+              </div>
+
+              <!-- 歷屆經驗 -->
+              <div class="field-wrapper">
+                <div class="field-header">
+                  <label for="stage3PastInfo">學長姐經驗／歷屆資料（註明來源）</label>
+                  <button type="button" class="btn-ai-sparkle" data-explore="stage3PastInfo"><span class="sparkle-icon">✨</span> 查歷屆經驗要點</button>
+                </div>
+                <div class="tag-cloud" data-target="stage3PastInfo">
+                  <span class="tag-cloud-label">🏷️ 面試現場氛圍：</span>
+                  <button type="button" class="tag-pill" data-insert="教授特別追問專題哪部分是你親自做的">追問本人真實親做</button>
+                  <button type="button" class="tag-pill" data-insert="會問到系上特色課程與教授實驗室">詢問系上特色課程</button>
+                  <button type="button" class="tag-pill" data-insert="黑臉教授針對數據與誤差線嚴苛挑刺">教授挑刺數據誤差</button>
+                  <button type="button" class="tag-pill" data-insert="問到如果同時錄取多校會如何選擇">多校錄取抉擇題</button>
+                  <button type="button" class="tag-pill" data-insert="要求用英文回答一題日常或專業問題">英文問答演練</button>
+                </div>
+                <textarea id="stage3PastInfo" rows="3" placeholder="貼上公開連結或摘要，註明年份與來源；未經官方確認的題目要標示為經驗分享。"></textarea>
+                <div class="field-footer">
+                  <span class="word-counter" id="count_stage3PastInfo">0 字</span>
+                  <button type="button" class="btn-field-ai" data-refine="stage3PastInfo">🤖 複製給 AI 優化</button>
+                </div>
+              </div>
+            </div>
+            <label class="consent-row stage3-consent"><input type="checkbox" id="includeStage3Context"><span><b>我會逐次檢視並自行移除可識別／敏感資料，本次同意將練習背景加入外部 AI 提示詞</b><small>姓名／班級欄位不會自動加入；自由文字不會自動匿名化。未勾選時不加入個人學習背景，但官方資訊、練習主題與歷屆／經驗資料仍會加入，請一併檢視完整預覽。第三方服務及網址／瀏覽紀錄可能保留提示內容；本網站不會自行呼叫外部服務。</small></span></label>
+          </div>
+
+          <!-- Phase 3 AI 提示詞卡片 -->
+          <div class="form-card prompt-card">
+            <div class="card-heading">
+              <div><span class="card-kicker">B / SEARCH & PRACTICE</span><h3>搜尋資料・AI 模擬考官三輪演練</h3></div>
+              <div class="mode-select-wrap">
+                <label for="stage3PromptMode" class="mode-label">練習模式：</label>
+                <select id="stage3PromptMode" class="prompt-mode-select">
+                  <option value="interview3" selected>模式 1：三輪追問式模擬面試（診斷→追問→情境）</option>
+                  <option value="mmi">模式 2：MMI 跑站倫理與兩難情境演練</option>
+                  <option value="selfintro">模式 3：一分鐘吸睛自我介紹黃金架構</option>
+                </select>
+              </div>
+            </div>
+            <div class="button-row search-row">
+              <button class="button button-outline" id="searchGoogleStage3" type="button">Google 搜尋官方資料 ↗</button>
+              <button class="button button-outline" id="searchPastStage3" type="button">Google 搜尋考古題／經驗 ↗</button>
+            </div>
+            <textarea id="stage3Prompt" class="prompt-preview" rows="9" readonly aria-label="筆試與面試提示詞預覽">選擇校系並填寫甄試方式後，會在此產生提示詞預覽。</textarea>
+            <div class="button-row">
+              <button class="button button-outline" id="copyStage3Prompt" type="button">複製提示詞</button>
+              <button class="button btn-claude" id="openStage3Claude" type="button">開啟 Claude ↗</button>
+              <button class="button button-dark" id="openStage3ChatGPT" type="button">開啟 ChatGPT ↗</button>
+              <button class="button button-dark" id="openStage3Gemini" type="button">開啟 Gemini ↗</button>
+            </div>
+
+            <!-- AI 模擬面試對照盒 -->
+            <div class="ai-compare-wrap">
+              <details class="compare-details">
+                <summary><b>🎙️ 展開「面試問答與 AI 點評對照盒」（記錄 AI 考官題目與你的回答）</b></summary>
+                <div class="compare-content">
+                  <p class="fine-print">在 Claude / ChatGPT 進行一問一答模擬面試時，可把精彩問答或 AI 指出的破綻記錄在此：</p>
+                  <textarea id="stage3AiNotes" rows="5" placeholder="記錄模擬面試題目、AI 給你的改進點（例如：哪裡講得太虛、哪裡該補數據）..."></textarea>
+                  <div class="button-row">
+                    <button class="button button-outline" type="button" id="clearStage3AiNotes">清空面試紀錄</button>
+                    <span class="compare-note">此筆記自動儲存於本機瀏覽器，不會加入提示詞。</span>
+                  </div>
+                </div>
+              </details>
+            </div>
+            
+            <div class="practice-box">
+              <span class="output-label">AI 模擬面試三大金律（取自升學輔導案例庫）</span>
+              <ol>
+                <li><strong>一次只問一題</strong>：請 AI 擔任面試官，學生回答後再給予回饋，嚴禁一次吐出10題標準答案讓學生背誦。</li>
+                <li><strong>三維度點評</strong>：每題結束請 AI 指出「一項說得清楚的地方」、「一項可觀察的改進點」、「一個需要補證或查核的問題」。</li>
+                <li><strong>誠實面對不知道</strong>：遇到沒想過的問題，不硬背瞎掰，先界定已知、提出合理假設與查證路徑。</li>
+              </ol>
+            </div>
+          </div>
+          <div class="phase-actions split"><button class="button button-outline" type="button" data-go="2">← 回上一步</button><button class="button button-primary" id="exportButton" type="button">匯出我的資料備份 ↓</button></div>
+        </section>
+
+        <footer class="page-footer"><span>升學路徑工作室</span><span>資料由你掌握・招生規定以當年度官方公告為準</span><button id="resetButton" type="button">清除本機資料</button></footer>
+      </div>
+    </main>
+  </div>
+
+  <!-- AI 靈感發想彈窗 (Modal) -->
+  <div id="aiModal" class="ai-modal-backdrop" hidden>
+    <div class="ai-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-kicker">✨ HUMAN-AI CO-CREATION</span>
+          <h3 id="modalTitle">AI 靈感發想與引導建議</h3>
+        </div>
+        <button type="button" class="modal-close" id="closeAiModal" aria-label="關閉視窗">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-meta-bar">
+          <div class="modal-meta-item"><b>當前校系：</b><span id="modalTargetProgram">尚未選擇校系</span></div>
+          <div class="modal-meta-item"><b>探索項目：</b><span id="modalFieldTitle">感興趣的領域</span></div>
+        </div>
+        <div class="modal-tips" id="modalTips">
+          💡 <strong>顧問建議：</strong>不要只寫形容詞（如「認真積極」），教授更看重你「在具體情境下採取了什麼行動、留下了什麼客觀證據與反思」。
+        </div>
+        <label class="modal-label">
+          <span>為此項目量身打造的 AI 引導提問詞（已優化人機協作結構）：</span>
+          <textarea id="modalPromptText" class="prompt-preview modal-prompt" rows="7" readonly></textarea>
+        </label>
+        <div class="button-row modal-actions">
+          <button class="button button-outline" id="copyModalPrompt" type="button">複製提示詞</button>
+          <button class="button btn-claude" id="openModalClaude" type="button">開啟 Claude 提問 ↗</button>
+          <button class="button button-dark" id="openModalChatGPT" type="button">開啟 ChatGPT 提問 ↗</button>
+          <button class="button button-dark" id="openModalGemini" type="button">開啟 Gemini 提問 ↗</button>
+        </div>
+        <div class="modal-footer-note">
+          <p>🎯 <strong>使用技巧：</strong>點選上述任一 AI 按鈕，系統會自動將提示詞複製到剪貼簿。在 AI 獲得靈感後，回到網頁直接在該欄位填寫！</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
