@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>智慧班級成績分析系統 2.0（v4 優化）</title>
+<title>智慧班級成績分析系統 v5</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -191,6 +191,41 @@ select:focus,input:focus{outline:none;border-color:var(--p);box-shadow:0 0 0 3px
 /* ===== Print ===== */
 .prt-bar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;}
 .print-hdr{display:none;font-weight:800;font-size:1rem;margin-bottom:10px;}
+
+/* ===== v5 additions ===== */
+.hint{font-size:.76rem;font-weight:400;color:var(--mu2);line-height:1.6;}
+.hdr-tools{position:absolute;top:18px;right:22px;z-index:3;display:flex;gap:8px;}
+.hdr-tools .theme-toggle{position:static;text-decoration:none;display:inline-flex;align-items:center;}
+.modal{background:var(--card);color:var(--tx);border:1px solid var(--bo);border-radius:var(--r);padding:24px;width:100%;max-width:720px;max-height:88vh;overflow-y:auto;box-shadow:var(--shl);}
+.modal h2{font-size:1.1rem;margin-bottom:12px;color:var(--p);}
+.ma{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap;}
+.bx{background:var(--card3);color:var(--tx);border:1px solid var(--bo);}
+.xgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:14px;}
+.xcard{border:1px solid var(--bo);border-radius:var(--r);padding:16px 18px;background:var(--card2);}
+.xcard.full{grid-column:1/-1;}
+.xcard.hl{border:2px solid var(--p2);background:linear-gradient(135deg,var(--p2l),var(--card2) 70%);}
+.xcard h3{font-size:.95rem;margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.xcard .xdesc{font-size:.82rem;color:var(--mu);margin-bottom:10px;line-height:1.6;}
+.xcard .ctrl{margin-bottom:8px;}
+.badge-new{background:var(--p2);color:#fff;font-size:.68rem;padding:1px 8px;border-radius:99px;font-weight:800;letter-spacing:.5px;}
+.opt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 16px;margin:6px 0 10px;}
+.opt-grid label{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--mu);font-weight:600;}
+.opt-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+input[type="number"]{padding:7px 8px;border:1.5px solid var(--bo);border-radius:var(--rs);font-size:.88rem;font-family:inherit;background:var(--card);color:var(--tx);}
+.pbar{height:12px;background:var(--card3);border-radius:99px;overflow:hidden;border:1px solid var(--bo);}
+.pbar>div{height:100%;width:0;background:linear-gradient(90deg,var(--p),var(--p2));transition:width .25s;}
+.pbar.indet>div{width:35%!important;animation:indet 1.2s ease-in-out infinite;}
+@keyframes indet{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
+.chip .ca{cursor:pointer;opacity:.55;font-size:.78rem;padding:0 2px;}
+.chip .ca:hover{opacity:1;}
+.chip.cur{border-color:var(--p);}
+.totop{position:fixed;right:22px;bottom:24px;width:42px;height:42px;border-radius:50%;border:none;background:var(--p);color:#fff;font-size:1.2rem;font-weight:900;cursor:pointer;box-shadow:var(--shl);opacity:0;pointer-events:none;transition:opacity .2s;z-index:500;}
+.totop.on{opacity:.9;pointer-events:auto;}
+#gw{max-height:74vh;overflow:auto;}
+#gw td.seat,#gw th:first-child{position:sticky;left:0;z-index:1;}
+#gw td.seat{background:var(--card);}
+#gw th:first-child{z-index:3;}
+.auto-note{font-size:.76rem;color:var(--w);margin-top:6px;}
 @media print{
   body{background:#fff;}
   .header,.tabs,.prt-bar,.up-card,.no-print,.theme-toggle,.hero{display:none!important;}
@@ -210,6 +245,8 @@ select:focus,input:focus{outline:none;border-color:var(--p);box-shadow:0 0 0 3px
   .header h1{font-size:1.15rem;}
   .cg{grid-template-columns:1fr;}
   .theme-toggle{position:static;margin-top:8px;}
+  .hdr-tools{position:static;margin-top:8px;}
+  .xgrid{grid-template-columns:1fr;}
   .tabs{position:static;}
 }
 </style>
@@ -217,9 +254,9 @@ select:focus,input:focus{outline:none;border-color:var(--p);box-shadow:0 0 0 3px
 <body>
 
 <div class="header">
-  <button class="theme-toggle no-print" id="themeBtn" onclick="toggleTheme()">🌙 深色模式</button>
-  <h1>📊 智慧班級成績分析系統 <span style="font-size:.85rem;font-weight:400;opacity:.8;">v2.0</span></h1>
-  <p>Excel 智慧解析 ｜ 班級體質儀表板 ｜ 五標統計 ｜ 預警關懷名單 ｜ 進階計量診斷（VAM·成長軌跡·信度校正）｜ 多次比較 ｜ 個人深度追蹤</p>
+  <div class="hdr-tools no-print"><a class="theme-toggle hdr-link" href="班級成績分析系統_Codex優化使用說明.html" target="_blank" rel="noopener" title="開啟使用說明（需與本檔放在同一資料夾）">📖 使用說明</a><button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">🌙 深色模式</button></div>
+  <h1>📊 智慧班級成績分析系統 <span style="font-size:.85rem;font-weight:400;opacity:.8;">v5</span></h1>
+  <p>Excel 智慧解析 ｜ 班級體質儀表板 ｜ 五標統計 ｜ 預警關懷名單 ｜ 進階計量診斷（VAM·成長軌跡·信度校正）｜ 多次比較 ｜ 個人深度追蹤 ｜ 全班個人報告一鍵合併 PDF</p>
   <p style="margin-top:6px;opacity:.75;font-size:.8rem;">臺北市立麗山高中 生物科 林獻升老師製作 ｜ <a href="mailto:frog@lssh.tp.edu.tw" style="color:rgba(255,255,255,.85);text-decoration:none;">frog@lssh.tp.edu.tw</a></p>
 </div>
 
@@ -271,7 +308,7 @@ select:focus,input:focus{outline:none;border-color:var(--p);box-shadow:0 0 0 3px
           <select id="s1"></select>
           <input type="search" id="q1" placeholder="🔍 搜尋座號/姓名" oninput="renderGradeTable(+document.getElementById('s1').value||0)" style="width:170px;">
           <label class="switch"><input type="checkbox" id="hm1" onchange="renderGradeTable(+document.getElementById('s1').value||0)">熱力圖模式</label>
-          <span style="font-size:.8rem;color:var(--mu);">🔴 不及格（&lt;60）｜ 姓名已遮罩</span>
+          <span style="font-size:.8rem;color:var(--mu);">🔴 不及格（&lt;60）｜ <span id="nameHint">姓名已遮罩</span>｜ 點表頭可排序、點列可看個人分析</span>
         </div>
         <div class="tw" id="gw"></div>
       </div>
@@ -383,59 +420,117 @@ select:focus,input:focus{outline:none;border-color:var(--p);box-shadow:0 0 0 3px
     <!-- T7: Export -->
     <div id="t7" class="tc" style="display:none;">
       <div class="card">
-        <div class="ct">💾 匯出與列印</div>
-        <div style="display:flex;flex-direction:column;gap:18px;">
+        <div class="ct">💾 匯出與列印 <span class="hint">所有報告都可在列印視窗選「另存為 PDF」；「全班學生個別報告」可直接下載成單一 PDF</span></div>
 
-          <div>
-            <h3 style="font-size:.92rem;margin-bottom:8px;">🖨️ 列印 / 存 PDF</h3>
-            <div class="ctrl">
-              <select id="prtExamScope" title="選擇完整班級報告範圍"></select>
-              <button class="btn bp" onclick="printFullReport()">📊 列印完整班級分析報告</button>
-              <span class="hint">可選擇全部成績或單次考試；涵蓋成績一覽、五標、全班分析、名次、預警、進階計量等班級統計（不含個別學生）</span>
+        <div class="xgrid">
+          <!-- 全班學生個別報告（批次） -->
+          <div class="xcard hl full">
+            <h3>📚 全班學生個別報告（一次產生、合併成單一 PDF）<span class="badge-new">NEW</span></h3>
+            <p class="xdesc">系統會依序產生每位學生的個人成績分析（單次分析＋讀書策略＋多次追蹤比較），自動合併為<b>一個 PDF 檔</b>，每位學生從新的一頁開始，下載後即可一次印出全班資料。</p>
+            <div class="opt-grid">
+              <label>單次分析考試
+                <select id="bExam"></select>
+              </label>
+              <label>座號範圍
+                <span style="display:inline-flex;align-items:center;gap:4px;">
+                  <input type="number" id="bFrom" min="1" max="99" value="1" style="width:64px;"> 到
+                  <input type="number" id="bTo" min="1" max="99" value="99" style="width:64px;">
+                </span>
+              </label>
+              <label>畫質／檔案大小
+                <select id="bQuality">
+                  <option value="std">標準（建議，清晰列印）</option>
+                  <option value="small">精簡（檔案較小）</option>
+                  <option value="hi">高畫質（檔案較大）</option>
+                </select>
+              </label>
             </div>
-            <div class="ctrl" style="margin-top:10px;">
+            <div class="opt-row">
+              <label class="switch"><input type="checkbox" id="bCmp" checked>包含多次成績追蹤比較</label>
+              <label class="switch"><input type="checkbox" id="bPlan" checked>包含讀書策略與下次目標</label>
+              <label class="switch"><input type="checkbox" id="bName" checked>報告標題顯示姓名</label>
+              <label class="switch" title="雙面列印時，若某位學生頁數為奇數，自動補一張空白頁，讓下一位學生從新的一張紙開始，方便分發"><input type="checkbox" id="bDuplex">雙面列印（每位學生從新的一張紙開始）</label>
+            </div>
+            <div class="ctrl" style="margin:10px 0 4px;">
+              <button class="btn bv" onclick="downloadAllStudentsPDF()">⬇️ 一鍵下載全班個人報告 PDF</button>
+              <button class="btn bo2" onclick="printAllStudentsReport()">🖨️ 列印全班個人報告（另存 PDF）</button>
+              <span class="hint" id="bInfo"></span>
+            </div>
+            <div class="hint">※ 個人報告只含該生成績與班級統計（班平均、五標），不含其他同學的個別成績，可直接發給學生或家長。30 人約需 1–2 分鐘，過程中可隨時取消。</div>
+          </div>
+
+          <div class="xcard">
+            <h3>🧑‍🎓 單一學生分析報告</h3>
+            <p class="xdesc">輸出該生單次成績分析＋多次成績追蹤比較的完整圖表。</p>
+            <div class="ctrl">
               <select id="prtStu"></select>
-              <button class="btn bv" onclick="printStudentReport()">🧑‍🎓 列印選定學生分析報告</button>
-              <span class="hint">輸出該生單次成績分析＋多次成績追蹤比較的完整圖表</span>
+              <button class="btn bv" onclick="printStudentReport()">🖨️ 列印</button>
+              <button class="btn bo2" onclick="downloadOneStudentPDF()">⬇️ 下載 PDF</button>
             </div>
           </div>
 
-          <div>
-            <h3 style="font-size:.92rem;margin-bottom:8px;">📥 Excel 匯出</h3>
+          <div class="xcard">
+            <h3>🏫 完整班級分析報告</h3>
+            <p class="xdesc">涵蓋成績一覽、五標、全班分析、名次、預警、進階計量、多次比較等班級統計（不含個別學生）。</p>
+            <div class="ctrl">
+              <select id="prtExamScope" title="選擇完整班級報告範圍"></select>
+              <button class="btn bp" onclick="printFullReport()">📊 列印班級報告</button>
+            </div>
+          </div>
+
+          <div class="xcard">
+            <h3>📥 Excel 匯出</h3>
+            <p class="xdesc">含成績、五標統計、學生讀書診斷、臨界生名單等工作表。</p>
             <div class="ctrl">
               <select id="se"></select>
-              <button class="btn bs" onclick="exportOne()">下載此次完整成績 .xlsx</button>
+              <button class="btn bs" onclick="exportOne()">下載此次 .xlsx</button>
               <button class="btn bs" onclick="exportAll()">下載全部考試 .xlsx</button>
             </div>
           </div>
 
-          <div style="border-top:1px solid var(--bo);padding-top:16px;">
-            <h3 style="font-size:.92rem;margin-bottom:8px;">🗂️ 資料儲存與讀取（瀏覽器）<span class="hint">可存多筆不同名稱的分析，換頁不遺失</span></h3>
+          <div class="xcard">
+            <h3>🗂️ 資料儲存與讀取（瀏覽器）</h3>
+            <p class="xdesc">可存多筆不同名稱的分析（例如不同班級、不同學期），換頁不遺失。</p>
             <div class="ctrl">
-              <button class="btn bp" onclick="openSaveDataset()">💾 儲存目前分析（命名）</button>
-              <select id="dsList" style="min-width:220px;"></select>
+              <button class="btn bp" onclick="openSaveDataset()">💾 儲存目前分析</button>
+              <select id="dsList" style="min-width:200px;"></select>
+            </div>
+            <div class="ctrl">
               <button class="btn bo2" onclick="loadSelectedDataset()">📂 讀取選定分析</button>
               <button class="btn bd" onclick="deleteSelectedDataset()">🗑️ 刪除選定分析</button>
             </div>
-            <div id="dsMeta" class="hint" style="margin-top:8px;"></div>
+            <div id="dsMeta" class="hint" style="margin-top:4px;"></div>
           </div>
 
-          <div style="border-top:1px solid var(--bo);padding-top:16px;">
-            <h3 style="font-size:.92rem;margin-bottom:8px;">🔄 全部資料備份（JSON）<span class="hint">換機 / 備份用，含所有已命名分析</span></h3>
+          <div class="xcard">
+            <h3>🔄 全部資料備份（JSON）</h3>
+            <p class="xdesc">換電腦或備份用，含所有已命名分析；匯入後自動載入。</p>
             <div class="ctrl">
-              <button class="btn bs" onclick="exportAllJSON()">⬇️ 匯出全部資料 .json</button>
-              <button class="btn bs" onclick="exportCurrentJSON()">⬇️ 只匯出目前分析 .json</button>
+              <button class="btn bs" onclick="exportAllJSON()">⬇️ 匯出全部 .json</button>
+              <button class="btn bs" onclick="exportCurrentJSON()">⬇️ 只匯出目前分析</button>
               <button class="btn bo2" onclick="document.getElementById('jsonImport').click()">⬆️ 匯入 .json</button>
               <input type="file" id="jsonImport" accept=".json,application/json" style="display:none" onchange="importJSON(event)">
             </div>
           </div>
-
         </div>
       </div>
     </div>
 
   </div>
 </div>
+
+<!-- Progress Modal (v5) -->
+<div class="ov" id="progOv">
+  <div class="vm" style="max-width:500px;">
+    <h2 id="progTitle">處理中…</h2>
+    <div class="pbar"><div id="progFill"></div></div>
+    <div id="progMsg" style="font-size:.86rem;color:var(--mu);margin-top:10px;min-height:1.4em;"></div>
+    <div id="progSub" style="font-size:.78rem;color:var(--mu2);margin-top:4px;"></div>
+    <div class="ma"><button class="btn bd" id="progCancel" onclick="cancelBatch()">取消</button></div>
+  </div>
+</div>
+
+<button class="totop no-print" id="toTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到頂端">↑</button>
 
 <!-- Validation Modal -->
 <div class="ov" id="ov">
@@ -940,8 +1035,8 @@ function showVldModal(exam, vld) {
   h+=`<div style="margin-top:12px;"><div style="font-weight:700;font-size:.85rem;margin-bottom:6px;">欄位偵測結果</div>`;
   h+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;">`;
   fields.forEach(f=>{
-    const ok=f.v.startsWith('✅');
-    h+=`<div style="background:${ok?'#f0fdf4':'#fffbeb'};border-radius:6px;padding:6px 10px;font-size:.8rem;">
+    const ok=!f.v.startsWith('⚠️');
+    h+=`<div style="background:${ok?'var(--sl)':'var(--wl)'};border-radius:6px;padding:6px 10px;font-size:.8rem;">
       <strong>${f.l}</strong>：${f.v}</div>`;
   });
   h+=`</div></div>`;
@@ -1121,7 +1216,7 @@ function renderFiveMarks(idx){
   e.subjects.forEach(s=>{h+=`<th class="th2">${s}</th>`;});
   h+=`</tr></thead><tbody>`;
   ROWS.forEach(([lbl,k])=>{
-    h+=`<tr><td style="text-align:left;font-weight:600;background:#f8fafc;">${lbl}</td>`;
+    h+=`<tr><td style="text-align:left;font-weight:600;background:var(--card2);">${lbl}</td>`;
     e.subjects.forEach(s=>{
       const st=e.stats[s];
       if(st&&st[k]!==undefined){
@@ -1488,10 +1583,10 @@ function computeTrends(allSubj, getVal){
 /* Insight card HTML */
 function insightCard(icon,label,items,style){
   const bdr={up:'#16a34a',dn:'#dc2626',warn:'#f59e0b',info:'#1a56db',neutral:'#64748b'}[style]||'#1a56db';
-  const bg ={up:'#f0fdf4',dn:'#fef2f2',warn:'#fffbeb',info:'#eff6ff',neutral:'#f8fafc'}[style]||'#eff6ff';
+  const bg ={up:'var(--sl)',dn:'var(--dl)',warn:'var(--wl)',info:'var(--pl)',neutral:'var(--card3)'}[style]||'var(--pl)';
   return `<div style="border-left:4px solid ${bdr};background:${bg};border-radius:8px;padding:12px 16px;min-width:200px;flex:1;">
     <div style="font-weight:700;font-size:.88rem;margin-bottom:6px;color:${bdr};">${icon} ${label}</div>
-    ${items.map(i=>`<div style="font-size:.82rem;color:#374151;padding:2px 0;">${i}</div>`).join('')}
+    ${items.map(i=>`<div style="font-size:.82rem;color:var(--tx);padding:2px 0;">${i}</div>`).join('')}
   </div>`;
 }
 
@@ -1573,7 +1668,7 @@ function renderClassCmp(div){
     h+=`</tr>`;
   });
   // Trend row
-  h+=`<tr style="background:#fef9c3;"><td style="font-weight:700;">首末變化</td>`;
+  h+=`<tr style="background:var(--wl);"><td style="font-weight:700;">首末變化</td>`;
   allSubj.forEach(s=>{
     const t=trends.find(x=>x.subj===s);
     if(t?.diff!=null){h+=`<td class="${t.diff>=0?'up':'dn'}" style="font-weight:700;">${t.diff>=0?'↑+':'↓'}${t.diff.toFixed(1)}</td>`;}
@@ -1583,7 +1678,7 @@ function renderClassCmp(div){
   else h+='<td>—</td>';
   h+=`</tr>`;
   // Trend direction row
-  h+=`<tr style="background:#f0f4ff;"><td style="font-weight:700;">趨勢方向</td>`;
+  h+=`<tr style="background:var(--pl);"><td style="font-weight:700;">趨勢方向</td>`;
   allSubj.forEach(s=>{
     const t=trends.find(x=>x.subj===s);
     const [lbl,col]=t?.trend==='up'?['⬆進步','#16a34a']:t?.trend==='dn'?['⬇退步','#dc2626']:['→平穩','#64748b'];
@@ -1845,13 +1940,13 @@ function renderStuCmp(div){
     h+=`<td>${stu?.classRank??'—'}</td><td>${stu?.groupRank??'—'}</td><td>${stu?.groupPct??'—'}</td></tr>`;
   });
   // Trend rows
-  h+=`<tr style="background:#fef9c3;"><td style="font-weight:700;">首末變化</td>`;
+  h+=`<tr style="background:var(--wl);"><td style="font-weight:700;">首末變化</td>`;
   allSubj.forEach(s=>{
     const t=stuTrends.find(x=>x.subj===s);
     h+=t?.diff!=null?`<td class="${t.diff>=0?'up':'dn'}" style="font-weight:700;">${t.diff>=0?'+':''}${t.diff.toFixed(1)}</td>`:`<td>—</td>`;
   });
   h+=`<td colspan="4"></td></tr>`;
-  h+=`<tr style="background:#f0f4ff;"><td style="font-weight:700;">趨勢方向</td>`;
+  h+=`<tr style="background:var(--pl);"><td style="font-weight:700;">趨勢方向</td>`;
   allSubj.forEach(s=>{
     const t=stuTrends.find(x=>x.subj===s);
     const [lbl,col]=t?.trend==='up'?['⬆進步','#16a34a']:t?.trend==='dn'?['⬇退步','#dc2626']:['→平穩','#64748b'];
@@ -1859,7 +1954,7 @@ function renderStuCmp(div){
   });
   h+=`<td colspan="4"></td></tr>`;
   // vs class row (latest exam)
-  h+=`<tr style="background:#f0fdf4;"><td style="font-weight:700;">vs 班均(最近)</td>`;
+  h+=`<tr style="background:var(--sl);"><td style="font-weight:700;">vs 班均(最近)</td>`;
   allSubj.forEach(s=>{
     const sc=lastE.students.find(x=>x.seat===seat)?.scores[s]?.value;
     const cls=lastE.stats[s]?.mean;
@@ -4110,6 +4205,707 @@ buildPrintDoc = function(title, sections){
     recomputeAllStats();
     try{ switchTab(curTab()); renderHero(); }catch(e){ console.warn(e); }
   }
+})();
+
+
+// =====================================================================
+// ===== v5 升級層（Claude 優化）=====
+//  1. 全班學生個別報告：一鍵產生並合併成單一 PDF（html2canvas + jsPDF，可取消、可雙面補頁）
+//     ＋ 列印全班個人報告（瀏覽器另存 PDF，文字可搜尋）＋ 單一學生直接下載 PDF
+//  2. 多檔上傳修正：依檔名排序、逐一驗證（舊版同時上傳多檔只會載入最後一份）
+//  3. 考試管理：標籤可左右調整順序、重新命名、刪除（刪到全空時同步清除儲存）
+//  4. Excel 無「班級名次／進退」時，系統依平均自動計算（標示為系統計算）
+//  5. 驗證視窗樣式修正、深色模式配色修正、深色模式下列印圖表自動改淺色
+//  6. 介面：匯出頁重新分區、進度視窗、Esc 關閉視窗、個人分析 ←/→ 切換學生、回到頂端、表頭凍結
+// =====================================================================
+
+// ---------- 共用：淺色主題 CSS 變數（供列印文件解析 var(--xx)） ----------
+const V5_LIGHT_VARS=`:root{--p:#2563eb;--pl:#dbeafe;--p2:#7c3aed;--p2l:#ede9fe;--d:#dc2626;--dl:#fee2e2;--s:#059669;--sl:#d1fae5;--w:#d97706;--wl:#fef3c7;
+  --card:#ffffff;--card2:#f8fafc;--card3:#f1f5f9;--tx:#0f172a;--mu:#64748b;--mu2:#94a3b8;--bo:#e2e8f0;}`;
+const _v4BPD = buildPrintDoc;
+buildPrintDoc = function(title, sections){
+  const d=_v4BPD(title, sections);
+  d.css = V5_LIGHT_VARS + d.css + `
+    .sech{font-weight:700;font-size:13px;color:#2563eb;margin:12px 0 8px;padding-left:8px;border-left:3px solid #2563eb;break-after:avoid;page-break-after:avoid;}
+    .auto-note{font-size:10px;color:#d97706;}
+    .stu-report{break-before:page;page-break-before:always;}
+    .stu-report:first-of-type{break-before:auto;page-break-before:auto;}
+    .stu-head{border-bottom:2px solid #1d4ed8;margin-bottom:8px;padding-bottom:4px;}
+    .stu-head h1{text-align:left;font-size:18px;margin:0;}
+    .stu-head .meta{text-align:left;}`;
+  return d;
+};
+secH = function(t){ return `<div class="sech" style="font-weight:700;font-size:.95rem;color:var(--p);margin:18px 0 10px;padding-left:10px;border-left:3px solid var(--p);">${t}</div>`; };
+
+// 列印時暫時切到淺色主題，避免深色模式下圖表文字在白紙上看不清楚
+async function withLightTheme(fn){
+  const h=document.documentElement, was=h.dataset.theme;
+  if(was==='dark'){ h.dataset.theme='light'; applyChartTheme(); }
+  try{ return await fn(); }
+  finally{ if(was==='dark'){ h.dataset.theme='dark'; applyChartTheme(); try{ switchTab(curTab()); renderHero(); }catch(e){} } }
+}
+['printFullReport','printStudentReport','printCurrentTab'].forEach(fn=>{
+  const orig=window[fn];
+  window[fn]=async function(...a){
+    showProg('正在彙整報告（含圖表）…', null, '請稍候，完成後會開啟列印視窗', false);
+    try{ return await withLightTheme(()=>orig.apply(this,a)); }
+    finally{ hideProg(); }
+  };
+});
+
+// ---------- 進度視窗 ----------
+const BATCH={running:false, cancel:false};
+function showProg(title, pct, msg, cancellable=true){
+  const ov=document.getElementById('progOv'); if(!ov) return;
+  document.getElementById('progTitle').textContent=title||'處理中…';
+  setProg(pct, msg||'');
+  document.getElementById('progSub').textContent='';
+  document.getElementById('progCancel').style.display=cancellable?'':'none';
+  ov.classList.add('on');
+}
+function setProg(pct, msg, sub){
+  const bar=document.querySelector('#progOv .pbar'), fill=document.getElementById('progFill');
+  if(pct==null){ bar.classList.add('indet'); }
+  else { bar.classList.remove('indet'); fill.style.width=Math.max(0,Math.min(100,pct)).toFixed(1)+'%'; }
+  if(msg!=null) document.getElementById('progMsg').textContent=msg;
+  if(sub!=null) document.getElementById('progSub').textContent=sub;
+}
+function hideProg(){ document.getElementById('progOv')?.classList.remove('on'); }
+function cancelBatch(){ if(BATCH.running){ BATCH.cancel=true; setProg(null,'正在取消…'); } else hideProg(); }
+
+// ---------- 外部函式庫延遲載入（僅在需要直接下載 PDF 時才載入） ----------
+const V5_LIBS={
+  h2c:['https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js','https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'],
+  jspdf:['https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js','https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'],
+};
+function loadScriptTry(srcs){
+  return new Promise((res,rej)=>{
+    let i=0;
+    const next=()=>{
+      if(i>=srcs.length){ rej(new Error('無法載入 PDF 元件（請確認網路連線）')); return; }
+      const s=document.createElement('script'); s.src=srcs[i++]; s.async=true;
+      s.onload=()=>res(); s.onerror=()=>{ s.remove(); next(); };
+      document.head.appendChild(s);
+    };
+    next();
+  });
+}
+async function ensurePdfLibs(){
+  if(typeof window.html2canvas!=='function') await loadScriptTry(V5_LIBS.h2c);
+  if(!(window.jspdf&&window.jspdf.jsPDF)) await loadScriptTry(V5_LIBS.jspdf);
+}
+
+// ---------- 快速擷取（批次用：關閉動畫、縮短等待） ----------
+async function captureFast(tabId, renderFn, ids){
+  const restore=showTabForCapture(tabId);
+  try{
+    renderFn();
+    await nextPaint(40);
+    const el=document.getElementById(tabId);
+    el.querySelectorAll('canvas').forEach(cv=>{ const c=Chart.getChart(cv); if(c){ try{ c.resize(); c.update('none'); }catch(e){} } });
+    await nextPaint(40);
+    let html=''; ids.forEach(id=>{ html+=snapshotContainer(document.getElementById(id)); });
+    return html;
+  } finally { restore(); }
+}
+
+// ---------- 組出某位學生的報告區塊 ----------
+function stuNameOf(seat){
+  for(let i=S.exams.length-1;i>=0;i--){ const s=S.exams[i].students.find(x=>x.seat===seat); if(s&&s.name) return s.name; }
+  return '';
+}
+function batchExamIndexes(){
+  const v=document.getElementById('bExam')?.value ?? 'latest';
+  if(v==='all') return S.exams.map((_,i)=>i);
+  if(v==='latest') return [S.exams.length-1];
+  const i=+v; return S.exams[i]?[i]:[S.exams.length-1];
+}
+async function buildStudentSections(seat, opt){
+  const sections=[];
+  for(const i of opt.examIdx){
+    if(!S.exams[i].students.some(s=>s.seat===seat)) continue;
+    const html=await captureFast('t4', ()=>{
+      S.cur=i; renderStudentAnalysis(i, seat);
+      if(!opt.plan){ const sb=document.getElementById('sb'); const last=sb?.lastElementChild; if(last&&last.textContent.includes('個人讀書策略')) last.remove(); }
+    }, ['sb']);
+    sections.push({title:`單次成績分析 ─ ${S.exams[i].name}`, html});
+  }
+  if(opt.cmp && S.exams.length>=2){
+    const html=await captureFast('t6', ()=>{
+      const sm=document.querySelector('input[name="cm"][value="student"]'); if(sm) sm.checked=true;
+      const scs=document.getElementById('scs');
+      if(scs){
+        if(![...scs.options].some(o=>+o.value===seat)){ const o=document.createElement('option'); o.value=seat; o.textContent='座號 '+p2(seat); scs.appendChild(o); }
+        scs.value=seat;
+      }
+      renderCmp();
+    }, ['cpb']);
+    sections.push({title:'多次成績追蹤比較', html});
+  }
+  return sections;
+}
+function batchSeats(examIdx){
+  const set=new Set();
+  examIdx.forEach(i=>S.exams[i].students.forEach(s=>set.add(s.seat)));
+  let seats=[...set].sort((a,b)=>a-b);
+  const f=+document.getElementById('bFrom')?.value||1, t=+document.getElementById('bTo')?.value||999;
+  const lo=Math.min(f,t), hi=Math.max(f,t);
+  return seats.filter(s=>s>=lo&&s<=hi);
+}
+function readBatchOpts(){
+  return {
+    examIdx: batchExamIndexes(),
+    cmp: document.getElementById('bCmp')?.checked!==false,
+    plan: document.getElementById('bPlan')?.checked!==false,
+    showName: document.getElementById('bName')?.checked!==false,
+    duplex: !!document.getElementById('bDuplex')?.checked,
+    quality: document.getElementById('bQuality')?.value||'std',
+  };
+}
+function stuReportTitle(seat, showName){
+  const nm=showName?stuNameOf(seat):'';
+  return `座號 ${p2(seat)}${nm?' '+nm:''}　個人成績分析報告`;
+}
+function batchScopeText(opt){
+  return opt.examIdx.length===1 ? S.exams[opt.examIdx[0]].name : `全部 ${S.exams.length} 次考試`;
+}
+// 批次前後保存／還原畫面狀態
+function saveUiState(){
+  return {tab:curTab(), cur:S.cur, ss:document.getElementById('ss')?.value,
+    cm:document.querySelector('input[name="cm"]:checked')?.value||'class', scs:document.getElementById('scs')?.value,
+    anim:Chart.defaults.animation};
+}
+function restoreUiState(st){
+  Chart.defaults.animation=st.anim;
+  S.cur=st.cur;
+  updStuSel();
+  const cm=document.querySelector(`input[name="cm"][value="${st.cm}"]`); if(cm) cm.checked=true;
+  const scs=document.getElementById('scs'); if(scs){ scs.style.display=st.cm==='student'?'inline-block':'none'; if(st.scs) scs.value=st.scs; }
+  if(st.ss && document.getElementById('ss')) document.getElementById('ss').value=st.ss;
+  switchTab(st.tab);
+}
+
+// ---------- 分頁排版引擎（A4，於隱藏 iframe 內量測後交給 html2canvas） ----------
+const PG={W:794, H:1123, PADX:36, PADT:30, PADB:44};
+function createPdfFrame(css){
+  let f=document.getElementById('pdfFrame'); if(f) f.remove();
+  f=document.createElement('iframe'); f.id='pdfFrame';
+  f.style.cssText=`position:fixed;left:-30000px;top:0;width:${PG.W+20}px;height:${PG.H}px;border:0;`;
+  document.body.appendChild(f);
+  const d=f.contentWindow.document;
+  d.open();
+  d.write(`<!DOCTYPE html><html lang="zh-TW"><head><meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>${css}
+    html,body{margin:0!important;padding:0!important;background:#fff;}
+    .pg{width:${PG.W}px;height:${PG.H}px;padding:${PG.PADT}px ${PG.PADX}px 0;box-sizing:border-box;position:relative;background:#fff;overflow:hidden;}
+    .pgb{height:${PG.H-PG.PADT-PG.PADB}px;overflow:hidden;position:relative;}
+    .pgb>*:first-child{margin-top:0!important;}
+    .pgf{position:absolute;left:${PG.PADX}px;right:${PG.PADX}px;bottom:16px;font-size:9.5px;color:#94a3b8;display:flex;justify-content:space-between;border-top:1px solid #e2e8f0;padding-top:4px;}
+    .cg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0;}
+    .cg .cb.full{grid-column:1/-1;}
+    .tw{overflow:visible!important;max-height:none!important;}
+    .stu-head{border-bottom:2px solid #1d4ed8;margin-bottom:8px;padding-bottom:5px;}
+    .stu-head h1{font-size:19px;text-align:left;margin:0 0 2px;}
+    .stu-head .meta,.stu-head .author{text-align:left;margin:0;}
+    .zoomwrap{overflow:hidden;}
+    .cg .cb img{max-height:235px;width:auto!important;max-width:100%;}
+    .cg .cb.full img{max-height:260px;}
+    .cb h3{margin-bottom:4px;}
+    </style></head><body><div id="host"></div></body></html>`);
+  d.close();
+  return f;
+}
+function isHeadingBlock(el){
+  return el.matches && (el.matches('h2.sec,.sech,h3') || (el.tagName==='DIV'&&el.children.length===0&&el.textContent.trim().length<40&&/border-left/.test(el.getAttribute('style')||'')));
+}
+// 把一段 HTML 拆成可分頁的區塊（圖表格線拆成每列兩張）
+function flattenBlocks(doc, html){
+  const tmp=doc.createElement('div'); tmp.innerHTML=html;
+  const out=[];
+  const mkCg=()=>{ const g=doc.createElement('div'); g.className='cg'; return g; };
+  [...tmp.children].forEach(ch=>{
+    if(ch.classList.contains('cg')){
+      let row=null;
+      [...ch.children].forEach(cb=>{
+        if(cb.classList.contains('full')){ row=null; const g=mkCg(); g.appendChild(cb); out.push(g); }
+        else { if(!row){ row=mkCg(); out.push(row); } row.appendChild(cb); if(row.children.length>=2) row=null; }
+      });
+    } else out.push(ch);
+  });
+  return out;
+}
+async function waitImages(root){
+  const imgs=[...root.querySelectorAll('img')];
+  await Promise.all(imgs.map(im=>im.complete&&im.naturalWidth?Promise.resolve():(im.decode?im.decode().catch(()=>{}):Promise.resolve())));
+}
+// 將一位學生排成多個 A4 頁面，回傳頁面元素陣列
+async function layoutStudentPages(doc, host, headHTML, sections, footL){
+  const pages=[]; let body=null;
+  const newPage=()=>{
+    const pg=doc.createElement('div'); pg.className='pg';
+    pg.innerHTML=`<div class="pgb"></div><div class="pgf"><span></span><span></span></div>`;
+    host.appendChild(pg); body=pg.firstChild; pages.push(pg);
+  };
+  const fits=()=>body.scrollHeight<=body.clientHeight+1;
+  const used=()=>{ const l=body.lastElementChild; return l? l.offsetTop+l.offsetHeight : 0; };
+  newPage();
+
+  const scaleToFit=(el)=>{
+    body.appendChild(el);
+    const h=el.scrollHeight||el.offsetHeight, avail=body.clientHeight-used()+el.offsetHeight-4;
+    body.removeChild(el);
+    const f=Math.max(0.35, Math.min(1, avail/h));
+    const wrap=doc.createElement('div'); wrap.className='zoomwrap';
+    el.style.transformOrigin='top left'; el.style.transform=`scale(${f})`; el.style.width=(100/f)+'%';
+    wrap.style.height=Math.ceil(h*f)+'px';
+    wrap.appendChild(el); body.appendChild(wrap);
+  };
+  const splitTable=(el)=>{
+    const tbl=el.tagName==='TABLE'?el:el.querySelector('table');
+    const rows=[...(tbl.tBodies[0]?.rows||[])];
+    const mkShell=()=>{
+      const w=el.tagName==='TABLE'?null:el.cloneNode(false);
+      const t=tbl.cloneNode(false); if(tbl.tHead) t.appendChild(tbl.tHead.cloneNode(true));
+      const tb=doc.createElement('tbody'); t.appendChild(tb);
+      if(w){ w.appendChild(t); } return {node:w||t, tb};
+    };
+    let sh=mkShell(); body.appendChild(sh.node);
+    for(const r of rows){
+      sh.tb.appendChild(r);
+      if(!fits()){
+        sh.tb.removeChild(r);
+        if(!sh.tb.rows.length){ body.removeChild(sh.node); }
+        newPage(); sh=mkShell(); body.appendChild(sh.node); sh.tb.appendChild(r);
+        if(!fits()){ /* 單列仍超高：保留讓它被裁切的風險極低，直接接受 */ }
+      }
+    }
+  };
+  const place=(el, depth=0)=>{
+    body.appendChild(el);
+    if(fits()) return;
+    body.removeChild(el);
+    if(body.children.length){                       // 換頁再試
+      newPage(); body.appendChild(el);
+      if(fits()) return;
+      body.removeChild(el);
+    }
+    // 空白頁也放不下 → 拆解
+    const onlyTable = (el.tagName==='TABLE') || (el.classList.contains('tw') && el.querySelector('table'));
+    if(onlyTable){ splitTable(el); return; }
+    const kids=[...el.children];
+    if(kids.length>1 && depth<3){ kids.forEach(k=>place(k, depth+1)); return; }
+    scaleToFit(el);
+  };
+
+  // 學生標題
+  const head=doc.createElement('div'); head.innerHTML=headHTML; place(head.firstElementChild||head);
+  for(const sec of sections){
+    if(!sec.html||!sec.html.trim()) continue;
+    const blocks=[];
+    const h2=doc.createElement('h2'); h2.className='sec'; h2.textContent=sec.title; blocks.push(h2);
+    flattenBlocks(doc, sec.html).forEach(b=>blocks.push(b));
+    // 先讓圖片解碼，量測才準
+    const tmp=doc.createElement('div'); tmp.style.cssText='position:absolute;left:-9999px;width:'+(PG.W-2*PG.PADX)+'px;';
+    blocks.forEach(b=>tmp.appendChild(b)); doc.body.appendChild(tmp); await waitImages(tmp); doc.body.removeChild(tmp);
+    for(let i=0;i<blocks.length;i++){
+      const b=blocks[i];
+      if(isHeadingBlock(b) && i<blocks.length-1 && body.children.length){
+        // 標題不可落單在頁尾：標題＋下一個區塊放不下就一起換頁
+        const nb=blocks[i+1];
+        body.appendChild(b); body.appendChild(nb);
+        const ok=fits() || (body.clientHeight-(b.offsetTop+b.offsetHeight))>=260;
+        body.removeChild(nb); body.removeChild(b);
+        if(!ok) newPage();
+      }
+      place(b);
+    }
+  }
+  // 頁尾
+  pages.forEach((pg,i)=>{
+    const sp=pg.querySelectorAll('.pgf span');
+    sp[0].textContent=footL; sp[1].textContent=`第 ${i+1} / ${pages.length} 頁`;
+  });
+  return pages;
+}
+
+function stuHeadHTML(seat, opt, total){
+  return `<div class="stu-head"><h1>📊 ${escH(stuReportTitle(seat,opt.showName))}</h1>
+    <div class="meta">分析範圍：${escH(batchScopeText(opt))}${opt.cmp&&S.exams.length>=2?`＋多次追蹤（${S.exams.length} 次）`:''}｜產生時間 ${new Date().toLocaleString('zh-TW')}</div>
+    <div class="author">臺北市立麗山高中 生物科 林獻升老師製作　智慧班級成績分析系統</div></div>`;
+}
+
+// ---------- 主流程：產生 PDF ----------
+async function generateStudentsPDF(seats, opt, filename){
+  if(BATCH.running){ toast('已有報告在產生中'); return; }
+  BATCH.running=true; BATCH.cancel=false;
+  const st=saveUiState();
+  const t0=Date.now();
+  showProg(seats.length>1?`📚 產生全班個人報告 PDF（${seats.length} 位）`:'⬇️ 產生學生報告 PDF', 0, '載入 PDF 元件…', true);
+  let frame=null, pdf=null, pageCount=0, done=0;
+  try{
+    await ensurePdfLibs();
+    const Q={small:{scale:1.5,q:.75},std:{scale:2,q:.8},hi:{scale:2.6,q:.9}}[opt.quality]||{scale:2,q:.85};
+    const {jsPDF}=window.jspdf;
+    pdf=new jsPDF({unit:'mm',format:'a4',orientation:'portrait',compress:true});
+    pdf.setProperties({title:filename.replace(/\.pdf$/i,''),author:'智慧班級成績分析系統',creator:'智慧班級成績分析系統 v5'});
+    await withLightTheme(async()=>{
+      Chart.defaults.animation=false;
+      frame=createPdfFrame(buildPrintDoc('',[]).css);
+      const doc=frame.contentWindow.document;
+      try{ await Promise.race([doc.fonts?.ready, new Promise(r=>setTimeout(r,2500))]); }catch(e){}
+      const host=doc.getElementById('host');
+      for(let k=0;k<seats.length;k++){
+        if(BATCH.cancel) break;
+        const seat=seats[k];
+        const label=`座號 ${p2(seat)}${opt.showName&&stuNameOf(seat)?' '+stuNameOf(seat):''}`;
+        const eta=k>0?Math.round((Date.now()-t0)/k*(seats.length-k)/1000):null;
+        setProg(k/seats.length*100, `第 ${k+1} / ${seats.length} 位：${label}　擷取分析圖表…`, eta!=null?`預估剩餘約 ${eta>=60?Math.floor(eta/60)+' 分 ':''}${eta%60} 秒`:'');
+        const sections=await buildStudentSections(seat, opt);
+        if(!sections.length) continue;
+        if(BATCH.cancel) break;
+        setProg((k+0.4)/seats.length*100, `第 ${k+1} / ${seats.length} 位：${label}　排版與轉成 PDF 頁面…`);
+        const pages=await layoutStudentPages(doc, host, stuHeadHTML(seat,opt), sections, `${stuReportTitle(seat,opt.showName).replace('　',' ｜ ')}｜${batchScopeText(opt)}`);
+        for(const pg of pages){
+          if(BATCH.cancel) break;
+          const cv=await window.html2canvas(pg,{scale:Q.scale, backgroundColor:'#ffffff', logging:false, useCORS:true,
+            width:PG.W, height:PG.H, windowWidth:PG.W+20, windowHeight:PG.H});
+          if(pageCount>0) pdf.addPage('a4','portrait');
+          pdf.addImage(cv.toDataURL('image/jpeg',Q.q),'JPEG',0,0,210,297,undefined,'FAST');
+          pageCount++;
+          cv.width=cv.height=0;
+        }
+        if(opt.duplex && pages.length%2===1 && k<seats.length-1){ pdf.addPage('a4','portrait'); pageCount++; }
+        host.innerHTML='';
+        done++;
+        await nextPaint(0);
+      }
+    });
+    if(BATCH.cancel){ toast('已取消，未產生 PDF'); return; }
+    if(!pageCount){ toast('⚠️ 沒有可輸出的學生資料'); return; }
+    setProg(100,'正在存檔…');
+    pdf.save(filename);
+    const sec=Math.round((Date.now()-t0)/1000);
+    toast(`✅ 已下載 ${filename}（${done} 位學生，共 ${pageCount} 頁，${sec} 秒）`);
+  }catch(err){
+    console.error(err);
+    toast('❌ PDF 產生失敗：'+(err.message||err)+'。可改用「列印全班個人報告」另存 PDF');
+  }finally{
+    try{ frame?.remove(); }catch(e){}
+    restoreUiState(st);
+    BATCH.running=false; BATCH.cancel=false;
+    hideProg();
+  }
+}
+function safeFile(s){ return String(s).replace(/[\\/:*?"<>|]/g,'_').trim(); }
+function batchBaseName(){
+  return safeFile(S.curDatasetName || S.exams[S.exams.length-1]?.name || '班級');
+}
+async function downloadAllStudentsPDF(){
+  if(!S.exams.length){ toast('請先載入成績資料'); return; }
+  const opt=readBatchOpts();
+  const seats=batchSeats(opt.examIdx);
+  if(!seats.length){ toast('座號範圍內沒有學生'); return; }
+  const range=seats.length>1?`_座號${p2(seats[0])}-${p2(seats[seats.length-1])}`:`_座號${p2(seats[0])}`;
+  await generateStudentsPDF(seats, opt, `${batchBaseName()}_全班個人成績分析報告${range}.pdf`);
+}
+async function downloadOneStudentPDF(){
+  if(!S.exams.length){ toast('請先載入成績資料'); return; }
+  const seat=+document.getElementById('prtStu').value; if(!seat){ toast('請先選擇學生'); return; }
+  const opt=readBatchOpts(); opt.examIdx=S.exams.map((_,i)=>i); opt.duplex=false; opt.cmp=true; opt.plan=true;
+  const nm=stuNameOf(seat);
+  await generateStudentsPDF([seat], opt, `座號${p2(seat)}${nm&&opt.showName?'_'+safeFile(nm):''}_個人成績分析報告.pdf`);
+}
+
+// ---------- 列印全班個人報告（瀏覽器列印→另存 PDF；文字可搜尋） ----------
+async function printAllStudentsReport(){
+  if(!S.exams.length){ toast('請先載入成績資料'); return; }
+  if(BATCH.running){ toast('已有報告在產生中'); return; }
+  const opt=readBatchOpts();
+  const seats=batchSeats(opt.examIdx);
+  if(!seats.length){ toast('座號範圍內沒有學生'); return; }
+  BATCH.running=true; BATCH.cancel=false;
+  const st=saveUiState(); const t0=Date.now();
+  showProg(`🖨️ 彙整全班個人報告（${seats.length} 位）`, 0, '準備中…', true);
+  let parts=[];
+  try{
+    await withLightTheme(async()=>{
+      Chart.defaults.animation=false;
+      for(let k=0;k<seats.length;k++){
+        if(BATCH.cancel) break;
+        const seat=seats[k];
+        const eta=k>0?Math.round((Date.now()-t0)/k*(seats.length-k)/1000):null;
+        setProg(k/seats.length*100, `第 ${k+1} / ${seats.length} 位：座號 ${p2(seat)}`, eta!=null?`預估剩餘約 ${eta} 秒`:'');
+        const sections=await buildStudentSections(seat, opt);
+        if(!sections.length) continue;
+        parts.push(`<div class="stu-report">${stuHeadHTML(seat,opt)}${sections.map(s=>`<div class="sec-wrap"><h2 class="sec">${escH(s.title)}</h2>${s.html}</div>`).join('')}</div>`);
+      }
+    });
+  } finally {
+    restoreUiState(st); BATCH.running=false; hideProg();
+  }
+  if(BATCH.cancel){ BATCH.cancel=false; toast('已取消'); return; }
+  if(!parts.length){ toast('⚠️ 沒有可列印的內容'); return; }
+  const title=`${batchBaseName()}_全班個人成績分析報告`;
+  const d=buildPrintDoc(title,[]);
+  printViaIframe({css:d.css, body:parts.join(''), title}, title, {silentIframeToast:true});
+  toast(`✅ 已彙整 ${parts.length} 位學生，請在列印視窗選「另存為 PDF」或直接列印`);
+}
+
+// ---------- 匯出頁選單 ----------
+function updBatchUI(){
+  const sel=document.getElementById('bExam'); if(!sel) return;
+  const prev=sel.value;
+  const last=S.exams[S.exams.length-1];
+  sel.innerHTML=(last?`<option value="latest">最近一次（${escH(last.name)}）</option>`:'')
+    + (S.exams.length>1?`<option value="all">每次考試都印（共 ${S.exams.length} 次）</option>`:'')
+    + S.exams.map((e,i)=>`<option value="${i}">只印：${escH(e.name)}</option>`).join('');
+  if([...sel.options].some(o=>o.value===prev)) sel.value=prev;
+  const seats=[...new Set(S.exams.flatMap(e=>e.students.map(s=>s.seat)))].sort((a,b)=>a-b);
+  const f=document.getElementById('bFrom'), t=document.getElementById('bTo');
+  if(seats.length && f && t && !f.dataset.touched && !t.dataset.touched){ f.value=seats[0]; t.value=seats[seats.length-1]; }
+  const cmp=document.getElementById('bCmp'); if(cmp){ cmp.disabled=S.exams.length<2; cmp.parentElement.title=S.exams.length<2?'需 2 次以上考試':''; }
+  const anyName=S.exams.some(e=>e.students.some(s=>s.name));
+  const bn=document.getElementById('bName'); if(bn){ bn.disabled=!anyName; }
+  updBatchInfo();
+}
+function updBatchInfo(){
+  const info=document.getElementById('bInfo'); if(!info||!S.exams.length) return;
+  const opt=readBatchOpts(); const n=batchSeats(opt.examIdx).length;
+  info.textContent=`將輸出 ${n} 位學生`;
+}
+document.addEventListener('change',ev=>{
+  const id=ev.target?.id;
+  if(id==='bFrom'||id==='bTo'){ ev.target.dataset.touched='1'; }
+  if(['bExam','bFrom','bTo'].includes(id)) updBatchInfo();
+});
+document.addEventListener('input',ev=>{ if(ev.target?.id==='bFrom'||ev.target?.id==='bTo') updBatchInfo(); });
+
+// =====================================================================
+// 多檔上傳：依檔名排序＋逐一驗證（修正舊版只載入最後一份）
+// =====================================================================
+let _vldResolve=null;
+function askValidation(exam, vld, i, n){
+  return new Promise(res=>{
+    _vldResolve=res;
+    // 同名考試提醒
+    if(S.exams.some(e=>e.name===exam.name)){
+      vld.warn.push(`已載入過同名考試「${exam.name}」，確認後將以「${uniqueExamName(exam.name)}」命名`);
+      vld.sum=vld.sum.replace(/(\d+) 警告/,(m,k)=>`${+k+1} 警告`);
+    }
+    showVldModal(exam, vld);
+    if(n>1) document.getElementById('vt').textContent+=`（第 ${i+1} / ${n} 份）`;
+    const vb=document.getElementById('vb');
+    if(!exam.students.some(s=>s.classRank!=null))
+      vb.insertAdjacentHTML('beforeend','<div class="vp vp-w" style="margin-top:10px;"><div class="vp-ttl">ℹ️ 未偵測到班級名次：載入後系統將依平均分數自動計算名次與進退（標示為系統計算）</div></div>');
+  });
+}
+function uniqueExamName(nm){
+  if(!S.exams.some(e=>e.name===nm)) return nm;
+  let k=2; while(S.exams.some(e=>e.name===`${nm}(${k})`)) k++; return `${nm}(${k})`;
+}
+acceptV = function(){
+  document.getElementById('ov').classList.remove('on');
+  if(_pending){
+    _pending.name=uniqueExamName(_pending.name);
+    S.exams.push(_pending); S.cur=S.exams.length-1;
+    const nm=_pending.name, n=_pending.students.length;
+    _pending=null;
+    refresh();
+    toast(`✅ ${nm} 載入成功（${n} 位學生）`);
+  }
+  const r=_vldResolve; _vldResolve=null; r&&r(true);
+};
+rejectV = function(){
+  document.getElementById('ov').classList.remove('on');
+  _pending=null;
+  const r=_vldResolve; _vldResolve=null; r&&r(false);
+};
+handleFiles = async function(list){
+  if(!list||!list.length) return;
+  const files=[...list].sort((a,b)=>a.name.localeCompare(b.name,'zh-Hant',{numeric:true}));
+  let loaded=0;
+  for(let i=0;i<files.length;i++){
+    const file=files[i];
+    const ext=file.name.split('.').pop().toLowerCase();
+    if(ext!=='xlsx'&&ext!=='xls'){ toast(`⚠️ ${file.name}：僅支援 .xlsx / .xls`); continue; }
+    let exam=null;
+    try{ exam=await parseXLSX(file); }catch(e){ console.error(e); setLd(false); toast(`❌ 解析失敗：${file.name}`); continue; }
+    setLd(false);
+    if(!exam){ toast(`⚠️ 無法從 ${file.name} 解析成績資料，請確認格式`); continue; }
+    if(await askValidation(exam, validate(exam), i, files.length)) loaded++;
+  }
+  if(files.length>1 && loaded) toast(`✅ 共載入 ${loaded} 份考試（依檔名排序；可在上方標籤用 ◀ ▶ 調整順序）`);
+};
+
+// =====================================================================
+// 考試標籤：調整順序／重新命名／刪除
+// =====================================================================
+updChips = function(){
+  const c=document.getElementById('chips'); c.innerHTML='';
+  S.exams.forEach((e,i)=>{
+    const chip=document.createElement('span'); chip.className='chip'+(i===S.cur?' cur':'');
+    chip.innerHTML=`${i>0?`<span class="ca" data-a="l" data-i="${i}" title="往前移">◀</span>`:''}
+      <span>📊 ${escH(e.name)} (${e.students.length}人)${e._rankAuto?' <span title="名次為系統依平均計算" style="opacity:.7">·自動名次</span>':''}</span>
+      ${i<S.exams.length-1?`<span class="ca" data-a="r" data-i="${i}" title="往後移">▶</span>`:''}
+      <span class="ca" data-a="e" data-i="${i}" title="重新命名">✏️</span>
+      <span class="rm" data-a="x" data-i="${i}" title="移除此考試">×</span>`;
+    c.appendChild(chip);
+  });
+  if(S.exams.length>1) c.insertAdjacentHTML('beforeend','<span class="hint" style="align-self:center;">考試順序＝趨勢分析的時間順序</span>');
+  c.querySelectorAll('[data-a]').forEach(b=>b.addEventListener('click',ev=>{
+    ev.stopPropagation();
+    const i=+b.dataset.i, a=b.dataset.a;
+    if(a==='l'||a==='r'){
+      const j=a==='l'?i-1:i+1;
+      [S.exams[i],S.exams[j]]=[S.exams[j],S.exams[i]];
+      if(S.cur===i) S.cur=j; else if(S.cur===j) S.cur=i;
+      refresh();
+    } else if(a==='e'){
+      const nm=prompt('考試名稱：', S.exams[i].name);
+      if(nm && nm.trim() && nm.trim()!==S.exams[i].name){ S.exams[i].name=uniqueExamName(nm.trim()); refresh(); }
+    } else if(a==='x'){
+      if(!confirm(`移除「${S.exams[i].name}」？（只移除目前畫面，已命名儲存的分析不受影響）`)) return;
+      S.exams.splice(i,1);
+      if(!S.exams.length){
+        killCharts(); document.getElementById('main').style.display='none';
+        document.getElementById('hero').classList.remove('on');
+        try{ localStorage.removeItem(STORE_KEY); }catch(e){}
+        updChips();
+      } else { S.cur=Math.min(S.cur,S.exams.length-1); refresh(); }
+    }
+  }));
+};
+
+// =====================================================================
+// 名次／進退自動計算（Excel 未提供時）
+// =====================================================================
+function ensureRanks(){
+  S.exams.forEach((e,ei)=>{
+    const excelRank=!e._rankAuto && e.students.some(s=>s.classRank!=null);
+    if(!excelRank){
+      const list=e.students.map(s=>({s,v:sAvg(s)})).filter(x=>x.v!=null).sort((a,b)=>b.v-a.v);
+      e.students.forEach(s=>{ s.classRank=null; });
+      list.forEach((x,k)=>{ x.s.classRank=(k>0&&Math.abs(x.v-list[k-1].v)<1e-9)?list[k-1].s.classRank:k+1; });
+      e._rankAuto=list.length>0;
+    }
+    const excelDiff=!e._diffAuto && e.students.some(s=>s.classDiff!=null);
+    if(!excelDiff){
+      const prev=S.exams[ei-1];
+      e.students.forEach(s=>{
+        const p=prev?.students.find(x=>x.seat===s.seat);
+        s.classDiff=(p&&p.classRank!=null&&s.classRank!=null)?p.classRank-s.classRank:null;
+      });
+      e._diffAuto=e.students.some(s=>s.classDiff!=null);
+    }
+  });
+}
+const _v4Refresh = refresh;
+refresh = function(){
+  cleanNumericNames();
+  ensureRanks();
+  _v4Refresh();
+  updBatchUI();
+  const nh=document.getElementById('nameHint'); if(nh) nh.textContent=SHOW_NAMES?'顯示姓名中':'姓名已遮罩';
+  if(document.getElementById('main').style.display!=='none'){ try{ switchTab(curTab()); }catch(e){ console.warn(e); } }
+};
+function autoRankNote(e){
+  const parts=[];
+  if(e._rankAuto) parts.push('班級名次');
+  if(e._diffAuto) parts.push('班級進退（與前一份考試比較）');
+  return parts.length?`<div class="auto-note">※ ${parts.join('、')}為系統依平均分數自動計算（Excel 未提供）。</div>`:'';
+}
+const _v4RGT = renderGradeTable;
+renderGradeTable = function(idx){
+  _v4RGT(idx);
+  const e=ex(idx); const gw=document.getElementById('gw');
+  if(e&&gw){ const n=autoRankNote(e); if(n) gw.insertAdjacentHTML('beforeend',n); }
+};
+const _v4RRA = renderRankAnalysis;
+renderRankAnalysis = function(idx){
+  applyChartTheme();
+  _v4RRA(idx);
+  const e=ex(idx); const rb=document.getElementById('rb');
+  if(e&&rb){ const n=autoRankNote(e); if(n) rb.insertAdjacentHTML('afterbegin',n); }
+};
+
+// ---------- 儀表板：加上「需優先關注科目」 ----------
+const _v4Hero = renderHero;
+renderHero = function(){
+  _v4Hero();
+  const e=S.exams[S.exams.length-1]; const g=document.querySelector('#hero .hero-grid');
+  if(!e||!g) return;
+  const subs=e.subjects.filter(s=>e.stats[s]);
+  if(!subs.length) return;
+  const w=[...subs].sort((a,b)=>e.stats[a].passRate-e.stats[b].passRate)[0];
+  const st=e.stats[w];
+  g.insertAdjacentHTML('beforeend',`<div class="hk clickable" onclick="switchTab('t3')"><div class="v" style="color:${st.passRate<60?'var(--d)':'var(--w)'};font-size:1.2rem;">${escH(w)}</div>
+    <div class="l">及格率最低科目（${st.passRate.toFixed(0)}%，平均 ${st.mean.toFixed(1)}）</div></div>`);
+};
+
+// ---------- 個人分析：鍵盤 ←/→ 切換學生；Esc 關閉視窗 ----------
+document.addEventListener('keydown',ev=>{
+  if(ev.key==='Escape'){
+    if(document.getElementById('ov').classList.contains('on')){ rejectV(); return; }
+    document.getElementById('saveOv')?.classList.remove('on');
+    if(!BATCH.running) hideProg();
+    return;
+  }
+  const tag=(ev.target?.tagName||'').toLowerCase();
+  if(['input','select','textarea'].includes(tag)) return;
+  if(curTab()!=='t4' || document.querySelector('.ov.on')) return;
+  if(ev.key!=='ArrowLeft'&&ev.key!=='ArrowRight') return;
+  const e=ex(+document.getElementById('s4').value||0); if(!e) return;
+  const seat=+document.getElementById('ss').value;
+  const k=e.students.findIndex(s=>s.seat===seat);
+  const nx=e.students[k+(ev.key==='ArrowRight'?1:-1)];
+  if(nx){ ev.preventDefault(); gotoStudent(nx.seat); }
+});
+const _v4RSA2 = renderStudentAnalysis;
+renderStudentAnalysis = function(examIdx, seat){
+  _v4RSA2(examIdx, seat);
+  const nav=document.querySelector('#sb .stu-nav');
+  if(nav && !nav.querySelector('.kbd-hint')) nav.insertAdjacentHTML('beforeend','<span class="kbd-hint hint" style="margin-left:6px;">（可用鍵盤 ← → 切換）</span>');
+};
+
+// ---------- 回到頂端 ----------
+window.addEventListener('scroll',()=>{ document.getElementById('toTop')?.classList.toggle('on', window.scrollY>600); },{passive:true});
+
+// ---------- 解析修正：Excel 無「姓名」欄時，舊版會誤把第一科分數當成姓名 ----------
+const _v4Parse = parseXLSX;
+parseXLSX = async function(file){
+  const e=await _v4Parse(file);
+  if(e && e.students.length){
+    const named=e.students.filter(s=>s.name);
+    const numeric=named.filter(s=>/^#?\s*-?\d+(\.\d+)?\s*$/.test(s.name));
+    if(named.length && numeric.length>=named.length*0.6) e.students.forEach(s=>{ s.name=''; });
+  }
+  return e;
+};
+function cleanNumericNames(){
+  S.exams.forEach(e=>{
+    const named=e.students.filter(s=>s.name);
+    const numeric=named.filter(s=>/^#?\s*-?\d+(\.\d+)?\s*$/.test(String(s.name)));
+    if(named.length && numeric.length>=named.length*0.6) e.students.forEach(s=>{ s.name=''; });
+  });
+}
+
+// ---------- 統計：Excel 無「平均」欄時，以各科平均建立班級均分統計（儀表板標準差、全班分析卡片） ----------
+const _v4CalcStats = calcStats;
+calcStats = function(students, subjects){
+  const st=_v4CalcStats(students, subjects);
+  if(!st['_avg']){
+    const v=students.map(sAvg).filter(x=>x!=null).sort((a,b)=>b-a);
+    if(v.length) st['_avg']=computeStatObj(v);
+  }
+  return st;
+};
+
+// ---------- 啟動 ----------
+(function initV5(){
+  cleanNumericNames();
+  if(S.exams.length){ try{ refresh(); }catch(e){ console.warn(e); } }
+  else updBatchUI();
 })();
 
 </script>

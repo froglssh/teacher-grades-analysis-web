@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>📊 智慧班級成績分析系統 2.0 使用說明與教師解讀指南</title>
+  <title>📊 智慧班級成績分析系統 v5 使用說明與教師解讀指南</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -617,7 +617,9 @@
     </div>
     <ul class="toc-list">
       <li class="toc-item active" data-target="sec-intro"><a href="#sec-intro">🌟 系統介紹與定位</a></li>
-      <li class="toc-item" data-target="sec-v4"><a href="#sec-v4">🆕 v4 優化新增功能</a></li>
+      <li class="toc-item" data-target="sec-v5"><a href="#sec-v5">🆕 v5 新增功能與修正</a></li>
+      <li class="toc-item" data-target="sec-batch"><a href="#sec-batch">📚 全班個人報告一鍵 PDF</a></li>
+      <li class="toc-item" data-target="sec-v4"><a href="#sec-v4">🗂️ v4 優化功能回顧</a></li>
       <li class="toc-item" data-target="sec-startup"><a href="#sec-startup">📁 快速上手與 Excel 需求</a></li>
       <li class="toc-item" data-target="sec-interface"><a href="#sec-interface">🖥️ 介面按鈕與操作指南</a></li>
       <li class="toc-item" data-target="sec-class-report"><a href="#sec-class-report">📊 班級完整報告解讀</a></li>
@@ -627,7 +629,7 @@
       <li class="toc-item" data-target="sec-calculator"><a href="#sec-calculator">🧮 互動式教師計算小工具</a></li>
     </ul>
     <div style="margin-top: auto; padding-top: 15px; border-top: 1px solid var(--border); font-size: 0.78rem; color: var(--mu-light);">
-      智慧班級成績分析系統 v2.0（v4 優化）指南<br>
+      智慧班級成績分析系統 v5 指南<br>
       林獻升老師 製作
     </div>
   </aside>
@@ -636,8 +638,8 @@
   <main class="main-content">
     <header class="header-banner">
       <button class="theme-toggle-btn" onclick="toggleTheme()">🌙 深色模式</button>
-      <h1>📊 智慧班級成績分析系統 2.0 <span style="font-size:.55em;vertical-align:middle;background:rgba(255,255,255,.2);padding:3px 10px;border-radius:99px;">v4 優化</span></h1>
-      <p>林獻升老師專為高中教師打造的計量分析工具。本說明書旨在引導教師精準解讀班級體質、五標統計、預警名單及包含 VAM 與 HLM 在內的進階教育測量指標，讓數據有效支持您的教學決策與學生關懷。</p>
+      <h1>📊 智慧班級成績分析系統 <span style="font-size:.55em;vertical-align:middle;background:rgba(255,255,255,.2);padding:3px 10px;border-radius:99px;">v5</span></h1>
+      <p>林獻升老師專為高中教師打造的計量分析工具。本說明書旨在引導教師精準解讀班級體質、五標統計、預警名單及包含 VAM 與 HLM 在內的進階教育測量指標，並說明 v5 新增的「全班學生個別報告一鍵合併 PDF」，讓數據有效支持您的教學決策與學生關懷。</p>
       
       <div class="meta-links">
         <a href="https://froglssh.github.io/class-grades-analyzer-online/" target="_blank" class="meta-btn meta-btn-primary">
@@ -658,7 +660,7 @@
       <section id="sec-intro">
         <div class="section-title">🌟 系統介紹與定位</div>
         <div class="card">
-          <p>「智慧班級成績分析系統 2.0」是一款完全運行於教師瀏覽器本地端的隱私安全、無伺服器（Serverless）數據分析工具。本程式旨在解決傳統 Excel 成績單僅能提供「排名與平均」的痛點，引入現代教育測量學與心理計量學的統計模型，實現真正的「<strong>學科能力輪廓診斷</strong>」與「<strong>學習進度成長觀測</strong>」。</p>
+          <p>「智慧班級成績分析系統」（目前版本 v5）是一款完全運行於教師瀏覽器本地端的隱私安全、無伺服器（Serverless）數據分析工具。本程式旨在解決傳統 Excel 成績單僅能提供「排名與平均」的痛點，引入現代教育測量學與心理計量學的統計模型，實現真正的「<strong>學科能力輪廓診斷</strong>」與「<strong>學習進度成長觀測</strong>」。</p>
           <div class="alert alert-info">
             <strong>💡 教育測量學核心理念：</strong><br>
             學生的學習成效受到起點能力、學術適應、隨機測量誤差的共同影響。一味地比較「絕對分數」或「名次」容易產生認知偏誤。本系統引進 <strong>Z 分數剖面</strong>、<strong>信度衰減校正</strong>、<strong>增值評量（VAM）</strong> 及 <strong>成長軌跡模型（HLM）</strong>，幫助教師撥開隨機誤差與起點效應的迷霧，精準找到學習困難與爆發力成長的學生。
@@ -666,11 +668,116 @@
         </div>
       </section>
 
+      <!-- Section: v5 New Features -->
+      <section id="sec-v5">
+        <div class="section-title">🆕 v5：新增功能與修正一覽</div>
+        <div class="card">
+          <p>v5 版（檔名仍為 <span class="code-span">班級成績分析系統_Codex優化.html</span>）保留 v4 所有分析功能，重點新增「<strong>全班學生個別報告一次產生、合併成單一 PDF</strong>」，並修正多項舊版問題、強化介面操作。瀏覽器中已儲存的分析資料可直接沿用。舊版檔案備份於 <span class="code-span">OLD/班級成績分析系統_Codex優化_v4備份_20261110.html</span>。</p>
+          <div class="table-container">
+            <table>
+              <thead><tr><th>類別</th><th>功能</th><th>所在位置</th><th>用途</th></tr></thead>
+              <tbody>
+                <tr><td><span class="badge badge-danger">重點</span></td><td><strong>一鍵下載全班個人報告 PDF</strong></td><td>💾 匯出（最上方紫框）</td><td>依序產生每位學生的個人分析，自動合併成<strong>一個 PDF 檔</strong>，每位學生從新的一頁開始，下載後即可一次印出全班。詳見下一節。</td></tr>
+                <tr><td><span class="badge badge-danger">重點</span></td><td><strong>列印全班個人報告（另存 PDF）</strong></td><td>💾 匯出</td><td>同樣內容改走瀏覽器列印，文字可搜尋、檔案較小；無網路時的替代方案。</td></tr>
+                <tr><td><span class="badge badge-success">學生</span></td><td><strong>單一學生「下載 PDF」</strong></td><td>💾 匯出</td><td>不經列印視窗，直接下載該生的個人報告 PDF（含所有考試與多次追蹤）。</td></tr>
+                <tr><td><span class="badge badge-primary">資料</span></td><td><strong>考試標籤管理 ◀ ▶ ✏️ ×</strong></td><td>頂部上傳區</td><td>可調整考試先後順序（＝趨勢分析的時間順序）、重新命名（例如把「模擬成績1」改為「1141 第一次段考」）、移除單次考試。</td></tr>
+                <tr><td><span class="badge badge-primary">資料</span></td><td><strong>自動計算名次與進退</strong></td><td>成績一覽、名次分析、預警</td><td>Excel 沒有「班級名次」或「班級進退」欄位時，系統依平均分數自動計算，並以橘色註記「系統自動計算」。名次退步類預警因此也能運作。</td></tr>
+                <tr><td><span class="badge badge-secondary">統計</span></td><td><strong>無「平均」欄也能算班級均分統計</strong></td><td>儀表板、全班分析</td><td>以各科成績平均建立班級均分統計，儀表板「均分標準差」與「全班平均分數分布」不再空白。</td></tr>
+                <tr><td><span class="badge badge-secondary">統計</span></td><td><strong>儀表板新增「及格率最低科目」</strong></td><td>班級體質儀表板</td><td>一眼看出本次最需優先關注的科目，點擊可跳到全班分析。</td></tr>
+                <tr><td><span class="badge badge-success">介面</span></td><td><strong>操作便利性</strong></td><td>全系統</td><td>匯出頁重新分區為卡片；個人分析可用鍵盤 ← → 切換學生；Esc 關閉視窗；成績一覽表頭與座號欄凍結；回到頂端按鈕；頂部「📖 使用說明」按鈕。</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="alert alert-info">
+            <strong>🔧 v5 同步修正：</strong>
+            <ul>
+              <li><strong>同時上傳多份 Excel 只會載入最後一份</strong>的問題已修正：現在依檔名排序（模擬成績1 → 模擬成績2），逐份顯示驗證視窗（標示「第 1 / 2 份」）。</li>
+              <li>上傳驗證視窗原本沒有底框、文字直接疊在暗色背景上，已修正。</li>
+              <li>Excel 沒有「姓名」欄時，舊版會把第一科分數誤當成姓名（例如顯示「座號 01 64」），已修正。</li>
+              <li>刪除最後一份考試後重新整理頁面，資料又跑回來的問題已修正。</li>
+              <li>深色模式下多次比較的「首末變化／趨勢方向」列、五標表、驗證視窗等文字看不清楚的問題已修正；深色模式列印時圖表自動改用淺色，白紙上清楚可讀。</li>
+              <li>上傳同名考試時會提醒，並自動加上 (2)、(3) 區分。</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Batch PDF -->
+      <section id="sec-batch">
+        <div class="section-title">📚 全班學生個別報告：一次產生、合併成單一 PDF</div>
+        <div class="card">
+          <p>期末親師座談、發放段考成績分析單時，不必再一位一位選學生、一份一份列印。系統會自動產生每位學生的個人報告，並<strong>合併為一個 PDF 檔</strong>，每位學生從新的一頁開始，頁尾印有「座號＋第 n / N 頁」，下載後一次列印、依序分發即可。</p>
+
+          <h4>操作步驟</h4>
+          <ol>
+            <li>上傳全部段考的 Excel（或讀取已儲存的分析），確認上方考試標籤順序正確（必要時用 ◀ ▶ 調整）。</li>
+            <li>若要在報告標題印出學生姓名，請確認 Excel 含「姓名」欄。</li>
+            <li>切換到 <strong>💾 匯出</strong> 分頁，最上方紫色框即為「全班學生個別報告」。</li>
+            <li>設定選項（見下表）。按鈕旁會即時顯示「將輸出 N 位學生」。</li>
+            <li>按 <strong>⬇️ 一鍵下載全班個人報告 PDF</strong>。進度視窗會顯示目前處理到第幾位學生與預估剩餘時間，可隨時按「取消」。</li>
+            <li>完成後瀏覽器自動下載，檔名如 <span class="code-span">1141 第三次段考_全班個人成績分析報告_座號01-30.pdf</span>。</li>
+          </ol>
+
+          <h4>選項說明</h4>
+          <div class="table-container">
+            <table>
+              <thead><tr><th>選項</th><th>說明與建議</th></tr></thead>
+              <tbody>
+                <tr><td><strong>單次分析考試</strong></td><td>「最近一次」（預設）：每位學生印最近一次考試的完整分析；「只印：某次考試」：指定一次；「每次考試都印」：每次考試各一份單次分析（頁數會倍增）。</td></tr>
+                <tr><td><strong>座號範圍</strong></td><td>預設為全班。可只輸出部分學生（例如 1–15、16–30 分兩批產生），或只補印某幾位。</td></tr>
+                <tr><td><strong>畫質／檔案大小</strong></td><td>標準（建議，清晰列印，每位學生約 0.9 MB）；精簡（檔案較小，適合 Email 或上傳）；高畫質（檔案較大）。</td></tr>
+                <tr><td><strong>包含多次成績追蹤比較</strong></td><td>需載入 2 次以上考試。含各科歷次成績、名次趨勢、個人趨勢圖。</td></tr>
+                <tr><td><strong>包含讀書策略與下次目標</strong></td><td>每科診斷、下一個標竿與差距、讀書時間建議比例。適合直接發給學生。</td></tr>
+                <tr><td><strong>報告標題顯示姓名</strong></td><td>勾選時標題為「座號 05 王小明　個人成績分析報告」，方便分發；Excel 無姓名欄時此選項自動停用。</td></tr>
+                <tr><td><strong>雙面列印</strong></td><td>若某位學生的頁數為奇數，自動補一張空白頁，確保<strong>下一位學生從新的一張紙開始</strong>，雙面列印後可直接逐份分發，不會有兩位學生印在同一張紙的正反面。</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h4>每位學生的報告內容</h4>
+          <ul>
+            <li><strong>報告標題：</strong>座號、姓名、分析範圍、產生時間。</li>
+            <li><strong>單次成績分析：</strong>各科成績、班平均、差距、Z／T 分數、班內排名、PR、五標、評等；個人 vs 班均長條圖、能力雷達圖、Z 分數剖面。</li>
+            <li><strong>個人讀書策略與下次目標</strong>（可選）。</li>
+            <li><strong>多次成績追蹤比較</strong>（可選）：個人學習關鍵發現、歷次成績對照表、科目表現分類、個人趨勢圖表。</li>
+          </ul>
+
+          <div class="alert alert-success">
+            <strong>🔒 隱私說明：</strong>個人報告只包含該生自己的成績，以及班級層級統計（班平均、五標、班級名次），<strong>不含其他同學的個別成績</strong>，可直接發給學生或家長。
+          </div>
+
+          <h4>兩種輸出方式比較</h4>
+          <div class="table-container">
+            <table>
+              <thead><tr><th></th><th>⬇️ 一鍵下載 PDF</th><th>🖨️ 列印全班個人報告</th></tr></thead>
+              <tbody>
+                <tr><td><strong>產出方式</strong></td><td>系統直接產生 PDF 檔並下載</td><td>開啟瀏覽器列印視窗，選「另存為 PDF」或直接送印表機</td></tr>
+                <tr><td><strong>分頁</strong></td><td>系統自動排版：標題不落單、表格跨頁自動重複表頭、頁尾印頁碼</td><td>由瀏覽器分頁，每位學生從新頁開始</td></tr>
+                <tr><td><strong>雙面補頁</strong></td><td>✅ 支援</td><td>不支援</td></tr>
+                <tr><td><strong>文字可搜尋／複製</strong></td><td>否（頁面以高解析影像存入）</td><td>✅ 可以</td></tr>
+                <tr><td><strong>檔案大小</strong></td><td>較大（可選精簡畫質）</td><td>較小</td></tr>
+                <tr><td><strong>網路需求</strong></td><td>第一次使用需連網載入 PDF 元件</td><td>不需要</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="alert alert-warning">
+            <strong>⏱️ 時間與注意事項：</strong>
+            <ul>
+              <li>20 位學生、2 次考試約 25 秒；30 位學生約 1 分鐘。「每次考試都印」會更久。</li>
+              <li>產生期間請勿關閉或切換此分頁；完成後畫面會自動回到原本的分頁與學生。</li>
+              <li>若下載失敗（例如沒有網路，無法載入 PDF 元件），請改用「🖨️ 列印全班個人報告」，在列印視窗選「另存為 PDF」。</li>
+              <li>深色模式下產生的報告仍為白底淺色版，適合列印。</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
       <!-- Section: v4 New Features -->
       <section id="sec-v4">
-        <div class="section-title">🆕 v4 優化：新增功能與修正一覽</div>
+        <div class="section-title">🗂️ v4 優化：功能回顧</div>
         <div class="card">
-          <p>v4 版（檔名 <span class="code-span">班級成績分析系統_v4優化.html</span>）在保留 2.0 所有功能的前提下，強化了「看得懂的圖表」與「能直接行動的建議」。舊版存在瀏覽器中的分析資料可直接沿用，系統讀取時會自動重新計算新增的統計量。</p>
+          <p>v4 版在保留 2.0 所有功能的前提下，強化了「看得懂的圖表」與「能直接行動的建議」。舊版存在瀏覽器中的分析資料可直接沿用，系統讀取時會自動重新計算新增的統計量。</p>
           <div class="table-container">
             <table>
               <thead><tr><th>類別</th><th>功能</th><th>所在位置</th><th>用途</th></tr></thead>
@@ -708,15 +815,16 @@
             <strong>✅ 支援的 Excel 欄位自動識別清單：</strong>
             <ul>
               <li><strong>座號：</strong>可命名為「座號」、「座位」。系統會自動過濾非數值。</li>
-              <li><strong>姓名：</strong>可命名為「姓名」。若無此欄，系統將以座號進行分析。</li>
+              <li><strong>姓名：</strong>可命名為「姓名」。若無此欄，系統將以座號進行分析（v5 已修正舊版誤把第一科分數當姓名的問題）。</li>
               <li><strong>科目成績：</strong>只要表頭（最上方一或兩行）包含「國語文」、「英語文」、「數學」、「物理」、「化學」、「生物」、「地科」、「公民」等科目關鍵字，即可自動辨識為成績欄（0–100 分）。</li>
-              <li><strong>輔助欄位（選填）：</strong>「總分」、「平均分數」/「平均」、「不及格數」、「班級名次」/「名次」、「班級進退」（正值代表進步，負值為退步）、「類組名次」、「類組進退」、「類組百分名次」（PR值）等。</li>
+              <li><strong>輔助欄位（選填）：</strong>「總分」、「平均分數」/「平均」、「不及格數」、「班級名次」/「名次」、「班級進退」（正值代表進步，負值為退步）、「類組名次」、「類組進退」、「類組百分名次」（PR值）等。<br><span class="badge badge-primary">v5</span> 若缺少「班級名次」或「班級進退」，系統會依平均分數自動計算（進退為與前一份考試比較），並在表格下方註記。</li>
             </ul>
           </div>
 
           <div class="alert alert-warning">
             <strong>⚠️ 多次段考比較的核心要求：</strong><br>
-            若要進行多次考試的對照比較（如一、二、三段比較），請<strong>同時選取多個 Excel 檔案</strong>上傳，或者<strong>依序上傳</strong>。系統會以「檔名」作為各次考試的名稱，並以相同的「座號」為基準，自動進行跨考試的個人與班級表現縱向追蹤。
+            若要進行多次考試的對照比較（如一、二、三段比較），請<strong>同時選取多個 Excel 檔案</strong>上傳，或者<strong>依序上傳</strong>。系統會以「檔名」作為各次考試的名稱，並以相同的「座號」為基準，自動進行跨考試的個人與班級表現縱向追蹤。<br>
+            <span class="badge badge-primary">v5</span> 同時選取多份檔案時，系統會<strong>依檔名排序</strong>（建議檔名帶序號，如「1141_1段」「1141_2段」），並逐份跳出驗證視窗確認。上傳後若順序不對，可用考試標籤的 ◀ ▶ 調整，用 ✏️ 重新命名。
           </div>
 
           <h4>🔍 解析驗證機制 (Validation Modal)</h4>
@@ -725,7 +833,9 @@
             <li><strong>重複座號查驗：</strong>檢查是否存在重複的座號。</li>
             <li><strong>分數合理性：</strong>警示是否有超出 0-100 範圍的值。</li>
             <li><strong>平均一致性：</strong>自動重新計算學生各科平均，若與 Excel 中的「平均欄位」差距大於 30 分會發出警示（例如是否未考慮加權學分）。</li>
-            <li>若驗證無重大錯誤，點擊「<strong>確認，載入資料</strong>」即可開始診斷。</li>
+            <li><strong>同名考試提醒</strong> <span class="badge badge-primary">v5</span>：已載入同名考試時提醒，並自動命名為「名稱(2)」。</li>
+            <li><strong>名次欄位提示</strong> <span class="badge badge-primary">v5</span>：未偵測到班級名次時，提示載入後將由系統自動計算。</li>
+            <li>若驗證無重大錯誤，點擊「<strong>確認，載入資料</strong>」即可開始診斷；多份檔案會依序出現「第 1 / N 份」的驗證視窗。</li>
           </ul>
         </div>
       </section>
@@ -762,6 +872,16 @@
                   <td>一鍵清空瀏覽器中載入的當前考試資料，並清除本地瀏覽器的快取快照。</td>
                 </tr>
                 <tr>
+                  <td><strong>考試標籤 ◀ ▶ ✏️ ×</strong> <span class="badge badge-primary">v5</span></td>
+                  <td>頂部上傳區</td>
+                  <td>◀ ▶ 調整考試先後順序（多次比較、預警、VAM、成長軌跡皆依此順序）；✏️ 重新命名考試；× 移除單次考試（已命名儲存的分析不受影響）。目前選定的考試標籤會加上外框。</td>
+                </tr>
+                <tr>
+                  <td><strong>📖 使用說明 / 深色模式</strong></td>
+                  <td>頁首右上角</td>
+                  <td>「📖 使用說明」開啟本說明書（需與主程式放在同一資料夾）；深色模式切換會被記住，列印時一律輸出淺色版。</td>
+                </tr>
+                <tr>
                   <td><strong>熱力圖模式</strong></td>
                   <td>📋 成績一覽</td>
                   <td>勾選後，成績表儲存格將顯示顏色。<strong>不及格顯示為紅色</strong>（愈低分愈深），<strong>90分以上為綠色</strong>（愈高分愈深）。這能讓教師一眼看出班級學科表現的群聚現象。</td>
@@ -769,12 +889,12 @@
                 <tr>
                   <td><strong>欄位標題排序</strong></td>
                   <td>📋 成績一覽</td>
-                  <td>點擊成績表表頭（如「座號」、「數學」、「不及格數」、「班級名次」）可進行遞增/遞減排序。名次類越小越前，分數類越高越前。</td>
+                  <td>點擊成績表表頭（如「座號」、「數學」、「不及格數」、「班級名次」）可進行遞增/遞減排序。名次類越小越前，分數類越高越前。<span class="badge badge-primary">v5</span> 表格捲動時表頭與座號欄固定不動；點擊任一列可跳到該生個人分析。</td>
                 </tr>
                 <tr>
                   <td><strong>列印本頁（含圖表）</strong></td>
                   <td>各分析分頁</td>
-                  <td>調用瀏覽器的列印功能。系統已預設 CSS 列印媒體查詢，會自動隱藏無關的導覽與按鈕，並對齊 A4 紙張寬度，建議在列印設定中選取「<strong>另存為 PDF</strong>」。</td>
+                  <td>調用瀏覽器的列印功能。系統已預設 CSS 列印媒體查詢，會自動隱藏無關的導覽與按鈕，並對齊 A4 紙張寬度，建議在列印設定中選取「<strong>另存為 PDF</strong>」。彙整時會顯示進度視窗。</td>
                 </tr>
                 <tr>
                   <td><strong>列印完整班級報告</strong></td>
@@ -784,7 +904,22 @@
                 <tr>
                   <td><strong>列印選定學生報告</strong></td>
                   <td>💾 匯出</td>
-                  <td>單獨輸出選定學生（如陳宇翔）的單次學科診斷與歷次段考趨勢比較圖表，適合用於家長面談或個別輔導。</td>
+                  <td>單獨輸出選定學生（如陳宇翔）的單次學科診斷與歷次段考趨勢比較圖表，適合用於家長面談或個別輔導。<span class="badge badge-primary">v5</span> 新增「⬇️ 下載 PDF」可不經列印視窗直接下載。</td>
+                </tr>
+                <tr>
+                  <td><strong>一鍵下載全班個人報告 PDF</strong> <span class="badge badge-danger">v5 重點</span></td>
+                  <td>💾 匯出</td>
+                  <td>依序產生全班（或指定座號範圍）每位學生的個人報告，合併為單一 PDF 下載，支援雙面列印補頁。詳見「📚 全班個人報告一鍵 PDF」一節。</td>
+                </tr>
+                <tr>
+                  <td><strong>列印全班個人報告（另存 PDF）</strong> <span class="badge badge-primary">v5</span></td>
+                  <td>💾 匯出</td>
+                  <td>同上內容改用瀏覽器列印輸出，文字可搜尋、檔案較小，無網路時亦可使用。</td>
+                </tr>
+                <tr>
+                  <td><strong>鍵盤 ← → 切換學生</strong> <span class="badge badge-primary">v5</span></td>
+                  <td>🧑‍🎓 個人分析</td>
+                  <td>在個人分析頁按鍵盤左右鍵即可切換上一位／下一位學生，個別晤談時快速翻閱。按 Esc 可關閉任何彈出視窗。</td>
                 </tr>
                 <tr>
                   <td><strong>下載預警名單 .xlsx</strong></td>
@@ -823,13 +958,14 @@
         <div class="card">
           <p>全班性報告的價值在於評估<strong>「教學成效」</strong>、<strong>「試題適切度」</strong>以及<strong>「班級整體學習穩定性」</strong>。以下是核心指標與圖表的解讀指引：</p>
           
-          <h4>1. 班級體質儀表板核心五項指標</h4>
+          <h4>1. 班級體質儀表板核心六項指標</h4>
           <ul>
             <li><strong>全班均分：</strong>代表全班的平均表現。對照歷次變化（如「-0.2 vs 上次」）可得知本次考題難易度及班級學習狀態的起伏。</li>
             <li><strong>全科及格率：</strong>全班所有學生、所有考科中「及格分數 (≥60)」所佔的比例。這比單一學科及格率更能代表全班的整體基礎扎實度。</li>
             <li><strong>90 分以上比率：</strong>反映班級頂尖群學生的比例，也是評估「試題鑑別度高分端」的指標。</li>
             <li><strong>均分標準差（班內差距）：</strong>代表學生個人均分的離散程度。數值越大（例如 >12），說明班上「兩極化」或「雙峰現象」越顯著，此時教學應更注重「差異化教學」；若數值極小，代表全班程度均質。</li>
             <li><strong>預警關懷人數：</strong>觸發學習危機警告的學生人數。</li>
+            <li><strong>及格率最低科目</strong> <span class="badge badge-primary">v5</span>：本次考試及格率最低的科目，附及格率與平均，點擊可跳至全班分析查看該科分布與教學診斷。</li>
           </ul>
 
           <h4>2. 五標的統計學意義（採大考中心官方定義）</h4>
@@ -1044,7 +1180,7 @@
             <ol>
               <li><strong>不及格學科數：</strong>不及格科數達 3 科以上加 3 分；達 2 科加 2 分。</li>
               <li><strong>平均分數極低：</strong>個人總均分低於 50 分加 3 分；均分低於 60 分（未達及格）加 2 分。</li>
-              <li><strong>名次嚴重退步：</strong>班級名次較上一次考試退步 10 名以上加 3 分；退步 5 名以上加 2 分。</li>
+              <li><strong>名次嚴重退步：</strong>班級名次較上一次考試退步 10 名以上加 3 分；退步 5 名以上加 2 分。（Excel 無「班級進退」欄時，v5 會依系統計算的名次與前一份考試比較，此規則同樣適用。）</li>
               <li><strong>均分驟降：</strong>個人均分較上一次考試下降達 8 分以上加 3 分。</li>
               <li><strong>單科崩盤：</strong>任一學科成績低於該生自己的平均分數達 25 分以上加 2 分（即便他其他科目都考好，此單科崩潰可能代表發生特定學習瓶頸）。</li>
               <li><strong>類組末段：</strong>類組百分名次 (PR) 落在後 10% (即百分名次數值 ≥ 90) 加 1 分。</li>
