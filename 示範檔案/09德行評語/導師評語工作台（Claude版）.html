@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>導師評語工作台</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;700;900&family=IBM+Plex+Mono:wght@500&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* Layout: 點名簿式座號欄（左）｜三步驟觀察輸入（中）｜即時成績單預覽（右） */
+:root{
+  --paper:#f3f6f5; --sheet:#ffffff; --sunk:#e9efed; --ink:#1c2a31; --ink2:#4d5d64; --ink3:#7d8b90;
+  --line:#d3dcd9; --accent:#2c6b5a; --accent-ink:#ffffff; --accent-soft:#e1eee9;
+  --seal:#b4412e; --seal-soft:#f8e6e1; --warn:#9a6a10; --warn-soft:#f8efd9;
+  --f-display:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --r:8px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#141b1e; --sheet:#1b2428; --sunk:#222d32; --ink:#e3ebe8; --ink2:#a9b8b4; --ink3:#7f8e8b;
+  --line:#33434a; --accent:#6fbfa7; --accent-ink:#0f1a17; --accent-soft:#1f3a33;
+  --seal:#e57a63; --seal-soft:#3a2420; --warn:#e2b45a; --warn-soft:#3a3020; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#141b1e; --sheet:#1b2428; --sunk:#222d32; --ink:#e3ebe8; --ink2:#a9b8b4; --ink3:#7f8e8b;
+  --line:#33434a; --accent:#6fbfa7; --accent-ink:#0f1a17; --accent-soft:#1f3a33;
+  --seal:#e57a63; --seal-soft:#3a2420; --warn:#e2b45a; --warn-soft:#3a3020; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* top bar */
+.top{background:var(--sheet);border-bottom:1px solid var(--line)}
+.top-in{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;padding-block:12px}
+.brand{font-family:var(--f-display);font-weight:900;font-size:1.3rem;letter-spacing:.04em;margin:0;white-space:nowrap}
+.brand small{font-family:var(--f-body);font-weight:500;font-size:.75rem;color:var(--ink3);letter-spacing:.08em;margin-left:8px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;flex:1 1 340px;min-width:0}
+.meta label{display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--ink2);white-space:nowrap;min-width:0}
+.meta select{max-width:100%}
+@media (max-width:520px){.meta label:last-child{flex:1 1 100%}.meta label:last-child select{flex:1}}
+.meta input,.meta select{padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--paper);width:auto}
+.meta input#mClass{width:5.5em}.meta input#mYear{width:4em}
+.top-actions{display:flex;flex-wrap:wrap;gap:6px}
+
+.btn{border:1px solid var(--line);background:var(--sheet);border-radius:6px;padding:6px 12px;font-size:.85rem;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.07);color:var(--accent-ink)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.danger:hover{border-color:var(--seal);color:var(--seal)}
+.btn.sm{padding:3px 9px;font-size:.78rem}
+.btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+
+.banner{background:var(--warn-soft);color:var(--warn);font-size:.85rem;padding-block:8px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.banner b{color:var(--ink)}
+
+/* main grid */
+.main{display:grid;grid-template-columns:220px minmax(0,1fr) minmax(0,400px);gap:16px;padding-block:16px;align-items:start}
+@media (max-width:1180px){.main{grid-template-columns:200px minmax(0,1fr)}.preview{grid-column:2}}
+@media (max-width:760px){.main{grid-template-columns:minmax(0,1fr)}.preview{grid-column:1}}
+
+/* roster */
+.roster{background:var(--sheet);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;position:sticky;top:12px}
+.roster-head{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line)}
+.roster-head h2{font-size:.85rem;margin:0;letter-spacing:.08em}
+.progress{font-family:var(--f-mono);font-size:.75rem;color:var(--ink3)}
+.bar{height:3px;background:var(--sunk)}.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.rlist{list-style:none;margin:0;padding:4px 0;max-height:62vh;overflow:auto}
+.rlist button{width:100%;display:grid;grid-template-columns:2.2em 1fr auto;gap:6px;align-items:center;text-align:left;border:0;background:none;padding:7px 12px;border-left:3px solid transparent}
+.rlist button:hover{background:var(--paper)}
+.rlist button[aria-current="true"]{background:var(--accent-soft);border-left-color:var(--accent)}
+.seat{font-family:var(--f-mono);font-size:.78rem;color:var(--ink3);font-variant-numeric:tabular-nums}
+.st{font-size:.68rem;padding:1px 6px;border-radius:99px;white-space:nowrap}
+.st.empty{color:var(--ink3);background:var(--sunk)}
+.st.draft{color:var(--warn);background:var(--warn-soft)}
+.st.done{color:var(--seal);background:var(--seal-soft);font-weight:700}
+.roster-foot{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px;border-top:1px solid var(--line)}
+.rsel{display:none}
+@media (max-width:760px){.roster{position:static}.rlist{display:flex;overflow-x:auto;max-height:none;padding:6px}.rlist li{flex:0 0 auto}.rlist button{grid-template-columns:auto auto;border-left:0;border-bottom:3px solid transparent;border-radius:6px}.rlist button .st{display:none}.rlist button[aria-current="true"]{border-bottom-color:var(--accent)}}
+
+/* editor */
+.panel{background:var(--sheet);border:1px solid var(--line);border-radius:var(--r);min-width:0}
+.ed-head{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+.ed-head .who{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ed-head input{border:1px solid var(--line);border-radius:6px;padding:5px 8px;background:var(--paper)}
+#fSeat{width:3.6em;font-family:var(--f-mono)}#fName{width:7em;font-weight:700}#fCall{width:5em}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;background:var(--sheet);padding:5px 11px;font-size:.85rem}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.hint{font-size:.78rem;color:var(--ink3)}
+.tabs{display:flex;border-bottom:1px solid var(--line);padding:0 10px;overflow-x:auto}
+.tabs button{border:0;background:none;padding:12px 14px 10px;font-weight:500;color:var(--ink2);border-bottom:2px solid transparent;white-space:nowrap;display:flex;gap:8px;align-items:center}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs .n{font-family:var(--f-display);font-weight:900;color:var(--accent);font-size:1.05rem}
+.tabs .cnt{font-size:.7rem;color:var(--ink3);font-family:var(--f-mono)}
+.tabpane{padding:18px;display:grid;gap:22px}
+.field>h3{font-size:.9rem;margin:0 0 4px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.field>h3 .hint{font-weight:400}
+.field>p.hint{margin:0 0 10px}
+.chipgroup{display:grid;grid-template-columns:4.2em minmax(0,1fr);gap:8px 10px;align-items:start;margin-top:8px}
+.chipgroup>span{font-size:.75rem;color:var(--ink3);padding-top:5px;letter-spacing:.1em}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--sheet);border-radius:99px;padding:3px 11px;font-size:.84rem}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip .ord{font-family:var(--f-mono);font-size:.7rem;margin-right:4px;opacity:.85}
+.chip.add{border-style:dashed;color:var(--ink2)}
+textarea,.in{width:100%;border:1px solid var(--line);border-radius:6px;padding:8px 10px;background:var(--paper);resize:vertical}
+textarea:focus,.in:focus{background:var(--sheet)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.row>*{min-width:0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.lbl{font-size:.78rem;color:var(--ink2);display:block;margin-bottom:4px}
+.items{display:grid;gap:6px;margin-top:8px}
+.item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:6px 6px 6px 10px}
+.item .t{font-size:.88rem;overflow-wrap:anywhere}
+.item select{padding:3px 6px;border:1px solid var(--line);border-radius:5px;background:var(--sheet);font-size:.8rem}
+.x{border:0;background:none;color:var(--ink3);font-size:1rem;padding:0 6px}
+.x:hover{color:var(--seal)}
+.selfref{background:var(--sunk);border-radius:6px;padding:10px 12px;font-size:.84rem}
+.selfref dl{margin:6px 0 0;display:grid;grid-template-columns:6em minmax(0,1fr) auto;gap:4px 10px;align-items:start}
+.selfref dt{color:var(--ink3)}.selfref dd{margin:0;overflow-wrap:anywhere}
+.pane-foot{display:flex;justify-content:space-between;gap:8px;padding:12px 18px;border-top:1px solid var(--line);flex-wrap:wrap}
+
+/* preview / report sheet */
+.preview{position:sticky;top:12px;display:grid;gap:12px}
+.sheet{background:var(--sheet);border:1px solid var(--line);border-radius:var(--r)}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);gap:8px;flex-wrap:wrap}
+.sheet-head h2{margin:0;font-family:var(--f-display);font-size:1rem;letter-spacing:.06em}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);align-items:center}
+.ctrls .seg button{padding:3px 9px;font-size:.78rem}
+.rep{width:100%;border-collapse:collapse}
+.rep th{width:6.2em;white-space:nowrap;text-align:left;vertical-align:top;font-size:.75rem;font-weight:500;color:var(--ink3);padding:10px 0 10px 14px;letter-spacing:.06em;border-bottom:1px solid var(--line)}
+.rep td{padding:8px 14px 8px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.rep tr:last-child th,.rep tr:last-child td{border-bottom:0}
+.codes{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.code{font-size:.8rem;border:1px solid var(--line);border-radius:4px;padding:1px 6px;display:inline-flex;gap:4px;align-items:center;background:var(--paper)}
+.code b{font-family:var(--f-mono);font-weight:500;color:var(--accent);font-size:.75rem}
+.code .x{font-size:.85rem;padding:0 0 0 2px}
+.comment{font-family:var(--f-display);font-size:1rem;line-height:1.95;border:1px solid transparent;background:transparent;padding:4px 6px;margin-left:-6px;min-height:8em;resize:none;overflow:hidden}
+.comment:hover{border-color:var(--line)}
+.comment:focus{border-color:var(--accent);background:var(--paper)}
+.special{font-size:.88rem;min-height:3em;resize:none;overflow:hidden;border:1px solid transparent;background:transparent;padding:4px 6px;margin-left:-6px}
+.special:hover{border-color:var(--line)}.special:focus{border-color:var(--accent);background:var(--paper)}
+.cc{display:flex;justify-content:space-between;font-size:.72rem;color:var(--ink3);font-family:var(--f-mono);gap:8px;flex-wrap:wrap}
+.lock{color:var(--warn);font-family:var(--f-body)}
+.sheet-foot{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px;border-top:1px solid var(--line);justify-content:space-between;align-items:center}
+.stamp{font-family:var(--f-display);font-weight:900;color:var(--seal);border:2px solid var(--seal);border-radius:4px;padding:0 8px;transform:rotate(-6deg);letter-spacing:.2em;display:inline-block}
+.checks{list-style:none;margin:0;padding:10px 14px;display:grid;gap:4px;font-size:.8rem}
+.checks li{display:grid;grid-template-columns:1.3em minmax(0,1fr);gap:4px}
+.ok{color:var(--accent)}.bad{color:var(--seal)}.mid{color:var(--warn)}
+details.ai{background:var(--sheet);border:1px solid var(--line);border-radius:var(--r)}
+details.ai summary{padding:10px 14px;cursor:pointer;font-size:.85rem;font-weight:500}
+details.ai .body{padding:0 14px 14px;display:grid;gap:8px;font-size:.82rem}
+.codepick{position:relative}
+.cp-pop{position:absolute;z-index:20;left:-90px;top:calc(100% + 4px);width:min(330px,calc(100vw - 48px));background:var(--sheet);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 10px 30px rgba(0,0,0,.15);padding:10px}
+.cp-pop .res{max-height:240px;overflow:auto;display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.cp-pop .cat{font-size:.7rem;color:var(--ink3);width:100%;margin-top:6px}
+
+/* overview */
+.ov{padding:0}
+#overview{grid-column:2 / -1}
+@media (max-width:760px){#overview{grid-column:1}}
+.ov-head{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+.ov-head h2{margin:0;font-family:var(--f-display)}
+.stats{display:flex;flex-wrap:wrap;gap:18px;padding:12px 18px;border-bottom:1px solid var(--line);font-size:.85rem;color:var(--ink2)}
+.stats b{font-family:var(--f-mono);font-size:1.2rem;color:var(--ink);margin-right:4px}
+.tblwrap{overflow-x:auto}
+.ovt{border-collapse:collapse;width:100%;min-width:860px;font-size:.84rem}
+.ovt th{text-align:left;font-weight:500;color:var(--ink3);font-size:.75rem;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.ovt td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.ovt td.c{font-family:var(--f-display);line-height:1.8;max-width:34em}
+.ovt tr:hover td{background:var(--paper)}
+.ovt td .btn{white-space:nowrap}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.dup{margin:12px 18px;background:var(--warn-soft);color:var(--warn);padding:10px 12px;border-radius:6px;font-size:.84rem}
+.dup ol{margin:6px 0 0;padding-left:1.4em;color:var(--ink)}
+
+/* modal & toast */
+.modal{position:fixed;inset:0;background:rgba(10,20,20,.45);display:flex;align-items:flex-start;justify-content:center;padding:max(5vh,env(safe-area-inset-top,0px)) 16px 16px;z-index:50;overflow:auto}
+.modal .box{background:var(--sheet);border-radius:10px;max-width:640px;width:100%;padding:20px 22px;display:grid;gap:12px}
+.modal h2{margin:0;font-family:var(--f-display)}
+.steps3{display:grid;gap:12px;margin:0;padding:0;list-style:none}
+.steps3 li{display:grid;grid-template-columns:2.2em minmax(0,1fr);gap:10px}
+.steps3 .n{font-family:var(--f-display);font-weight:900;font-size:1.6rem;color:var(--accent);line-height:1}
+.steps3 p{margin:2px 0 0;color:var(--ink2);font-size:.88rem}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 16px;border-radius:99px;font-size:.85rem;opacity:0;transition:opacity .25s;pointer-events:none;z-index:60;max-width:90vw}
+#toast.on{opacity:1}
+.confirm{display:inline-flex;gap:6px;align-items:center;font-size:.8rem;color:var(--seal)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+
+<header class="top">
+  <div class="wrap top-in">
+    <h1 class="brand">導師評語工作台<small>德行評語・特殊優良表現</small></h1>
+    <div class="meta" aria-label="班級資料">
+      <label>班級<input id="mClass" placeholder="201"></label>
+      <label>學年<input id="mYear" placeholder="115" inputmode="numeric"></label>
+      <label>學期<select id="mSem"><option value="1">上學期</option><option value="2">下學期</option></select></label>
+      <label>年級語氣<select id="mGrade">
+        <option value="g1">高一（新生適應）</option><option value="g2">高二（穩定成長）</option>
+        <option value="g3a">高三上（學測衝刺）</option><option value="g3b">高三下（三年總結）</option></select></label>
+    </div>
+    <div class="top-actions">
+      <button class="btn" id="bView" aria-pressed="false">全班總覽</button>
+      <button class="btn" id="bImport">匯入名單／自評</button>
+      <button class="btn" id="bBackup">備份與還原</button>
+      <button class="btn ghost" id="bHelp">使用說明</button>
+    </div>
+  </div>
+</header>
+<div class="banner wrap" id="sampleBanner" hidden>
+  <span>目前顯示的是<b>範例班級</b>（3 位虛構學生），可先點點看。</span>
+  <button class="btn sm primary" id="bStartReal">清空範例，建立我的班級</button>
+</div>
+
+<main class="wrap main" id="mainGrid">
+  <aside class="roster" aria-label="學生名單">
+    <div class="roster-head"><h2>座號名單</h2><span class="progress" id="prog">0/0</span></div>
+    <div class="bar"><i id="progBar" style="width:0"></i></div>
+    <ul class="rlist" id="rlist"></ul>
+    <div class="roster-foot">
+      <button class="btn sm" id="bAdd">＋ 新增學生</button>
+      <button class="btn sm" id="bPaste">貼上名單</button>
+    </div>
+  </aside>
+
+  <section class="panel" id="editor" aria-label="學生觀察輸入">
+    <div class="ed-head">
+      <div class="who">
+        <input id="fSeat" aria-label="座號" placeholder="座號">
+        <input id="fName" aria-label="學生姓名" placeholder="學生姓名">
+        <label class="hint">評語稱呼 <input id="fCall" placeholder="自動"></label>
+        <div class="seg" role="group" aria-label="性別">
+          <button data-g="m" aria-pressed="true">男・你</button><button data-g="f" aria-pressed="false">女・妳</button>
+        </div>
+      </div>
+      <span id="delWrap"><button class="btn sm ghost danger" id="bDel">刪除此生</button></span>
+    </div>
+    <div class="tabs" role="tablist">
+      <button role="tab" data-tab="1" aria-selected="true"><span class="n">1</span>個性印象<span class="cnt" id="c1"></span></button>
+      <button role="tab" data-tab="2" aria-selected="false"><span class="n">2</span>職務與表現<span class="cnt" id="c2"></span></button>
+      <button role="tab" data-tab="3" aria-selected="false"><span class="n">3</span>成長叮嚀<span class="cnt" id="c3"></span></button>
+    </div>
+
+    <div class="tabpane" data-pane="1">
+      <div class="field">
+        <h3>這位學生給你的印象 <span class="hint">依重要性點選 2～4 個，第一個會寫在開頭</span></h3>
+        <div id="traitBox"></div>
+      </div>
+      <div class="field">
+        <h3>一件你記得的具體小事 <span class="hint">選填，但最能讓評語像「你寫的」</span></h3>
+        <textarea id="fObs" rows="2" placeholder="例：段考前主動整理生物重點講義，分享給全班同學"></textarea>
+        <div class="chips" style="margin-top:6px" id="obsIdeas"></div>
+      </div>
+      <div class="field">
+        <h3>學業表現</h3>
+        <div class="grid2">
+          <div><span class="lbl">班級成績位置</span><div class="seg" role="group" id="segBand">
+            <button data-v="top">前段</button><button data-v="upper">中上</button><button data-v="mid">中段</button><button data-v="low">待加強</button></div></div>
+          <div><span class="lbl">與上學期相比</span><div class="seg" role="group" id="segTrend">
+            <button data-v="up">進步</button><button data-v="flat">持平</button><button data-v="down">退步</button></div></div>
+          <div><label class="lbl" for="fStrong">表現突出的科目</label><input class="in" id="fStrong" placeholder="例：數學、生物"></div>
+          <div><label class="lbl" for="fRank">名次（選填，會寫入評語）</label><input class="in" id="fRank" placeholder="例：班級第 3 名"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabpane" data-pane="2" hidden>
+      <div class="field">
+        <h3>擔任職務 <span class="hint">點選後可調整表現，自動帶入職務內容描述</span></h3>
+        <div id="roleBox"></div>
+        <div class="row" style="margin-top:8px"><input class="in" id="fRoleOther" placeholder="其他職務，例：畢業紀念冊編輯" style="flex:1"><button class="btn sm" id="bRoleAdd">加入</button></div>
+        <div class="items" id="roleItems"></div>
+      </div>
+      <div class="field">
+        <h3>競賽、活動與成果</h3>
+        <div class="row">
+          <input class="in" id="fActName" placeholder="活動或競賽名稱，例：臺北市科展" style="flex:2 1 12em">
+          <input class="in" id="fActRes" placeholder="成績（選填）例：佳作" style="flex:1 1 7em">
+          <button class="btn sm primary" id="bActAdd">加入</button>
+        </div>
+        <div class="items" id="actItems"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><h3>社團</h3><input class="in" id="fClub" placeholder="例：生物研究社（社長）"></div>
+        <div class="field"><h3>服務學習</h3><input class="in" id="fService" placeholder="例：圖書館志工、社區淨灘"></div>
+      </div>
+      <div class="field">
+        <h3>出缺勤</h3>
+        <div class="seg" role="group" id="segAttend"><button data-v="full">全勤</button><button data-v="good">良好</button><button data-v="">不寫入</button></div>
+      </div>
+      <div class="field" id="selfWrap" hidden>
+        <h3>學生自評資料 <span class="hint">從匯入的自評表帶入，按「帶入」加到上方欄位</span></h3>
+        <div class="selfref"><dl id="selfList"></dl></div>
+      </div>
+    </div>
+
+    <div class="tabpane" data-pane="3" hidden>
+      <div class="field">
+        <h3>希望他／她再加強的地方 <span class="hint">最多 2 項，會寫成具體可做的建議，不寫成缺點</span></h3>
+        <div class="chips" id="impBox"></div>
+      </div>
+      <div class="field">
+        <label class="lbl" for="fWeak">需要加強的科目（選了「特定科目」時使用）</label>
+        <input class="in" id="fWeak" placeholder="例：英文">
+      </div>
+      <div class="field">
+        <h3>導師想對他／她說的話 <span class="hint">選填，會放在評語最後一句</span></h3>
+        <textarea id="fNote" rows="2" placeholder="例：老師很期待看到你在科展舞台上發光！"></textarea>
+      </div>
+    </div>
+    <div class="pane-foot">
+      <button class="btn" id="bPrevTab">上一步</button>
+      <button class="btn primary" id="bNextTab">下一步</button>
+    </div>
+  </section>
+
+  <section class="panel ov" id="overview" hidden aria-label="全班總覽"></section>
+
+  <aside class="preview" id="preview">
+    <div class="sheet">
+      <div class="sheet-head"><h2>日常生活表現｜評語預覽</h2><span id="stampBox"></span></div>
+      <div class="ctrls">
+        <div class="seg" role="group" id="segTone" aria-label="語氣">
+          <button data-v="warm">溫暖鼓勵</button><button data-v="plain">平實客觀</button><button data-v="earnest">殷切叮嚀</button></div>
+        <div class="seg" role="group" id="segLen" aria-label="長度">
+          <button data-v="short">精簡</button><button data-v="std">標準</button><button data-v="long">詳盡</button></div>
+      </div>
+      <table class="rep">
+        <tr><th>評語代碼</th><td><div class="codes"><span class="codes" id="codeBox"></span><span class="codepick" id="cpHost"><button class="btn sm" id="bCodePick">調整代碼</button></span><span id="codeAuto"></span></div></td></tr>
+        <tr><th>導師標籤</th><td><span id="tagBox" style="font-size:.9rem"></span></td></tr>
+        <tr><th>德行評語</th><td>
+          <textarea class="comment" id="outComment" aria-label="德行評語"></textarea>
+          <div class="cc"><span id="ccC"></span><span id="lockC"></span></div></td></tr>
+        <tr><th>特殊優良<br>表現</th><td>
+          <textarea class="special" id="outSpecial" aria-label="特殊優良表現"></textarea>
+          <div class="cc"><span id="ccS"></span><span id="lockS"></span></div></td></tr>
+      </table>
+      <div class="sheet-foot">
+        <div class="row">
+          <button class="btn sm" id="bReword">換一種說法</button>
+          <button class="btn sm" id="bCopy">複製評語</button>
+        </div>
+        <button class="btn sm primary" id="bDone">標記完成，下一位</button>
+      </div>
+    </div>
+    <div class="sheet"><ul class="checks" id="checks" aria-label="品質檢核"></ul></div>
+    <details class="ai">
+      <summary>AI 潤飾（選用）</summary>
+      <div class="body">
+        <p class="hint" style="margin:0">系統會先把姓名換成「○○」再送出，回來後自動換回。不想送出資料就不用開這裡，本機生成已可直接使用。</p>
+        <div class="row">
+          <select class="in" id="aiProv" style="flex:1"><option value="gemini">Google Gemini</option><option value="openai">OpenAI ChatGPT</option></select>
+          <input class="in" id="aiModel" placeholder="模型（留空自動）" style="flex:1">
+        </div>
+        <input class="in" id="aiKey" type="password" placeholder="貼上 API Key" autocomplete="off">
+        <label class="hint"><input type="checkbox" id="aiRemember"> 在這台電腦記住 Key</label>
+        <button class="btn primary" id="bAi">AI 潤飾這段德行評語</button>
+        <span class="hint" id="aiMsg"></span>
+      </div>
+    </details>
+  </aside>
+</main>
+
+<div class="modal" id="modal" hidden><div class="box" id="modalBox"></div></div>
+<input type="file" id="fileImport" accept=".xlsx,.xls,.csv" hidden>
+<input type="file" id="fileJson" accept=".json,application/json" hidden>
+<div id="toast" role="status"></div>
+
+<script>
+// ============ 資料庫 ============
+const CODE_DB = [{"k":"nature1","label":"性情(正向)","items":["101端莊有禮","102外圓內方","103稟性善良","104溫文謙和","105溫順忠厚","106溫文爾雅","107溫和樸實","108和善敦睦","109勤勞儉樸","110誠正勤樸","111熱誠正直","112誠懇坦率","113沈靜溫和","114沈著鎮靜","115沈默負責","116沈默內向","117剛毅木訥","118文靜篤實","119文質彬彬","120內向自律","121不矜不伐","122持躬謹嚴","123處世平和","124舉止端莊","125舉止大方","126胸襟開闊","127穩健練達","128忠厚誠懇","129剛毅渾厚","130剛毅沈著","131活潑爽朗","132活潑天真","133活潑外向","134耿介直爽","135樂天安閒","136胸襟開闊","137胸襟豁達","138慷慨直爽","139坦白直爽","140博學正直","141心地善良","142能知自勉","143光明磊落","144老成持重","145才思敏捷","146能當重任","147深具自信","148精明能幹","149善體人意","150靈敏急智","151氣質不凡","152卓爾不群"]},{"k":"nature2","label":"性情(待改進)","items":["201稚氣未泯","202玩世不恭","203不拘小節","204恃才傲物","205豪放不拘","206憨直衝動","207安少躁多","208心浮氣躁","209心氣不定","210好動剛直","211性急好動","212舉止輕佻","213衝動易怒","214心直口快","215放蕩不羈","216倔強固執","217處事主觀","218我行我素","219自行其是","220落落寡合","221剛愎自用","222不善表達","223閒話稍多","224言多行少","225言多過實","226言行隨便","227好議多評","228強辭好辯","229意志不堅","230意志消沉","231少有主見","232優柔寡斷","233易受影響","234缺乏信心","235自暴自棄","236生活散漫","237敷衍草率","238草率從事","239浮華不實","240固執不通","241嬉遊無度","242聰明貪玩","243荒廢學業","244舍本逐末","245情緒不穩","246精神不振","247神情慵倦","248感情用事","249固執不通","250輕率急躁","251輕浮散慢","252孤僻成性"]},{"k":"learning","label":"向學(正向)","items":["301學業優良","302品學兼優","303敦品勵學","304學行俱佳","305學習有方","306學習專心","307學習認真","308勤學用功","309敏而好學","310多才多藝","311好學多聞","312好學靈敏","313博學慎思","314涉獵廣博","315求學踏實","316機敏好學","317熟讀深思","318理解力強","319博學多聞","320天資聰穎","321聰明伶俐","322求知慾強","323專心致志","324勤學有恒","325富於研究","326好學不倦","327敬業樂群","328勤勉有功","329勤學多問","330日有進步"]},{"k":"learning2","label":"向學(待改進)","items":["351尚知用功","352學業尚可","353勉能應付","354尚知認真","355學行尚佳","356須多努力","357加強學習","358聽課不專","359不求甚解","360粗心大意","361輕忽學業","362時學時輟","363貪玩怠學","364心猿意馬","365上課多言","366心不專一","367作業草率","368作業常缺","369經常遲到","370缺曠過多"]},{"k":"ambition","label":"進取","items":["401樂觀進取","402力行不倦","403勉能應付","404積極奮勉","405奮發向上","406意志堅強","407堅毅有恒","408聽課不專","409刻苦耐勞","410刻苦自勵","411茅塞頓開","412循序漸進","451尚知進取","452尚知奮勉","453尚知振作","454尚能自勵","455尚知上進","456尚能耐勞","457須多上進","458須多奮勉","459須多自勉","460須多惕勵","461須圖振作","462須多主動","463加強恒心","464加強毅力","465加強信心"]},{"k":"discipline","label":"紀律","items":["501循規蹈矩","502守正不阿","503守法重紀","504安分守己","505潔身自好","506自重自愛","507有守有為","508品行端正","509須多自勉","510明辨是非","511禮貌週到","512擇善固執","513篤守信義","514愛護團體","515思想純正","516儀容整潔","517能知進退","518知錯能改","519勇於改過","520知恥奮發","521自勉自律","522慎思明辨","551尚守規矩","552尚守禮儀","553尚能自律","554尚能自愛","555尚辨是非","556不守規定","557閒話稍多","558因循苟且","559宜加強禮節","560宜加強儀容","561宜加強倫理","562宜加強德行","563宜加強孝行","564屢勸不改","565宜培養謙和","566得過且過"]},{"k":"social","label":"交友","items":["601隨和易處","602待人謙和","603待人真誠","604友愛同學","605敬師睦友","606善於交友","607樂群合作","608談吐有度","609謹言慎行","610幽默風趣","611爽朗合群","612友愛合群","613感情豐富","614頗有人緣","615悅己納人","616隨和從眾","617能忍讓人","618體恤諒人","619關心別人","620為人解憂","651不善交友","652多交益友","653須多合群","654謹慎交友","655交友稍雜","656略顯孤傲"]},{"k":"service","label":"服務","items":["701熱心服務","702熱心公益","703熱心助人","704熱衷活動","705急公好義","706任勞任怨","707處世有方","708服務盡責","709領導力高","710表現卓越","711熱心可嘉","712熱心負責","713大公無私","714敏捷伶俐","715勤勉合作","716主動勤快","717熱心班務","718以身作則","719缺責任感","720不重公務"]},{"k":"skills","label":"擅長","items":["801擅長文史","802擅長數理","803擅長運動","804擅長演說","805擅長音樂","806擅長美術","807擅長工藝","808擅長書法","809擅長寫作","810擅長舞蹈","811擅長國術","812擅長戲劇","813擅長民俗","814拙於數理","815不喜文史","816英文特佳"]}];
+const CODE_MAP = {}; CODE_DB.forEach(c => c.items.forEach(s => { CODE_MAP[s.slice(0,3)] = s.slice(3); }));
+
+const TRAITS = [
+ // g: 群組, adj: 開頭形容, s: 具體描述（多種說法）, codes: 對應學校代碼, tag: 標籤用語
+ {id:'sincere',g:'品格',label:'誠懇正直',adj:'誠懇正直',s:['待人真誠、處事正直，是一位值得信賴的孩子','為人坦率真誠、說到做到，深獲師長與同學的信任'],codes:['111','603']},
+ {id:'polite',g:'品格',label:'有禮懂事',adj:'彬彬有禮',s:['與老師們交談時總是彬彬有禮、面帶微笑','對師長有禮，應對進退得宜，讓人感到十分舒服'],codes:['101','605']},
+ {id:'kind',g:'品格',label:'善良體貼',adj:'心地善良',s:['心地善良、善體人意，總能察覺身邊同學的需要','個性溫暖體貼，常主動關心身旁的同學'],codes:['141','149']},
+ {id:'humble',g:'品格',label:'謙和低調',adj:'溫文謙和',s:['個性謙和、不矜不伐，即使表現優異也從不自滿','待人謙和有禮，處世平和，讓人如沐春風'],codes:['104','121']},
+ {id:'self',g:'品格',label:'守規自律',adj:'自律守規',s:['生活常規表現良好，能自我要求、遵守班級規範','自律甚嚴、作息規律，生活常規從不讓老師操心'],codes:['501','521']},
+ {id:'cheerful',g:'個性',label:'活潑爽朗',adj:'活潑爽朗',s:['個性開朗大方，總是為班上帶來歡樂的氣氛','笑容燦爛、充滿活力，是班上的開心果'],codes:['131','611']},
+ {id:'calm',g:'個性',label:'文靜沉穩',adj:'沉靜溫和',s:['個性沉穩內斂，思慮周密、行事謹慎','文靜懂事，做事穩重踏實，總是默默把分內工作做好'],codes:['113','118']},
+ {id:'optimistic',g:'個性',label:'樂觀堅毅',adj:'樂觀進取',s:['面對挫折能迅速調整心情，展現良好的學習韌性','遇到困難不輕言放棄，始終保持正向積極的態度'],codes:['401','406']},
+ {id:'humor',g:'個性',label:'幽默風趣',adj:'幽默風趣',s:['談吐幽默風趣，常為班級帶來笑聲','反應靈敏又幽默，與同學相處十分融洽'],codes:['610','614']},
+ {id:'independent',g:'個性',label:'獨立有主見',adj:'獨立有主見',s:['做事有主見，能獨立思考並勇於表達自己的看法','具備獨立思考的能力，對事情常有自己的見解'],codes:['147','512']},
+ {id:'responsible',g:'做事',label:'認真負責',adj:'認真負責',s:['交辦的任務總能如期完成，讓老師十分放心','做事一絲不苟，是老師得力的幫手'],codes:['712','708']},
+ {id:'meticulous',g:'做事',label:'細心踏實',adj:'細心踏實',s:['做事細心、注重細節，交出的作業總是工整完整','處理事情細膩周到，能按部就班完成每一件事'],codes:['315','122']},
+ {id:'proactive',g:'做事',label:'主動積極',adj:'積極主動',s:['遇到班級事務總是主動承擔，從不推託','做事自動自發，不需老師提醒便能把事情做好'],codes:['716','404']},
+ {id:'persistent',g:'做事',label:'堅持有恆',adj:'堅毅有恆',s:['做事有恆心，訂下目標便能持之以恆地努力','具備堅毅的意志，能一步一腳印朝目標前進'],codes:['407','324']},
+ {id:'capable',g:'做事',label:'精明能幹',adj:'精明能幹',s:['做事有條理、效率高，能妥善規劃並完成多項任務','處事明快幹練，能在短時間內把事情安排妥當'],codes:['148','146']},
+ {id:'diligent',g:'學習',label:'勤學用功',adj:'勤學用功',s:['學習態度認真，課業上總是全力以赴','上課專注聽講，課後也能主動複習，學習態度令人讚賞'],codes:['308','307']},
+ {id:'curious',g:'學習',label:'求知慾強',adj:'求知慾旺盛',s:['對新知充滿好奇，遇到疑問會主動向老師請教','樂於探索課本以外的知識，學習視野開闊'],codes:['322','329']},
+ {id:'smart',g:'學習',label:'思考敏捷',adj:'聰穎敏捷',s:['反應靈敏、理解力強，能快速掌握課程重點','思考敏捷，常能舉一反三、提出獨到的見解'],codes:['318','145']},
+ {id:'focused',g:'學習',label:'上課專注',adj:'專心向學',s:['上課時眼神專注、認真抄寫筆記，能跟上教學節奏','課堂上專心投入，學習效率良好'],codes:['306','323']},
+ {id:'research',g:'學習',label:'喜歡探究',adj:'富研究精神',s:['對科學探究充滿熱忱，願意投入時間動手實驗、尋找答案','面對問題能有系統地思考與驗證，具備研究精神'],codes:['325','313']},
+ {id:'talented',g:'學習',label:'多才多藝',adj:'多才多藝',s:['興趣廣泛，在各類活動中都能發揮所長','擁有多方面的才華，讓同學們十分欣賞'],codes:['310','704']},
+ {id:'helpful',g:'人際',label:'熱心助人',adj:'熱心助人',s:['總是熱心協助同學，樂於分享自己的學習方法','看見同學需要幫忙時，總是第一個伸出援手'],codes:['703','701']},
+ {id:'teamwork',g:'人際',label:'樂群合作',adj:'樂群合作',s:['在小組活動中能與同學互助合作，展現良好的團隊精神','能傾聽組員意見、分工合作，是團隊中可靠的夥伴'],codes:['607','715']},
+ {id:'popular',g:'人際',label:'人緣好',adj:'隨和易處',s:['個性隨和，與同學相處融洽，人緣極佳','待人親切友善，在班上擁有好人緣'],codes:['601','614']},
+ {id:'leader',g:'人際',label:'具領導力',adj:'具領導才能',s:['能凝聚同學向心力，帶領大家完成任務','做事有魄力，能有效協調分工、帶動班級團結'],codes:['709','718']},
+ {id:'speak',g:'人際',label:'善於表達',adj:'善於表達',s:['口語表達清晰有條理，上台報告台風穩健','善於溝通，能清楚傳達自己的想法'],codes:['804','608']},
+ {id:'inclusive',g:'人際',label:'包容友善',adj:'胸襟開闊',s:['能包容不同意見，友善對待每一位同學','心胸寬大、不計較，是同學們信任的朋友'],codes:['126','615']},
+ {id:'altruist',g:'人際',label:'熱心公益',adj:'熱心公益',s:['熱心參與服務學習，展現對他人與社會的關懷','樂於付出時間服務他人，富有公民責任感'],codes:['702','705']},
+ {id:'t_sci',g:'特長',label:'擅長數理',adj:'擅長數理',s:['數理邏輯清晰，解題思路靈活'],codes:['802']},
+ {id:'t_lit',g:'特長',label:'擅長文史',adj:'擅長文史',s:['文史素養深厚，閱讀與思辨能力出色'],codes:['801']},
+ {id:'t_write',g:'特長',label:'擅長寫作',adj:'文筆流暢',s:['文筆流暢細膩，作文常獲老師肯定'],codes:['809']},
+ {id:'t_eng',g:'特長',label:'英文佳',adj:'英文能力出色',s:['英文能力出色，聽說讀寫表現均衡'],codes:['816']},
+ {id:'t_sport',g:'特長',label:'擅長運動',adj:'熱愛運動',s:['熱愛運動、體能出色，在體育活動中表現亮眼'],codes:['803']},
+ {id:'t_art',g:'特長',label:'藝術才華',adj:'富藝術天分',s:['具有藝術天分，美感與創作力令人驚豔'],codes:['806','805']}
+];
+const TRAIT = Object.fromEntries(TRAITS.map(t => [t.id, t]));
+
+const ROLE_GROUPS = [
+ {g:'幹部',roles:['班長','副班長','風紀股長','學藝股長','衛生股長','總務股長','康樂股長','輔導股長','資訊股長','環保股長','體育股長']},
+ {g:'小老師',roles:['國文小老師','英文小老師','數學小老師','物理小老師','化學小老師','生物小老師','地科小老師','歷史小老師','地理小老師','公民小老師']},
+ {g:'其他',roles:['社長','社團幹部','班聯會','糾察隊','服務隊','畢冊編輯']}
+];
+const ROLE_DUTY = [
+ [/^班長/,'協調班級大小事務，帶動全班氣氛'],[/副班長/,'協助班長處理班務，讓班級運作順暢'],
+ [/風紀/,'維持班級秩序，並以身作則遵守規範'],[/學藝/,'負責教室日誌與布置，記錄詳實'],
+ [/衛生|環保/,'督導打掃工作，維護教室環境整潔'],[/總務/,'管理班費收支，帳目清楚'],
+ [/康樂/,'規劃籌辦班級活動，凝聚班級向心力'],[/輔導/,'關心同學狀況，協助傳達輔導訊息'],
+ [/資訊/,'協助維護班級設備與線上資訊傳達'],[/體育/,'帶領同學參與體育活動與運動會'],
+ [/小老師/,'協助收發作業、傳達老師交代事項，並熱心為同學解惑'],
+ [/社長/,'帶領社員規劃社課與活動，展現組織能力'],[/社團幹部/,'協助社團運作與活動籌辦'],
+ [/班聯會/,'參與學生自治事務，為同學發聲'],[/糾察/,'協助維護校園秩序'],[/服務隊/,'投入校園服務工作'],[/畢冊|編輯/,'參與刊物企劃與編輯']
+];
+const PERF = {
+ top:{label:'表現卓越',s:['表現卓越，深獲師生肯定','做得有聲有色，獲得師生一致好評']},
+ good:{label:'認真負責',s:['工作認真負責，讓老師十分放心','盡心盡力，是老師得力的幫手']},
+ ok:{label:'盡責',s:['能確實完成分內工作','能按部就班完成交辦事項']},
+ more:{label:'可再主動',s:['若能再多一分主動，相信能發揮得更好','期待未來能更加主動承擔']}
+};
+const ABILITY = [
+ [/科展|科學|研究|探究|專題/,'科學探究的熱忱與嚴謹的研究態度'],
+ [/數學|物理|化學|生物|地科|資訊|程式|APCS|奧林匹亞|學科/,'紮實的學科實力與清晰的邏輯思維'],
+ [/作文|演講|朗讀|辯論|寫作|字音字形|英文|英語|閱讀/,'優異的語文表達能力'],
+ [/運動|田徑|籃球|排球|羽球|桌球|游泳|足球|拔河|大隊接力|跆拳/,'強健的體魄與拚搏不懈的精神'],
+ [/音樂|合唱|管樂|美術|舞蹈|戲劇|攝影|書法|設計/,'出色的藝術天分與創作力'],
+ [/志工|服務|公益|淨灘/,'服務人群的熱忱'],
+];
+const IMPROVE = [
+ {id:'time',label:'時間管理',s:['學會規劃時間、善用零碎時間，讓課業與活動取得更好的平衡','訂定每週讀書計畫，把時間花在最需要的地方']},
+ {id:'focus',label:'上課專注',s:['上課時更專注於老師的講解，把握課堂學習的黃金時間','減少課堂分心，讓每一節課都學得扎實']},
+ {id:'homework',label:'作業準時',s:['養成按時繳交作業的習慣，把每份作業當成鞏固觀念的機會','每天固定時段完成作業，不拖延到最後一刻']},
+ {id:'punctual',label:'準時到校',s:['調整生活作息、早睡早起，準時到校迎接每一天','養成守時的習慣，以飽滿的精神開始每一天']},
+ {id:'phone',label:'手機使用',s:['適度控制手機使用時間，把更多專注力留給學習與休息','善用手機但不被手機綁住，學習時讓自己專心']},
+ {id:'ask',label:'主動發問',s:['遇到不懂的地方多主動向老師與同學請教，及時釐清觀念','把疑問寫下來主動發問，不讓問題累積']},
+ {id:'careful',label:'細心檢查',s:['作答時放慢速度、細心檢查，減少不必要的失誤','整理錯題筆記，避免重複犯同樣的錯誤']},
+ {id:'subject',label:'特定科目',s:['在{weak}多下功夫，從基礎觀念與錯題整理開始穩紮穩打','把更多心力放在{weak}上，逐步補強基礎']},
+ {id:'confidence',label:'自信表達',s:['對自己多一點信心，勇敢在課堂與活動中表達想法','多把握上台與發言的機會，讓大家看見{你}的想法']},
+ {id:'emotion',label:'情緒調適',s:['學習覺察並調適自己的情緒，遇事先冷靜再表達','遇到不如意時先深呼吸、換個角度想，以平和的心面對']},
+ {id:'listen',label:'傾聽他人',s:['在團體中多傾聽他人的想法，說話前先體貼對方的感受','與人溝通時多一分耐心與傾聽，讓合作更順利']},
+ {id:'proactive',label:'更主動',s:['面對課業與任務能更加主動積極，不待提醒便自動自發','在班級事務上多一分主動，勇於承擔責任']},
+ {id:'clean',label:'整潔習慣',s:['維持座位與抽屜的整潔，並認真完成打掃工作','養成隨手整理的好習慣，讓學習環境更清爽']},
+ {id:'health',label:'作息健康',s:['注意作息與運動，照顧好身體，才有足夠的體力面對課業','保持規律作息與適度運動，讓身心維持在最佳狀態']},
+ {id:'goal',label:'訂定目標',s:['及早思考未來的方向，訂定具體的目標並一步步實踐','多探索自己的興趣，為未來的升學方向做好準備']},
+ {id:'join',label:'參與班務',s:['多參與班級事務與活動，在服務中累積經驗、展現所長','積極參與團體活動，讓高中生活更加多采多姿']}
+];
+const IMP = Object.fromEntries(IMPROVE.map(i => [i.id, i]));
+const OBS_IDEAS = ['主動協助老師處理班務','段考前整理重點講義分享同學','校慶時負責班級布置','遇到同學有困難主動關心','打掃工作總是做得一絲不苟','分組報告時帶領組員分工'];
+const SENSITIVE = ['單親','離婚','家暴','疾病','生病','憂鬱','焦慮症','過動','自閉','輔導室','諮商','記過','警告','懲處','霸凌','低收','身心障礙','特教','住院','服藥'];
+const TARGET = {short:130, std:230, long:330};
+
+// ============ 狀態與儲存 ============
+const KEY = 'homeroom-comment-studio-v2';
+let state, tab = 1, view = 'edit', delArm = false;
+const uid = () => Math.random().toString(36).slice(2, 9);
+function blankStudent(seat='', name='', gender='m'){
+  return {id:uid(), seat:String(seat), name, call:'', gender, traits:[], obs:'', band:'', trend:'', strong:'', rank:'',
+    roles:[], acts:[], club:'', service:'', attend:'', improve:[], weak:'', note:'', tone:'warm', len:'std', seed:0,
+    codes:[], codesManual:false, comment:'', special:'', manualC:false, manualS:false, done:false, self:null, sample:false};
+}
+function sampleState(){
+  const a = blankStudent('01','陳宥恩','m'); Object.assign(a,{traits:['responsible','research','helpful'],obs:'段考前主動整理生物重點講義，分享給全班同學',band:'top',trend:'up',strong:'生物、化學',rank:'',roles:[{role:'生物小老師',perf:'good'}],acts:[{name:'臺北市科展',result:'佳作'}],club:'生物研究社',attend:'full',improve:['time'],sample:true});
+  const b = blankStudent('02','李思妤','f'); Object.assign(b,{traits:['cheerful','popular','talented'],obs:'',band:'mid',trend:'flat',strong:'英文',roles:[{role:'康樂股長',perf:'top'}],acts:[{name:'校內英語歌唱比賽',result:'第二名'}],club:'熱舞社',attend:'good',improve:['subject','focus'],weak:'數學',sample:true});
+  const c = blankStudent('03','張家豪','m'); Object.assign(c,{traits:['calm','kind'],obs:'默默幫忙整理班上的回收物',band:'low',trend:'up',roles:[{role:'環保股長',perf:'ok'}],service:'社區淨灘志工',improve:['confidence','ask'],tone:'warm',sample:true});
+  return {meta:{cls:'201',year:'115',sem:'1',grade:'g2'}, students:[a,b,c], current:a.id, sample:true};
+}
+function load(){
+  try{ const raw = localStorage.getItem(KEY); if(raw){ const s = JSON.parse(raw); if(s && Array.isArray(s.students)) return s; } }catch(e){}
+  return sampleState();
+}
+let saveT; function save(){ clearTimeout(saveT); saveT = setTimeout(() => { try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }, 300); }
+const $ = id => document.getElementById(id);
+const cur = () => state.students.find(s => s.id === state.current) || state.students[0];
+function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('on'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('on'),2200); }
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// ============ 生成引擎 ============
+function hash(str){ let h=2166136261; for(const ch of str){ h^=ch.charCodeAt(0); h=Math.imul(h,16777619);} return h>>>0; }
+function picker(s){ return (arr, k) => arr[hash(s.id + '|' + s.seed + '|' + k) % arr.length]; }
+const strip = t => String(t||'').trim().replace(/[。！？，、；\s]+$/,'');
+function callName(s){ if(s.call) return s.call; const n=(s.name||'').trim(); if(!n) return '這位同學'; return n.length>=3 ? n.slice(1) : n; }
+function roleDuty(r){ for(const [re,d] of ROLE_DUTY) if(re.test(r)) return d; return '盡心投入各項工作'; }
+function abilityOf(t){ for(const [re,a] of ABILITY) if(re.test(t)) return a; return '積極參與、勇於挑戰的精神'; }
+
+function generate(s){
+  const g = state.meta.grade, P = picker(s);
+  const third = g === 'g3b';
+  const you = third ? (s.gender==='f'?'她':'他') : (s.gender==='f'?'妳':'你');
+  const name = callName(s);
+  const fill = t => t.replace(/\{你\}/g, you).replace(/\{name\}/g, name).replace(/\{weak\}/g, strip(s.weak)||'較弱的科目');
+  const tr = s.traits.map(id => TRAIT[id]).filter(Boolean);
+  const segs = [];
+  const pickS = (t,k) => { const c = t.s.filter(x => !x.includes(t.adj.slice(0,2))); return P(c.length ? c : t.s, k); };
+  const add = (k, pri, text) => { if(text) segs.push({k, pri, text: fill(text)}); };
+
+  // 1 開頭
+  const adjs = tr.slice(0,2).map(t => t.adj);
+  if(third){
+    const sum = tr.length ? adjs.join('、') : '穩健成長';
+    const d = tr[0] ? P(tr[0].s,'o') : '待人和善，認真面對每一件事';
+    add('open',0, `{name}同學高中三年${sum}，${d}。`);
+  } else if(tr.length){
+    add('open',0, `{name}，{你}是一位${adjs.join('、')}的學生，${P(tr[0].s,'o')}。`);
+  } else {
+    add('open',0, `{name}，{你}在這學期的學校生活中穩定成長，認真面對每一件事。`);
+  }
+  if(tr[1]) add('t2',3, `${P(['同時，','平時','']  ,'c2')}${pickS(tr[1],'t2')}。`);
+  if(tr[2]) add('t3',3.5, `${P(['另外，','此外，'],'c3')}${pickS(tr[2],'t3')}。`);
+  if(tr[3]) add('t4',8, `${pickS(tr[3],'t4')}。`);
+
+  // 2 具體小事
+  if(strip(s.obs)){
+    const o = strip(s.obs).replace(/^(他|她|你|妳|該生)/, '');
+    add('obs',1, P([`老師印象很深的是，{你}${o}，這份用心大家都看在眼裡。`, `記得{你}${o}，讓老師相當感動。`, `{你}${o}，展現了令人欣賞的態度。`],'obs'));
+  }
+
+  // 3 學業
+  const bandS = {
+    top:['成績表現十分優異、名列前茅，是同學學習的榜樣','表現亮眼，展現紮實的學習實力與良好的讀書方法'],
+    upper:['成績維持在班級中上水準，學習態度穩定積極','表現穩定，具備良好的學習基礎'],
+    mid:['成績表現平穩，具有持續進步的潛力','表現穩定，只要再多投入一些心力，成績必能更上一層樓'],
+    low:['目前仍有努力的空間，但老師看見了{你}願意嘗試的態度','部分科目的基礎觀念尚待加強，相信透過規律複習便能逐步追上']
+  }[s.band];
+  const trendS = {up:['本學期成績呈現進步趨勢，顯示{你}的努力已逐漸展現成效','比起上學期有明顯進步，努力的成果有目共睹'],
+    down:['本學期成績稍有起伏，可以重新檢視讀書方法與時間分配'], flat:null}[s.trend];
+  let acad = '';
+  if(bandS){ acad = (strip(s.rank) ? `段考成績為${strip(s.rank)}，` : '') + P(bandS,'band'); }
+  if(strip(s.strong)) acad += (acad?'，':'') + `尤其在${strip(s.strong)}方面表現突出`;
+  if(trendS) acad += (acad?'；':'') + P(trendS,'trend');
+  if(acad) add('acad',2, (P(['學業方面，','課業上，','在學習上，'],'ac')) + acad + '。');
+
+  // 4 出缺勤
+  if(s.attend==='full') add('att',4, P(['這學期全勤，準時到校上課，學習態度十分積極。','本學期全勤，從不遲到早退，展現守時的好習慣。'],'att'));
+  if(s.attend==='good') add('att',7, '出缺勤狀況良好，生活作息規律。');
+
+  // 5 職務
+  s.roles.forEach((r,i) => {
+    const p = PERF[r.perf] || PERF.good;
+    add('role'+i, i?4:2, `擔任${r.role}期間，${roleDuty(r.role)}，${P(p.s,'r'+i)}。`);
+  });
+
+  // 6 競賽活動
+  if(s.acts.length){
+    const parts = s.acts.map(a => a.result ? `在${strip(a.name)}中榮獲${strip(a.result)}` : `積極參與${strip(a.name)}`);
+    const firstWin = s.acts.find(a => a.result) || s.acts[0];
+    add('acts',2, `${parts.join('，')}，${P(['充分展現','展現出'],'ab')}${abilityOf(firstWin.name)}。`);
+  }
+  if(strip(s.club)) add('club',5, `社團方面，{你}投入${strip(s.club)}，${P(['在課堂之外培養了多元的能力','從中累積了合作與規劃的經驗'],'club')}。`);
+  if(strip(s.service)) add('svc',5, `{你}熱心參與${strip(s.service)}，${P(['展現服務人群的熱忱','用行動實踐對社會的關懷'],'svc')}。`);
+
+  // 7 結尾期許
+  const sugs = s.improve.slice(0,2).map(id => IMP[id]).filter(Boolean).map((m,i) => P(m.s,'imp'+i));
+  const lead = {g1:['新的學期，希望{name}可以','在高中生活中，期許{name}能'],g2:['在接下來的日子裡，希望{name}能','升上高二課業更加繁重，期許{name}能'],
+    g3a:['面對即將到來的學測，期許{name}能','在學測衝刺的關鍵階段，希望{name}能'],g3b:['即將邁入大學，期許{name}能','未來的大學生活，祝福{name}能']}[g];
+  const close = {warm:['，老師相信{你}一定做得到，加油！','，相信{你}會有更亮眼的表現，加油！'],
+    plain:['，持續精進、穩健成長。','，讓自己更上一層樓。'],
+    earnest:['。老師會一直在旁支持{你}，期待看見{你}的改變！','。願意改變就是進步的開始，老師對{你}有信心！']}[s.tone] || [''];
+  let end;
+  if(sugs.length){
+    end = P(lead,'lead') + sugs.join('，並且');
+  } else {
+    end = third ? `祝福{name}帶著高中三年的收穫，勇敢追逐自己的夢想` : (tr[0] ? `期許{name}繼續保持這份${tr[0].adj}的特質` : `期許{name}繼續保持認真向上的態度`);
+  }
+  if(strip(s.note)) end += '。' + strip(s.note) + (/[！？]$/.test(s.note.trim()) ? '' : '。');
+  else end += P(close,'close');
+  end = end.replace(/。。/g,'。').replace(/，。/g,'。');
+  add('end',0, end);
+
+  // 依長度挑選段落
+  const target = TARGET[s.len] || 230;
+  const fixed = segs.filter(x => x.pri === 0);
+  let total = fixed.reduce((n,x) => n + x.text.length, 0);
+  const keep = new Set(fixed.map(x => x.k)), dropped = [];
+  segs.filter(x => x.pri > 0).sort((a,b) => a.pri - b.pri).forEach(x => {
+    const isFact = /^(role|acts|obs|acad)/.test(x.k);
+    if(total + x.text.length <= target + 30 || (isFact && s.len !== 'short')){ keep.add(x.k); total += x.text.length; }
+    else if(isFact) dropped.push(x.k);
+  });
+  const order = ['open','t2','t3','t4','obs','acad','att','role','acts','club','svc','end'];
+  const rank = k => order.findIndex(o => k.startsWith(o));
+  const comment = segs.filter(x => keep.has(x.k)).sort((a,b) => rank(a.k) - rank(b.k)).map(x => x.text).join('');
+
+  // 特殊優良表現（只列具體事實，不重複稱讚）
+  const sp = [];
+  s.roles.forEach(r => sp.push(`擔任${r.role}，${roleDuty(r.role).split('，')[0]}`));
+  s.acts.forEach(a => sp.push(a.result ? `${strip(a.name)}獲得${strip(a.result)}` : `參與${strip(a.name)}`));
+  if(strip(s.club)) sp.push(`參與${strip(s.club)}`);
+  if(strip(s.service)) sp.push(strip(s.service));
+  if(s.attend==='full') sp.push('本學期全勤');
+  const special = sp.length ? sp.join('；') + '。' : '';
+
+  // 評語代碼建議（1～3 個）
+  const score = {};
+  const bump = (c,w) => { if(CODE_MAP[c]) score[c] = (score[c]||0) + w; };
+  tr.forEach((t,i) => t.codes.forEach((c,j) => bump(c, (4-i) * (j?1:2))));
+  if(s.band==='top') bump(s.traits.includes('sincere')||s.traits.includes('polite') ? '302':'301', 5);
+  if(s.trend==='up') bump('330', 3);
+  if(s.roles.some(r => /班長|社長/.test(r.role))) bump('709', 3);
+  if(s.roles.length) bump('717', 2);
+  if(s.acts.some(a => /科展|研究|專題/.test(a.name))) bump('325', 3);
+  if(strip(s.service)) bump('701', 2);
+  const codes = Object.entries(score).sort((a,b) => b[1]-a[1]).map(e => e[0])
+    .filter((c,i,arr) => arr.findIndex(x => CODE_MAP[x]===CODE_MAP[c]) === i).slice(0,3);
+
+  return {comment, special, codes, dropped};
+}
+
+function regen(s, force=false){
+  const r = generate(s);
+  if(force || !s.manualC) { s.comment = r.comment; s.manualC = false; }
+  if(force || !s.manualS) { s.special = r.special; s.manualS = false; }
+  if(!s.codesManual) s.codes = r.codes;
+  s._dropped = r.dropped;
+}
+function statusOf(s){ if(s.done) return 'done'; return (s.traits.length || s.roles.length || s.acts.length || s.manualC) ? 'draft' : 'empty'; }
+
+function checks(s){
+  const out = [], txt = s.comment || '', name = callName(s), g = state.meta.grade;
+  const t = TARGET[s.len]; const n = txt.replace(/\s/g,'').length;
+  out.push(s.traits.length >= 2 ? ['ok','已選 '+s.traits.length+' 個個性特質'] : ['mid','建議至少選 2 個個性特質，評語會更具體']);
+  out.push(strip(s.obs) ? ['ok','含一件具體小事，評語更有個人溫度'] : ['mid','加一件具體小事，最能避免「罐頭評語」']);
+  out.push(txt.startsWith(name) ? ['ok','以「'+name+'」開頭稱呼'] : ['mid','開頭未以學生名字稱呼']);
+  if(g !== 'g3b'){
+    const wrong = s.gender==='f' ? /你(?!們)/.test(txt) : /妳/.test(txt);
+    out.push(wrong ? ['bad','稱謂與性別不一致，請檢查「你／妳」'] : ['ok','稱謂「'+(s.gender==='f'?'妳':'你')+'」一致']);
+  }
+  const lo = Math.round(t*0.6), hi = Math.round(t*1.45);
+  out.push(n < lo ? ['mid',`目前 ${n} 字，略短（目標約 ${t} 字）`] : n > hi ? ['mid',`目前 ${n} 字，偏長（目標約 ${t} 字）`] : ['ok',`字數 ${n} 字，符合「${{short:'精簡',std:'標準',long:'詳盡'}[s.len]}」長度`]);
+  out.push(/希望|期許|期待|祝福|相信/.test(txt) ? ['ok','結尾含期許或鼓勵'] : ['mid','結尾缺少期許或鼓勵']);
+  const hit = SENSITIVE.filter(w => txt.includes(w) || (s.special||'').includes(w));
+  out.push(hit.length ? ['bad','含敏感字詞：'+hit.join('、')+'，成績單會給家長與學校看，建議改寫'] : ['ok','未出現家庭、健康、懲處等敏感字詞']);
+  out.push(s.codes.length>=1 && s.codes.length<=3 ? ['ok','評語代碼 '+s.codes.length+' 個（學校規定 1～3 個）'] : ['bad','評語代碼需 1～3 個']);
+  if(s._dropped && s._dropped.length && !s.manualC) out.push(['mid',`有 ${s._dropped.length} 項資料因「精簡」長度未寫入，可改為「標準」`]);
+  return out;
+}
+
+// ============ 畫面：名單 ============
+function renderRoster(){
+  const list = $('rlist'); const ss = [...state.students].sort((a,b) => (parseInt(a.seat)||999) - (parseInt(b.seat)||999));
+  list.innerHTML = ss.map(s => { const st = statusOf(s); return `<li><button data-id="${s.id}" aria-current="${s.id===state.current && view==='edit'}">
+    <span class="seat">${esc(s.seat||'--')}</span><span>${esc(s.name||'未命名')}</span>
+    <span class="st ${st}">${{empty:'未填',draft:'草稿',done:'完成'}[st]}</span></button></li>`; }).join('') || '<li class="hint" style="padding:12px">尚無學生，請新增或貼上名單</li>';
+  const done = state.students.filter(s => s.done).length, tot = state.students.length;
+  $('prog').textContent = `${done}/${tot} 完成`; $('progBar').style.width = tot ? (done/tot*100)+'%' : '0';
+  $('sampleBanner').hidden = !state.sample;
+}
+
+// ============ 畫面：編輯 ============
+function setSeg(id, val){ document.querySelectorAll('#'+id+' button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === val))); }
+function renderEditor(){
+  const s = cur(); if(!s){ return; }
+  $('fSeat').value = s.seat; $('fName').value = s.name; $('fCall').value = s.call; $('fCall').placeholder = callName({...s, call:''});
+  document.querySelectorAll('.who .seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.g === s.gender)));
+  ['fObs','fStrong','fRank','fClub','fService','fWeak','fNote'].forEach(id => { $(id).value = s[{fObs:'obs',fStrong:'strong',fRank:'rank',fClub:'club',fService:'service',fWeak:'weak',fNote:'note'}[id]] || ''; });
+  setSeg('segBand', s.band); setSeg('segTrend', s.trend); setSeg('segAttend', s.attend);
+  renderTraits(); renderRoles(); renderActs(); renderImprove(); renderSelf(); renderTabCounts();
+  delArm = false; $('delWrap').innerHTML = '<button class="btn sm ghost danger" id="bDel">刪除此生</button>';
+}
+function renderTraits(){
+  const s = cur(); const groups = [...new Set(TRAITS.map(t => t.g))];
+  $('traitBox').innerHTML = groups.map(g => `<div class="chipgroup"><span>${g}</span><div class="chips">${
+    TRAITS.filter(t => t.g===g).map(t => { const i = s.traits.indexOf(t.id);
+      return `<button class="chip" data-trait="${t.id}" aria-pressed="${i>=0}">${i>=0?`<span class="ord">${i+1}</span>`:''}${t.label}</button>`; }).join('')}</div></div>`).join('');
+  $('obsIdeas').innerHTML = '<span class="hint" style="align-self:center">靈感：</span>' + OBS_IDEAS.map(o => `<button class="chip add" data-obs="${esc(o)}">${esc(o)}</button>`).join('');
+}
+function renderRoles(){
+  const s = cur();
+  $('roleBox').innerHTML = ROLE_GROUPS.map(gr => `<div class="chipgroup"><span>${gr.g}</span><div class="chips">${
+    gr.roles.map(r => `<button class="chip" data-role="${r}" aria-pressed="${s.roles.some(x => x.role===r)}">${r}</button>`).join('')}</div></div>`).join('');
+  $('roleItems').innerHTML = s.roles.map((r,i) => `<div class="item"><span class="t">${esc(r.role)}<span class="hint">　${esc(roleDuty(r.role))}</span></span>
+    <span class="row"><select data-perf="${i}" aria-label="表現">${Object.entries(PERF).map(([k,v]) => `<option value="${k}" ${r.perf===k?'selected':''}>${v.label}</option>`).join('')}</select>
+    <button class="x" data-delrole="${i}" aria-label="移除">×</button></span></div>`).join('');
+}
+function renderActs(){
+  const s = cur();
+  $('actItems').innerHTML = s.acts.map((a,i) => `<div class="item"><span class="t">${esc(a.name)}${a.result?`　<b>${esc(a.result)}</b>`:''}<span class="hint">　→ 展現${esc(abilityOf(a.name))}</span></span>
+    <button class="x" data-delact="${i}" aria-label="移除">×</button></div>`).join('');
+}
+function renderImprove(){
+  const s = cur();
+  $('impBox').innerHTML = IMPROVE.map(m => { const i = s.improve.indexOf(m.id);
+    return `<button class="chip" data-imp="${m.id}" aria-pressed="${i>=0}">${i>=0?`<span class="ord">${i+1}</span>`:''}${m.label}</button>`; }).join('');
+}
+function renderSelf(){
+  const s = cur(); const has = s.self && Object.keys(s.self).length;
+  $('selfWrap').hidden = !has; if(!has) return;
+  $('selfList').innerHTML = Object.entries(s.self).map(([k,v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd><dd><button class="btn sm" data-selfk="${esc(k)}">帶入</button></dd>`).join('');
+}
+function renderTabCounts(){
+  const s = cur();
+  $('c1').textContent = s.traits.length ? s.traits.length+'項' : '';
+  const n2 = s.roles.length + s.acts.length + (s.club?1:0) + (s.service?1:0);
+  $('c2').textContent = n2 ? n2+'項' : '';
+  $('c3').textContent = s.improve.length ? s.improve.length+'項' : '';
+}
+function showTab(n){
+  tab = n;
+  document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', String(+b.dataset.tab===n)));
+  document.querySelectorAll('.tabpane').forEach(p => p.hidden = +p.dataset.pane !== n);
+  $('bPrevTab').disabled = n===1;
+  $('bNextTab').textContent = n===3 ? '看評語預覽' : '下一步';
+}
+
+// ============ 畫面：預覽 ============
+function renderPreview(){
+  const s = cur(); if(!s) return;
+  setSeg('segTone', s.tone); setSeg('segLen', s.len);
+  if(document.activeElement !== $('outComment')) $('outComment').value = s.comment;
+  if(document.activeElement !== $('outSpecial')) $('outSpecial').value = s.special;
+  autosize($('outComment')); autosize($('outSpecial'));
+  $('codeBox').innerHTML = s.codes.map(c => `<span class="code"><b>${c}</b>${esc(CODE_MAP[c]||'')}<button class="x" data-delcode="${c}" aria-label="移除代碼">×</button></span>`).join('');
+  $('codeAuto').innerHTML = s.codesManual ? `<button class="btn sm ghost" id="bCodeAuto">改回自動建議</button>` : '<span class="hint">依特質自動建議</span>';
+  const cpc = $('cpCount'); if(cpc) cpc.textContent = s.codes.length;
+  $('tagBox').textContent = s.codes.slice(0,2).map(c => CODE_MAP[c]).join(',') || '—';
+  $('ccC').textContent = (s.comment||'').replace(/\s/g,'').length + ' 字';
+  $('ccS').textContent = (s.special||'').replace(/\s/g,'').length + ' 字';
+  $('lockC').innerHTML = s.manualC ? '已手動修改，左側變更不會覆蓋 <button class="btn sm ghost" id="bUnlockC">重新生成</button>' : '';
+  $('lockS').innerHTML = s.manualS ? '已手動修改 <button class="btn sm ghost" id="bUnlockS">重新整理</button>' : '';
+  $('stampBox').innerHTML = s.done ? '<span class="stamp">完成</span>' : '';
+  $('bDone').textContent = s.done ? '取消完成' : '標記完成，下一位';
+  $('checks').innerHTML = checks(s).map(([k,m]) => `<li><span class="${k}">${k==='ok'?'✓':k==='bad'?'✕':'!'}</span><span>${esc(m)}</span></li>`).join('');
+}
+function autosize(t){ t.style.height = 'auto'; t.style.height = (t.scrollHeight + 4) + 'px'; }
+function update(){ const s = cur(); if(!s) return; regen(s); renderPreview(); renderTabCounts(); renderRosterLite(); save(); }
+function renderRosterLite(){ renderRoster(); }
+
+// ============ 全班總覽 ============
+function renderOverview(){
+  const ss = [...state.students].sort((a,b) => (parseInt(a.seat)||999) - (parseInt(b.seat)||999));
+  const done = ss.filter(s => s.done).length;
+  const avg = ss.length ? Math.round(ss.reduce((n,s) => n + (s.comment||'').length, 0) / ss.length) : 0;
+  // 重複句偵測
+  const cnt = {};
+  ss.forEach(s => new Set((s.comment||'').split(/[。！？]/).map(x => x.replace(/^.{0,6}，/, '').trim()).filter(x => x.length >= 12)).forEach(x => cnt[x] = (cnt[x]||0) + 1));
+  const lim = Math.max(3, Math.ceil(ss.length * 0.15));
+  const dups = Object.entries(cnt).filter(e => e[1] >= lim).sort((a,b) => b[1]-a[1]).slice(0,6);
+  $('overview').innerHTML = `
+    <div class="ov-head"><h2>${esc(state.meta.cls||'')} 班 全班總覽</h2>
+      <div class="row"><button class="btn sm" id="bCopyAll">複製全班表格（貼到 Excel）</button>
+      <button class="btn sm primary" id="bXlsx">匯出 Excel</button><button class="btn sm" id="bCsv">匯出 CSV</button></div></div>
+    <div class="stats"><span><b>${ss.length}</b>位學生</span><span><b>${done}</b>位已完成</span><span><b>${ss.length-done}</b>位待處理</span><span><b>${avg}</b>平均字數</span></div>
+    ${dups.length ? `<div class="dup">以下句子在多位學生評語中重複出現，建議點選該生按「換一種說法」或手動改寫：<ol>${dups.map(d => `<li>${esc(d[0])}（${d[1]} 位）</li>`).join('')}</ol></div>` : ''}
+    <div class="tblwrap"><table class="ovt"><thead><tr><th>座號</th><th>姓名</th><th>狀態</th><th>評語代碼</th><th>導師標籤</th><th>德行評語</th><th>特殊優良表現</th><th>字數</th></tr></thead><tbody>
+    ${ss.map(s => `<tr><td class="num">${esc(s.seat)}</td><td><button class="btn sm ghost" data-goto="${s.id}">${esc(s.name||'未命名')}</button></td>
+      <td><span class="st ${statusOf(s)}">${{empty:'未填',draft:'草稿',done:'完成'}[statusOf(s)]}</span></td>
+      <td class="num">${s.codes.join('、')}</td><td>${esc(s.codes.slice(0,2).map(c=>CODE_MAP[c]).join(','))}</td>
+      <td class="c">${esc(s.comment)}</td><td>${esc(s.special)}</td><td class="num">${(s.comment||'').length}</td></tr>`).join('')}
+    </tbody></table></div>`;
+}
+function setView(v){
+  view = v; $('editor').hidden = v!=='edit'; $('preview').hidden = v!=='edit'; $('overview').hidden = v!=='ov';
+  $('bView').setAttribute('aria-pressed', String(v==='ov')); $('bView').textContent = v==='ov' ? '回到編輯' : '全班總覽';
+  if(v==='ov') renderOverview(); renderRoster();
+}
+
+// ============ 匯出 ============
+function rows(){
+  return [...state.students].sort((a,b) => (parseInt(a.seat)||999) - (parseInt(b.seat)||999)).map(s => ({
+    '座號':s.seat,'姓名':s.name,'性別':s.gender==='f'?'女':'男','評語代碼':s.codes.join('、'),'代碼文字':s.codes.map(c=>CODE_MAP[c]).join('、'),
+    '導師標籤':s.codes.slice(0,2).map(c=>CODE_MAP[c]).join(','),'德行評語':s.comment,'特殊優良表現':s.special,'狀態':s.done?'完成':'草稿'}));
+}
+function fname(ext){ const m = state.meta; return `${m.year||''}-${m.sem==='2'?'下':'上'}_${m.cls||'班級'}_導師評語.${ext}`; }
+function download(blob, name){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+async function copy(text, msg){
+  try{ await navigator.clipboard.writeText(text); toast(msg||'已複製'); }
+  catch(e){ const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); try{ document.execCommand('copy'); toast(msg||'已複製'); }catch(_){ toast('無法自動複製，請手動選取'); } t.remove(); }
+}
+
+// ============ 匯入 ============
+const ALIAS = {
+  seat:['座號','座號no','no','號碼'], name:['姓名','學生姓名','名字'], gender:['性別'],
+  roles:['幹部','擔任幹部','職務','擔任職務','幹部經歷'], club:['社團','社團表現','社團活動'],
+  service:['學校服務','校內服務','服務學習','社會服務','校外服務','志工服務'],
+  acts:['科學展覽','科展','競賽','比賽','活動表演','其他特殊表現','校內其他特殊表現','校外其他特殊表現','特殊表現','得獎']
+};
+const SELF_LABELS = ['學校服務','社團表現','學業表現','生活常規','其他特殊表現','社會服務','活動表演','科學展覽','校外其他特殊表現','幹部','擔任幹部','職務','競賽'];
+const norm = h => String(h||'').replace(/\s|（.*?）|\(.*?\)/g,'').toLowerCase();
+function importRows(rowsIn){
+  if(!rowsIn.length){ toast('檔案中沒有資料列'); return; }
+  const headers = Object.keys(rowsIn[0]);
+  const find = key => headers.filter(h => ALIAS[key].some(a => norm(h).includes(norm(a))));
+  const hName = find('name')[0]; if(!hName){ toast('找不到「姓名」欄位，請確認第一列是標題'); return; }
+  const hSeat = find('seat')[0], hGender = find('gender')[0];
+  if(state.sample){ state.students = []; state.sample = false; }
+  let added = 0, merged = 0;
+  rowsIn.forEach(r => {
+    const name = String(r[hName]||'').trim(); if(!name) return;
+    let s = state.students.find(x => x.name === name);
+    if(!s){ s = blankStudent(hSeat ? r[hSeat] : '', name, 'm'); state.students.push(s); added++; } else merged++;
+    if(hSeat && r[hSeat] !== '' && r[hSeat] != null) s.seat = String(r[hSeat]).padStart(2,'0');
+    if(hGender){ const gv = String(r[hGender]); if(/女|f/i.test(gv)) s.gender='f'; else if(/男|m/i.test(gv)) s.gender='m'; }
+    const self = s.self || {};
+    headers.forEach(h => { const v = String(r[h]??'').trim(); if(!v || /^(無|沒有|none|-|—)$/i.test(v)) return; if(SELF_LABELS.some(l => norm(h).includes(norm(l)))) self[h.trim()] = v; });
+    if(Object.keys(self).length) s.self = self;
+    find('club').forEach(h => { const v = String(r[h]||'').trim(); if(v && !s.club && !/^(無|沒有)$/.test(v)) s.club = v; });
+    find('roles').forEach(h => String(r[h]||'').split(/[、,，;；\/\n]/).map(x => x.trim()).filter(x => x && !/^(無|沒有)$/.test(x)).forEach(role => { if(!s.roles.some(x => x.role===role)) s.roles.push({role, perf:'good'}); }));
+  });
+  state.current = state.students[0] && state.students[0].id;
+  state.students.forEach(s => regen(s));
+  renderAll(); closeModal(); toast(`匯入完成：新增 ${added} 位、更新 ${merged} 位`);
+}
+function parsePaste(text){
+  const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
+  if(state.sample){ state.students = []; state.sample = false; }
+  let n = 0;
+  lines.forEach((l,i) => {
+    const p = l.split(/[\t,，\s]+/).filter(Boolean); if(!p.length) return;
+    let seat = '', name = '', gender = 'm';
+    p.forEach(x => { if(/^\d{1,3}$/.test(x) && !seat) seat = x.padStart(2,'0'); else if(/^(男|女|M|F|m|f)$/.test(x)) gender = /女|f/i.test(x)?'f':'m'; else if(!name) name = x; });
+    if(!name) return; if(!seat) seat = String(i+1).padStart(2,'0');
+    if(state.students.some(s => s.name===name)) return;
+    state.students.push(blankStudent(seat, name, gender)); n++;
+  });
+  if(!state.students.length){ toast('沒有讀到姓名'); return; }
+  state.current = state.students[0].id; state.students.forEach(s => regen(s)); renderAll(); closeModal(); toast(`已加入 ${n} 位學生`);
+}
+
+// ============ Modal ============
+function openModal(html){ $('modalBox').innerHTML = html; $('modal').hidden = false; }
+function closeModal(){ $('modal').hidden = true; }
+function helpHtml(){ return `<h2>三步驟寫好一位學生</h2>
+ <ol class="steps3">
+  <li><span class="n">1</span><div><b>點選個性印象</b><p>依重要性點 2～4 個特質，第一個會成為開頭「○○，你是一位……的學生」。再寫一件你記得的具體小事，評語就會有你的溫度。</p></div></li>
+  <li><span class="n">2</span><div><b>點職務、填競賽</b><p>點選幹部或小老師，系統自動帶入職務內容（例：衛生股長→督導打掃工作）。競賽填名稱與成績即可，會同時寫進「特殊優良表現」。</p></div></li>
+  <li><span class="n">3</span><div><b>選成長方向，看右側預覽</b><p>選 1～2 個希望加強的地方，系統寫成具體可做的建議，不寫成缺點。右側即時產生德行評語、特殊優良表現與評語代碼。</p></div></li>
+ </ol>
+ <p class="hint" style="margin:0">・右側文字可以直接修改；修改後左側變更不會覆蓋，按「重新生成」才會更新。<br>・「換一種說法」會換句型，避免全班評語長得一樣；「全班總覽」會提醒重複句。<br>・年級語氣在上方切換：高三上強調學測，高三下改為三年總結。<br>・資料只存在這台電腦的瀏覽器裡，請定期「備份與還原」下載備份檔。</p>
+ <div class="row" style="justify-content:flex-end"><button class="btn primary" data-close>開始使用</button></div>`; }
+
+// ============ AI 潤飾 ============
+const AI_DEFAULT = {gemini:'gemini-2.5-flash', openai:'gpt-4.1-mini'};
+async function aiPolish(){
+  const s = cur(); const prov = $('aiProv').value, key = $('aiKey').value.trim(), model = $('aiModel').value.trim() || AI_DEFAULT[prov];
+  if(!key){ $('aiMsg').textContent = '請先貼上 API Key。'; return; }
+  if(!s.comment){ $('aiMsg').textContent = '目前沒有評語可潤飾。'; return; }
+  try{ if($('aiRemember').checked) localStorage.setItem(KEY+'-ai-'+prov, key); }catch(e){}
+  const nm = callName(s), full = s.name || nm;
+  const mask = t => t.split(full).join('○○').split(nm).join('○○');
+  const you = state.meta.grade==='g3b' ? (s.gender==='f'?'她':'他') : (s.gender==='f'?'妳':'你');
+  const prompt = `你是一位資深、溫暖的台灣高中班導師，正在寫成績單上的德行評語。
+請潤飾下面這段評語，讓它讀起來像導師親筆寫的，語句自然流暢、溫暖但正式。
+規則：
+1. 以「○○，${you}是一位……」開頭（高三下總結格式則保留「○○同學高中三年……」），全文第二人稱用「${you}」。
+2. 保留所有事實（職務、競賽名稱與名次、科目），不得新增未提供的獎項、名次或經歷。
+3. 缺點一律寫成具體可做的建議，結尾要有期許與鼓勵。
+4. 不提家庭、健康、懲處等敏感資訊。使用台灣繁體中文，避免翻譯腔與過度華麗的形容。
+5. 字數約 ${TARGET[s.len]} 字，單一段落，直接輸出評語本文，不要標題或說明。
+
+原評語：
+${mask(s.comment)}`;
+  $('bAi').disabled = true; $('aiMsg').textContent = '潤飾中…';
+  try{
+    let text = '';
+    if(prov==='gemini'){
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key':key},
+        body: JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}], generationConfig:{temperature:0.5, maxOutputTokens:1024}})});
+      const d = await r.json(); if(!r.ok) throw new Error(d.error?.message || r.status);
+      text = (d.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('');
+    } else {
+      const r = await fetch('https://api.openai.com/v1/chat/completions', {method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+        body: JSON.stringify({model, messages:[{role:'user',content:prompt}], temperature:0.5})});
+      const d = await r.json(); if(!r.ok) throw new Error(d.error?.message || r.status);
+      text = d.choices?.[0]?.message?.content || '';
+    }
+    text = text.trim().replace(/○○/g, nm);
+    if(text.length < 60) throw new Error('回傳內容過短');
+    s.comment = text; s.manualC = true; renderPreview(); save();
+    $('aiMsg').textContent = '完成。已標示為手動版本，可再自行微調。';
+  }catch(e){ $('aiMsg').textContent = 'AI 潤飾失敗：' + e.message + '。請確認 Key 與模型名稱，本機生成的評語仍可使用。'; }
+  finally{ $('bAi').disabled = false; }
+}
+
+// ============ 事件 ============
+function renderAll(){ renderRoster(); renderEditor(); renderPreview(); if(view==='ov') renderOverview(); renderMeta(); }
+function renderMeta(){ $('mClass').value = state.meta.cls||''; $('mYear').value = state.meta.year||''; $('mSem').value = state.meta.sem||'1'; $('mGrade').value = state.meta.grade||'g1'; }
+function bindField(id, key, rerenderTraits){
+  $(id).addEventListener('input', e => { const s = cur(); s[key] = e.target.value; if(key==='name'){ $('fCall').placeholder = callName({...s, call:''}); } update(); });
+}
+function init(){
+  state = load(); if(!state.meta) state.meta = {cls:'',year:'',sem:'1',grade:'g1'};
+  state.students.forEach(s => { Object.keys(blankStudent()).forEach(k => { if(!(k in s)) s[k] = blankStudent()[k]; }); if(!s.comment) regen(s); });
+  if(!state.current && state.students[0]) state.current = state.students[0].id;
+  renderAll(); showTab(1);
+  try{ const k = localStorage.getItem(KEY+'-ai-gemini'); if(k){ $('aiKey').value = k; $('aiRemember').checked = true; } }catch(e){}
+
+  ['mClass','mYear','mSem','mGrade'].forEach(id => $(id).addEventListener('change', e => {
+    state.meta[{mClass:'cls',mYear:'year',mSem:'sem',mGrade:'grade'}[id]] = e.target.value;
+    if(id==='mGrade') state.students.forEach(s => regen(s));
+    renderPreview(); if(view==='ov') renderOverview(); save(); }));
+  bindField('fSeat','seat'); bindField('fName','name'); bindField('fCall','call');
+  ['fObs:obs','fStrong:strong','fRank:rank','fClub:club','fService:service','fWeak:weak','fNote:note'].forEach(p => { const [id,k] = p.split(':'); bindField(id,k); });
+  $('fSeat').addEventListener('change', renderRoster); $('fName').addEventListener('change', renderRoster);
+
+  document.addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b) { if(e.target === $('modal')) closeModal(); if(!e.target.closest('.cp-pop')) closePick(); return; }
+    const s = cur(); const d = b.dataset;
+    if(!b.closest('.codepick')) closePick();
+    if(d.id){ state.current = d.id; if(view==='ov') setView('edit'); renderAll(); return; }
+    if(d.goto){ state.current = d.goto; setView('edit'); renderAll(); return; }
+    if(d.close !== undefined){ closeModal(); return; }
+    if(d.g){ s.gender = d.g; document.querySelectorAll('.who .seg button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.g===d.g))); update(); return; }
+    if(d.trait){ const i = s.traits.indexOf(d.trait); if(i>=0) s.traits.splice(i,1); else if(s.traits.length < 4) s.traits.push(d.trait); else { toast('最多選 4 個，請先取消一個'); return; } renderTraits(); update(); return; }
+    if(d.obs){ s.obs = s.obs ? s.obs : d.obs; $('fObs').value = s.obs; $('fObs').focus(); update(); return; }
+    if(d.role){ const i = s.roles.findIndex(x => x.role===d.role); if(i>=0) s.roles.splice(i,1); else s.roles.push({role:d.role, perf:'good'}); renderRoles(); update(); return; }
+    if(d.delrole){ s.roles.splice(+d.delrole,1); renderRoles(); update(); return; }
+    if(d.delact){ s.acts.splice(+d.delact,1); renderActs(); update(); return; }
+    if(d.imp){ const i = s.improve.indexOf(d.imp); if(i>=0) s.improve.splice(i,1); else if(s.improve.length < 2) s.improve.push(d.imp); else { toast('最多 2 項，建議聚焦最重要的'); return; } renderImprove(); update(); return; }
+    if(d.selfk){ const v = s.self[d.selfk]; if(/社團/.test(d.selfk)) { s.club = s.club ? s.club+'、'+v : v; $('fClub').value = s.club; }
+      else if(/服務/.test(d.selfk)) { s.service = s.service ? s.service+'、'+v : v; $('fService').value = s.service; }
+      else if(/幹部|職務/.test(d.selfk)) { v.split(/[、,，;；]/).map(x=>x.trim()).filter(Boolean).forEach(role => { if(!s.roles.some(x=>x.role===role)) s.roles.push({role,perf:'good'}); }); renderRoles(); }
+      else if(/學業/.test(d.selfk)) { s.obs = s.obs || v; $('fObs').value = s.obs; }
+      else { v.split(/[、;；\n]/).map(x=>x.trim()).filter(Boolean).forEach(x => { const m = x.match(/^(.*?)(?:獲得|榮獲|得到)?(特優|優等|甲等|佳作|第[一二三四五六]名|[金銀銅]牌|一等獎|二等獎|三等獎|入選|冠軍|亞軍|季軍)$/); s.acts.push(m ? {name:m[1].trim()||x, result:m[2]} : {name:x, result:''}); }); renderActs(); }
+      toast('已帶入「'+d.selfk+'」'); update(); return; }
+    if(d.delcode){ s.codes = s.codes.filter(c => c!==d.delcode); s.codesManual = true; renderPreview(); save(); return; }
+    if(d.pick){ if(s.codes.includes(d.pick)) s.codes = s.codes.filter(c => c!==d.pick); else if(s.codes.length<3) s.codes.push(d.pick); else { toast('學校規定最多 3 個代碼'); return; } s.codesManual = true; b.setAttribute('aria-pressed', String(s.codes.includes(d.pick))); renderPreview(); save(); return; }
+    if(d.tab){ showTab(+d.tab); return; }
+    if(b.parentElement.id==='segBand'){ s.band = s.band===d.v ? '' : d.v; setSeg('segBand', s.band); update(); return; }
+    if(b.parentElement.id==='segTrend'){ s.trend = s.trend===d.v ? '' : d.v; setSeg('segTrend', s.trend); update(); return; }
+    if(b.parentElement.id==='segAttend'){ s.attend = d.v; setSeg('segAttend', s.attend); update(); return; }
+    if(b.parentElement.id==='segTone'){ s.tone = d.v; s.manualC = false; update(); return; }
+    if(b.parentElement.id==='segLen'){ s.len = d.v; s.manualC = false; update(); return; }
+    switch(b.id){
+      case 'bPrevTab': showTab(Math.max(1,tab-1)); break;
+      case 'bNextTab': if(tab<3) showTab(tab+1); else { $('outComment').scrollIntoView({behavior:'smooth',block:'center'}); $('outComment').focus(); } break;
+      case 'bRoleAdd': { const v = $('fRoleOther').value.trim(); if(v){ s.roles.push({role:v, perf:'good'}); $('fRoleOther').value=''; renderRoles(); update(); } break; }
+      case 'bActAdd': { const n = $('fActName').value.trim(); if(!n){ toast('請先輸入活動或競賽名稱'); break; } s.acts.push({name:n, result:$('fActRes').value.trim()}); $('fActName').value=''; $('fActRes').value=''; $('fActName').focus(); renderActs(); update(); break; }
+      case 'bReword': s.seed++; regen(s, true); renderPreview(); save(); toast('已換一種說法'); break;
+      case 'bCopy': copy(s.comment, '已複製德行評語'); break;
+      case 'bUnlockC': s.manualC = false; update(); break;
+      case 'bUnlockS': s.manualS = false; update(); break;
+      case 'bCodeAuto': s.codesManual = false; update(); break;
+      case 'bCodePick': openPick(); break;
+      case 'bDone': { s.done = !s.done; save(); if(s.done){ const ss = [...state.students].sort((a,b) => (parseInt(a.seat)||999)-(parseInt(b.seat)||999)); const nx = ss.find(x => !x.done); if(nx){ state.current = nx.id; showTab(1); toast(`${s.name} 完成，接著寫 ${nx.name}`); } else toast('全班都完成了！到「全班總覽」匯出'); } renderAll(); break; }
+      case 'bAdd': { if(state.sample){ state.students = []; state.sample = false; toast('已清除範例學生'); } const seats = state.students.map(x => parseInt(x.seat)||0); const ns = blankStudent(String((Math.max(0,...seats)+1)).padStart(2,'0'), '', 'm'); regen(ns); state.students.push(ns); state.current = ns.id; setView('edit'); renderAll(); showTab(1); $('fName').focus(); save(); break; }
+      case 'bDel': { if(!delArm){ delArm = true; $('delWrap').innerHTML = '<span class="confirm">確定刪除 '+esc(s.name||'此生')+'？<button class="btn sm danger" id="bDel">刪除</button><button class="btn sm ghost" id="bDelNo">取消</button></span>'; } else { state.students = state.students.filter(x => x.id!==s.id); state.current = state.students[0]?.id; if(!state.students.length){ const n = blankStudent('01'); regen(n); state.students.push(n); state.current = n.id; } renderAll(); save(); toast('已刪除'); } break; }
+      case 'bDelNo': renderEditor(); break;
+      case 'bView': setView(view==='ov' ? 'edit' : 'ov'); break;
+      case 'bHelp': openModal(helpHtml()); break;
+      case 'bStartReal': state = {meta:{cls:'',year:state.meta.year,sem:state.meta.sem,grade:state.meta.grade}, students:[], sample:false}; { const n = blankStudent('01'); regen(n); state.students.push(n); state.current = n.id; } save(); renderAll(); openModal(pasteHtml()); break;
+      case 'bPaste': openModal(pasteHtml()); break;
+      case 'bDoPaste': parsePaste($('pasteArea').value); break;
+      case 'bImport': openModal(importHtml()); break;
+      case 'bPickFile': $('fileImport').click(); break;
+      case 'bBackup': openModal(backupHtml()); break;
+      case 'bJsonOut': download(new Blob([JSON.stringify(state,null,1)],{type:'application/json'}), fname('json').replace('導師評語','評語備份')); toast('已下載備份檔'); break;
+      case 'bJsonCopy': copy(JSON.stringify(state), '已複製備份文字'); break;
+      case 'bJsonIn': $('fileJson').click(); break;
+      case 'bCopyAll': { const r = rows(); const h = Object.keys(r[0]||{}); copy([h.join('\t'), ...r.map(x => h.map(k => String(x[k]||'').replace(/[\t\n]/g,' ')).join('\t'))].join('\n'), '已複製，可直接貼到 Excel 或校務系統'); break; }
+      case 'bXlsx': { if(!window.XLSX){ toast('Excel 元件未載入，請改用「複製全班表格」'); break; } const ws = XLSX.utils.json_to_sheet(rows()); ws['!cols'] = [{wch:5},{wch:8},{wch:4},{wch:14},{wch:18},{wch:14},{wch:70},{wch:40},{wch:6}]; const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, '導師評語'); XLSX.writeFile(wb, fname('xlsx')); toast('已匯出 Excel'); break; }
+      case 'bCsv': { const r = rows(); const h = Object.keys(r[0]||{}); const csv = '﻿' + [h, ...r.map(x => h.map(k => x[k]))].map(a => a.map(v => '"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n'); download(new Blob([csv],{type:'text/csv'}), fname('csv')); break; }
+      case 'bAi': aiPolish(); break;
+    }
+  });
+  document.addEventListener('change', e => {
+    if(e.target.dataset.perf !== undefined){ cur().roles[+e.target.dataset.perf].perf = e.target.value; update(); }
+  });
+  document.addEventListener('keydown', e => { if(e.key==='Escape'){ closeModal(); closePick(); } if(e.key==='Enter' && e.target.id==='fActRes') $('bActAdd').click(); if(e.key==='Enter' && e.target.id==='fActName') $('fActRes').focus(); });
+  $('outComment').addEventListener('input', e => { autosize(e.target); const s = cur(); s.comment = e.target.value; s.manualC = true; $('ccC').textContent = e.target.value.replace(/\s/g,'').length+' 字'; save(); });
+  $('outComment').addEventListener('blur', renderPreview);
+  $('outSpecial').addEventListener('input', e => { autosize(e.target); const s = cur(); s.special = e.target.value; s.manualS = true; save(); });
+  $('outSpecial').addEventListener('blur', renderPreview);
+  $('aiProv').addEventListener('change', e => { try{ $('aiKey').value = localStorage.getItem(KEY+'-ai-'+e.target.value) || ''; }catch(_){ $('aiKey').value=''; } });
+  $('fileImport').addEventListener('change', e => { const f = e.target.files[0]; if(!f) return; const rd = new FileReader();
+    rd.onload = () => { try{ const wb = XLSX.read(rd.result, {type:'array'}); importRows(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval:''})); }catch(err){ toast('讀取失敗：'+err.message); } };
+    rd.readAsArrayBuffer(f); e.target.value=''; });
+  $('fileJson').addEventListener('change', e => { const f = e.target.files[0]; if(!f) return; f.text().then(t => { try{ const d = JSON.parse(t); if(!Array.isArray(d.students)) throw new Error('格式不符'); state = d; state.sample = false; renderAll(); save(); closeModal(); toast('已還原 '+d.students.length+' 位學生'); }catch(err){ toast('還原失敗：'+err.message); } }); e.target.value=''; });
+  try{ if(!localStorage.getItem(KEY+'-help')){ localStorage.setItem(KEY+'-help','1'); openModal(helpHtml()); } }catch(e){}
+}
+function pasteHtml(){ return `<h2>貼上班級名單</h2><p class="hint" style="margin:0">從校務系統或 Excel 複製「座號、姓名、性別」三欄貼上，一行一位。性別可省略，之後再改。</p>
+ <textarea id="pasteArea" rows="9" placeholder="01	王小明	男&#10;02	林小華	女&#10;03	陳大同	男"></textarea>
+ <div class="row" style="justify-content:flex-end"><button class="btn" data-close>取消</button><button class="btn primary" id="bDoPaste">加入名單</button></div>`; }
+function importHtml(){ return `<h2>匯入名單或學生自評</h2>
+ <p style="margin:0">支援 Excel（.xlsx／.xls）與 CSV，第一列需為欄位標題。系統會辨識：</p>
+ <ul class="hint" style="margin:0;padding-left:1.2em"><li>座號、姓名、性別 → 建立名單（同名學生會合併更新）</li>
+ <li>幹部、社團 → 直接填入</li><li>學校服務、社會服務、科學展覽、競賽、其他特殊表現等 → 放在「學生自評資料」，按「帶入」加入評語</li></ul>
+ <p class="hint" style="margin:0">Google 表單回覆可在試算表中「下載 → Microsoft Excel」後匯入。</p>
+ <div class="row" style="justify-content:flex-end"><button class="btn" data-close>取消</button><button class="btn primary" id="bPickFile">選擇檔案</button></div>`; }
+function backupHtml(){ return `<h2>備份與還原</h2>
+ <p class="hint" style="margin:0">所有資料只存在這台電腦的瀏覽器中，清除瀏覽紀錄就會消失。換電腦或期末前，請下載備份檔存到雲端硬碟。API Key 不會包含在備份中。</p>
+ <div class="row"><button class="btn primary" id="bJsonOut">下載備份檔（.json）</button><button class="btn" id="bJsonCopy">複製備份文字</button><button class="btn" id="bJsonIn">從備份檔還原</button></div>
+ <div class="row" style="justify-content:flex-end"><button class="btn" data-close>關閉</button></div>`; }
+function openPick(){
+  closePick(); const s = cur(); const host = $('cpHost'); if(!host) return;
+  const pop = document.createElement('div'); pop.className = 'cp-pop'; pop.id = 'cpPop';
+  pop.innerHTML = `<input class="in" id="cpQ" placeholder="搜尋，例：負責、數理、305" autocomplete="off"><div class="hint" style="margin-top:4px">已選 <span id="cpCount">${s.codes.length}</span>/3，點選加入或移除</div><div class="res" id="cpRes"></div>`;
+  host.appendChild(pop);
+  const draw = q => { $('cpRes').innerHTML = CODE_DB.map(c => { const hits = c.items.filter(x => !q || x.includes(q)); return hits.length ? `<div class="cat">${c.label}</div>` + hits.map(x => `<button class="chip" data-pick="${x.slice(0,3)}" aria-pressed="${s.codes.includes(x.slice(0,3))}"><span class="ord">${x.slice(0,3)}</span>${x.slice(3)}</button>`).join('') : ''; }).join('') || '<span class="hint">找不到符合的代碼</span>'; };
+  draw(''); $('cpQ').addEventListener('input', e => draw(e.target.value.trim()));
+}
+function closePick(){ const p = $('cpPop'); if(p) p.remove(); }
+init();
+</script>
+
+</body>
+</html>
