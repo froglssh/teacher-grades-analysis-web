@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>導師知能研習｜AI 輔助德性評語與特殊優良表現撰寫</title>
+<style>
+:root{
+  --bg:#f3f6f8;
+  --paper:#ffffff;
+  --ink:#182331;
+  --muted:#607083;
+  --line:#dbe4ec;
+  --teal:#176f75;
+  --teal-soft:#e4f3f2;
+  --blue:#2f5f9e;
+  --blue-soft:#e7eefb;
+  --red:#b94a48;
+  --red-soft:#f8e8e6;
+  --green:#2d7d58;
+  --green-soft:#e5f3ea;
+  --gold:#a86f12;
+  --gold-soft:#fbf0d9;
+  --violet:#6554a8;
+  --violet-soft:#ece9f7;
+  --shadow:0 18px 46px rgba(24,35,49,.10);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",Arial,sans-serif;
+  color:var(--ink);
+  background:var(--bg);
+  line-height:1.75;
+}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:20;
+  background:rgba(255,255,255,.94);
+  border-bottom:1px solid var(--line);
+  backdrop-filter:blur(12px);
+}
+.topbar-inner{
+  max-width:1180px;
+  margin:auto;
+  padding:10px 22px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+.brand{
+  font-weight:900;
+  letter-spacing:.02em;
+  flex:1;
+}
+.nav{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+.nav a{
+  color:var(--muted);
+  font-size:.88rem;
+  padding:6px 10px;
+  border-radius:8px;
+}
+.nav a:hover{
+  background:#eef3f7;
+  color:var(--ink);
+  text-decoration:none;
+}
+.hero{
+  background:var(--paper);
+  border-bottom:1px solid var(--line);
+}
+.hero-inner{
+  max-width:1180px;
+  margin:auto;
+  padding:38px 22px 34px;
+  display:grid;
+  grid-template-columns:minmax(0,1.05fr) minmax(310px,.95fr);
+  gap:32px;
+  align-items:center;
+}
+.eyebrow{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  color:var(--teal);
+  font-weight:800;
+  font-size:.85rem;
+  letter-spacing:.14em;
+}
+.eyebrow::before{
+  content:"";
+  width:28px;
+  height:3px;
+  border-radius:3px;
+  background:var(--teal);
+}
+h1{
+  margin:14px 0 14px;
+  font-size:clamp(2rem,5vw,4rem);
+  line-height:1.13;
+  letter-spacing:0;
+}
+.maker{
+  margin:0 0 14px;
+  color:var(--teal);
+  font-size:.98rem;
+  font-weight:700;
+}
+.lead{
+  margin:0;
+  max-width:58ch;
+  color:var(--muted);
+  font-size:1.08rem;
+  font-weight:500;
+}
+.hero-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:24px;
+}
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:40px;
+  padding:8px 14px;
+  border-radius:8px;
+  border:1px solid var(--line);
+  background:var(--paper);
+  color:var(--ink);
+  font-weight:800;
+  cursor:pointer;
+  font:inherit;
+}
+.btn.primary{
+  color:#fff;
+  background:var(--teal);
+  border-color:var(--teal);
+}
+.btn:hover{text-decoration:none;filter:brightness(.98)}
+.hero-visual{
+  margin:0;
+  border:1px solid var(--line);
+  border-radius:8px;
+  overflow:hidden;
+  background:#dfe8ee;
+  box-shadow:var(--shadow);
+}
+.hero-visual img{
+  display:block;
+  width:100%;
+  aspect-ratio:16/10;
+  object-fit:cover;
+}
+.hero-visual figcaption{
+  padding:9px 12px;
+  background:#fff;
+  color:var(--muted);
+  font-size:.84rem;
+}
+.wrap{
+  max-width:1180px;
+  margin:auto;
+  padding:28px 22px 58px;
+}
+.notice{
+  background:var(--gold-soft);
+  border:1px solid #ecd29a;
+  border-left:6px solid var(--gold);
+  padding:14px 16px;
+  border-radius:8px;
+  margin-bottom:24px;
+}
+.section{
+  margin:34px 0;
+  scroll-margin-top:82px;
+}
+.section-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:14px;
+}
+h2{
+  margin:0;
+  font-size:1.55rem;
+  line-height:1.35;
+}
+.section-head p{
+  margin:0;
+  color:var(--muted);
+  max-width:52ch;
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:14px;
+}
+.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.card{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:18px;
+  box-shadow:0 1px 0 rgba(24,35,49,.03);
+}
+.card h3{
+  margin:0 0 8px;
+  font-size:1.05rem;
+}
+.card p,.card li{
+  color:var(--muted);
+}
+.card p{margin:0}
+.badge{
+  display:inline-flex;
+  align-items:center;
+  min-height:26px;
+  padding:2px 9px;
+  border-radius:999px;
+  font-size:.78rem;
+  font-weight:800;
+  margin-bottom:10px;
+}
+.b-teal{background:var(--teal-soft);color:var(--teal)}
+.b-blue{background:var(--blue-soft);color:var(--blue)}
+.b-red{background:var(--red-soft);color:var(--red)}
+.b-green{background:var(--green-soft);color:var(--green)}
+.b-gold{background:var(--gold-soft);color:var(--gold)}
+.b-violet{background:var(--violet-soft);color:var(--violet)}
+.timeline{
+  display:grid;
+  gap:12px;
+}
+.step{
+  display:grid;
+  grid-template-columns:44px minmax(0,1fr);
+  gap:14px;
+  align-items:start;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:16px;
+}
+.num{
+  width:36px;
+  height:36px;
+  border-radius:8px;
+  background:var(--teal);
+  color:#fff;
+  display:grid;
+  place-items:center;
+  font-weight:900;
+}
+.step h3{
+  margin:0 0 4px;
+  font-size:1.06rem;
+}
+.step p{
+  margin:0;
+  color:var(--muted);
+}
+.resource-list{
+  display:grid;
+  gap:10px;
+}
+.resource{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:12px;
+  align-items:center;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:12px 14px;
+}
+.resource strong{display:block}
+.resource span{
+  color:var(--muted);
+  font-size:.9rem;
+}
+.resource-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+.table-wrap{
+  overflow:auto;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:8px;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:720px;
+}
+th,td{
+  padding:11px 12px;
+  border-bottom:1px solid var(--line);
+  text-align:left;
+  vertical-align:top;
+}
+th{
+  background:#edf3f7;
+  font-size:.88rem;
+}
+td{color:var(--muted)}
+.prompt-box{
+  background:#182331;
+  color:#f6fbff;
+  border-radius:8px;
+  overflow:hidden;
+  border:1px solid #2d4057;
+}
+.prompt-tools{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 12px;
+  background:#26374b;
+}
+.prompt-tools strong{font-size:.92rem}
+.copy-btn{
+  border:1px solid rgba(255,255,255,.22);
+  background:rgba(255,255,255,.1);
+  color:#fff;
+  border-radius:8px;
+  padding:6px 10px;
+  cursor:pointer;
+  font:inherit;
+  font-size:.86rem;
+}
+pre{
+  margin:0;
+  padding:16px;
+  white-space:pre-wrap;
+  font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  font-size:.92rem;
+  line-height:1.7;
+}
+.practice{
+  border-left:6px solid var(--green);
+}
+.warning{
+  border-left:6px solid var(--red);
+}
+.checklist{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px 14px;
+}
+.check{
+  display:flex;
+  gap:9px;
+  align-items:flex-start;
+  color:var(--muted);
+}
+.check input{
+  width:18px;
+  height:18px;
+  margin-top:4px;
+  accent-color:var(--teal);
+}
+.footer{
+  padding:24px 22px 42px;
+  color:var(--muted);
+  text-align:center;
+}
+@media (max-width:900px){
+  .hero-inner{grid-template-columns:1fr}
+  .grid,.grid.two,.checklist{grid-template-columns:1fr}
+  .resource{grid-template-columns:1fr}
+  .resource-actions{justify-content:flex-start}
+  .section-head{display:block}
+  .section-head p{margin-top:8px}
+  .topbar-inner{align-items:flex-start}
+  .nav{justify-content:flex-start}
+}
+@media print{
+  .topbar,.copy-btn,.hero-actions{display:none}
+  body{background:#fff}
+  .wrap,.hero-inner{max-width:none}
+  .card,.step,.resource,.table-wrap{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">導師知能研習：AI 輔助德性評語</div>
+    <nav class="nav" aria-label="頁面導覽">
+      <a href="#goal">研習目標</a>
+      <a href="#resources">資料庫</a>
+      <a href="#workflow">操作流程</a>
+      <a href="#assistant">建立助手</a>
+      <a href="#practice">實作任務</a>
+      <a href="#ethics">檢核</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <div class="eyebrow">HOMEROOM AI WORKSHOP</div>
+      <h1>AI輔助德性評語書寫</h1>
+      <p class="maker">製作者：臺北市麗山高中林獻升老師製作</p>
+      <div class="hero-actions">
+        <a class="btn primary" href="導師評語生成系統（codex優化版）.html">開啟評語生成系統</a>
+        <a class="btn primary" href="導師評語工作台（Claude版）.html">導師評語工作台</a>
+        <a class="btn" href="導師評語生成系統（codex優化版）使用說明.html">查看原系統說明</a>
+        <a class="btn" href="#assistant">複製 AI 助手提示詞</a>
+        <a class="btn" href="班級學生資料管理系統.html">班級學生資料管理系統</a>
+        <a class="btn" href="班級學生資料管理系統使用說明.html">系統使用說明</a>
+      </div>
+    </div>
+    <figure class="hero-visual">
+      <img src="生物科圖案.jpg" alt="生物科圖案">
+      <figcaption>研習主軸：把零散評語經驗、學生自評資料與歷屆範例，轉成可重複使用的導師評語工作流。</figcaption>
+    </figure>
+  </div>
+</section>
+
+<main class="wrap">
+  <div class="notice">
+    <strong>研習定位：</strong>AI 不是代替導師判斷學生，而是協助導師整理素材、改善語句、建立個人風格範本。正式送出前，仍需由導師確認事實、語氣、稱謂、隱私與是否符合校務系統欄位限制。
+  </div>
+
+  <section class="section" id="goal">
+    <div class="section-head">
+      <h2>研習目標</h2>
+      <p>老師完成研習後，應能把「以往怎麼寫」轉成「以後可以穩定複製的工作流程」。</p>
+    </div>
+    <div class="grid">
+      <article class="card">
+        <span class="badge b-teal">目標 1</span>
+        <h3>整理可用素材</h3>
+        <p>會使用學生德行自評表、匯入範例、校內評語代碼與歷屆評語，建立學生個別化資料來源。</p>
+      </article>
+      <article class="card">
+        <span class="badge b-blue">目標 2</span>
+        <h3>善用 AI 改寫</h3>
+        <p>會用 GPTs、Gemini Gem 或本機評語生成系統，將關鍵詞、觀察紀錄與特殊表現改寫成正式評語。</p>
+      </article>
+      <article class="card">
+        <span class="badge b-violet">目標 3</span>
+        <h3>建立個人風格助手</h3>
+        <p>能用自己的舊評語、語氣偏好與校內格式，建立專屬的德性評語輔助 AI，而不是每次從零開始。</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="resources">
+    <div class="section-head">
+      <h2>檔案資源</h2>
+      <p>下列資料可分成四類：工具、學生資料、提示詞、評語資料庫。研習時建議由上而下依序示範。</p>
+    </div>
+    <div class="resource-list">
+      <div class="resource">
+        <div><strong>導師評語生成系統（codex優化版）</strong><span>可輸入學生資料、評語代碼、幹部表現、競賽活動與自評資料，生成基礎評語並進行 AI 潤飾。</span></div>
+        <div class="resource-actions">
+          <a class="btn" href="導師評語生成系統（codex優化版）.html">開啟系統</a>
+          <a class="btn" href="導師評語生成系統（codex優化版）使用說明.html">使用說明</a>
+        </div>
+      </div>
+      <div class="resource">
+        <div><strong>導師評語工作台（Claude版）</strong><span>三步驟觀察輸入、點名簿式座號欄、即時成績單預覽與評語代碼選取，支援純前端本地儲存與備份還原。</span></div>
+        <div class="resource-actions">
+          <a class="btn" href="導師評語工作台（Claude版）.html">開啟系統</a>
+        </div>
+      </div>
+      <div class="resource">
+        <div><strong>班級學生資料管理系統</strong><span>可整理班級學生基本資料、社團與各類統整資訊，方便後續匯入評語生成與整批管理流程。</span></div>
+        <div class="resource-actions">
+          <a class="btn" href="班級學生資料管理系統.html">開啟系統</a>
+          <a class="btn" href="班級學生資料管理系統使用說明.html">使用說明</a>
+        </div>
+      </div>
+      <div class="resource">
+        <div><strong>學生德性自評匯入範例表.xlsx</strong><span>欄位包含學生姓名、座號、班級、性別、學校服務、社團表現、學業表現、生活常規、科學展覽等。</span></div>
+        <a class="btn" href="整批匯入/學生德性自評匯入範例表.xlsx">下載</a>
+      </div>
+      <div class="resource">
+        <div><strong>學生德行自評表（高一／高二高三）</strong><span>適合請學生先整理校內外表現，再由導師篩選事實、修正語氣並轉成正式評語。</span></div>
+        <div class="resource-actions">
+          <a class="btn" href="整批匯入/學生德行自評表(空白)高一.docx">高一表</a>
+          <a class="btn" href="整批匯入/學生德行自評表(空白)高二高三.docx">高二高三表</a>
+          <a class="btn" href="https://docs.google.com/forms/d/e/1FAIpQLSfS7nDF_K8cxGmwohTscWEVsw0_gIe0pemM-CDkeNDHPI6Hug/viewform?usp=sharing&amp;ouid=108739733451640475226" target="_blank" rel="noopener noreferrer">自評表單</a>
+        </div>
+      </div>
+      <div class="resource">
+        <div><strong>學生德行評語與特殊表現表單 - Google 表單.pdf</strong><span>提供表單版本的學生蒐集介面與輸出樣式，方便老師理解欄位與發送學生填寫。</span></div>
+        <a class="btn" href="整批匯入/學生德行評語與特殊表現表單 - Google 表單.pdf">開啟 PDF</a>
+      </div>
+      <div class="resource">
+        <div><strong>班級學生社團統計資料.xlsx</strong><span>可搭配班級學生資料管理系統整理社團分布與班級學生背景資料，作為後續評語補充素材。</span></div>
+        <a class="btn" href="整批匯入/班級學生社團統計資料.xlsx">下載</a>
+      </div>
+      <div class="resource">
+        <div><strong>導師學生資料範本.docx</strong><span>提供導師整理學生觀察資料的基礎範本，適合在餵給 GPTs、Gemini Gem 或評語生成系統前，先把關鍵事實整理成固定欄位。</span></div>
+        <a class="btn" href="整批匯入/導師學生資料範本.docx">下載</a>
+      </div>
+      <div class="resource">
+        <div><strong>高中導師德性評語優化 GPTs 系統設定提示詞</strong><span>核心原則是保留導師觀察、避免空泛模板、強化教育性與正式度，可直接作為 GPTs 或 Gem 的系統指令底稿。</span></div>
+        <a class="btn" href="0德行評語資料庫/高中導師德性評語優化 GPTs 系統設定提示詞.docx">開啟</a>
+      </div>
+      <div class="resource">
+        <div><strong>0德行評語資料庫</strong><span>含德性評語總整理、導師評語參考文本、麗山高中導師評語對照表、網路德性評語總集合。適合做語庫與風格參照，不宜整段照抄。</span></div>
+        <a class="btn" href="0德行評語資料庫/">查看</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="database">
+    <div class="section-head">
+      <h2>評語資料庫如何使用</h2>
+      <p>資料庫不是答案庫，而是幫老師找到詞彙、句型與分類角度。</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>資料來源</th><th>適合用途</th><th>研習提醒</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>麗山高中導師評語對照表</td><td>快速選擇性情、向學、進取、紀律、交友、服務、擅長等評語代碼。</td><td>每位學生可抓 1 至 3 個最貼近的代碼，再用導師觀察補足個別差異。</td></tr>
+          <tr><td>導師評語參考文本</td><td>依成績表現、幹部表現、人際互動、特殊活動等面向找句型。</td><td>適合改寫成自己的語氣，不建議原句大量複製。</td></tr>
+          <tr><td>德性評語總整理</td><td>提供正向特質、責任感、服務精神、領導能力、學術能力等語庫。</td><td>可用來補詞彙，但仍需加入學生具體事件。</td></tr>
+          <tr><td>網路德性評語總集合</td><td>提供大量常見評語句型，適合初學者找靈感。</td><td>部分語氣較國中小或較制式，高中導師使用時需提高成熟度與真實感。</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="section" id="workflow">
+    <div class="section-head">
+      <h2>建議研習操作流程</h2>
+      <p>全程可安排 90 至 120 分鐘，老師最後應完成一位學生的德性評語與一段特殊優良表現。</p>
+    </div>
+    <div class="timeline">
+      <div class="step">
+        <div class="num">1</div>
+        <div><h3>先整理學生資料</h3><p>用學生德行自評表或 Excel 匯入範例蒐集事實：幹部、服務、社團、競賽、學業、生活常規與特殊表現。先求資料具體，不急著寫成漂亮文字。</p></div>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <div><h3>選擇評語代碼與特質詞</h3><p>從校內評語對照表中選 1 至 3 個最準確的描述，例如「溫文謙和、勤學用功、服務盡責」，作為評語的骨架。</p></div>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <div><h3>使用評語生成系統產生初稿</h3><p>將姓名、性別、特質、職務、活動、競賽、自評資料輸入系統，先產出基礎評語，再補充導師自己的觀察。</p></div>
+      </div>
+      <div class="step">
+        <div class="num">4</div>
+        <div><h3>交給 GPTs 或 Gemini Gem 優化</h3><p>請 AI 做「專業化修飾」而不是「重新捏造」。提示詞中要明確要求保留事實、維持導師語氣、區分德性評語與特殊優良表現。</p></div>
+      </div>
+      <div class="step">
+        <div class="num">5</div>
+        <div><h3>人工檢核後定稿</h3><p>確認稱謂、事實、敏感資訊、字數、重複句、是否太像 AI、是否能被學生與家長接受。最後再貼入校務系統。</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="assistant">
+    <div class="section-head">
+      <h2>建立自己的 GPTs 或 Gemini Gem</h2>
+      <p>關鍵不是把 AI 設成「會寫評語」，而是讓它知道你的評語原則、常用語氣、資料來源與禁止事項。</p>
+    </div>
+    <div class="grid" style="margin-bottom:14px">
+      <article class="card">
+        <span class="badge b-teal">德性評語助手 1</span>
+        <h3>Gem</h3>
+        <p>已建立的 Gemini Gem，可直接拿來測試德性評語優化與特殊優良表現改寫流程。</p>
+        <p style="margin-top:12px"><a class="btn" href="https://gemini.google.com/gem/c88087e1b82d?usp=sharing" target="_blank" rel="noopener noreferrer">開啟 Gem</a></p>
+      </article>
+      <article class="card">
+        <span class="badge b-blue">德性評語助手 2</span>
+        <h3>GPTs</h3>
+        <p>已建立的 ChatGPT GPTs，可直接貼入學生資料、導師觀察與需要保留的語氣範例。</p>
+        <p style="margin-top:12px"><a class="btn" href="https://chatgpt.com/g/g-6a2828464eb4819196ae48b7cf54065a-de-xing-ping-yu-fu-zhu" target="_blank" rel="noopener noreferrer">開啟 GPTs</a></p>
+      </article>
+      <article class="card">
+        <span class="badge b-violet">德性評語助手 3</span>
+        <h3>NotebookLM</h3>
+        <p>適合把評語範例、提示詞與參考資料集中在同一個知識庫中，再進行對話式查詢與改寫。</p>
+        <p style="margin-top:12px"><a class="btn" href="https://notebooklm.google.com/notebook/b754c146-8ac6-49f3-961c-c220ef5f831e?authuser=4" target="_blank" rel="noopener noreferrer">開啟 NotebookLM</a></p>
+      </article>
+    </div>
+    <div class="grid two">
+      <article class="card">
+        <span class="badge b-blue">準備資料</span>
+        <h3>上傳或貼入的內容</h3>
+        <ul>
+          <li>自己過去寫過、願意作為風格範例的德性評語。</li>
+          <li>校內評語代碼表與常見德性詞彙。</li>
+          <li>學生自評表欄位說明與特殊優良表現範例。</li>
+          <li>一份「好評語」與「太空泛評語」的對照範例。</li>
+        </ul>
+      </article>
+      <article class="card warning">
+        <span class="badge b-red">資料保護</span>
+        <h3>上傳前先去識別化</h3>
+        <p>若要把歷屆評語放入 GPTs 或 Gem，建議移除學生全名、座號、特殊身分、健康、家庭、心理與其他敏感資訊。可用「學生A」「學生B」取代真名，只保留書寫風格與句型。</p>
+      </article>
+    </div>
+    <div class="prompt-box" style="margin-top:14px">
+      <div class="prompt-tools">
+        <strong>可複製：GPTs / Gemini Gem 系統提示詞底稿</strong>
+        <button class="copy-btn" data-copy="systemPrompt">複製</button>
+      </div>
+      <pre id="systemPrompt">你是一位熟悉台灣高中導師工作、108課綱核心素養與校務系統評語格式的「高中導師德性評語與特殊優良表現撰寫助理」。
+
+你的任務不是代替導師判斷學生，而是協助導師將既有觀察、學生自評資料、幹部服務紀錄、競賽活動與校內評語代碼，整理成正式、自然、具教育性的文字。
+
+請遵守以下原則：
+1. 優先保留導師原始觀察與學生具體行為，不要捏造未提供的事實。
+2. 評語語氣需正式、溫暖、具高中導師口吻，避免過度浮誇、空泛或明顯 AI 感。
+3. 德性評語著重人格特質、學習態度、人際互動、服務精神與成長建議。
+4. 特殊優良表現著重具體事蹟、職務、活動、競賽、服務與成果，避免與德性評語重複。
+5. 若資料不足，先根據現有資料產生可用草稿，再列出可補充的關鍵資訊。
+6. 不輸出涉及家庭背景、健康、心理、懲處細節或其他敏感個資的內容，除非導師明確要求且符合教育專業判斷。
+7. 最後請提供「德性評語」「特殊優良表現」「可再補充資料」三個欄位。</pre>
+    </div>
+    <div class="prompt-box" style="margin-top:14px">
+      <div class="prompt-tools">
+        <strong>可複製：單一學生評語生成提示詞</strong>
+        <button class="copy-btn" data-copy="studentPrompt">複製</button>
+      </div>
+      <pre id="studentPrompt">請根據下列資料，協助我產生一位高中學生的德性評語與特殊優良表現。請保留具體事實，語氣正式溫暖，不要捏造未提供的內容。
+
+學生姓名：
+性別與稱謂：
+評語代碼或特質詞：
+個性與人際互動：
+學習態度與學業表現：
+幹部、服務或小老師經歷：
+社團、競賽、活動或特殊優良表現：
+導師補充觀察：
+需要委婉提醒或期許的方向：
+希望模仿的導師語氣範例：
+
+輸出格式：
+1. 德性評語：150至250字。
+2. 特殊優良表現：條列具體事蹟，避免重複德性評語。
+3. 可再補充資料：列出若要更個人化，還需要補充哪些資料。</pre>
+    </div>
+  </section>
+
+  <section class="section" id="practice">
+    <div class="section-head">
+      <h2>研習實作任務</h2>
+      <p>建議每位老師使用一位已去識別化的學生案例操作，研習結束即可帶走可用成品。</p>
+    </div>
+    <div class="grid">
+      <article class="card practice">
+        <span class="badge b-green">任務 A</span>
+        <h3>從學生自評表取得素材</h3>
+        <p>打開 Excel 範例，觀察欄位如何把「學校服務、社團表現、學業表現、生活常規、科學展覽」分開。請老師把自己的學生資料整理到相同欄位。</p>
+      </article>
+      <article class="card practice">
+        <span class="badge b-green">任務 B</span>
+        <h3>用生成系統產出初稿</h3>
+        <p>輸入學生姓名、性別、評語代碼、幹部與特殊表現，產出基礎評語。接著補上一句導師親自觀察，讓文字不只像範本。</p>
+      </article>
+      <article class="card practice">
+        <span class="badge b-green">任務 C</span>
+        <h3>用 AI 助手做第二版</h3>
+        <p>把初稿貼到 GPTs 或 Gemini Gem，要求 AI 保留事實、優化語句、分開輸出德性評語與特殊優良表現，並檢查是否過度誇飾。</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="examples">
+    <div class="section-head">
+      <h2>範例：從資料到正式評語</h2>
+      <p>此例示範如何把零散資料轉成可送出的文字。實際使用時請依學生真實情況調整。</p>
+    </div>
+    <div class="grid two">
+      <article class="card">
+        <span class="badge b-gold">原始資料</span>
+        <h3>學生資料摘要</h3>
+        <p>特質：溫和樸實、勤學用功、服務盡責。擔任衛生服務隊，協助環境打掃；生物社長，辦理採集活動；段考經常前三名；準時到校，無缺曠紀錄；校內科展特優，臺北市科展特優。</p>
+      </article>
+      <article class="card">
+        <span class="badge b-teal">優化後</span>
+        <h3>評語方向</h3>
+        <p>可先寫德性與學習態度，再寫服務與特殊表現，最後以期許收束。例如：「你個性溫和樸實，待人誠懇有禮，平日能自律安排學習與班級事務……期許未來持續保持探索精神，將研究能力延伸到更深入的學習挑戰。」</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="ethics">
+    <div class="section-head">
+      <h2>定稿前檢核清單</h2>
+      <p>AI 生成後一定要人工檢查。勾選清單可作為研習最後 10 分鐘的同儕互評依據。</p>
+    </div>
+    <div class="card">
+      <div class="checklist">
+        <label class="check"><input type="checkbox">評語中的職務、競賽、服務與學業表現都是真實資料。</label>
+        <label class="check"><input type="checkbox">德性評語與特殊優良表現有分工，沒有大量重複。</label>
+        <label class="check"><input type="checkbox">語氣像導師本人，不是過度華麗或空泛的 AI 樣板。</label>
+        <label class="check"><input type="checkbox">稱謂、性別代詞、姓名與年級情境正確。</label>
+        <label class="check"><input type="checkbox">未揭露不必要的家庭、健康、心理或其他敏感資訊。</label>
+        <label class="check"><input type="checkbox">若學生有待改進處，已用具體、委婉、可行的建議表達。</label>
+        <label class="check"><input type="checkbox">文字長度符合校務系統欄位，貼上後不會被截斷。</label>
+        <label class="check"><input type="checkbox">最後版本已由導師親自讀過並修改。</label>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+document.querySelectorAll("[data-copy]").forEach((button)=>{
+  button.addEventListener("click", async ()=>{
+    const target=document.getElementById(button.dataset.copy);
+    if(!target) return;
+    const original=button.textContent;
+    try{
+      await navigator.clipboard.writeText(target.textContent.trim());
+      button.textContent="已複製";
+    }catch(error){
+      button.textContent="請手動複製";
+    }
+    window.setTimeout(()=>button.textContent=original,1400);
+  });
+});
+</script>
+</body>
+</html>
