@@ -5,229 +5,184 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>導師評語生成系統（codex優化版）使用說明</title>
 <style>
-body {
-  font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
-  color: #1f2333;
-  line-height: 1.8;
-  max-width: 920px;
-  margin: 0 auto;
-  padding: 36px 24px 64px;
-  background: #fbfaf7;
-}
-h1, h2, h3 {
-  line-height: 1.35;
-  color: #17182a;
-}
-h1 {
-  font-size: 2rem;
-  border-bottom: 4px solid #c0392b;
-  padding-bottom: 12px;
-}
-h2 {
-  font-size: 1.35rem;
-  margin-top: 36px;
-  border-left: 6px solid #16a085;
-  padding-left: 12px;
-}
-h3 {
-  font-size: 1.08rem;
-  margin-top: 22px;
-}
-a { color: #1b6fb7; }
-code {
-  background: #f0eee8;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 12px 0;
-  background: white;
-}
-th, td {
-  border: 1px solid #d8d2c6;
-  padding: 8px 10px;
-  vertical-align: top;
-}
-th {
-  background: #f1eadf;
-  text-align: left;
-}
-.note {
-  background: #eef8f5;
-  border-left: 5px solid #16a085;
-  padding: 12px 16px;
-  margin: 14px 0;
-}
-.example {
-  background: white;
-  border: 1px solid #e1d9cc;
-  border-radius: 8px;
-  padding: 12px 16px;
-}
-@media print {
-  body { background: white; padding: 0; }
-  a { color: #1f2333; text-decoration: none; }
-}
+body{font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;color:#1f2933;line-height:1.85;max-width:920px;margin:0 auto;padding:36px 20px 64px;background:#f5f3ee}
+h1,h2,h3{line-height:1.35;color:#17182a}
+h1{font-size:1.9rem;border-bottom:4px solid #0f6e66;padding-bottom:12px}
+h2{font-size:1.3rem;margin-top:36px;border-left:6px solid #0f6e66;padding-left:12px}
+h3{font-size:1.05rem;margin-top:22px}
+a{color:#0f6e66}
+table{width:100%;border-collapse:collapse;margin:12px 0;background:#fff;font-size:.95rem}
+th,td{border:1px solid #d8d2c6;padding:8px 10px;vertical-align:top;text-align:left}
+th{background:#ece8df}
+.note{background:#e6f3f1;border-left:5px solid #0f6e66;padding:12px 16px;margin:14px 0;border-radius:0 8px 8px 0}
+.warn{background:#fff4dc;border-left:5px solid #a86b00;padding:12px 16px;margin:14px 0;border-radius:0 8px 8px 0}
+.example{background:#fff;border:1px solid #e1d9cc;border-radius:8px;padding:12px 16px}
+.kbd{font-family:ui-monospace,Menlo,monospace;font-size:.85rem;background:#fff;border:1px solid #cfc8bb;border-radius:4px;padding:0 5px}
+.update{background:#fff;border:1px solid #c9d0d8;border-radius:12px;padding:16px 20px}
+.update h2{margin-top:0;border:0;padding:0}
+@media print{body{background:#fff;padding:0}a{color:#1f2933;text-decoration:none}}
+@media (max-width:600px){body{padding:24px 16px 48px}table{font-size:.88rem}}
 </style>
 </head>
 <body>
 <h1>導師評語生成系統（codex優化版）使用說明</h1>
 
-<p>本系統協助導師快速整理學生德行評語、特殊優良表現與日常生活表現資料，並可使用本機規則、Google Gemini API 或 ChatGPT／OpenAI API 進行文字潤飾。老師可以先用結構化欄位輸入學生資料，再產生基礎評語，最後視需要使用 AI 優化成較完整、自然的成績單評語。</p>
-
-<p><strong>線上版網址：</strong><br>
-<a href="https://froglssh.github.io/homeroom-comment-generator-online/">https://froglssh.github.io/homeroom-comment-generator-online/</a></p>
-
-<h2>一、開啟系統</h2>
-<ol>
-  <li>使用 Chrome、Edge、Safari 等瀏覽器開啟線上版網址。</li>
-  <li>建議使用電腦或平板操作，畫面較寬時左右兩欄會比較容易填寫。</li>
-  <li>若頁面剛發佈後出現 404，請等待 1 至 3 分鐘後重新整理。</li>
-</ol>
-
-<h2>二、基本設定</h2>
-<p>在左側「基本設定」區填寫學生姓名、性別與語氣風格。語氣風格可選擇「溫暖鼓勵」、「客觀中立」或「委婉規勸」，這些設定會影響基礎評語與 AI 潤飾後的文字語氣。</p>
-
-<h3>匯入單一學生 Excel</h3>
-<p>若老師手上有其他校務系統匯出的單一學生 Excel 檔，可在「基本設定」區使用匯入功能。系統會分析 Excel 內的工作表、欄位標題與儲存格文字，嘗試比對學生姓名、學號、評語代碼、幹部職務、競賽活動、學生自評、特殊表現等資料，並列出可匯入的欄位與位置，讓老師確認或手動調整後再套用。</p>
-<div class="note">此功能適合匯入單一學生的完整資料；若是整班 Google 表單回覆或學生自評總表，請使用「學生德行自評資料」區的 Excel 匯入功能。</div>
-
-<h2>三、選擇學校評語代碼</h2>
-<p>「學校評語代碼」區可多選學生適合的德行特質，例如性情、向學、進取、紀律、交友、服務、擅長等類別。點選分類後，再點選代碼項目即可加入；若選錯，可按標籤上的叉號移除。</p>
-
-<h2>四、填寫職務與特殊表現</h2>
-<h3>擔任職務</h3>
-<p>可使用快速選單選取班級幹部或科目小老師，例如班長、副班長、衛生股長、生物小老師等，也可以直接自行輸入其他職務。選好職務後，再選擇表現狀況並按加號加入。</p>
-
-<h3>校內外活動／競賽</h3>
-<p>若學生有科展、學科競賽、社團成果、校內外比賽等表現，可輸入活動名稱與成績。系統會在「競賽與活動」欄位顯示，也會整合到「特殊優良表現」中。</p>
-<div class="example">例如：活動名稱「校內科展」、成績「特優」，會整理為「校內科展獲得特優」。</div>
-
-<h2>五、匯入學生德行自評資料</h2>
-<ol>
-  <li>按「選擇檔案」上傳 Excel、XLS 或 CSV。</li>
-  <li>系統會讀取第一個工作表。</li>
-  <li>若表格中有「姓名」或「學生姓名」欄位，系統會嘗試自動比對目前學生。</li>
-  <li>也可以從「選擇學生列」手動選取學生。</li>
-  <li>按「套用選取學生資料」後，資料會自動帶入自評欄位。</li>
-</ol>
-<p>若表單某一欄沒有填寫，匯入後會保持空白，老師可自行補寫。系統可辨識學校服務、社團表現、學業表現、生活常規、社會服務、活動表演、科學展覽、其他特殊表現等常見欄位。</p>
-
-<h2>六、智慧生成選項</h2>
-<p>「智慧生成選項」提供常見學生表現項目，老師可快速點選「佳」或「待改進」。類別包含學習態度、生活常規與守法、人際互動、個人特質。系統會依照所選內容產生基礎評語素材。</p>
-
-<h2>七、導師勉勵／結語</h2>
-<p>若老師希望指定評語結尾，可在「導師勉勵／結語」欄位自行輸入。若留空，系統會依照語氣風格自動產生鼓勵或期許文字。</p>
-
-<h2>八、產生基礎評語</h2>
-<p>填寫左側資料後，按右側「生成基礎評語」。系統會整合學生姓名與性別、評語代碼、智慧生成選項、學生自評資料、幹部職務、活動競賽與導師勉勵，產生初稿。</p>
-
-<h2>九、使用 AI 潤飾評語</h2>
-<p>系統提供「本機規則合併」、「Google Gemini API」與「ChatGPT／OpenAI API」三種潤飾模式。若不想把學生資料送到雲端，請使用本機規則合併；若希望由外部 AI 協助潤飾，可選擇 Gemini 或 ChatGPT／OpenAI。</p>
-
-<h3>本機規則合併</h3>
-<p>不需要 API Key，所有文字只在瀏覽器內處理，不會送到雲端，適合快速合併基礎評語與補充觀察。</p>
-
-<h3>Google Gemini API</h3>
-<ol>
-  <li>在「AI 設定」中選擇「Google Gemini API」。</li>
-  <li>按「取得 API Key」前往 Google AI Studio。</li>
-  <li>建立並複製 API Key。</li>
-  <li>回到系統，貼到 API Key 欄位。</li>
-  <li>可按「儲存 Key」將 API Key 儲存在本機瀏覽器。</li>
-  <li>按「AI 智慧潤飾與合併」產生最終德行評語。</li>
-</ol>
-
-<h3>ChatGPT／OpenAI API</h3>
-<ol>
-  <li>在「AI 設定」中選擇「ChatGPT／OpenAI API」。</li>
-  <li>按「取得 API Key」前往 OpenAI API Key 頁面。</li>
-  <li>建立並複製 API Key。</li>
-  <li>回到系統，貼到 OpenAI API Key 欄位。</li>
-  <li>可按「儲存 Key」將 API Key 儲存在本機瀏覽器。</li>
-  <li>按「AI 智慧潤飾與合併」產生最終德行評語。</li>
-</ol>
-
-<h3>模型自動選擇與自訂模型</h3>
-<p>Gemini 與 ChatGPT／OpenAI 模式都不再固定顯示預設模型名稱。系統會在使用 API Key 時查詢該服務目前可用的模型，並自動選擇適合文字生成的模型，以降低日後模型升級或舊模型停用造成失敗的機率。</p>
-<p>若老師需要指定特定模型，可在「自訂模型名稱（選填）」欄位輸入模型名稱。此欄位留空時，系統會自動查詢並選擇模型；此欄位有填寫時，系統會優先使用老師輸入的模型名稱。</p>
-<p>若不確定模型名稱，可按「查模型名稱」連到官方模型清單查詢：</p>
+<section class="update">
+<h2>2026-11-14 全面改版重點</h2>
 <ul>
-  <li>Gemini 模型清單：<a href="https://ai.google.dev/gemini-api/docs/models">https://ai.google.dev/gemini-api/docs/models</a></li>
-  <li>OpenAI 模型清單：<a href="https://platform.openai.com/docs/models">https://platform.openai.com/docs/models</a></li>
+  <li><b>全班名單模式</b>：貼上或匯入名單後，左側顯示全班進度，一位接一位完成；同一台電腦可保存多個班級學期。</li>
+  <li><b>評語依知識庫規範產生</b>：單用名不帶姓、男「你」女「妳」、五段模組、待改進項目一律寫成成長建議，並依篇幅自動控制字數。</li>
+  <li><b>即時八大品質檢核與四大紅線</b>：懲處紀錄、家庭隱私、身心健康、人格宣判字眼會立即標紅。</li>
+  <li><b>全班匯入與匯出</b>：自評表、Google 表單、社團名單、前學期評語可一次匯入；全班 Excel 一列一位、可依座號複製整欄到校務系統。</li>
+  <li><b>AI 潤飾去識別化</b>：送出前把姓名換成「○○」，不送座號、學號與學生自評原文。</li>
+  <li>舊版草稿可在「匯入 → 匯入舊版草稿」轉入；舊版程式保留在 <code>OLD/</code> 資料夾。</li>
 </ul>
-<div class="note">若使用 Gemini 或 ChatGPT／OpenAI API 潤飾，評語內容會送至對應 AI 服務進行生成。若不想送出資料，請使用「本機規則合併」。API Key 只會儲存在本機瀏覽器，不會上傳到本系統伺服器。</div>
+</section>
 
-<h2>十、最終德行評語</h2>
-<p>「最終德行評語」是正式使用的主要評語欄位。建議先生成基礎評語，再加入補充觀察，接著使用本機規則、Gemini API 或 ChatGPT／OpenAI API 潤飾，最後由老師檢查並手動微調。</p>
+<h2>一、三分鐘上手</h2>
+<ol>
+  <li>開啟〈導師評語生成系統（codex優化版）.html〉。建議用電腦 Chrome、Edge 或 Safari；手機、平板也可操作。</li>
+  <li>第一次使用可按「先試用範例」，建立 3 位虛擬學生體驗流程。</li>
+  <li>正式使用時，按「設定」填寫班級、學年度與年級學期，再建立名單（見第二節）。</li>
+  <li>每位學生依三個步驟點選，右側評語即時產生；確認後按「標記完成並前往下一位」。</li>
+  <li>全班完成後按「匯出」，下載 Excel 或複製到校務系統。</li>
+</ol>
 
-<h2>十一、日常生活表現總表（附表選用）</h2>
-<p>按「同步所有資料至表格」後，系統會整理右側表格，包含評語代碼、幹部經歷、競賽與活動、德行評語、特殊優良表現。</p>
-
-<h3>德行評語</h3>
-<p>此欄位會自動帶入「最終德行評語」的文字。</p>
-
-<h3>特殊優良表現</h3>
-<p>此欄位會整理學生具體的特殊表現與成就，避免和最終德行評語重複稱讚。</p>
-<div class="example">林獻升特殊優良表現：擔任衛生服務隊，協助環境打掃；生物社長，辦理採集活動；段考經常前三名；校內科展獲得特優；學科能力競賽獲得一等獎。</div>
-
-<h2>十二、步驟四：複製與匯出評語資料</h2>
-<h3>複製</h3>
-<p>可使用「複製基礎評語」、「複製最終德行評語」或「複製整張表格」。</p>
-
-<h3>匯出 Excel</h3>
-<p>按「匯出 Excel」後，系統會下載 Excel 檔。Excel 採直向排列，每一個輸出項目由上到下排列，並將內容欄位設定為自動換行，避免長評語橫向過寬。</p>
+<h2>二、建立班級名單</h2>
+<h3>方法 1：貼上名單</h3>
+<p>從校務系統或 Excel 複製「座號、姓名、性別」三欄，按左下「貼上名單」貼上即可。欄位可用 Tab、逗號或空白分隔，學號可有可無。</p>
+<div class="example">01　林郁婷　女<br>02　陳柏翰　男<br>03　王思妤　女</div>
+<h3>方法 2：匯入 Excel</h3>
+<p>按上方「匯入」選擇檔案，系統會自動判斷欄位並列出對應表，您可逐欄調整「匯入到」的位置後再套用。依「座號＋姓名」比對名單，名單中沒有的學生可自動新增。</p>
 <table>
-  <thead><tr><th>項目</th><th>內容</th></tr></thead>
+  <thead><tr><th>可匯入的檔案</th><th>系統會帶入</th></tr></thead>
   <tbody>
-    <tr><td>學生姓名</td><td>學生姓名</td></tr>
-    <tr><td>性別</td><td>男／女</td></tr>
-    <tr><td>最終德行評語</td><td>評語全文</td></tr>
-    <tr><td>特殊優良表現</td><td>表現摘要</td></tr>
+    <tr><td>全班基本資料</td><td>座號、姓名、性別（手機、住址、生日、身分證、家長資料會自動鎖定，不會匯入）</td></tr>
+    <tr><td>學生德行自評表（Excel／CSV）</td><td>學校服務、社團、學業、生活常規、社會服務、活動表演、科學展覽、校內外其他表現</td></tr>
+    <tr><td>Google 表單自評回覆</td><td>個性、向學、進取等描述放入「學生自述」；若填的是三位數代碼則直接選取代碼。時間戳記與電子郵件會鎖定不匯入</td></tr>
+    <tr><td>單一學生 Word 自評表（.docx）</td><td>同上，套用到對應學生</td></tr>
+    <tr><td>社團名單</td><td>社團名稱與職稱</td></tr>
+    <tr><td>前學期評語</td><td>放入「上學期評語（參考）」，撰寫時可對照、避免重複</td></tr>
+    <tr><td>其他系統匯出的單一學生直式資料表</td><td>以「欄位—內容」方式辨識，選擇要套用的學生</td></tr>
   </tbody>
 </table>
+<div class="note">匯入後若結果不對，可在提示訊息按「復原」回到匯入前狀態。研習練習檔在〈00學生資料／匯入練習_虛擬班級資料〉。</div>
 
-<h3>匯出 PDF</h3>
-<p>按「匯出 PDF」後，瀏覽器會開啟列印視窗。在列印視窗中選擇「另存為 PDF」即可。</p>
-
-<h2>十三、常見問題</h2>
-<h3>Gemini 或 OpenAI API Key 輸入後仍無法潤飾？</h3>
-<p>請確認 API Key 是否完整複製、帳號或專案是否已啟用對應 API、是否有可用額度，並確認網路可連線到 Gemini 或 OpenAI API。若仍失敗，可先改用「本機規則合併」。</p>
-
-<h3>系統顯示模型不支援或模型不存在？</h3>
-<p>可能是原本的模型已停用、帳號權限不支援該模型，或自訂模型名稱輸入錯誤。建議清空「自訂模型名稱」欄位，讓系統自動查詢目前可用模型；若要指定模型，請按「查模型名稱」到官方文件確認最新名稱後再填入。</p>
-
-<h3>AI 生成文字太短或不完整？</h3>
-<p>系統已加入回覆長度檢查與自動重試。若仍覺得不夠完整，可在「補充觀察」加入更多具體資料，再重新潤飾。</p>
-
-<h3>特殊優良表現和最終德行評語內容重複？</h3>
-<p>「特殊優良表現」設計為簡潔摘要，只列具體項目與成就；評價與稱讚主要放在「最終德行評語」。</p>
-
-<h2>十四、建議使用流程</h2>
-<ol>
-  <li>填寫學生姓名、性別與語氣。</li>
-  <li>選擇學校評語代碼。</li>
-  <li>輸入幹部、小老師、活動與競賽資料。</li>
-  <li>匯入或填寫學生德行自評資料。</li>
-  <li>點選智慧生成選項。</li>
-  <li>生成基礎評語。</li>
-  <li>補充導師觀察。</li>
-  <li>使用本機規則、Gemini API 或 ChatGPT／OpenAI API 潤飾。</li>
-  <li>同步日常生活表現總表。</li>
-  <li>檢查德行評語與特殊優良表現。</li>
-  <li>匯出 Excel 或 PDF。</li>
-</ol>
-
-<h2>十五、資料與隱私提醒</h2>
+<h2>三、三步驟撰寫每位學生</h2>
+<p>畫面上方是學生基本資料（座號、姓名、性別、語氣）。系統會自動取「名」作為評語稱呼，例如「林郁婷」稱「郁婷」、「歐陽娜娜」稱「娜娜」；需要時可在「評語稱呼」覆寫。</p>
+<h3>步驟 1：印象與代碼</h3>
 <ul>
-  <li>若使用「本機規則合併」，文字只在瀏覽器內處理。</li>
-  <li>若使用「Google Gemini API」，評語內容會送至 Google Gemini API 進行生成。</li>
-  <li>若使用「ChatGPT／OpenAI API」，評語內容會送至 OpenAI API 進行生成。</li>
-  <li>請避免輸入不必要的敏感個資。</li>
-  <li>API Key 請妥善保管，不要公開分享。</li>
+  <li><b>評語代碼</b>：可直接搜尋（如輸入「熱心」或「302」），或點分類瀏覽。建議選 1–3 個，第一個會寫在開頭，可用 ↑ 調整順序。</li>
+  <li><b>常用組合</b>：品學兼優型、服務奉獻型、才華活力型、溫和人緣型、穩健踏實型、勉勵精進型，一鍵帶入。</li>
+  <li><b>待改進代碼</b>（灰色）不會原文寫入評語，會自動改寫成成長建議。</li>
+  <li><b>一件具體小事</b>：最能讓評語有溫度，會接在開頭句後。</li>
+  <li><b>個性與人際</b>：點「佳」寫成優點，點「再加強」寫成建議。</li>
+</ul>
+<h3>步驟 2：學習與生活</h3>
+<ul>
+  <li>學業概況（名列前茅／表現優良／表現穩定／持續進步／仍在摸索）、優勢學科、希望加強的學科。</li>
+  <li>出缺勤（全勤會寫入「這學期全勤，準時到校上課」）與生活常規。</li>
+  <li><b>希望再加強的地方</b>：最多 2 項，系統以正向語氣寫進結尾。待加強項目若超過 2 項，右側會提醒哪些沒有寫入。</li>
+</ul>
+<h3>步驟 3：職務與表現</h3>
+<ul>
+  <li><b>擔任職務</b>：點選班級幹部、科目小老師或自治社團職務，系統自動帶入工作內容描述（例如衛生股長「督導打掃工作與資源回收」），可調整表現：認真負責、具領導力、默默付出、主動積極、可再主動。</li>
+  <li><b>競賽、活動與成果</b>：選類別與層級（校內、區域、縣市、全國、國際），有名次再填成果。只寫真實發生的事。</li>
+  <li><b>學生自評資料</b>：僅供參考，按「轉為活動」才會寫入評語與特殊表現。</li>
+  <li><b>導師補充</b>與<b>想對學生說的話</b>：分別接在結尾之前與最後一句。</li>
 </ul>
 
+<h2>四、評語、檢核與特殊表現</h2>
+<h3>評語如何組成</h3>
+<p>依麗山高中德行評語知識庫的五段模組：德性品格 → 學業表現 → 職務服務 → 特殊事蹟 → 期許結尾。沒有資料的段落會略過，不會自行補寫。</p>
+<table>
+  <thead><tr><th>篇幅</th><th>字數</th><th>說明</th></tr></thead>
+  <tbody>
+    <tr><td>自動</td><td>150–350</td><td>依資料多寡決定，超過上限時自動省略次要細節</td></tr>
+    <tr><td>精簡</td><td>150–200</td><td>品格＋學業＋期許</td></tr>
+    <tr><td>標準</td><td>200–280</td><td>再加入職務服務</td></tr>
+    <tr><td>完整</td><td>280–350</td><td>五段全部</td></tr>
+    <tr><td>高三下三年總評</td><td>300–400</td><td>在「設定」選高三下，改以「○○同學高中三年…」客觀綜述，結尾給大學發展建議</td></tr>
+  </tbody>
+</table>
+<p>結尾開頭會依年級學期調整，例如高一上「新的一年」、高二下「邁向高三的關鍵階段」、高三上「面對即將到來的升學挑戰」。</p>
+<h3>直接修改</h3>
+<p>評語可以直接在右側修改。修改後，左側勾選的變更不會覆蓋您的文字；需要時按「依勾選重新生成」。任何覆蓋前的版本都可用「復原上一版」找回。</p>
+<h3>八大品質檢核</h3>
+<table>
+  <thead><tr><th>指標</th><th>檢查內容</th></tr></thead>
+  <tbody>
+    <tr><td>稱謂</td><td>以名字開頭、不帶姓、不出現「該生」</td></tr>
+    <tr><td>代詞</td><td>男生「你」、女生「妳」全篇一致；三年總評用他／她</td></tr>
+    <tr><td>具體事例</td><td>有具體小事、職務、活動或補充觀察</td></tr>
+    <tr><td>事實不捏造</td><td>評語中的名次、獎項字眼必須出現在輸入資料中（特別用於檢查 AI 潤飾結果）</td></tr>
+    <tr><td>零批判字眼</td><td>如懶散、總是遲到、沉迷、很爛等，並提供改寫建議</td></tr>
+    <tr><td>結尾期許</td><td>最後一句有期許或鼓勵</td></tr>
+    <tr><td>評語代碼</td><td>已選 1–3 個</td></tr>
+    <tr><td>字數</td><td>落在該篇幅的字數範圍</td></tr>
+  </tbody>
+</table>
+<div class="warn"><b>四大紅線</b>：懲處紀錄、家庭經濟與家庭狀況、身心健康與醫療、人格宣判字眼。出現時會以紅框標示，且無法標記完成，請先修改。</div>
+<h3>特殊優良表現</h3>
+<p>由職務、競賽活動、社團、服務學習與學生自評自動整理，可切換「段落」或「條列」。可取消「納入學生自評」。</p>
+<div class="example">本學期擔任學藝股長，工作認真負責且表現良好。參加臺北市科展，獲得佳作。本學期全勤。</div>
+
+<h2>五、全班總覽與批次作業</h2>
+<p>上方「全班總覽」列出每位學生的狀態、代碼、字數、檢核分數與評語摘要，點一列即可開啟該生。</p>
+<ul>
+  <li><b>全班依勾選重新生成</b>：套用最新規則，手動修改過與已完成的學生不受影響。</li>
+  <li><b>全班 AI 潤飾</b>：逐位潤飾尚未潤飾、尚未完成的學生，可隨時停止。</li>
+</ul>
+
+<h2>六、匯出與複製</h2>
+<table>
+  <thead><tr><th>功能</th><th>說明</th></tr></thead>
+  <tbody>
+    <tr><td>下載全班 Excel</td><td>「評語總表」一列一位：座號、姓名、性別、評語代碼、代碼詞語、德行評語、字數、特殊優良表現、職務、活動、社團、服務、檢核、狀態；另附「學生自評」與「說明」工作表。可勾選只匯出已完成</td></tr>
+    <tr><td>複製到校務系統</td><td>依座號順序複製德行評語、評語代碼、代碼詞語或特殊表現，可只複製內容欄（直接貼到 Excel 一整欄），或含座號姓名</td></tr>
+    <tr><td>列印／存成 PDF</td><td>列印目前學生或全班，在列印視窗選「另存為 PDF」</td></tr>
+    <tr><td>備份</td><td>下載 JSON 備份，可在另一台電腦以「匯入 → 還原備份 JSON」加入</td></tr>
+  </tbody>
+</table>
+<p>每位學生右側也有「複製評語」「複製代碼」「複製特殊表現」「複製全部欄位」按鈕，適合逐筆貼到校務系統。</p>
+
+<h2>七、班級學期管理</h2>
+<ul>
+  <li>上方選單可切換班級學期；選「＋ 新增班級學期」可建立下一學期。</li>
+  <li>新學期可選「沿用目前名單」：座號、姓名、性別會帶過去，上學期的評語與特殊表現保留為參考。</li>
+  <li>「設定」中可刪除班級學期（刪除前建議先備份）。</li>
+</ul>
+
+<h2>八、AI 潤飾（選用）</h2>
+<p>系統內建的評語生成完全在瀏覽器中完成，不需要 AI。若要進一步潤飾：</p>
+<ol>
+  <li>按「設定」，選擇 Google Gemini 或 ChatGPT／OpenAI。</li>
+  <li>按「取得 API 金鑰」申請並貼上金鑰。公用電腦請勿勾選「記住金鑰」，關閉分頁後即失效。</li>
+  <li>可按「預覽送出內容」查看實際送出的文字。</li>
+  <li>回到學生畫面按「✨ 潤飾」。潤飾後仍會經過八大檢核，特別是「事實不捏造」。</li>
+</ol>
+<div class="note">送出前，學生姓名與名字會被替換為「○○」，回傳後再換回；座號、學號、學生自評原文不會送出。自訂模型欄位留空時，系統會自動選擇可用模型。</div>
+
+<h2>九、資料與隱私</h2>
+<ul>
+  <li>所有資料只存在這台電腦的瀏覽器（localStorage），不會上傳到任何伺服器。</li>
+  <li>換電腦、清除瀏覽紀錄或使用無痕視窗前，請先「匯出 → 備份」。</li>
+  <li>同時開兩個分頁編輯時，系統會暫停其中一頁的儲存，避免互相覆蓋，請重新載入。</li>
+  <li>備份 JSON 與 Excel 含學生資料，請依學校個資規範保管。</li>
+</ul>
+
+<h2>十、常見問題</h2>
+<h3>評語太短？</h3>
+<p>系統不會自行編造內容。請補一件具體小事、職務或活動，或在「導師補充」寫一句觀察。</p>
+<h3>我改過的評語會不會被覆蓋？</h3>
+<p>不會。手動修改後只有按「依勾選重新生成」才會覆蓋，且可用「復原上一版」找回。</p>
+<h3>一位學生同時有很多待加強的地方？</h3>
+<p>評語只寫 2 項，避免整段變成缺點清單。右側會提示沒有寫入的項目，可在步驟 2 調整要寫哪兩項。</p>
+<h3>舊版的草稿還在嗎？</h3>
+<p>在。按「匯入」→「匯入舊版草稿」即可轉入目前班級；舊版資料仍保留在瀏覽器中。</p>
+<h3>快捷鍵</h3>
+<p><span class="kbd">Alt</span>＋<span class="kbd">↑</span>／<span class="kbd">↓</span> 切換上一位／下一位；<span class="kbd">Esc</span> 關閉視窗或名單。</p>
+
+<p style="margin-top:40px;color:#6b7785;font-size:.9rem">臺北市立麗山高中 生物科 林獻升老師製作｜<a href="mailto:frog@lssh.tp.edu.tw">frog@lssh.tp.edu.tw</a></p>
 </body>
 </html>
