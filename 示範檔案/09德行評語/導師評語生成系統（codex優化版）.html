@@ -1839,9 +1839,10 @@ function showTableMapping(label, headers, rows) {
   const map = headers.map(h => guessTarget(h));
   modalState.table = {headers, rows, map};
   const sample = i => rows.map(r => r[i]).find(isMeaningful) || '';
+  const realRows = rows.filter(r => { const ni = map.indexOf('name'), si = map.indexOf('seat'); return !/範例|示範|example/i.test(`${si >= 0 ? r[si] : ''}${ni >= 0 ? r[ni] : ''}`); });
   const wb = WB();
   const matchable = rows.filter(r => { const ni = map.indexOf('name'), si = map.indexOf('seat'); return wb.students.some(s => (ni >= 0 && s.name === r[ni]) || (si >= 0 && s.seat === String(r[si]).padStart(2, '0'))); }).length;
-  $('impStatus').textContent = `已讀取 ${label}：${rows.length} 筆資料、${headers.length} 個欄位。`;
+  $('impStatus').textContent = `已讀取 ${label}：${realRows.length} 筆資料、${headers.length} 個欄位${realRows.length < rows.length ? '（範例列不匯入）' : ''}。`;
   $('impMapping').innerHTML = `<div class="sec"><h3>② 確認欄位對應</h3>
     <div class="tbl-wrap"><table class="tbl"><thead><tr><th>檔案欄位</th><th>範例內容</th><th>匯入到</th></tr></thead><tbody>
     ${headers.map((h, i) => `<tr><td>${esc(h || `（第 ${i + 1} 欄）`)}</td><td class="snippet">${esc(String(sample(i)).slice(0, 60))}</td><td>${targetSelect(i, map[i], map[i] === 'lock')}</td></tr>`).join('')}
@@ -1851,7 +1852,7 @@ function showTableMapping(label, headers, rows) {
       <label><input type="checkbox" id="impActs" checked> 自評中的科展、競賽、活動表演自動加入活動清單</label>
     </div>
     <p class="hint" style="margin-top:6px">依「座號＋姓名」比對目前名單（目前可比對 ${matchable} 筆）。已有內容的文字欄位會合併，不會清空。</p>
-    <div class="row" style="margin-top:10px;justify-content:flex-end"><button class="btn primary" id="impApply">③ 套用到 ${rows.length} 位學生</button></div></div>`;
+    <div class="row" style="margin-top:10px;justify-content:flex-end"><button class="btn primary" id="impApply">③ 套用到 ${realRows.length} 位學生</button></div></div>`;
   $('impMapping').querySelectorAll('[data-map]').forEach(sel => sel.onchange = () => { modalState.table.map[+sel.dataset.map] = sel.value; });
   $('impApply').onclick = applyTableImport;
 }
@@ -1899,10 +1900,11 @@ function applyTableImport() {
   const create = $('impCreate').checked, autoActs = $('impActs').checked;
   const ni = map.indexOf('name'), si = map.indexOf('seat');
   if (ni < 0 && si < 0) { toast('請至少指定「姓名」或「座號」欄位'); return; }
-  let updated = 0, created = 0, skipped = 0;
+  let updated = 0, created = 0, skipped = 0, examples = 0;
   const before = clone(wb.students);
   rows.forEach(r => {
     const name = ni >= 0 ? r[ni] : '', seat = si >= 0 && r[si] ? String(r[si]).padStart(2, '0') : '';
+    if (/範例|示範|example/i.test(`${seat}${name}`)) { examples++; return; }
     let st = wb.students.find(s => name && s.name === name && (!seat || !s.seat || s.seat === seat))
       || wb.students.find(s => name && s.name === name)
       || (seat && wb.students.find(s => s.seat === seat && (!name || !s.name)));
@@ -1919,7 +1921,7 @@ function applyTableImport() {
   });
   sortStudents(wb); if (!CUR()) wb.activeId = wb.students[0]?.id;
   queueSave(); closeModal(); renderAll();
-  toast(`匯入完成：更新 ${updated} 位、新增 ${created} 位${skipped ? `、略過 ${skipped} 筆` : ''}`, {label: '復原', run: () => { wb.students = before; queueSave(); renderAll(); toast('已復原匯入前狀態'); }});
+  toast(`匯入完成：更新 ${updated} 位、新增 ${created} 位${skipped ? `、略過 ${skipped} 筆` : ''}${examples ? `（已略過範例列）` : ''}`, {label: '復原', run: () => { wb.students = before; queueSave(); renderAll(); toast('已復原匯入前狀態'); }});
 }
 
 // 直式（欄位—內容）單一學生資料：沿用舊版智慧判斷
