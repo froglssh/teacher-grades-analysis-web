@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>多班級成績管理系統 2.0 使用說明與教學手冊</title>
+<title>多班級成績管理系統 4.3 使用說明與教學手冊</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -16,14 +16,18 @@
     --accent-light: #FBF3E2;
     --danger: #B5443C;
     --danger-light: #F9ECEA;
+    --purple: #7A4A78;
+    --purple-light: #F4ECF4;
     --ink: #22302A;
     --ink-soft: #5C6B63;
     --bg-page: #F4F6F3;
     --bg-card: #FFFFFF;
     --line: #DDE3DD;
+    --line-strong: #C2CCC2;
     --radius: 12px;
     --shadow: 0 4px 20px rgba(20, 80, 60, 0.08);
     --transition: all 0.25s ease;
+    --mono: "Consolas", "Menlo", monospace;
   }
 
   * { box-sizing: border-box; }
@@ -44,7 +48,7 @@
 
   /* ── 側邊欄導航 ── */
   .sidebar {
-    width: 280px;
+    width: 290px;
     background-color: var(--primary-dark);
     color: #ffffff;
     position: fixed;
@@ -52,7 +56,7 @@
     bottom: 0;
     left: 0;
     z-index: 100;
-    padding: 24px;
+    padding: 24px 20px;
     display: flex;
     flex-direction: column;
     box-shadow: 4px 0 20px rgba(0,0,0,0.15);
@@ -63,19 +67,28 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    padding-bottom: 24px;
+    padding-bottom: 20px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-    margin-bottom: 24px;
+    margin-bottom: 20px;
   }
 
   .sidebar-brand h1 {
-    font-size: 19px;
+    font-size: 18.5px;
     font-weight: 900;
     margin: 0;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
     background: linear-gradient(to right, #ffffff, #F2C879);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+  }
+
+  .sidebar-brand .ver-badge {
+    background: #F2C879;
+    color: var(--primary-dark);
+    font-size: 11px;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 99px;
   }
 
   .sidebar-menu {
@@ -84,16 +97,16 @@
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
   }
 
   .sidebar-menu a {
-    color: rgba(255, 255, 255, 0.75);
+    color: rgba(255, 255, 255, 0.78);
     text-decoration: none;
-    padding: 10px 14px;
+    padding: 8px 12px;
     border-radius: 8px;
     display: block;
-    font-size: 14.5px;
+    font-size: 14px;
     font-weight: 500;
     transition: var(--transition);
     border-left: 3px solid transparent;
@@ -101,30 +114,40 @@
 
   .sidebar-menu a:hover {
     color: #ffffff;
-    background-color: rgba(255, 255, 255, 0.08);
-    padding-left: 18px;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding-left: 16px;
   }
 
   .sidebar-menu li.active a {
     color: #ffffff;
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.18);
     border-left-color: #F2C879;
     font-weight: 700;
-    padding-left: 18px;
+    padding-left: 16px;
+  }
+
+  .sidebar-menu .menu-cat {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 10px 10px 4px 10px;
   }
 
   .sidebar-footer {
     margin-top: auto;
-    padding-top: 24px;
+    padding-top: 20px;
     border-top: 1px solid rgba(255, 255, 255, 0.15);
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.6);
     text-align: center;
   }
 
   .sidebar-footer a {
     color: #F2C879;
     text-decoration: none;
+    font-weight: 700;
   }
   .sidebar-footer a:hover {
     text-decoration: underline;
@@ -132,18 +155,18 @@
 
   /* ── 主要內容區 ── */
   .main-content {
-    margin-left: 280px;
+    margin-left: 290px;
     flex: 1;
     padding: 40px 48px;
-    max-width: 1000px;
+    max-width: 1040px;
   }
 
   /* ── 頂部英雄區 ── */
   .hero-card {
-    background: linear-gradient(135deg, #14503C 0%, #1E6B52 60%, #2E876B 100%);
+    background: linear-gradient(135deg, #14503C 0%, #1E6B52 60%, #247A5E 100%);
     color: #ffffff;
     border-radius: 16px;
-    padding: 40px;
+    padding: 36px 40px;
     margin-bottom: 32px;
     box-shadow: 0 10px 30px rgba(20, 80, 60, 0.15);
     position: relative;
@@ -153,10 +176,10 @@
   .hero-card::after {
     content: "";
     position: absolute;
-    right: -50px;
-    bottom: -50px;
-    width: 250px;
-    height: 250px;
+    right: -40px;
+    bottom: -40px;
+    width: 240px;
+    height: 240px;
     background: rgba(255, 255, 255, 0.04);
     border-radius: 50%;
     pointer-events: none;
@@ -168,25 +191,36 @@
     padding: 4px 12px;
     border-radius: 99px;
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 800;
     display: inline-block;
-    margin-bottom: 16px;
-    letter-spacing: 1px;
+    margin-bottom: 14px;
+    letter-spacing: 0.5px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   }
 
   .hero-card h2 {
     font-size: 32px;
-    font-weight: 800;
-    margin: 0 0 12px 0;
-    letter-spacing: 1px;
+    font-weight: 900;
+    margin: 0 0 10px 0;
+    letter-spacing: 0.5px;
+  }
+
+  .hero-card .hero-sub {
+    font-size: 15.5px;
+    color: #F2C879;
+    font-weight: 600;
+    margin-bottom: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .hero-card p {
-    font-size: 17px;
-    opacity: 0.9;
+    font-size: 16.5px;
+    opacity: 0.92;
     margin: 0 0 24px 0;
-    max-width: 720px;
+    max-width: 760px;
+    line-height: 1.7;
   }
 
   .btn-primary-link {
@@ -194,13 +228,13 @@
     align-items: center;
     gap: 8px;
     background-color: #ffffff;
-    color: var(--primary);
+    color: var(--primary-dark);
     text-decoration: none;
     padding: 12px 24px;
     border-radius: 8px;
-    font-weight: 700;
+    font-weight: 800;
     font-size: 15px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.12);
     transition: var(--transition);
   }
 
@@ -208,7 +242,7 @@
     background-color: #F2C879;
     color: var(--primary-dark);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.18);
   }
 
   /* ── 內容卡片與排版 ── */
@@ -220,7 +254,7 @@
     background-color: var(--bg-card);
     border: 1px solid var(--line);
     border-radius: var(--radius);
-    padding: 30px;
+    padding: 32px;
     margin-bottom: 30px;
     box-shadow: var(--shadow);
   }
@@ -233,17 +267,28 @@
     margin-bottom: 18px;
     border-left: 5px solid var(--primary);
     padding-left: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
 
   .card h3 {
     color: var(--primary);
     font-size: 18px;
     font-weight: 700;
-    margin-top: 24px;
-    margin-bottom: 10px;
+    margin-top: 26px;
+    margin-bottom: 12px;
     display: flex;
     align-items: center;
     gap: 8px;
+  }
+
+  .card h4 {
+    color: var(--ink);
+    font-size: 16px;
+    font-weight: 700;
+    margin-top: 18px;
+    margin-bottom: 8px;
   }
 
   p {
@@ -253,7 +298,7 @@
   }
 
   .hint-text {
-    font-size: 14.5px;
+    font-size: 14px;
     color: var(--ink-soft);
   }
 
@@ -263,7 +308,7 @@
     border-radius: 8px;
     margin-bottom: 20px;
     font-size: 15px;
-    line-height: 1.6;
+    line-height: 1.65;
     border-left: 4px solid transparent;
   }
 
@@ -271,6 +316,12 @@
     background-color: var(--primary-light);
     border-left-color: var(--primary);
     color: var(--primary-dark);
+  }
+
+  .alert.info {
+    background-color: var(--secondary-light);
+    border-left-color: var(--secondary);
+    color: #1A476A;
   }
 
   .alert.warning {
@@ -286,7 +337,7 @@
   }
 
   .alert-title {
-    font-weight: 700;
+    font-weight: 800;
     margin-bottom: 6px;
     display: flex;
     align-items: center;
@@ -307,6 +358,7 @@
   .badge.secondary { background-color: var(--secondary-light); color: var(--secondary); }
   .badge.accent { background-color: var(--accent-light); color: var(--accent); }
   .badge.danger { background-color: var(--danger-light); color: var(--danger); }
+  .badge.purple { background-color: var(--purple-light); color: var(--purple); }
 
   .btn-mockup {
     display: inline-flex;
@@ -314,7 +366,7 @@
     gap: 6px;
     font-size: 13.5px;
     font-weight: 700;
-    padding: 6px 12px;
+    padding: 5px 12px;
     border-radius: 6px;
     border: 1px solid var(--line);
     background-color: #F8FAF7;
@@ -330,12 +382,26 @@
   .btn-mockup.ghost { background-color: #ffffff; color: var(--primary); border: 1.5px solid var(--primary); }
   .btn-mockup.ghost-secondary { background-color: #ffffff; color: var(--secondary); border: 1.5px solid var(--secondary); }
 
+  kbd {
+    display: inline-block;
+    padding: 2px 6px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink);
+    background-color: #f7f7f7;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.2), inset 0 0 0 1px #fff;
+    white-space: nowrap;
+  }
+
   /* ── 模擬成績冊表格與配分群組樣式 ── */
   .demo-table-wrapper {
     overflow-x: auto;
-    margin: 16px 0;
+    margin: 18px 0;
     border: 1px solid var(--line);
     border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
   }
 
   table.demo-table {
@@ -346,7 +412,7 @@
   }
 
   table.demo-table th, table.demo-table td {
-    padding: 10px 8px;
+    padding: 8px 10px;
     border: 1px solid var(--line);
     white-space: nowrap;
   }
@@ -359,15 +425,20 @@
   table.demo-table tr.grp-hdr th {
     color: #fff;
     font-size: 12.5px;
-    padding: 4px 8px;
+    padding: 5px 8px;
   }
 
   .g-daily { background-color: var(--primary) !important; }
   .g-exam { background-color: var(--secondary) !important; }
-  .g-other { background-color: var(--ink-soft) !important; }
-  .g-fixed { background-color: #8A958D !important; }
+  .g-other { background-color: var(--purple) !important; }
+  .g-fixed { background-color: #78857C !important; }
 
-  /* ── 階層結構展示 ── */
+  td.td-abs { background-color: var(--danger-light); color: var(--danger); font-weight: 800; }
+  td.td-ex { background-color: var(--secondary-light); color: var(--secondary); font-weight: 800; }
+  td.td-fail { color: var(--danger); font-weight: 800; }
+  td.td-final { font-weight: 900; color: var(--primary-dark); font-size: 14.5px; }
+
+  /* ── 階層結構與卡片網格 ── */
   .steps-list {
     margin: 20px 0;
     padding-left: 20px;
@@ -376,16 +447,53 @@
   .steps-list li {
     margin-bottom: 16px;
     position: relative;
+    line-height: 1.65;
   }
 
   .steps-list li strong {
     color: var(--primary-dark);
   }
 
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin: 20px 0;
+  }
+
+  .feature-box {
+    background-color: #FBFCFA;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px 20px;
+    transition: var(--transition);
+  }
+
+  .feature-box:hover {
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(30,107,82,0.08);
+  }
+
+  .feature-box h4 {
+    margin: 0 0 6px 0;
+    color: var(--primary-dark);
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .feature-box p {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin: 0;
+    line-height: 1.6;
+  }
+
   /* ── FAQ 卡片 ── */
   .faq-item {
     border-bottom: 1px solid var(--line);
-    padding: 16px 0;
+    padding: 18px 0;
   }
 
   .faq-item:first-child { padding-top: 0; }
@@ -393,7 +501,7 @@
 
   .faq-question {
     font-weight: 700;
-    font-size: 16.5px;
+    font-size: 16px;
     color: var(--primary-dark);
     margin-bottom: 8px;
     display: flex;
@@ -405,12 +513,14 @@
     content: "Q.";
     color: var(--accent);
     font-weight: 900;
-    font-size: 18px;
+    font-size: 17px;
   }
 
   .faq-answer {
     padding-left: 24px;
     color: var(--ink);
+    font-size: 15px;
+    line-height: 1.65;
   }
 
   /* ── 響應式調整 ── */
@@ -467,24 +577,31 @@
       <path d="M8 19 L20 13 L33 7" stroke="#F2C879" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
       <circle cx="8" cy="19" r="2.6" fill="#fff"/><circle cx="20" cy="13" r="2.6" fill="#fff"/><circle cx="33" cy="7" r="2.6" fill="#fff"/>
     </svg>
-    <h1>多班級成績管理系統</h1>
+    <div>
+      <h1>成績管理系統</h1>
+      <span class="ver-badge">v4.3 旗艦版</span>
+    </div>
   </div>
   <ul class="sidebar-menu">
-    <li class="active"><a href="#intro">系統簡介</a></li>
-    <li><a href="#tab-import">1. 匯入 Excel</a></li>
-    <li><a href="#tab-class">2. 班級管理</a></li>
-    <li><a href="#v3-new">🆕 3.0 新功能</a></li>
-    <li><a href="#tab-score">3. 成績管理</a></li>
-    <li><a href="#fast-input">3-1. 快速輸入技巧</a></li>
-    <li><a href="#btn-toolbar">4. 表格工具欄</a></li>
-    <li><a href="#personal-weights">5. 個別配分</a></li>
-    <li><a href="#tab-stats">6. 統計分析</a></li>
-    <li><a href="#tab-export">7. 匯出與備份</a></li>
-    <li><a href="#tab-demo">8. 示範資料</a></li>
-    <li><a href="#faq">FAQ 常見問題</a></li>
+    <li class="menu-cat">系統導航</li>
+    <li class="active"><a href="#intro">系統簡介與特色</a></li>
+    <li><a href="#v4-highlights">🆕 4.0～4.3 重大升級</a></li>
+    <li><a href="#dual-sync">📁 雙機共用與資料夾同步</a></li>
+    <li class="menu-cat">核心功能</li>
+    <li><a href="#tab-import">1. 📥 匯入 Excel 成績冊</a></li>
+    <li><a href="#tab-class">2. 🏫 班級與名單管理</a></li>
+    <li><a href="#tab-score">3. ✏️ 成績管理與表格佈局</a></li>
+    <li><a href="#fast-input">4. ⚡ 快速輸入與連續登分</a></li>
+    <li><a href="#column-weights">5. ⚖️ 欄位、配分與計算方式</a></li>
+    <li><a href="#special-weights">5-1. 👤 特殊生個別配分</a></li>
+    <li class="menu-cat">評量與輸出</li>
+    <li><a href="#tab-stats">6. 📊 統計分析與教學應用</a></li>
+    <li><a href="#tab-export">7. 💾 匯出、備份與成績單</a></li>
+    <li><a href="#tab-demo">8. ✨ 成績示範與練習</a></li>
+    <li><a href="#faq">❓ FAQ 常見問題與排解</a></li>
   </ul>
   <div class="sidebar-footer">
-    <p>多班級成績管理系統 3.0<br>教師使用手冊電子版</p>
+    <p>多班級成績管理系統 4.3<br>臺北市立麗山高中 林獻升老師</p>
     <a href="https://froglssh.github.io/multi-class-grades-management/" target="_blank">點此開啟主程式 ↗</a>
   </div>
 </div>
@@ -494,9 +611,12 @@
   
   <!-- 頂部英雄區 -->
   <div class="hero-card">
-    <span class="hero-badge">線上版說明指南</span>
-    <h2>多班級成績管理系統 3.0</h2>
-    <p>本系統是專為高中及中小學教師開發的「純前端、零負擔」多班級學期成績冊管理工具。能自動識別您的 Excel 分頁、動態計算日常與定期加權，並提供跨班比較與跨學期追蹤。</p>
+    <span class="hero-badge">線上版說明指南・v4.3 旗艦發布</span>
+    <h2>多班級成績管理系統 4.3</h2>
+    <div class="hero-sub">
+      <span>Excel 匯入</span>・<span>快速登分</span>・<span>缺考免計</span>・<span>群組配分</span>・<span>個人成績單</span>・<span>完全離線</span>・<span>資料夾雙機共用</span>
+    </div>
+    <p>專為高中及各級學校教師開發的「純前端、零伺服器、極速離線」多班級成績冊管理系統。具備智慧 Excel 結構辨識、動態加權運算、缺考免計彈性處理、右側五欄固定凍結、盒鬚圖與 Z/T 分數統計分析，並支援 File System Access API 讓您在研究室與家中雙電腦無縫同步！</p>
     <a href="https://froglssh.github.io/multi-class-grades-management/" class="btn-primary-link" target="_blank">
       🚀 立即開啟成績管理系統線上版
     </a>
@@ -505,371 +625,416 @@
   <!-- ── 系統簡介 ── -->
   <div id="intro" class="section-anchor card">
     <h2>系統簡介與技術安全</h2>
-    <p>日常教學中，老師們常常需要管理多個班級、不同科目，甚至要應對請假補考、個別特殊生加權配分的需求。本系統旨在為老師提供一個簡便、強大且極度安全的成績管理方案。</p>
+    <p>日常教學中，老師們常常需要管理多個班級、不同科目，甚至要應對請假補考、個別特殊生加權配分、學期成績及格邊緣預警等複雜需求。傳統 Excel 往往公式繁雜、容易誤刪，而雲端資料庫又有學生個資外洩的隱憂。本系統專為解決這些痛點而生：</p>
     
     <div class="alert note">
-      <div class="alert-title">🔒 隱私與資料安全聲明</div>
-      本系統為<strong>純前端（Single Page Application）</strong>應用。所有您上傳的 Excel 成績單、學生名單以及您鍵入的成績，<strong>100% 儲存在您的本機電腦瀏覽器中（利用 localStorage 技術）</strong>。本系統沒有任何後端伺服器，絕不會將任何學生姓名或成績傳輸至外部網際網路，確保完全符合個資法規範，請老師們安心使用。
+      <div class="alert-title">🔒 隱私與安全：100% 本地運算，絕無伺服器暫存</div>
+      本系統為<strong>純前端單一網頁程式</strong>。所有學生名冊、成績數據皆儲存於老師自己電腦的瀏覽器中（IndexedDB / localStorage）或您自行指定的本機雲端硬碟資料夾。<strong>絕不上傳任何第三方後端伺服器</strong>，徹底符合個資保護法與校園資通安全規範！
     </div>
 
-    <h3>系統特色</h3>
-    <ul>
-      <li><strong>無痛銜接 Excel</strong>：支援直接拖放學校教務系統下載的成績冊活頁簿，自動識別多班級分頁。</li>
-      <li><strong>極度彈性的配分機制</strong>：除了一般加權，還支援「去掉最低 1 次 / 2 次」的小考平均欄位，甚至能為個別學生調整專屬配分。</li>
-      <li><strong>視覺化統計分析</strong>：自動生成常態分布曲線圖、跨班段考平均比較圖，以及沿革追蹤一個班級在不同學期的學習表現。</li>
-      <li><strong>專用 A4 列印樣式</strong>：一鍵輸出精美、工整的紙本成績單。</li>
-    </ul>
+    <div class="feature-grid">
+      <div class="feature-box">
+        <h4>⚡ 極速流暢登分</h4>
+        <p>提供「依座號順序輸入」、「⚡ 快速登分（依考卷收回順序輸入）」與「連續模式」，登分不再眼花撩亂。</p>
+      </div>
+      <div class="feature-box">
+        <h4>🎯 彈性多元評量</h4>
+        <p>支援欄位自訂滿分（如滿分 50 或 20）、缺考（0分）與免計（按比例放大）、群組配分、去最低分或取最高分。</p>
+      </div>
+      <div class="feature-box">
+        <h4>📊 專業統計與分析</h4>
+        <p>一鍵產出班級平均、五標、盒鬚圖、Z/T 分數、自訂組距分布圖、性別比較與跨學期長期追蹤。</p>
+      </div>
+      <div class="feature-box">
+        <h4>🖨️ 多樣化列印與匯出</h4>
+        <p>支援列印完整班級成績冊，以及每頁兩張、含各項班平均與家長簽章欄的「個人成績通知單」。</p>
+      </div>
+    </div>
   </div>
 
-  <!-- ── 3.0 新功能 ── -->
-  <div id="v3-new" class="section-anchor card">
-    <h2>🆕 3.0 版新功能一覽</h2>
-    <p>3.0 版以「<strong>登分更快、更不容易出錯</strong>」為核心，重新整理了成績管理畫面：</p>
-    <ul>
-      <li><strong>⚡ 快速登分</strong>：輸入「座號 分數」（如 <code>12 85</code>）按 Enter 即登錄，適合依考卷收回順序登分。</li>
-      <li><strong>像 Excel 一樣操作</strong>：方向鍵移動、Enter 跳到下一個空格、可直接從 Excel 複製一整塊（多列多欄）貼到表格。</li>
-      <li><strong>↶ 復原／↷ 重做</strong>（Ctrl+Z／Ctrl+Y）：貼錯、打錯都能一鍵還原。</li>
-      <li><strong>防呆</strong>：只接受 0–100 的數字；滑鼠滾輪與方向鍵不會再意外改到分數；不及格自動紅字、90 分以上綠字。</li>
-      <li><strong>隨時掌握進度</strong>：每欄顯示「已填人數」，表格底部有已填／平均／最高／最低／不及格統計列；疑似漏填的格子會以黃色斜紋提示。</li>
-      <li><strong>名次欄</strong>：依學期成績即時排名。</li>
-      <li><strong>狀態列與高亮</strong>：目前輸入的學生整列、欄位標題都會高亮，狀態列顯示「座號 姓名｜欄位」，不怕對錯行。</li>
-      <li><strong>跳到座號</strong>、<strong>⛶ 專注模式</strong>（隱藏頁首與分頁，表格放到最大，Esc 離開）。</li>
-      <li><strong>統計分析</strong>：單一班級新增五標（P88/P75/P50/P25/P12）、成績排行表（含 PR），以及不及格、臨界 55–59、90 分以上名單。</li>
-      <li>修正：滑鼠移到分頁上時文字會「消失」（綠底綠字）的問題。</li>
-    </ul>
+  <!-- ── 4.0～4.3 重大升級特寫 ── -->
+  <div id="v4-highlights" class="section-anchor card">
+    <h2>🆕 4.0～4.3 重大升級特寫</h2>
+    <p>系統經過歷次架構重構與教學現場實證，由 3.0 全面躍升至 4.3 旗艦版，帶來多項重磅技術革新：</p>
+
+    <div class="feature-grid">
+      <div class="feature-box">
+        <h4>📁 資料夾儲存與雙機共用 (v4.3)</h4>
+        <p>透過 File System Access API 指定雲端硬碟資料夾，辦公室與筆電讀寫同一個正本檔案，自動衝突保護與 14 天歷史備份。</p>
+      </div>
+      <div class="feature-box">
+        <h4>🔌 完全內嵌・離線可用 (v4.2)</h4>
+        <p>已將 SheetJS (0.20.3) 與 Chart.js (4.4.1) 完整內嵌於單一 HTML 檔內，無網路的深山或封閉內網照常運行所有功能。</p>
+      </div>
+      <div class="feature-box">
+        <h4>💾 IndexedDB 大容量儲存 (v4.1)</h4>
+        <p>突破舊版 localStorage 5MB 限制，大班級多年級安心存放；內建啟動遮罩保護、自動還原點與多分頁同步鎖定。</p>
+      </div>
+      <div class="feature-box">
+        <h4>🏷️ 智慧備份與操作提示 (v4.0)</h4>
+        <p>頂端常駐「上次備份狀態標籤」與即時操作紀錄視窗，超過 7 天未備份自動變色提醒，名冊特殊字元全面安全跳脫。</p>
+      </div>
+      <div class="feature-box">
+        <h4>📑 個人成績單列印 (v3.4)</h4>
+        <p>每頁兩張精美個人成績單，直印上下、橫印左右，含各項成績、項目班平均、名次、家長簽章與個別評語欄。</p>
+      </div>
+      <div class="feature-box">
+        <h4>📐 盒鬚圖與 Z/T 分數 (v3.4)</h4>
+        <p>統計分析新增盒鬚圖（Boxplot）快速辨識離群值，並提供 Z 分數與 T 分數換算，常態化客觀評估學生進退步。</p>
+      </div>
+    </div>
   </div>
 
-  <!-- ── 1. 匯入 Excel ── -->
-  <div id="tab-import" class="section-anchor card">
-    <h2>分頁說明：匯入 Excel</h2>
-    <p>此分頁是您開始使用系統的起點，提供「從本機載入」與「匯入新檔案」兩大區塊。</p>
+  <!-- ── 雙機共用與資料夾同步 ── -->
+  <div id="dual-sync" class="section-anchor card">
+    <h2>📁 雙機共用與資料夾儲存 (4.3 核心功能)</h2>
+    <p>很多老師會在「學校辦公室電腦」與「家裡的筆電」交替登分。4.3 版新增<strong>指定資料存放資料夾</strong>（支援 Chrome、Edge 等基於 Chromium 的現代瀏覽器），徹底解決隨身碟拷貝容易覆蓋的困擾！</p>
 
-    <h3>1. 已儲存的班級資料</h3>
-    <p>當您在瀏覽器中建立過班級後，每次開啟網頁，這些班級會顯示在此區塊中。您可以：</p>
-    <ul>
-      <li>使用 <span class="badge primary">篩選學年</span> 或 <span class="badge primary">篩選學期</span> 下拉選單快速篩選班級。</li>
-      <li>勾選特定班級，並點擊 <span class="btn-mockup">▶ 載入勾選的班級</span>，即可將這些班級載入工作區。</li>
-      <li>對於舊學年或不要的資料，勾選後點擊紅色的 <span class="btn-mockup danger">🗑 刪除勾選的班級</span>（注意：此動作無法復原）。</li>
-    </ul>
-    
-    <h3>2. 匯入新的 Excel 成績冊</h3>
-    <p>如果您手邊有全新的 Excel 學生名單或成績冊，請在此匯入：</p>
+    <div class="alert info">
+      <div class="alert-title">💡 運作機制與原理</div>
+      系統透過瀏覽器的 <code>File System Access API</code>，讓網頁直接存取您指定的本機資料夾（例如 Google Drive 電腦版或 OneDrive 的本機同步資料夾）。資料夾內的 <code>成績資料.json</code> 為唯一<strong>正本</strong>，原本瀏覽器內的資料庫則作為本地快取與後援。
+    </div>
+
+    <h3>兩台電腦共用設定步驟</h3>
     <ol class="steps-list">
-      <li>設定 <strong>學年</strong>（如 114）、<strong>學期</strong>（第一學期或第二學期）以及 <strong>科目名稱</strong>（如：生物）。</li>
-      <li>將 Excel 檔案拖曳至 <span class="badge primary">點擊選擇檔案，或將 Excel 拖曳到這裡</span> 的虛線框中，或點擊該區域選擇檔案。</li>
-      <li>系統會自動讀取 Excel 中的所有活頁分頁（每個分頁代表一個班級）。系統會智慧型分析：
-        <ul>
-          <li><strong>學生基本資料</strong>：自動定位「座號」與「姓名」欄位。</li>
-          <li><strong>欄位群組（簽名元素）</strong>：系統會自動根據欄位名稱判定其群組，例如小考歸入「日常考查」（綠色）、段考歸入「期中考試」/「期末考試」（藍色）。</li>
-        </ul>
+      <li><strong>選擇儲存資料夾</strong>：
+        在辦公室電腦開啟系統，切換至「💾 匯出資料」分頁，找到「📁 資料存放位置」卡片，點擊 <span class="btn-mockup primary">📁 選擇資料存放資料夾</span>，選取您 Google Drive 或 OneDrive 在電腦上的同步資料夾（例如 <code>我的雲端硬碟/成績檔案夾</code>）。
       </li>
-      <li>在下方預覽清單中，勾選您要匯入的班級，點擊 <span class="btn-mockup">匯入勾選的班級</span> 即可完成。</li>
+      <li><strong>首次建立或匯入</strong>：
+        若資料夾內原本沒有資料，系統會將目前的成績資料寫入建立 <code>成績資料.json</code>；若資料夾內已存在正本，系統會提示您載入正本。
+      </li>
+      <li><strong>第二台電腦連結</strong>：
+        回到家裡的筆電，開啟同一個系統網址，同樣至「💾 匯出資料」點擊「選擇資料存放資料夾」，選取同一個雲端硬碟同步資料夾即可！
+      </li>
+      <li><strong>瀏覽器存取授權</strong>：
+        依據瀏覽器安全性規定，重新開啟網頁時可能需要點擊授權；當 Chrome 出現「每次造訪都允許」時，建議勾選即可免除重複點選。
+      </li>
     </ol>
-  </div>
 
-  <!-- ── 2. 班級管理 ── -->
-  <div id="tab-class" class="section-anchor card">
-    <h2>分頁說明：班級管理</h2>
-    <p>如果您沒有 Excel，或者想直接手動修改學生的座號、姓名及班級，請使用此分頁。</p>
-
-    <h3>1. 選取班級</h3>
-    <p>點擊選取您要管理的「學年」→「學期」→「班級」膠囊按鈕，下方的名單即會自動載入。</p>
-
-    <h3>2. 手動新增班級</h3>
-    <p>若要手動新增一個班級，請輸入 <strong>班級名稱</strong>（例：`204 生物`）、<strong>學年</strong> 與 <strong>學期</strong>，然後點擊 <span class="btn-mockup">新增班級</span> 即可建立一個沒有學生的空白班級。</p>
-
-    <h3>3. 編輯學生名單</h3>
-    <p>大文字框會載入目前班級的學生名單，格式如下：</p>
-    <div class="alert note" style="font-family: monospace; white-space: pre;">
-01 王小明
-02 李小華
-03 張大同</div>
-    <ul>
-      <li>您可以直接在此文字框中新增、修改或刪除學生姓名。</li>
-      <li>支援直接從 Excel 複製兩欄（座號、姓名）並貼上於此。</li>
-      <li>修改完畢後，請務必點擊 <span class="btn-mockup primary">更新學生名單</span> 進行儲存。</li>
-      <li>如果您想徹底移除該班，可點擊 <span class="btn-mockup danger">刪除此班級</span>。</li>
-    </ul>
-  </div>
-
-  <!-- ── 3. 成績管理 ── -->
-  <div id="tab-score" class="section-anchor card">
-    <h2>分頁說明：成績管理 (核心輸入與配分)</h2>
-    <p>這是您日常教學最常使用的核心介面。包含班級選取器、成績表表格，以及上方強大的工具按鈕。</p>
-
+    <h3>雙機共用的重要注意事項</h3>
     <div class="alert warning">
-      <div class="alert-title">💡 成績計算邏輯與加權配分（重要！）</div>
-      每個欄位（如小考 1、期中考）的標題下方都有一個<strong>配分比例輸入框（%）</strong>。系統計算「加權成績」時，會將各項成績乘以其配分比例。
-      <br><strong>例如：</strong>日常考查配分合佔 40%、期中考 30%、期末考 30%。學期加權總分為這三部分成績加權相加的結果。
-    </div>
-
-    <h3>表格結構介紹</h3>
-    <p>表格分為固定列與成績欄位，表頭由<strong>群組色帶</strong>區分：</p>
-    <div class="demo-table-wrapper">
-      <table class="demo-table">
-        <thead>
-          <tr class="grp-hdr">
-            <th class="g-fixed" colspan="2">固定欄位</th>
-            <th class="g-daily">日常考查 (合佔 40%)</th>
-            <th class="g-exam">期中考試 (合佔 30%)</th>
-            <th class="g-exam">期末考試 (合佔 30%)</th>
-            <th class="g-fixed" colspan="2">系統計算</th>
-          </tr>
-          <tr>
-            <th>座號</th>
-            <th>姓名</th>
-            <th>小考 1 <br><small>配分 40%</small></th>
-            <th>期中考 <br><small>配分 30%</small></th>
-            <th>期末考 <br><small>配分 30%</small></th>
-            <th>加權成績</th>
-            <th>學期成績</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>01</td>
-            <td>王小明</td>
-            <td>80</td>
-            <td>90</td>
-            <td>85</td>
-            <td>85.5</td>
-            <td>86</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <ul>
-      <li><strong>日常考查（綠色）</strong>、<strong>期中考試（藍色）</strong>、<strong>期末考試（深藍）</strong> 等群組色帶與配分，能清晰指引老師目前欄位的屬性。</li>
-      <li><strong>初步成績</strong>：各欄成績乘以配分後加總（空白不計 0 分）。</li>
-      <li><strong>學期成績</strong>：初步成績加上加減分後的結果（取到小數一位，限 0–100）。低於 60 分（不及格）時，該格會呈現<strong>淡紅色</strong>作為預警。</li>
-      <li><strong>名次（3.0 新增）</strong>：依學期成績即時計算的班級名次。</li>
-      <li><strong>調整成績欄（藍色輸入框）</strong>：如果老師想要在加權後手動幫特定學生加減分數（如日常表現優異），可直接在該生的<strong>「加減分」</strong>藍色格輸入整數（如 `2` 或 `-1`），系統將自動累加至學期成績。</li>
-    </ul>
-  </div>
-
-  <!-- ── 3-1. 快速輸入技巧 ── -->
-  <div id="fast-input" class="section-anchor card">
-    <h2>快速輸入技巧（3.0）</h2>
-    <h3>1. 直接在表格輸入（依座號順序）</h3>
-    <table class="demo-table" style="width:auto">
-      <thead><tr><th>按鍵</th><th>動作</th></tr></thead>
-      <tbody>
-        <tr><td><code>Enter</code></td><td>跳到本欄下一個<strong>空白</strong>格（已填的會自動略過，適合補登）</td></tr>
-        <tr><td><code>↓</code> / <code>↑</code></td><td>移到下一列／上一列同一欄</td></tr>
-        <tr><td><code>←</code> / <code>→</code></td><td>游標在數字最前或最後時，移到左／右一欄</td></tr>
-        <tr><td><code>Shift + Enter</code></td><td>回到上一列</td></tr>
-        <tr><td><code>Esc</code></td><td>取消本格修改，還原原本的分數</td></tr>
-        <tr><td><code>Ctrl + Z</code> / <code>Ctrl + Y</code></td><td>復原／重做（Mac 用 ⌘）</td></tr>
-      </tbody>
-    </table>
-    <div class="alert note"><div class="alert-title">💡 防呆設計</div>點進格子時會自動全選原分數，直接打字即可覆蓋。輸入超過 100、負數或文字時格子會變紅，離開時自動還原，不會寫入錯誤分數。</div>
-
-    <h3>2. ⚡ 快速登分（依考卷順序）</h3>
-    <ol class="steps-list">
-      <li>點工具列的 <span class="btn-mockup accent">⚡ 快速登分</span>，選擇「登分欄位」（例如：期中考1）。</li>
-      <li>在輸入框打 <code>座號 分數</code>，例如 <code>12 85</code>，按 Enter。也可用逗號、冒號或 Tab 分隔。</li>
-      <li>右側「登分紀錄」會顯示 <span style="color:#1E6B52">✓ 12 王小明：85</span>；若該生已有分數，會以 <span style="color:#B97D14">⚠ 已覆蓋</span> 提醒。</li>
-      <li>下方即時列出<strong>尚未登分的座號</strong>，登完一疊考卷就知道誰還沒交。</li>
-      <li>也可一次貼上多行「座號 分數」資料。</li>
-    </ol>
-
-    <h3>3. 從 Excel 直接貼上一整塊</h3>
-    <p>在 Excel 選取一個區塊（例如 30 列 × 3 欄）按 Ctrl+C，回到本系統點選要貼上的<strong>左上角</strong>格子按 Ctrl+V，系統會由該格往右、往下依序填入。非 0–100 的格子會被略過，貼錯可按 Ctrl+Z 一次復原。</p>
-
-    <h3>4. 檢查有沒有漏登</h3>
-    <ul>
-      <li>每個欄位標題下方的 <span class="badge primary">27/28</span> 代表已填 27 人；全部填完會變綠色。</li>
-      <li>某欄已有一半以上學生有分數、但某位學生仍空白時，該格會出現<strong>黃色斜紋</strong>，提醒可能漏登或缺考。</li>
-      <li>表格底部的統計列會即時顯示每欄的已填人數、平均、最高、最低與不及格人數。</li>
-    </ul>
-
-    <h3>5. 跳到座號與專注模式</h3>
-    <p>在「跳到座號」輸入座號按 Enter，會直接跳到該生最近使用的欄位。按 <span class="btn-mockup ghost">⛶ 專注模式</span> 會隱藏頁首、說明與分頁，讓表格佔滿螢幕，適合大量登分或投影；按 Esc 或再按一次即可離開。</p>
-  </div>
-
-  <!-- ── 4. 表格工具欄 ── -->
-  <div id="btn-toolbar" class="section-anchor card">
-    <h2>功能詳解：表格頂部工具欄按鈕</h2>
-    <p>3.0 版把工具列分成<strong>「輸入」「欄位」「檢視」</strong>三組，下方另有狀態列顯示目前輸入的學生與欄位、以及常用快捷鍵。各按鈕功能如下：</p>
-
-    <h3>1. ☑ 選取欄位 與 建立平均欄位</h3>
-    <ul>
-      <li><strong>操作方式</strong>：點擊 <span class="btn-mockup ghost">☑ 選取欄位</span>，表格表頭會出現勾選框。勾選多個成績欄位（如小考1 ~ 小考5），上方的 <span class="btn-mockup accent">建立平均欄位</span> 按鈕便會浮現。</li>
-      <li><strong>計算方式</strong>：
-        <ul>
-          <li><strong>全部平均（空白不計）</strong>：只對有分數的項目進行平均。</li>
-          <li><strong>去掉最低 1 次 / 去掉最低 2 次</strong>：適用於多次小考，系統會為每位學生自動挑出分數最低的 1 或 2 次排除後再做平均。若學生請假次數多於排除限制，則會以剩下的次數計算。</li>
-        </ul>
-      </li>
-      <li><strong>意義</strong>：幫助老師快速生成一個「小考平均」或「平時作業平均」的獨立欄位，並賦予該平均欄位一個總配分比重（如 20%），精簡成績冊版面。</li>
-    </ul>
-
-    <h3>2. 🗑 刪除欄位</h3>
-    <p>點擊 <span class="btn-mockup ghost">🗑 刪除欄位</span> 後，每個成績欄位標題旁會出現紅色 <span style="color:var(--danger)">[✖]</span> 按鈕，點擊即可刪除該欄位。再次點擊此按鈕可關閉刪除模式。</p>
-
-    <h3>3. ＋ 新增欄位</h3>
-    <p>點擊後開啟控制面板，可輸入欄位名稱、指定考查群組，並設定初始加權比例。</p>
-
-    <h3>4. 📋 批次貼上成績 (高效輸入)</h3>
-    <ul>
-      <li><strong>情境</strong>：老師在其他 Excel 檔案登錄了成績，不想一筆一筆輸入。</li>
-      <li><strong>操作</strong>：勾選要貼上的目標欄位（可多選），在文字區直接貼上從 Excel 複製的整直行成績（一列對應一位學生），點擊匯入即可一次完成數十人的成績輸入！</li>
-    </ul>
-
-    <h3>5. ⚖ 複製配分 (一鍵同步到其他班級)</h3>
-    <p>當您帶多個班級且使用相同的評量比例時，不需要在每個班級手動輸入比例。點擊此按鈕，可將本班各欄位的配分比例（%）以及平均欄位設定，一鍵複製並套用到同一年段的其他班級。</p>
-
-    <h3>6. ⬆ 上傳成績檔 (段考/平時成績匯入)</h3>
-    <p>當教務處發放了段考 Excel 成績單，或您從線上測驗系統導出了小考成績：</p>
-    <ul>
-      <li>點擊按鈕，上傳 Excel 檔案。</li>
-      <li>系統會嚴格執行<strong>「座號 + 姓名」雙重比對</strong>，確保成績準確填入本系統對應的學生格內，並會詳細標示成功配對、部分不符或無此學生的清單，避免張冠李戴。</li>
-    </ul>
-
-    <h3>7. 顯示大小與高度調整</h3>
-    <p>「檢視」組的 <span class="btn-mockup ghost">＋</span>／<span class="btn-mockup ghost">－</span> 可放大或縮小表格（40% ~ 140%），<span class="btn-mockup ghost">↕＋</span>／<span class="btn-mockup ghost">↕－</span> 可調整表格視窗高度（50 ~ 90vh），適應不同尺寸的螢幕或投影機展示。</p>
-  </div>
-
-  <!-- ── 5. 個別配分 ── -->
-  <div id="personal-weights" class="section-anchor card">
-    <h2>進階功能：個別學生配分 (特殊生處理)</h2>
-    <p>在實際教學中，常有學生因長期公假、生病缺考、或是轉學生，無法參與某些考試項目。本系統特有<strong>「個別學生配分」</strong>功能，完美解決此困擾。</p>
-
-    <h3>操作步驟：</h3>
-    <ol class="steps-list">
-      <li>在成績管理表格中，找到該位學生的姓名旁，點擊紫色的小按鈕 <span class="btn-mockup ghost-secondary" style="font-size:11px; padding:2px 6px;">⚙</span>。</li>
-      <li>將會彈出「個別學生配分設定」視窗。</li>
-      <li>在<strong>「個別配分（%）」</strong>欄位中，針對該生輸入專屬的配分比例。</li>
-      <li>點擊 <span class="btn-mockup">儲存個別配分</span> 即可。</li>
-    </ol>
-
-    <div class="alert note">
-      <div class="alert-title">ℹ 計算規則說明</div>
-      <ul>
-        <li>若該生某個欄位的個別配分設為 <strong>0% 或留白</strong>，則表示該欄位對該生使用「班級預設配分」。</li>
-        <li>設定個別配分後，該生姓名旁的按鈕會變為實心紫色的 <span class="badge secondary">★</span>，方便識別。</li>
-        <li>系統在計算該生學期成績時，會以其「個別配分」為準，其餘學生的成績計算與權重完全不受影響。</li>
+      <div class="alert-title">⚠️ 雲端同步需要時間，請勿兩台電腦「同時」登分！</div>
+      <ul style="margin: 6px 0 0; padding-left: 20px;">
+        <li><strong>換電腦前</strong>：先確認網頁右上角標籤顯示 <span class="badge primary">📁 已同步到資料夾</span>，並等待電腦右下角/右上角的雲端硬碟圖示同步完成（不再轉圈）。</li>
+        <li><strong>換電腦後</strong>：開機後先確認雲端硬碟已完成下載最新檔案，再開啟本網頁。</li>
+        <li><strong>衝突保護機制</strong>：若系統偵測到正本已被另一台電腦修改，會暫停寫入並主動彈出視窗詢問：
+          <br>1. 「<strong>載入資料夾內較新的資料</strong>」：改用另一台電腦的最新內容（本機未儲存的變更會先存成本機自動還原點）。
+          <br>2. 「<strong>以本頁內容覆蓋</strong>」：以本頁內容為準覆蓋，資料夾原本檔案會先自動備份為衝突檔。
+          <br>3. 「<strong>把本頁內容另存成衝突檔，之後再處理</strong>」：安全保存兩邊內容，稍後手動整理。
+        </li>
+        <li><strong>每日歷史備份</strong>：每天第一次寫入時，系統會自動在該資料夾的 <code>成績資料_歷史</code> 子目錄備份一份 <code>成績資料_年月日.json</code>，自動保留最近 14 天的歷史檔案，隨時可一鍵還原！</li>
       </ul>
     </div>
   </div>
 
+  <!-- ── 1. 匯入 Excel ── -->
+  <div id="tab-import" class="section-anchor card">
+    <h2>1. 📥 匯入 Excel (多班級成績冊)</h2>
+    <p>開學初或段考後，您可以直接上傳學校教務處發布的 Excel 成績冊，系統會自動完成多班解析與結構化建檔。</p>
+
+    <h3>1. 已儲存的班級資料 (快速切換)</h3>
+    <p>每次開啟網頁時，上方會列出所有已儲存在瀏覽器內的班級清單：</p>
+    <ul>
+      <li><strong>學年與學期篩選</strong>：提供「篩選學年」與「篩選學期」下拉選單，能精準過濾不同學期的班級。</li>
+      <li><strong>一鍵進入成績表</strong>：每個班級卡片皆有 <span class="btn-mockup ghost">開啟 ↗</span> 按鈕，點擊立即跳轉到該班的成績登記表格。</li>
+      <li><strong>批次刪除與防呆</strong>：若需整理舊班級，可勾選後點擊「🗑 刪除勾選的班級」。所有被刪除的班級會先移入「最近刪除（垃圾桶）」，不怕誤刪！</li>
+    </ul>
+
+    <h3>2. 匯入新的 Excel 成績冊</h3>
+    <div class="demo-table-wrapper">
+      <table class="demo-table">
+        <tr class="grp-hdr">
+          <th colspan="3" class="g-fixed">基本資料 (系統自動偵測)</th>
+          <th colspan="3" class="g-daily">日常考查 (依試卷/作業辨識)</th>
+          <th colspan="2" class="g-exam">定期考查</th>
+        </tr>
+        <tr>
+          <th>座號</th><th>姓名</th><th>性別</th>
+          <th>作業1</th><th>小考1</th><th>學習態度</th>
+          <th>第一次期中考</th><th>期末考</th>
+        </tr>
+        <tr>
+          <td>1</td><td>王小明</td><td>男</td><td>85</td><td>92</td><td>90</td><td>88</td><td>90</td>
+        </tr>
+      </table>
+    </div>
+
+    <ul class="steps-list">
+      <li><strong>多工作表 (Sheet) 自動辨識</strong>：一個 Excel 檔內若有多個班級分頁（如 101, 102, 103），系統會一次解析並同時匯入所有班級。</li>
+      <li><strong>略過選項設定</strong>：匯入面板提供「☑ 略過假期作業欄位」與「☑ 略過第三次期中考」核取方塊（預設勾選），方便切換兩次段考制或三次段考制學校。</li>
+      <li><strong>自動配分補齊</strong>：匯入時系統會自動套用常見預設配分（期中考 20%、期末考 30% 等）；若配分未滿 100%，系統會自動建立「日常考查平均」欄補足剩餘百分比。</li>
+      <li><strong>同名班級防覆蓋確認</strong>：若匯入的班級名稱與現有班級重複，系統會彈出確認對話框，讓您選擇「覆蓋已存在班級」、「僅匯入全新班級」或「取消」，絕不默默抹煞舊成績。</li>
+    </ul>
+  </div>
+
+  <!-- ── 2. 班級管理 ── -->
+  <div id="tab-class" class="section-anchor card">
+    <h2>2. 🏫 班級管理 (手動建班與名單更新)</h2>
+    <p>除了直接匯入 Excel，您也可以手動建立班級或隨時修訂學生名冊：</p>
+
+    <h3>1. 學年・學期・班級選取器</h3>
+    <p>位於頁面頂部，與「成績管理」分頁即時聯動。在任一處切換班級，所有頁面與報表皆會同步切換。</p>
+
+    <h3>2. 手動新增班級與學生名單</h3>
+    <ul>
+      <li>輸入班級名稱（支援如「201 生物」、「高二數理資優班」等任意符號）。</li>
+      <li>在「學生名單」文字框中，每行輸入一筆「座號 姓名」（例如 <code>01 陳大同 男</code>，性別選填），點擊 <span class="btn-mockup primary">建立班級</span> 即可完成。</li>
+    </ul>
+
+    <h3>3. 名單更新的「三層智慧配對」防護</h3>
+    <div class="alert note">
+      <div class="alert-title">🛡️ 轉學生、轉組或改名？成績絕不遺失</div>
+      學期中若有學生轉入、休學、轉組或改名，直接在學生名單框修改後點擊「更新學生名單」。系統會依據：
+      <br><strong>第一層：座號與姓名皆相符</strong> ➔ 成績完全保留。
+      <br><strong>第二層：姓名相同但座號改變（換座號）</strong> ➔ 成績自動隨學生移至新座號。
+      <br><strong>第三層：座號相同但姓名相近（改名）</strong> ➔ 提示確認後保留成績。
+      <br>若有名單中的學生將被刪除且該生已有登記成績，系統會跳出醒目清單要求二次確認，嚴防誤刪。
+    </div>
+  </div>
+
+  <!-- ── 3. 成績管理 ── -->
+  <div id="tab-score" class="section-anchor card">
+    <h2>3. ✏️ 成績管理與表格佈局</h2>
+    <p>本分頁是平時登分與結算的核心工作台。採用針對高密度成績輸入優化的表格佈局：</p>
+
+    <h3>右側五欄固定凍結</h3>
+    <p>橫向欄位很多時，表格向右捲動，右側的關鍵計算欄位會<strong>固定停留在螢幕右側</strong>，讓您隨時掌握總評：</p>
+    <ul>
+      <li><strong>目前累計</strong>：目前所有已評量欄位的加權實得總分（藍字）。</li>
+      <li><strong>初步成績</strong>：按目前已考欄位的權重比例，等比換算為 100 分制的即時成績。方便在學期中提早看出哪些學生處於不及格邊緣！</li>
+      <li><strong>加減分</strong>：全學期平時獎懲加減分（僅限整數）。<strong>在格子雙擊（Double Click）</strong>可開啟備註輸入理由，有理由的格子右上角帶有小黃點。</li>
+      <li><strong>學期成績</strong>：依完整配分公式計算之最終總成績（粗體深綠色，不及格紅字）。若完全沒有成績則顯示為空白，不會拉低平均。</li>
+      <li><strong>名次</strong>：班級即時排名，同分同名次，無成績者顯示「–」。</li>
+    </ul>
+
+    <h3>缺考 (缺/a) 與 免計 (免/e) 的精準計算</h3>
+    <div class="alert info">
+      <div class="alert-title">💡 缺考與免計的區別與規範</div>
+      <ul>
+        <li><strong>缺考（輸入「缺」或「a」）</strong>：以 <strong>0 分</strong> 計算，格子呈現<strong>紅底粗體「缺」</strong>。該項配分仍計入分母，學期成績會受到影響。</li>
+        <li><strong>免計（輸入「免」或「e」）</strong>：該項目<strong>不納入計算</strong>，格子呈現<strong>藍底粗體「免」</strong>。系統會自動將其配分扣除，並把其餘項目的權重按比例等比放大至 100% 計算！</li>
+        <li><strong>取消標記</strong>：直接點擊該格輸入新分數，即可清除缺考或免計標記。</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── 4. 快速輸入與連續登分 ── -->
+  <div id="fast-input" class="section-anchor card">
+    <h2>4. ⚡ 快速輸入與連續登分技巧</h2>
+    <p>系統提供多種極速登分方式，適應不同批改場景：</p>
+
+    <div class="feature-grid">
+      <div class="feature-box">
+        <h4>1. 表格直覺鍵盤巡航</h4>
+        <p>點選任一格子打分數：<br>
+        • <kbd>Enter</kbd>：跳到本欄下一個空格（可在狀態列切換為「往下一列」）。<br>
+        • <kbd>Shift</kbd> + <kbd>Enter</kbd>：往上一列。<br>
+        • <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd>：上下左右移動。<br>
+        • <kbd>Esc</kbd>：取消修改還原原分數。只接受合法分數，誤按滾輪不會改動數值。</p>
+      </div>
+      <div class="feature-box">
+        <h4>2. ⚡ 快速登分 (依考卷收回順序)</h4>
+        <p>考卷常被打亂未按座號排？點擊「⚡ 快速登分」：<br>
+        在輸入框直接打「<code>座號 分數</code>」（例如 <code>15 88</code> 或 <code>15 缺</code>）按 Enter，系統立即寫入並在右方紀錄歷史，同時即時列出尚未登分的座號清單！</p>
+      </div>
+      <div class="feature-box">
+        <h4>3. 連續登分模式 (流水號登分)</h4>
+        <p>考卷已照座號排好？在快速登分面板勾選「☑ 連續模式」並設定起始座號：<br>
+        只要打分數按 Enter，立即寫入該生並跳下一位，面板以大字提示「下一位：06 李同學」；直接按 Enter 為跳過、打 <code>b</code> 可回上一位！</p>
+      </div>
+      <div class="feature-box">
+        <h4>4. 從 Excel 貼上一整塊</h4>
+        <p>在外部 Excel 選取一塊矩形分數區域複製（Ctrl+C），回到系統點選目標左上角第一格，按下 <kbd>Ctrl+V</kbd>，分數自動由該格往右、往下完整填入！</p>
+      </div>
+    </div>
+
+    <h3>📋 批次貼上成績 (多欄智慧對位)</h3>
+    <p>點擊頂部工具列「📋 批次貼上成績」，可一次勾選多個目標欄位：</p>
+    <ul>
+      <li><strong>座號自動對位</strong>：若貼上的文字第一欄是座號，系統會自動比對學生座號填入，即使行數順序不一致也不會錯位！</li>
+      <li><strong>空白格保留原成績</strong>：貼上的資料中若有空白格，系統絕不會抹除原本已登的分數。</li>
+      <li><strong>寫入前預覽</strong>：貼上後會先列出「新增筆數、覆蓋筆數（顯示前 5 筆舊值 → 新值）、略過筆數」，確認無誤才正式寫入。</li>
+    </ul>
+
+    <h3>全域復原與重做 (<kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Y</kbd>)</h3>
+    <p>無論是不小心填錯整列成績、誤刪欄位、批次貼錯或更動配分，隨時按下鍵盤 <kbd>Ctrl+Z</kbd>（Mac 為 <kbd>⌘+Z</kbd>）即可復原；各班擁有獨立的復原紀錄，換班再切回依然可以復原！</p>
+  </div>
+
+  <!-- ── 5. 欄位、配分與計算方式 ── -->
+  <div id="column-weights" class="section-anchor card">
+    <h2>5. ⚖️ 欄位、配分與計算方式</h2>
+    
+    <h3>1. 欄位選單「⋯」功能</h3>
+    <p>每個成績欄位標題右上角皆有「⋯」選單按鈕，點擊可開啟功能選單：</p>
+    <ul>
+      <li><strong>修改欄位屬性</strong>：修改欄位名稱、變更所屬群組、自訂欄位滿分、設定評量日期。</li>
+      <li><strong>同群組左右排序</strong>：點擊「← 往左移」或「往右移 →」，自訂欄位先後順序。</li>
+      <li><strong>加入平均欄</strong>：一鍵將該欄納入指定的平均計算欄。</li>
+      <li><strong>刪除欄位</strong>：刪除該欄（可按 Ctrl+Z 復原）。</li>
+    </ul>
+
+    <h3>2. 自訂滿分折算百分制</h3>
+    <p>新增或編輯欄位時可設定「滿分」（預設 100，可改為 50、20 等）。非 100 滿分的欄位，標題下方會標註如「<code>/50</code>」；在結算學期成績時，系統會自動按 <code>(實得分數 ÷ 欄位滿分) × 100</code> 換算為標準百分制計算加權，不必老師手動換算！</p>
+
+    <h3>3. 群組折疊與自訂分類</h3>
+    <p>欄位可歸類為日常考查、期中考、期末考、作業、實驗、報告、報告或自訂群組。點擊表格頂部的<strong>群組色帶</strong>即可將該群組所有細項欄位「折疊」收合，只保留群組平均欄，讓表格更加清爽乾淨！</p>
+
+    <h3>4. 建立平均欄位 (取最高 N 次 / 去最低 N 次)</h3>
+    <p>點擊頂部工具列「☑ 選取欄位」，勾選多次小考或作業後，點擊「建立平均欄位」，可選擇：</p>
+    <ul>
+      <li><strong>算術平均</strong>：所有勾選項目平均。</li>
+      <li><strong>去掉最低 N 次平均</strong>：自動剔除學生個人表現最差的 N 次後再平均（缺考 0 分優先剔除）。</li>
+      <li><strong>取最高 N 次平均</strong>：僅採計表現最佳的 N 次成績。</li>
+    </ul>
+  </div>
+
+  <!-- ── 5-1. 特殊生個別配分 ── -->
+  <div id="special-weights" class="section-anchor card">
+    <h2>5-1. 👤 特殊生個別配分處理</h2>
+    <p>資源班學生、身心障礙生、體育專長生或因公請假長期缺考的同學，評量加權比例往往與全班不同。本系統提供完善的個別學生配分設定：</p>
+
+    <ol class="steps-list">
+      <li>在「成績管理」表格中，找到該位學生的姓名，點擊學生姓名旁的 <span class="btn-mockup ghost">配分</span> 按鈕。</li>
+      <li>彈出該生的個別配分設定視窗，取消「使用班級預設配分」核取方塊。</li>
+      <li>直接輸入該生專屬的各項配分比例（例如將實驗考查 20% 移轉至平時作業）。</li>
+      <li>點擊儲存，該生的學期成績即刻依其專屬配分精準重算，名冊旁會顯示標記，列印總表時也會明確備註。</li>
+    </ol>
+  </div>
+
   <!-- ── 6. 統計分析 ── -->
   <div id="tab-stats" class="section-anchor card">
-    <h2>分頁說明：統計分析的教學意義</h2>
-    <p>本分頁提供強大的視覺化分析，協助教師發掘學習落差、掌握教學成效。</p>
+    <h2>6. 📊 統計分析與教學應用</h2>
+    <p>系統內嵌 Chart.js 4.4.1 圖表庫，提供三大維度的即時統計圖表：</p>
 
-    <h3>1. 單一班級分析</h3>
-    <p>選擇班級與統計依據（如學期成績），系統會自動計算：</p>
-    <ul>
-      <li><strong>基礎統計量</strong>：全班人數、平均分數、最高分、最低分、及格人數、不及格人數與及格率。</li>
-      <li><strong>成績分布直方圖（左圖）</strong>：直觀展示 90分以上、80~89分...等各分數段的人數比例。<strong>教學意義</strong>：若呈現雙峰分布，代表班級學習產生兩極化，需實施差異化教學。</li>
-      <li><strong>各項目班平均長條圖（右圖）</strong>：對比該班各成績欄位與學期成績的班平均。<strong>教學意義</strong>：若期末考平均大幅下降，代表期末課程難度提高或學生複習不足。</li>
-      <li><strong>五標（3.0 新增）</strong>：頂標 P88、前標 P75、均標 P50、後標 P25、底標 P12，與大考中心定義相同。</li>
-      <li><strong>成績排行表（3.0 新增）</strong>：依所選統計依據列出名次、座號、姓名、分數、與班平均差、PR（班內百分等級）。不及格者以紅字標示。</li>
-      <li><strong>關懷與拔尖名單（3.0 新增）</strong>：自動列出不及格、<strong>臨界 55–59 分</strong>（補救投入最少、效果最明顯）與 90 分以上的學生，可直接作為補救教學或加深加廣的名單。</li>
-    </ul>
-
-    <h3>2. 多班級比較</h3>
-    <p>勾選多個同一年級的班級，系統會產生**跨班級平均分柱狀圖與表格**。</p>
-    <ul>
-      <li><strong>教學意義</strong>：老師可以直觀地看出自己帶的 301 班、302 班在同一次段考中的表現落差。若某班平均顯著落後，可及時調整該班的授課進度或引導方式。</li>
-    </ul>
-
-    <h3>3. 長期追蹤</h3>
-    <p>當班級從高二升高三，或從第一學期進入第二學期，學生名單大致不變但班級名稱變更時：</p>
-    <ul>
-      <li><strong>操作</strong>：勾選不同學期的沿革班級（如 113-1-201 班與 113-2-201 班），點擊產生長期分析。</li>
-      <li><strong>教學意義</strong>：系統會自動對比每位學生在不同學期的加權成績，畫出長期趨勢折線圖。能幫助老師實施**「早期預警」**，找出成績持續下滑、需要關懷或輔導的學生名單。</li>
-    </ul>
-  </div>
-
-  <!-- ── 7. 匯出與備份 ── -->
-  <div id="tab-export" class="section-anchor card">
-    <h2>分頁說明：匯出、列印與資料備份</h2>
-    <p>完成一學期的成績登錄後，您需要將成績資料儲存或交給學校系統。</p>
-
-    <h3>1. 匯出成績與列印</h3>
-    <ul>
-      <li><span class="btn-mockup">⬇ 下載班級成績</span>：一鍵將當前選取班級的完整成績表格下載為 Excel 檔案，方便您直接上傳至學校的行政系統。</li>
-      <li><span class="btn-mockup secondary">🖨 列印班級成績</span>：開啟專為紙本設計的列印視窗，格式工整並包含基本統計量。建議在列印設定中勾選<strong>「顯示背景圖形」</strong>，以確保群組色帶與不及格淡紅色標示能完美列印。</li>
-    </ul>
-
-    <h3>2. 還原與備份 (重要安全保護)</h3>
-    <div class="alert danger">
-      <div class="alert-title">⚠ 瀏覽器清除快取風險宣導</div>
-      由於資料儲存在瀏覽器的 `localStorage`，若您執行了瀏覽器清理（如：清理 Cookie、清除歷程記錄、重設瀏覽器），或是使用他人電腦的無痕視窗，<strong>儲存的成績資料將會遺失！</strong>
+    <div class="feature-grid">
+      <div class="feature-box">
+        <h4>1. 單一班級深度分析</h4>
+        <p>• <strong>敘述統計指標</strong>：平均數、中位數、標準差、最高分、最低分、及格率、前標/均標/底標。<br>
+        • <strong>分布長條圖</strong>：支援自由切換「10分組距」或「5分組距」，並附平均線與標準差標記。<br>
+        • <strong>盒鬚圖 (Boxplot)</strong>：一眼辨識四分位距（Q1/Q2/Q3）與極端離群值。<br>
+        • <strong>Z 分數與 T 分數</strong>：客觀常態化數值，方便觀察個別學生在群體中的相對位置。<br>
+        • <strong>性別差異分析</strong>：男女生成績對比雷達/直條圖與平均差異。</p>
+      </div>
+      <div class="feature-box">
+        <h4>2. 多班級橫向比較</h4>
+        <p>同時任教多個同進度班級時，勾選多個班級進行橫向比較：<br>
+        • 班級平均數與及格率對比柱狀圖。<br>
+        • 各段考項目跨班難易度比較。<br>
+        • 快速掌握各班教學進度與吸收落差。</p>
+      </div>
+      <div class="feature-box">
+        <h4>3. 跨學期長期追蹤與預警</h4>
+        <p>追蹤同一批學生在不同學期（如高一上 ➔ 高一下 ➔ 高二上）的成績演變：<br>
+        • 學生個人升降軌跡折線圖。<br>
+        • 自動列出「成績大幅退步」或「學期成績瀕臨不及格」之預警關懷名單，方便及早進行課後輔導或親師溝通。</p>
+      </div>
     </div>
-    
-    <p>為避免上述情況導致心血白費，系統提供：</p>
+  </div>
+
+  <!-- ── 7. 匯出、備份與成績單 ── -->
+  <div id="tab-export" class="section-anchor card">
+    <h2>7. 💾 匯出、備份與個人成績單列印</h2>
+
+    <h3>1. 個人成績通知單列印 (3.4 旗艦亮點)</h3>
+    <p>期末或段考後要發給學生與家長簽章確認？在「列印成績」選項中選擇<strong>「個人成績單」</strong>：</p>
     <ul>
-      <li><span class="btn-mockup ghost-secondary">⬇ 下載 JSON 備份</span>：定期（如每次段考登記完）點擊此按鈕，會下載一個包含您所有班級、所有學期成績的 `.json` 備份檔。請將此檔案妥善保存在您的隨身碟或雲端硬碟。</li>
-      <li><span class="btn-mockup ghost">⬆ 還原 JSON 備份</span>：在新電腦或瀏覽器被清空時，點擊此按鈕並選取您的備份檔，即可 1 秒還原所有歷史成績資料。</li>
+      <li><strong>一頁兩張排版</strong>：直印時上下各一張，橫印時左右各一張，不浪費紙張。</li>
+      <li><strong>內容完整齊備</strong>：列出學生姓名、座號、各單項分數、<strong>各單項之全班平均</strong>、加減分與說明、學期成績及班級排名。</li>
+      <li><strong>親師溝通欄位</strong>：下方附有「家長簽章欄」與「導師勉勵與評語備註欄」，列印後即可直接裁剪發放。</li>
+    </ul>
+
+    <h3>2. 班級成績總表列印與 Excel 匯出</h3>
+    <ul>
+      <li><strong>列印班級成績總表</strong>：支援自由勾選要印出的欄位（可隱藏細項只印總分），格式符合學校存檔規範。</li>
+      <li><strong>匯出 Excel (.xlsx)</strong>：一鍵下載完整成績試算表，包含學生名單、各項原始得分、加權後學期成績、名次及加減分理由，中文完全不亂碼。</li>
+    </ul>
+
+    <h3>3. JSON 完整備份與還原</h3>
+    <ul>
+      <li><strong>下載 JSON 備份檔</strong>：一秒將所有學年、所有班級、個別配分、操作設定完整打包為單一檔案，妥善存於隨身碟或雲端硬碟。</li>
+      <li><strong>還原備份</strong>：在任何新電腦開啟本網頁，點選「還原 JSON 備份」，所有資料立即原樣復活！支援「覆蓋」或「與現有班級合併」。</li>
+      <li><strong>最近刪除（垃圾桶）</strong>：任何被刪除的班級或整個學期，皆會保留於最近刪除清單（最多 20 筆），提供「一鍵還原」後悔藥。</li>
     </ul>
   </div>
 
-  <!-- ── 8. 示範資料 ── -->
+  <!-- ── 8. 成績示範與練習 ── -->
   <div id="tab-demo" class="section-anchor card">
-    <h2>分頁說明：成績示範與練習</h2>
-    <p>為了方便新使用者快速熟悉系統，系統內建了 11 份完整的示範班級成績檔。</p>
+    <h2>8. ✨ 成績示範與練習</h2>
+    <p>新手老師剛使用系統想先熟悉介面？切換到「✨ 成績示範」分頁：</p>
     <ul>
-      <li>您可以直接勾選如 `113學年第一學期 201 生物` 或全選，然後點擊 <span class="btn-mockup">▶ 匯入勾選的示範班級</span>。</li>
-      <li><strong>練習建議</strong>：
-        <ul>
-          <li>匯入 113 學年與 114 學年的示範班級後，切換到「統計分析」→「長期追蹤」，勾選 `113-1-201`、`113-2-201`、`114-1-301`，觀察學生在兩年內的成績升降軌跡。</li>
-          <li>練習在「成績管理」中修改示範學生的分數，體會即時加權計算的便利性。</li>
-        </ul>
-      </li>
+      <li>內建 <strong>11 份完整示範班級</strong>（涵蓋 113 與 114 學年、第一與第二學期）。</li>
+      <li>包含完整日常考查、段考分數、缺考免計示範、加減分備註與特殊生個別配分。</li>
+      <li>點擊「匯入勾選的示範班級」即可練習登分、配分運算、統計圖表切換與個人成績單列印！</li>
     </ul>
   </div>
 
   <!-- ── FAQ 常見問題 ── -->
   <div id="faq" class="section-anchor card">
-    <h2>FAQ 常見問題與疑難排解</h2>
+    <h2>❓ FAQ 常見問題與疑難排解</h2>
+
     <div class="faq-item">
-      <div class="faq-question">如果學校的 Excel 成績單格式跟系統不符，要怎麼匯入？</div>
+      <div class="faq-question">我要如何在「辦公室電腦」與「家裡筆電」同步使用，資料才不會錯亂？</div>
       <div class="faq-answer">
-        系統在匯入 Excel 時，具有高度的容錯力。它會自動在表格中尋找含有「座號」、「姓名」的欄位。如果您的 Excel 格式比較特殊，建議您可以使用「班級管理」手動建立學生名單，再使用「成績管理」頂部工具欄的「批次貼上成績」或「上傳成績檔」功能，將成績快速複製進來。
+        強烈建議使用 4.3 版的「<strong>📁 指定資料存放資料夾</strong>」功能！兩台電腦各自主動在「💾 匯出資料」中選擇相同的 Google Drive 或 OneDrive 同步資料夾。換電腦前，請先確認網頁右上角顯示「📁 已同步到資料夾」，並等待雲端硬碟同步圖示完成上傳；切記<strong>不要兩台電腦同時開著登分</strong>，即可享受自動同步！
       </div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-question">我不小心關掉網頁，剛剛輸入的成績會不見嗎？</div>
+      <div class="faq-question">沒有網路的環境（例如地下室或斷網電腦）可以使用嗎？</div>
       <div class="faq-answer">
-        不會。本系統在您輸入成績、修改配分或名單時，皆會<strong>即時自動儲存</strong>至瀏覽器中。您也可以在成績管理中點擊「💾 儲存」確保安全。只要您不主動清除瀏覽器快取，下次開啟同一網址時資料依然會在。
+        <strong>100% 可以！</strong> 4.2 版已將 SheetJS (Excel 匯入匯出) 與 Chart.js (圖表元件) 完整內嵌在 HTML 單檔中。您可以直接把 HTML 檔案拷貝到隨身碟，在任何完全無網路的電腦上開啟，所有功能完全正常運作。
       </div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-question">我想把成績分發給學生看，可以只列印個別學生的成績嗎？</div>
+      <div class="faq-question">我不小心關閉瀏覽器，剛剛輸入的成績會遺失嗎？</div>
       <div class="faq-answer">
-        在點擊「列印班級成績」時，會彈出列印選項面板。您可以選擇列印「完整成績冊」，或者在「統計分析」分頁中觀察學生的個人表現。如果您只需要個別學生的成績，建議將資料導出為 Excel 後，在 Excel 中進行篩選與分發。
+        不會！系統在您每次鍵盤敲擊、改配分或貼上時，皆會透過 IndexedDB 進行<strong>即時毫秒級自動儲存</strong>。即使直接關閉分頁或電腦突然重開機，下次開啟網頁時所有進度皆完整保留。
       </div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-question">有些學生的名字有罕見字，在 Excel 匯入時出現亂碼怎麼辦？</div>
+      <div class="faq-question">學生請假缺考，該填「0分」、「缺」還是「免」？</div>
       <div class="faq-answer">
-        本系統採用現代的 `SheetJS` 庫解讀 Excel，對 UTF-8 與罕見字有良好的支援。若真的出現亂碼，您可以隨時在「班級管理」分頁的學生名單中，直接手動修正學生的姓名，並點擊更新即可。
+        • 若該生無正當理由缺席、依校規以零分採計：請填「<strong>缺</strong>」（或英文字母 <code>a</code>），系統會以 0 分計算並在格子顯示紅底。<br>
+        • 若該生經核准免測或病假免計、該次成績不列入學期考核：請填「<strong>免</strong>」（或英文字母 <code>e</code>），系統會顯示藍底，並將其配分扣除，自動將其他已考項目等比放大到 100%！
       </div>
-    </div>
-    <div class="faq-item">
-      <div class="faq-question">打錯分數或貼錯整塊成績，要怎麼還原？</div>
-      <div class="faq-answer">按工具列的「↶ 復原」或鍵盤 Ctrl+Z（Mac 為 ⌘+Z），可逐步復原最近的輸入、貼上與快速登分；「↷ 重做」或 Ctrl+Y 可再套用回來。切換到其他班級後，復原紀錄會重新開始。</div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-question">為什麼有些空白格子出現黃色斜紋？</div>
-      <div class="faq-answer">表示該欄已有一半以上學生有成績，但這位學生還是空白，可能是漏登或缺考。若確定是缺考，可不理會（空白不會以 0 分計算），或使用「個別配分」調整該生的配分。</div>
+      <div class="faq-question">某次小考滿分是 50 分或 20 分，學期成績加權會不會算錯？</div>
+      <div class="faq-answer">
+        完全不會！點擊該欄右上角「⋯」選單，將「滿分」改為 50 或 20。系統在結算學期總成績時，會自動依 <code>(實得分數 ÷ 欄位滿分) × 100</code> 換算為標準百分制後再乘以配分權重。
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">不小心誤刪欄位或整批貼錯，要怎麼還原？</div>
+      <div class="faq-answer">
+        直接按下鍵盤 <kbd>Ctrl+Z</kbd>（Mac 為 <kbd>⌘+Z</kbd>）即可逐步復原！系統支援逐格輸入、刪除欄位、改配分、群組配分、複製配分、批次貼上、名單更新等各類操作的全域復原。若誤刪整個班級，可至「💾 匯出資料」➔「最近刪除」中一鍵還原。
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">為什麼部分學生的空白格子會出現「黃色斜紋」？</div>
+      <div class="faq-answer">
+        黃色斜紋是系統的<strong>疑似漏登智慧提示</strong>！當該欄位全班已有超過一半的同學登入分數，但某位學生依然是空白時，系統會以黃色斜紋標示，提醒老師可能漏打分數或尚未登記請假補考。
+      </div>
     </div>
   </div>
 
   <!-- 頁尾 -->
-  <footer style="margin-top: 40px; border-top: 1px solid var(--line); padding-top: 20px; text-align: center; font-size: 14px; color: var(--ink-soft);">
-    <p>多班級成績管理系統 2.0 使用說明手冊 © 2026</p>
-    <p>
+  <footer style="margin-top: 40px; border-top: 1px solid var(--line); padding-top: 24px; text-align: center; font-size: 14px; color: var(--ink-soft); line-height: 1.8;">
+    <p style="margin: 0; font-weight: 600;">多班級成績管理系統 4.3 教學與使用手冊 © 2026</p>
+    <p style="margin: 4px 0 0;">
+      系統架構設計：臺北市立麗山高級中學 林獻升老師（<a href="mailto:frog@lssh.tp.edu.tw" style="color: var(--primary);">frog@lssh.tp.edu.tw</a>）
+    </p>
+    <p style="margin: 4px 0 0;">
       主程式 GitHub 線上版：
       <a href="https://froglssh.github.io/multi-class-grades-management/" target="_blank" style="color: var(--primary); font-weight: 700;">https://froglssh.github.io/multi-class-grades-management/</a>
+      &nbsp;|&nbsp;
+      使用手冊線上版：
+      <a href="https://froglssh.github.io/multi-class-grades-management-guide/" target="_blank" style="color: var(--primary); font-weight: 700;">https://froglssh.github.io/multi-class-grades-management-guide/</a>
     </p>
   </footer>
 
@@ -884,16 +1049,15 @@
     let current = '';
     sections.forEach(section => {
       const sectionTop = section.offsetTop;
-      const sectionHeight = section.clientHeight;
-      if (pageYOffset >= (sectionTop - 80)) {
+      if (pageYOffset >= (sectionTop - 100)) {
         current = section.getAttribute('id');
       }
     });
 
     navLi.forEach(li => {
       li.classList.remove('active');
-      const targetAnchor = li.querySelector('a').getAttribute('href').substring(1);
-      if (targetAnchor === current) {
+      const a = li.querySelector('a');
+      if (a && a.getAttribute('href').substring(1) === current) {
         li.classList.add('active');
       }
     });
