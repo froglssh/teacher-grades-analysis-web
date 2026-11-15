@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智慧班級成績分析系統 v6 使用說明</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --p: #2563eb;
+      --pl: #dbeafe;
+      --p-hover: #1d4ed8;
+      --p2: #7c3aed;
+      --p2l: #ede9fe;
+      --d: #dc2626;
+      --dl: #fee2e2;
+      --s: #059669;
+      --sl: #d1fae5;
+      --w: #d97706;
+      --wl: #fef3c7;
+      --bg: #f8fafc;
+      --header-bg: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #5b21b6 100%);
+      --card: #ffffff;
+      --card-hover: #f1f5f9;
+      --border: #e2e8f0;
+      --tx: #0f172a;
+      --mu: #475569;
+      --mu-light: #94a3b8;
+      --sh: 0 4px 20px -2px rgba(15, 23, 42, 0.08), 0 2px 8px -1px rgba(15, 23, 42, 0.04);
+      --sh-hover: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
+      --r: 16px;
+      --rs: 10px;
+    }
+
+    [data-theme="dark"] {
+      --p: #60a5fa;
+      --pl: #1e3a8a;
+      --p-hover: #3b82f6;
+      --p2: #a78bfa;
+      --p2l: #2e1065;
+      --d: #f87171;
+      --dl: #450a0a;
+      --s: #34d399;
+      --sl: #064e3b;
+      --w: #fbbf24;
+      --wl: #78350f;
+      --bg: #090d16;
+      --header-bg: linear-gradient(135deg, #020617 0%, #0f172a 60%, #1e1b4b 100%);
+      --card: #111827;
+      --card-hover: #1f2937;
+      --border: #1f2937;
+      --tx: #f8fafc;
+      --mu: #94a3b8;
+      --mu-light: #64748b;
+      --sh: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
+      --sh-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Outfit', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--tx);
+      line-height: 1.7;
+      display: flex;
+      min-height: 100vh;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    /* Layout */
+    .sidebar {
+      width: 300px;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      padding: 30px 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      z-index: 100;
+    }
+
+    .main-content {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Sidebar Navigation */
+    .toc-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--p);
+      letter-spacing: 0.5px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--pl);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toc-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .toc-item a {
+      display: block;
+      padding: 10px 14px;
+      color: var(--mu);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border-radius: var(--rs);
+      transition: all 0.2s;
+    }
+
+    .toc-item a:hover {
+      background: var(--pl);
+      color: var(--p);
+      transform: translateX(4px);
+    }
+
+    .toc-item.active a {
+      background: var(--p);
+      color: #ffffff !important;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+
+    /* Header Banner */
+    .header-banner {
+      background: var(--header-bg);
+      color: #ffffff;
+      padding: 60px 40px;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-banner::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 15% 30%, rgba(37, 99, 235, 0.15) 0%, transparent 50%),
+                  radial-gradient(circle at 85% 70%, rgba(124, 58, 237, 0.2) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .header-banner h1 {
+      font-size: 2.2rem;
+      font-weight: 900;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .header-banner p {
+      font-size: 1.05rem;
+      opacity: 0.9;
+      max-width: 800px;
+      margin-bottom: 24px;
+      font-weight: 300;
+    }
+
+    .meta-links {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .meta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 99px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.88rem;
+      transition: all 0.2s;
+    }
+
+    .meta-btn-primary {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 4px 14px rgba(255, 255, 255, 0.2);
+    }
+
+    .meta-btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
+    }
+
+    .meta-btn-secondary {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(4px);
+    }
+
+    .meta-btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.22);
+      transform: translateY(-2px);
+    }
+
+    .theme-toggle-btn {
+      position: absolute;
+      top: 30px;
+      right: 40px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #ffffff;
+      padding: 8px 16px;
+      border-radius: 99px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      backdrop-filter: blur(4px);
+      transition: all 0.2s;
+    }
+
+    .theme-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    /* Container */
+    .container {
+      padding: 40px;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    /* Sections & Cards */
+    section {
+      scroll-margin-top: 40px;
+    }
+
+    .section-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--p);
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      box-shadow: var(--sh);
+      padding: 30px;
+      margin-bottom: 24px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      box-shadow: var(--sh-hover);
+    }
+
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--tx);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Typography & Alerts */
+    h4 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin: 18px 0 8px;
+      color: var(--tx);
+    }
+
+    p {
+      margin-bottom: 16px;
+      color: var(--mu);
+    }
+
+    ul, ol {
+      margin-bottom: 20px;
+      padding-left: 20px;
+      color: var(--mu);
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    strong {
+      color: var(--tx);
+    }
+
+    .code-span {
+      font-family: Consolas, Monaco, 'Andale Mono', monospace;
+      background: var(--pl);
+      color: var(--p);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.85em;
+      font-weight: 600;
+    }
+
+    /* Alerts */
+    .alert {
+      padding: 16px 20px;
+      border-radius: var(--rs);
+      margin-bottom: 24px;
+      border-left: 4px solid;
+      font-size: 0.92rem;
+    }
+
+    .alert p:last-child {
+      margin-bottom: 0;
+    }
+
+    .alert-info {
+      background: var(--pl);
+      border-color: var(--p);
+      color: var(--tx);
+    }
+    .alert-info strong { color: var(--p); }
+
+    .alert-warning {
+      background: var(--wl);
+      border-color: var(--w);
+      color: var(--tx);
+    }
+    .alert-warning strong { color: var(--w); }
+
+    .alert-danger {
+      background: var(--dl);
+      border-color: var(--d);
+      color: var(--tx);
+    }
+    .alert-danger strong { color: var(--d); }
+
+    .alert-success {
+      background: var(--sl);
+      border-color: var(--s);
+      color: var(--tx);
+    }
+    .alert-success strong { color: var(--s); }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--rs);
+      margin-bottom: 24px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--tx);
+    }
+
+    th {
+      background: var(--pl);
+      color: var(--p);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Interactive Calculator Styling */
+    .calc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--mu);
+    }
+
+    input, select {
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--rs);
+      background: var(--card);
+      color: var(--tx);
+      font-family: inherit;
+      font-size: 0.92rem;
+      transition: all 0.2s;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--p);
+      box-shadow: 0 0 0 3px var(--pl);
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: var(--rs);
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--p);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+
+    .btn-primary:hover {
+      background: var(--p-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+    }
+
+    .calc-results {
+      background: var(--pl);
+      border: 1px solid var(--p);
+      border-radius: var(--rs);
+      padding: 20px;
+      display: none;
+      margin-top: 20px;
+    }
+
+    .calc-results-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--p);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .calc-results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 14px;
+    }
+
+    .calc-res-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--rs);
+      padding: 12px;
+      text-align: center;
+    }
+
+    .calc-res-val {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: var(--p2);
+    }
+
+    .calc-res-lbl {
+      font-size: 0.76rem;
+      color: var(--mu-light);
+      margin-top: 2px;
+    }
+
+    .calc-commentary {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1.5px dashed var(--border);
+      font-size: 0.88rem;
+      color: var(--mu);
+    }
+
+    /* Badge styles */
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 99px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .badge-primary { background: var(--pl); color: var(--p); }
+    .badge-secondary { background: var(--p2l); color: var(--p2); }
+    .badge-danger { background: var(--dl); color: var(--d); }
+    .badge-success { background: var(--sl); color: var(--s); }
+
+    /* Decorative Chart Simulations */
+    .mock-chart-container {
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-end;
+      height: 160px;
+      border-bottom: 2px solid var(--border);
+      padding: 10px 0;
+      margin: 20px 0;
+    }
+
+    .mock-bar {
+      width: 10%;
+      background: var(--p);
+      border-radius: 4px 4px 0 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding-bottom: 4px;
+      transition: height 0.6s ease;
+    }
+
+    .mock-bar-label {
+      font-size: 0.75rem;
+      text-align: center;
+      margin-top: 6px;
+      color: var(--mu);
+    }
+
+    .correlation-matrix-sim {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 3px;
+      max-width: 320px;
+      margin: 15px auto;
+    }
+
+    .corr-cell {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border-radius: 4px;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      body {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 20px;
+      }
+      .header-banner {
+        padding: 40px 20px;
+      }
+      .theme-toggle-btn {
+        top: 20px;
+        right: 20px;
+      }
+      .container {
+        padding: 20px;
+      }
+    }
+    .badge{white-space:nowrap;}
+    .table-container table td, .table-container table th { vertical-align: top; }
+    @media (max-width: 480px) { .container { padding: 12px; } .card { padding: 16px; } }
+    @media print { .sidebar, .theme-toggle-btn { display: none !important; } body { display: block; } }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar no-print">
+    <div class="toc-title"><span>📖 說明書目錄</span></div>
+    <ul class="toc-list">
+      <li class="toc-item active" data-target="sec-intro"><a href="#sec-intro">🌟 這個程式做什麼</a></li>
+      <li class="toc-item" data-target="sec-start"><a href="#sec-start">🚀 三步驟上手</a></li>
+      <li class="toc-item" data-target="sec-format"><a href="#sec-format">📄 成績冊格式說明</a></li>
+      <li class="toc-item" data-target="sec-validate"><a href="#sec-validate">🔍 驗證視窗怎麼看</a></li>
+      <li class="toc-item" data-target="sec-nav"><a href="#sec-nav">🧭 考試切換與四組導覽</a></li>
+      <li class="toc-item" data-target="sec-tabs"><a href="#sec-tabs">📊 各分頁怎麼讀</a></li>
+      <li class="toc-item" data-target="sec-settings"><a href="#sec-settings">⚙️ 排除科目與預警標準</a></li>
+      <li class="toc-item" data-target="sec-student"><a href="#sec-student">🧑‍🎓 學生版報告與發放</a></li>
+      <li class="toc-item" data-target="sec-export"><a href="#sec-export">🖨️ 列印、PDF 與 Excel</a></li>
+      <li class="toc-item" data-target="sec-storage"><a href="#sec-storage">🗄️ 資料儲存與屆別</a></li>
+      <li class="toc-item" data-target="sec-folder"><a href="#sec-folder">📁 指定資料夾長期保存</a></li>
+      <li class="toc-item" data-target="sec-privacy"><a href="#sec-privacy">🔒 隱私與離線使用</a></li>
+      <li class="toc-item" data-target="sec-faq"><a href="#sec-faq">❓ 常見問題</a></li>
+      <li class="toc-item" data-target="sec-terms"><a href="#sec-terms">📚 名詞小辭典</a></li>
+    </ul>
+    <div style="margin-top: auto; padding-top: 15px; border-top: 1px solid var(--border); font-size: 0.78rem; color: var(--mu-light);">
+      智慧班級成績分析系統 v6 使用說明<br>臺北市立麗山高中 林獻升老師 製作
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="header-banner">
+      <button class="theme-toggle-btn" onclick="toggleTheme()">🌙 深色模式</button>
+      <h1>📊 智慧班級成績分析系統 <span style="font-size:.55em;vertical-align:middle;background:rgba(255,255,255,.2);padding:3px 10px;border-radius:99px;">v6</span></h1>
+      <p>給導師的使用說明：把學校系統匯出的班級成績冊上傳，就能看到班級總覽、各科診斷、預警關懷名單與每位學生的個人報告。本說明依 v6 程式（檔名 <span class="code-span" style="color:#fff;background:rgba(255,255,255,.15);">班級成績分析系統_v6.html</span>）的實際功能撰寫。</p>
+    </header>
+
+    <div class="container">
+
+      <!-- Intro -->
+      <section id="sec-intro">
+        <div class="section-title">🌟 這個程式做什麼</div>
+        <div class="card">
+          <p>這是一個<strong>單一 HTML 檔</strong>的成績分析工具，用瀏覽器打開就能用，不需要安裝、不需要帳號，也不會把成績傳到任何伺服器。它的定位很單純：</p>
+          <ul>
+            <li><strong>只讀學校成績冊，不改成績。</strong>程式沒有修改分數、新增科目、設定滿分或及格線的功能；總分、平均、名次一律以成績冊為準（成績冊沒有名次時才由系統依平均補算，並會標示「系統計算」）。</li>
+            <li><strong>以一個班級為單位。</strong>同一屆三年的段考都累積在「目前這一屆」，可以看趨勢、比較進退步。</li>
+            <li><strong>分析給老師看，報告也可以給學生和家長看。</strong>學生版個人報告只含該生自己的成績與全班統計數字，不含其他同學的個別成績。</li>
+          </ul>
+          <div class="alert alert-info">
+            <strong>💡 適合的使用時機：</strong>段考成績出來後的導師班會、親師座談前準備個人成績單、學期末追蹤需要關懷的學生、在導師知能研習示範數據輔助班級經營。
+          </div>
+        </div>
+      </section>
+
+      <!-- Start -->
+      <section id="sec-start">
+        <div class="section-title">🚀 三步驟上手</div>
+        <div class="card">
+          <ol>
+            <li><strong>① 上傳學校成績冊：</strong>用 Chrome 或 Edge 打開 <span class="code-span">班級成績分析系統_v6.html</span>，把學校系統匯出的班級成績冊（.xls 或 .xlsx）拖到虛線框，或點一下框框選檔。一次可以選多份，系統會依考試時間（學年、學期、第幾次）自動排序。</li>
+            <li><strong>② 確認驗證結果：</strong>每一份檔案都會先跳出「驗證視窗」，列出人數、科目、選修人數、名單異動等。確認沒問題再按「確認，載入資料」。（看不懂的提示請參考下一節「驗證視窗怎麼看」。）</li>
+            <li><strong>③ 看分析：</strong>建議從「🏫 班級分析 → 班級總覽」開始看（第一次使用時預設就在這頁；之後程式會記住您上次看的分頁）。上方的「目前分析的考試」可以切換要看哪一次段考。</li>
+          </ol>
+          <div class="alert alert-success">
+            <strong>✨ 先試玩：</strong>還沒有成績冊時，可按「✨ 載入示範班級（3 次段考，合成資料）」。示範資料是程式隨機產生的虛構學生，適合研習時操作練習。若目前已經有資料，載入示範班級前系統會先把目前這一屆封存，之後可以切換回來。
+          </div>
+          <p>已經有資料時，上傳區會收成一列，只顯示屆別、已載入幾份考試、「＋ 上傳新成績」按鈕、「顯示學生姓名」開關與「⚙️ 設定」。要再上傳時按「＋ 上傳新成績」展開拖放區即可。</p>
+        </div>
+      </section>
+
+      <!-- Format -->
+      <section id="sec-format">
+        <div class="section-title">📄 成績冊格式說明</div>
+        <div class="card">
+          <p>程式是針對學校系統匯出的「班級成績一覽表」設計，不需要另外整理。它會自動找出以下內容（以下表格為<strong>虛構示意</strong>）：</p>
+          <div class="table-container">
+            <table>
+              <thead><tr><th colspan="9" style="text-align:left;">115 學年度上學期 107 第一次期中考 成績一覽表　　列印日期：115/10/20</th></tr>
+              <tr><th>座號</th><th>姓名</th><th>國語文<br>4/4</th><th>英語文<br>4/4</th><th>數學<br>4/4</th><th>…</th><th>總分</th><th>平均</th><th>班級名次</th></tr></thead>
+              <tbody>
+                <tr><td>01</td><td>王小明</td><td>78</td><td>#55</td><td>82</td><td>…</td><td>…</td><td>71.6</td><td>12</td></tr>
+                <tr><td>02</td><td>李小華</td><td>91</td><td>88</td><td>76</td><td>…</td><td>…</td><td>84.3</td><td>3</td></tr>
+                <tr><td colspan="9" style="text-align:left;">…（其餘學生）…</td></tr>
+                <tr><td colspan="2">平均</td><td>74.2</td><td>70.8</td><td>68.5</td><td>…</td><td colspan="3"></td></tr>
+                <tr><td colspan="2">高標</td><td>85.6</td><td>83.1</td><td>81.0</td><td>…</td><td colspan="3"></td></tr>
+                <tr><td colspan="2">及格比率%</td><td>86</td><td>79</td><td>72</td><td>…</td><td colspan="3"></td></tr>
+                <tr><td colspan="2">標準差</td><td>9.8</td><td>12.4</td><td>14.1</td><td>…</td><td colspan="3"></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <ul>
+            <li><strong>標題列：</strong>從「○○○學年度 上／下學期 班級 考試別」自動取得學年、學期、班級與考試名稱，考試會自動命名為例如「115上 第一次期中考」，並依時間排序。</li>
+            <li><strong>座號、姓名：</strong>成績冊沒有姓名欄也可以分析，只是跨考試辨識同一位學生、轉入轉出判斷都只能用座號。</li>
+            <li><strong>科目欄：</strong>表頭含科目名稱即可；表頭下的「4/4」會讀成學分。同一個科目名稱出現兩次（例如同名選修分成 1 學分、2 學分兩門）時，系統會自動加上「（1學分）」「（2學分）」區分。</li>
+            <li><strong>「#」：</strong>成績冊以 # 標示不及格，程式會讀出分數並標成紅字。</li>
+            <li><strong>輔助欄：</strong>總分、平均、不及格數、班級名次、班級進退、類組名次、類組進退、類組百分名次。沒有班級名次或進退時，系統依平均自動計算並註明「系統依平均分數自動計算」。</li>
+            <li><strong>底部統計列：</strong>平均、高標、及格比率、標準差、班級人數等會一併讀入，在「五標統計」以黃底列並列，也用來核對程式計算是否正確。</li>
+          </ul>
+          <div class="alert alert-warning"><strong>⚠️ 注意：</strong>請直接上傳學校匯出的原檔，不要先在 Excel 裡合併儲存格、刪表頭或加註解列，以免欄位對不上。</div>
+        </div>
+      </section>
+
+      <!-- Validate -->
+      <section id="sec-validate">
+        <div class="section-title">🔍 驗證視窗怎麼看</div>
+        <div class="card">
+          <p>每份檔案載入前都會跳出驗證視窗。最上面一行是摘要，例如「解析完成：29 位學生 / 7 科 ｜ 0 錯誤 / 1 警告」。紅框「錯誤」必須處理（按鈕會無法按）；黃框「警告」請看一下是否合理；藍框是參考資訊。</p>
+          <div class="table-container">
+            <table>
+              <thead><tr><th>提示</th><th>代表什麼</th><th>怎麼處理</th></tr></thead>
+              <tbody>
+                <tr><td><strong>人數核對</strong><br>「成績冊記載班級人數 N 人，但讀入 M 位學生」</td><td>成績冊底部的班級人數和程式讀到的學生列數不同。</td><td>打開原檔核對是否有學生列沒有座號或格式特殊；確認無誤再載入。</td></tr>
+                <tr><td><strong>各科修習人數（藍框）</strong><br>「○○：選修，6 人修習」</td><td>修習人數不到全班一半的科目視為選修，統計只算有修的學生。</td><td>正常現象。人數少於 10 人的科目，分析頁會提醒「人數太少，僅供參考」。若不想讓選修科影響全班分析，可在「⚙️ 設定」排除。</td></tr>
+                <tr><td>「○○：未有成績 N 人」</td><td>大部分人有成績，少數人空白（缺考、免修等）。</td><td>確認是否符合實際狀況。</td></tr>
+                <tr><td><strong>未讀入欄位</strong><br>「下列表頭欄位未被辨識，未讀入分析」</td><td>有表頭欄位程式不認得，該欄不會進入分析。</td><td>若那欄是科目成績，請把原檔與提示內容告訴製作老師；若是備註欄可忽略。</td></tr>
+                <tr><td>「程式計算平均 … 與成績冊平均 … 相差」</td><td>程式算出的該科平均與成績冊底部平均不同，可能欄位對錯。</td><td>先不要載入，核對原檔欄位。</td></tr>
+                <tr><td>「未能完整解析考試時間」</td><td>標題列讀不到學年／學期／考試別。</td><td>可以載入，但會依上傳順序排列；載入後可在考試標籤用 ◀ ▶ 調整順序、✏️ 改名。</td></tr>
+                <tr><td>「已載入過同名考試」</td><td>同一份成績冊可能上傳了兩次。</td><td>若是重複上傳請按取消；確定要載入，系統會自動命名為「名稱(2)」。</td></tr>
+                <tr><td>「未偵測到班級名次」</td><td>成績冊沒有名次欄。</td><td>載入後由系統依平均計算名次與進退，並標示為系統計算。</td></tr>
+                <tr><td><strong>👥 名單核對：同一屆，有異動</strong></td><td>和時間上相鄰的考試比對姓名：<br>・<b>轉出</b>：較早名單有、較晚名單沒有的姓名<br>・<b>轉入</b>：新出現的姓名<br>・<b>座號異動</b>：姓名相同、座號不同（視為同一人）</td><td>確認後系統會記錄異動：轉出生保留歷史成績；轉入生的多次比較、趨勢、預警與成長分析只從轉入後開始算。個人報告標題會標示「○○起轉入」等字樣。</td></tr>
+                <tr><td><strong>🎓 換屆警告</strong><br>「偵測到換屆（或不同班級）」</td><td>座號與姓名都相同的人不到一半，可能是新的一屆或上傳到別班的成績冊。</td><td>如果真的是新一屆，按「🎓 建立新一屆」：系統先把目前這一屆整個封存（可隨時切換回來），再開始新的一屆。若是傳錯檔，按「取消上傳」。</td></tr>
+                <tr><td>「成績冊沒有姓名，無法判斷…」</td><td>沒有姓名欄，無法判斷換屆或轉學。</td><td>請自行確認是同一班的成績。</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="alert alert-info"><strong>💡</strong> 驗證視窗是給導師核對用的，會直接顯示名單異動的姓名。投影示範時請留意。</div>
+        </div>
+      </section>
+
+      <!-- Nav -->
+      <section id="sec-nav">
+        <div class="section-title">🧭 全域考試切換與四組導覽</div>
+        <div class="card">
+          <h4>目前分析的考試</h4>
+          <p>分頁列右上方（手機在分頁列下方）有「目前分析的考試」選單與 ◀ ▶ 按鈕。<strong>所有分頁共用這一個選擇</strong>：切換後，成績一覽、五標、全班分析、名次、預警、個人分析、班級總覽與最上方的「班級體質儀表板」都會一起換成這份考試；「與上次比較」一律是和<strong>時間上的前一份考試</strong>比。上傳區的考試標籤也可以點一下考試名稱來切換；◀ ▶ 用來調整考試先後順序，✏️ 改名，× 移除這份考試。</p>
+          <h4>四組導覽</h4>
+          <div class="table-container">
+            <table>
+              <thead><tr><th>第一層</th><th>第二層子分頁</th></tr></thead>
+              <tbody>
+                <tr><td><strong>📋 成績資料</strong></td><td>成績一覽、五標統計</td></tr>
+                <tr><td><strong>🏫 班級分析</strong></td><td>班級總覽、全班分析、名次分析、多次比較、預警關懷、進階計量診斷</td></tr>
+                <tr><td><strong>🧑‍🎓 個人分析</strong></td><td>個人分析、個人多次比較</td></tr>
+                <tr><td><strong>💾 輸出與儲存</strong></td><td>報告與匯出、資料與儲存</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>程式會記住您上次看的分頁，重新開啟時直接回到那裡；第一次使用（或有資料時）預設在「班級總覽」。手機或平板上，分頁列可以左右滑動。</p>
+          <div class="alert alert-info"><strong>小「?」名詞說明：</strong>畫面上專有名詞旁的小「?」，滑鼠移上去或點一下就會出現一句白話解釋（例如五標、PR、標準差、偏態、VAM）。列印時不會出現。</div>
+        </div>
+      </section>
+
+      <!-- Tabs -->
+      <section id="sec-tabs">
+        <div class="section-title">📊 各分頁怎麼讀</div>
+        <div class="card">
+          <h4>🏫 班級總覽（建議先看）</h4>
+          <p>老師版一頁摘要：一句話總評（班平均、與上次比較、及格人次比率、及格率最低科目、預警人數與建議）、關鍵數字、各科一列精簡表（人數、平均、學校高標、及格率、與上次差、需關注標記）、平均進步／退步最多的前五位（需有前一份考試；依姓名比對同一人，本次轉入的同學不列入）、預警分級人數，以及本次轉入、轉出、座號異動摘要。按「🖨️ 列印班級總覽」可印成 A4 一頁或另存 PDF。</p>
+          <h4>📋 成績一覽</h4>
+          <p>全班成績表，可搜尋座號（顯示姓名時也可搜尋姓名）、點表頭排序、切換熱力圖、點一列跳到該生個人分析。「🧩 顯示欄位」可加開班級 PR、與班平均差、與上次平均差。紅底為不及格；在目前顯示的這份考試中被排除的科目，表頭會標「分析排除」，但成績照常顯示。</p>
+          <h4>📏 五標統計</h4>
+          <p>各科頂標、前標、均標、後標、底標（第 88／75／50／25／12 百分位）及平均、標準差等。黃底列是成績冊底部的原始數值；成績冊的「高標」是前 50% 學生的平均，和五標定義不同，數字不必相同。</p>
+          <h4>📈 全班分析</h4>
+          <p>各科平均、及格率、成績分布、雷達圖、五標折線、箱型圖、程度分群、科目相關矩陣、各科教學診斷表、臨界學生名單。<strong>每個區塊上方的綠框是依實際數值自動產生的白話結論</strong>（「這代表什麼」＋「老師可以怎麼做」）；修習人數少於 10 人的科目會加註「人數太少，僅供參考」。</p>
+          <h4>📊 名次分析</h4>
+          <p>班級名次、進退、類組名次與百分名次的表格與圖表（成績冊有提供才顯示）。</p>
+          <h4>🔄 多次比較</h4>
+          <p>需兩份以上考試。「全班比較」看各科平均、及格率、標準差的歷次變化；「個人比較」（在「🧑‍🎓 個人分析 → 個人多次比較」）看單一學生的歷次成績與趨勢。</p>
+          <h4>🚨 預警關懷</h4>
+          <p>依不及格科數、均分、名次退步、均分驟降、單科明顯低於個人均分、臨界不及格、連續下滑等規則計分，分成高度關注、中度關注、持續留意。這是老師版頁面，用語較直接；名單可下載 Excel。判定規則寫在頁面下方，標準可自行調整（見下一節）。</p>
+          <h4>🔬 進階計量診斷</h4>
+          <ul>
+            <li><strong>信度衰減校正關聯：</strong>扣除測量誤差後，估計兩科底層能力的關聯；只計算每科都有成績的學生。</li>
+            <li><strong>增值評量（VAM）：</strong>用前兩次考試預測「目前分析的考試」，找出明顯超出或低於預期的學生（包括分數及格但明顯退步的「隱性危機」）。目前分析的考試之前要至少還有兩份考試。</li>
+            <li><strong>成長軌跡：</strong>用這一屆全部考試（3 次以上）算每位學生的起點與每次平均進退幾分，列出持續進步、持續下滑、起伏大的學生。</li>
+          </ul>
+          <p>每個區塊上方都有白話結論；考試次數或人數不足時，會直接寫「次數／人數太少，僅供參考」或「暫不提供結論」，不會硬下結論。</p>
+          <h4>🧑‍🎓 個人分析</h4>
+          <p>選擇學生後顯示各科成績、班平均、差距、Z／T 分數、五標位置、評等、偏科指數、三張圖與「讀書策略與下次目標」。可用鍵盤 ← → 切換學生；「🔄 看這位學生的多次比較」直接跳到個人多次比較。上方的「學生版報告選項」見後面說明。</p>
+        </div>
+      </section>
+
+      <!-- Settings -->
+      <section id="sec-settings">
+        <div class="section-title">⚙️ 排除科目與預警標準</div>
+        <div class="card">
+          <h4>排除科目（上傳區的「⚙️ 設定」）</h4>
+          <p><strong>每份考試各自設定</strong>：面板標題會寫明是哪一次考試（例如「分析時排除科目 ─ 115上 第一次期中考」），只列出「目前分析的考試」的科目，勾選只影響這一次；要設定其他次考試，先在上方切換目前分析的考試，面板內容會跟著換。按「套用到這一屆所有考試」可把這一次的勾選依科目名稱套到其他每份考試的同名科目（其他考試沒有對應的科目不變，會先詢問確認）。新上傳的考試，同名科目會沿用時間上前一份考試的勾選。</p>
+          <p>勾選的科目（例如國防、體育等藝能科，或人數很少的選修）在該次考試不列入讀書策略、教學診斷、相關與進階計量、預警單科規則、雷達與科目比較圖、儀表板及格人次比率與班級總覽精簡表。多次比較、趨勢與「與上次差」等跨考試分析中，每份考試各照自己的設定：某科在某次被排除，那一次就不提供該科的資料（表格標示「排除」或「—」、圖表該點留空），不會被當成 0 分或退步；科目清單列出至少在一份考試中未被排除的科目。成績一覽表仍完整顯示；總分、平均、名次一律以成績冊為準，不會因排除而改變。設定會自動儲存，並隨考試一起保存在封存屆別、JSON 備份與資料夾正本中；舊版的整屆共用設定在載入時會自動轉成各考試的設定。</p>
+          <p>「⚙️ 設定」裡也有「🗑️ 清除目前這一屆的資料」：只清除目前這一屆，封存的屆別不受影響；清除前會自動建立還原點。</p>
+          <h4>調整預警標準（預警關懷頁的「⚙️ 調整預警標準」）</h4>
+          <p>可改各項門檻，例如不及格科數、均分門檻、名次退步名數、均分驟降分數、臨界分數範圍等，每一項都顯示預設值；改完立即重算並儲存，只影響預警名單與儀表板的預警人數。按「↺ 恢復預設」回到原本規則。</p>
+        </div>
+      </section>
+
+      <!-- Student report -->
+      <section id="sec-student">
+        <div class="section-title">🧑‍🎓 學生版報告選項與發放注意事項</div>
+        <div class="card">
+          <p>個人分析頁上方、以及「報告與匯出」頁的「全班學生個別報告」區，都有兩個同步的選項：</p>
+          <div class="table-container">
+            <table>
+              <thead><tr><th>選項</th><th>說明</th></tr></thead>
+              <tbody>
+                <tr><td><strong>顯示班級名次</strong>（預設開）</td><td>關閉時，個人分析頁與個人報告（列印、單一學生 PDF、全班個人報告）都<strong>不出現</strong>班級名次、類組名次、名次進退、預估名次與 PR，只保留自己的分數、與班平均／五標的位置、進退步分數。適合不想強調排名的班級或家長說明會。</td></tr>
+                <tr><td><strong>附家長閱讀說明</strong>（預設開）</td><td>報告最後附一段白話說明：五標是什麼、紅字（成績冊上的 #）代表不及格、怎麼看進退步，以及建議和孩子一起討論的三個問題。</td></tr>
+                <tr><td><strong>報告標題顯示姓名</strong>（報告與匯出頁）</td><td>決定個人報告的標題<strong>與內文</strong>是否出現姓名，和畫面上的「顯示學生姓名」開關無關。成績冊沒有姓名時自動停用。</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>「讀書策略與下次目標」等自動文字使用中性、鼓勵式的說法（例如「與班平均還有一段距離」「最近往下、可再加油的科目」），分類方式與數值不變。轉入、轉出、座號異動會在報告標題旁標示。</p>
+          <div class="alert alert-warning">
+            <strong>📮 發給學生／家長前請確認：</strong>
+            <ul>
+              <li>每份報告只含該生自己的成績與班級統計（班平均、五標等），不含其他同學的個別成績。</li>
+              <li>確認選對學生、座號範圍與考試；姓名是否顯示依「報告標題顯示姓名」選項。</li>
+              <li>自動建議只是依分數算出的參考，請搭配平日觀察與任課老師意見；名次與 PR 只是班內相對位置。</li>
+              <li>PDF 檔含學生成績，傳送時請一人一檔或紙本分發，不要整份全班檔寄給家長或貼到群組。</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Export -->
+      <section id="sec-export">
+        <div class="section-title">🖨️ 列印、PDF 與 Excel 匯出</div>
+        <div class="card">
+          <div class="table-container">
+            <table>
+              <thead><tr><th>功能</th><th>位置</th><th>說明</th></tr></thead>
+              <tbody>
+                <tr><td><strong>🖨️ 列印本頁</strong></td><td>各分頁右上</td><td>連同圖表印出目前分頁（目前分析的考試）；在列印視窗選「另存為 PDF」即可存檔。班級總覽設計為 A4 一頁。</td></tr>
+                <tr><td><strong>⬇️ 一鍵下載全班個人報告 PDF</strong></td><td>報告與匯出</td><td>依座號範圍逐一產生個人報告並合併成一個 PDF，每位學生從新的一頁開始，頁尾有頁碼。可選單次分析考試（預設＝目前分析的考試）、是否含多次追蹤比較、讀書策略、畫質、雙面列印補白頁。30 人約 1–2 分鐘，可隨時取消。檔名為「屆別＿考試＿全班個人成績分析報告＿座號範圍.pdf」。</td></tr>
+                <tr><td><strong>🖨️ 列印全班個人報告</strong></td><td>報告與匯出</td><td>同樣內容改用瀏覽器列印，文字可搜尋、檔案較小。</td></tr>
+                <tr><td><strong>單一學生分析報告</strong></td><td>報告與匯出</td><td>選學生後可「列印」或「下載 PDF」，含所有考試的單次分析與多次追蹤。</td></tr>
+                <tr><td><strong>📊 完整班級分析報告</strong></td><td>報告與匯出</td><td>班級總覽、成績一覽、五標、全班分析、名次、預警、進階計量、多次比較。範圍預設＝目前分析的考試，也可選「全部成績」。</td></tr>
+                <tr><td><strong>📥 Excel 匯出</strong></td><td>報告與匯出</td><td>「下載此次」含成績、五標統計、學生讀書診斷、臨界生名單工作表；「下載全部考試」含合併成績與各次成績。預警頁、全班分析頁另可下載預警名單、臨界生名單。</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="alert alert-info"><strong>姓名：</strong>「顯示學生姓名」關閉時，畫面、列印本頁、完整班級報告、班級總覽、預警名單與所有 Excel 匯出都只出現座號、不含姓名（Excel 會直接拿掉姓名欄）。個人報告則依自己的「報告標題顯示姓名」選項。深色模式下列印或產生 PDF 會自動改用白底版本。</div>
+        </div>
+      </section>
+
+      <!-- Storage -->
+      <section id="sec-storage">
+        <div class="section-title">🗄️ 資料儲存、屆別、還原點與 JSON 備份</div>
+        <div class="card">
+          <h4>自動儲存（不用按存檔）</h4>
+          <p>載入、改名、排除科目、調整預警標準、切換考試等變更都會自動存在<strong>這台電腦這個瀏覽器</strong>裡（IndexedDB，另有一份 localStorage 鏡像）。標題列右上的徽章會顯示「已儲存 時:分」。下次用同一台電腦、同一個瀏覽器打開同一個檔案，資料會自動載入。內容沒有變動時不會重複寫入。</p>
+          <div class="alert alert-warning"><strong>⚠️ 注意：</strong>資料跟著「瀏覽器」走，不是跟著 HTML 檔走。換電腦、換瀏覽器、使用無痕視窗或清除瀏覽器資料後，就看不到原本的資料——請用下面的「指定資料夾」或「JSON 備份」保存。同一台電腦同時開兩個分頁修改時，後改的分頁會提示「另一個分頁已修改資料，請重新載入」，避免互相覆蓋。</div>
+          <h4>屆別（💾 輸出與儲存 → 🗄️ 資料與儲存 → 屆別資料）</h4>
+          <p>同一屆三年的考試都累積在「目前這一屆」，屆別名稱會自動依入學學年度與班級命名（例如「115學年度入學・107班」），可重新命名。上傳時偵測到換屆並按「建立新一屆」，舊的一屆會被封存；封存的屆別可以「切換到這一屆」查看（目前這一屆會自動封存保留），也可以刪除。</p>
+          <h4>自動還原點</h4>
+          <p>清除資料、建立新一屆、刪除屆別、匯入 JSON、以資料夾內容取代本機之前，系統會自動留一份還原點（保留最近 10 份），可在「資料存放位置與狀態 → 自動還原點」還原或下載。</p>
+          <h4>手動備份（JSON）</h4>
+          <p>「⬇️ 匯出全部 .json」＝所有屆別（目前＋封存）與設定；「只匯出目前這一屆」＝只有目前這一屆。「⬆️ 匯入 .json」可在另一台電腦載入（匯入前會自動建立還原點，也能讀舊版備份檔）。沒有載入任何考試時，這些功能在上傳區下方的「🗄️ 屆別資料與資料存放位置」也找得到。</p>
+        </div>
+      </section>
+
+      <!-- Folder -->
+      <section id="sec-folder">
+        <div class="section-title">📁 指定資料夾長期保存（兩台電腦共用）</div>
+        <div class="card">
+          <p>只有<strong>電腦版 Chrome 或 Edge</strong>支援。指定一個資料夾後，資料夾內的 <span class="code-span">班級成績分析資料.json</span> 就是正本，瀏覽器裡的資料是本機快取。建議選雲端硬碟的同步資料夾（例如 Google 雲端硬碟電腦版的資料夾），兩台電腦選同一個資料夾就會讀寫同一份資料。</p>
+          <h4>設定步驟</h4>
+          <ol>
+            <li>到「💾 輸出與儲存 → 🗄️ 資料與儲存 → 資料存放位置與狀態」。</li>
+            <li>（建議）在「這台電腦的名稱」填「辦公室」「家裡」等，方便辨識是哪台電腦寫入的。</li>
+            <li>按「📁 選擇資料存放資料夾」，選好資料夾並允許瀏覽器讀寫。</li>
+            <li>系統會比對資料夾與本機資料：資料夾是空的就寫入；兩邊內容不同時會詢問要採用哪一份（被取代的一方會先留備份）。</li>
+            <li>瀏覽器不會告訴程式完整路徑，請在「位置備註」記下您選的是哪個資料夾（備註會存進正本，兩台電腦都看得到）。</li>
+          </ol>
+          <h4>平常使用</h4>
+          <ul>
+            <li>每次本機儲存後約 2 秒，自動寫入資料夾；標題列會出現「📁 已同步・資料夾名稱」。</li>
+            <li>每天第一次寫入前，會在 <span class="code-span">班級成績分析資料_歷史</span> 子資料夾留一份歷史備份，保留最近 14 份。</li>
+            <li>重新開啟程式時，瀏覽器通常會要求再授權一次：請按頁面上方提示列的「點此連接資料夾」。授權並比對完成前，程式不會寫入資料夾。</li>
+            <li>可按「立即寫入」「從資料夾重新載入」「更換資料夾」「解除連結」。</li>
+          </ul>
+          <div class="alert alert-warning">
+            <strong>兩台電腦共用的注意事項：</strong>
+            <ul>
+              <li><strong>不要兩台電腦同時編輯。</strong>換電腦前，等雲端硬碟同步完成（雲端硬碟圖示顯示已同步）再在另一台開啟。</li>
+              <li>程式每分鐘、以及切回視窗時會檢查資料夾；發現另一台電腦更新過，會提示「載入最新資料」。</li>
+              <li>寫入前若發現正本被另一台電腦改過且內容不同，會「暫停寫入資料夾」並請您按「處理衝突」選擇要保留哪一份；被取代的資料夾內容會另存衝突檔，本機內容會留還原點。</li>
+              <li>資料夾內的檔案含學生姓名與成績，雲端硬碟資料夾不要分享給他人。</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Privacy -->
+      <section id="sec-privacy">
+        <div class="section-title">🔒 隱私與離線使用</div>
+        <div class="card">
+          <ul>
+            <li><strong>成績不會上傳：</strong>解析、統計、圖表、PDF 都在您的瀏覽器裡完成。</li>
+            <li><strong>可離線使用：</strong>Excel 解析、圖表、PDF 產生所需的元件都已內嵌在 HTML 檔中，沒有網路也能使用（沒網路時字型會改用電腦內建字型，不影響功能）。</li>
+            <li><strong>「顯示學生姓名」開關：</strong>預設關閉，畫面與輸出只顯示座號，適合投影或研習示範；需要時再打開。</li>
+            <li><strong>含姓名的檔案：</strong>JSON 備份、資料夾正本、還原點下載檔都含學生姓名與成績，請妥善保管。</li>
+            <li><strong>公用電腦：</strong>用完請到「⚙️ 設定」清除目前這一屆的資料，或在「屆別資料」刪除封存的屆別；也可清除瀏覽器的網站資料。</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section id="sec-faq">
+        <div class="section-title">❓ 常見問題</div>
+        <div class="card">
+          <h4>Q1. 打開檔案後之前的資料不見了？</h4>
+          <p>資料存在瀏覽器裡：請確認是同一台電腦、同一個瀏覽器、不是無痕視窗，並且是同一個網址（同一個檔案位置）開啟。若有連結資料夾，按提示列「點此連接資料夾」即可讀回；也可匯入 JSON 備份或從自動還原點還原。</p>
+          <h4>Q2. 考試順序不對？</h4>
+          <p>標題列沒有學年／學期／考試別時會依上傳順序排列。請在上傳區的考試標籤用 ◀ ▶ 調整（順序＝趨勢分析的時間順序），用 ✏️ 改名。</p>
+          <h4>Q3. 為什麼某科顯示「人數太少，僅供參考」？</h4>
+          <p>修習人數少於 10 人（通常是選修）。少數人的平均、相關係數很容易被一兩位同學影響。可以在「⚙️ 設定」把這科排除在分析之外。</p>
+          <h4>Q4. 進階計量診斷說「考試次數太少」？</h4>
+          <p>增值評量需要目前分析的考試之前至少還有兩份考試；成長軌跡需要這一屆累積 3 份以上考試。</p>
+          <h4>Q5. 系統計算的名次和學校公告不同？</h4>
+          <p>只有成績冊沒有名次欄時，系統才會依平均分數自動計算（有標示）。請以學校公告為準。</p>
+          <h4>Q6. 學期中有學生轉入或轉出怎麼辦？</h4>
+          <p>正常上傳即可。驗證視窗會列出轉入、轉出與座號異動；確認後，轉入生的比較與預警只從轉入後開始算，轉出生保留歷史成績。</p>
+          <h4>Q7. 下載 PDF 失敗？</h4>
+          <p>請改用「🖨️ 列印全班個人報告」，在列印視窗選「另存為 PDF」。人數多時可分座號範圍分批產生。</p>
+          <h4>Q8. 出現「另一個分頁已修改資料」？</h4>
+          <p>同一個檔案在兩個分頁開啟並修改了。請按「重新載入」，以最新的資料繼續；只保留一個分頁使用。</p>
+          <h4>Q9. Safari 或手機能用嗎？</h4>
+          <p>分析、列印、JSON 備份都可以使用；「指定資料夾」只有電腦版 Chrome、Edge 支援。</p>
+        </div>
+      </section>
+
+      <!-- Terms -->
+      <section id="sec-terms">
+        <div class="section-title">📚 名詞小辭典</div>
+        <div class="card">
+          <div class="table-container">
+            <table>
+              <thead><tr><th>名詞</th><th>白話解釋</th></tr></thead>
+              <tbody>
+                <tr><td>五標</td><td>全班某科成績由高到低排好，頂標＝第 88 百分位、前標＝75、均標＝50（正中間）、後標＝25、底標＝12 的分數（大考中心定義）。</td></tr>
+                <tr><td>學校高標</td><td>成績冊底部的「高標」，是該科前 50% 學生的平均，和五標不同。</td></tr>
+                <tr><td>PR（百分等級）</td><td>大約贏過全班百分之幾的同學（同分算一半），是班內比較。</td></tr>
+                <tr><td>標準差（母體）</td><td>分數有多分散，越大代表程度差距越大；除以總人數 N 計算，與成績冊一致。</td></tr>
+                <tr><td>Z／T 分數</td><td>Z＝（個人分數−班平均）÷標準差；T＝50＋10Z。</td></tr>
+                <tr><td>變異係數（偏科指數）</td><td>個人各科分數的標準差 ÷ 個人平均，越大代表各科高低差越多。</td></tr>
+                <tr><td>偏態</td><td>小於 0：高分的人多；大於 0：低分的人多。</td></tr>
+                <tr><td>四分位距</td><td>中間一半學生的分數範圍（箱型圖的箱子長度）。</td></tr>
+                <tr><td>及格人次比率</td><td>每位學生每一科各算一次，及格次數 ÷ 總次數；不是全科及格的人數比例。</td></tr>
+                <tr><td>臨界生</td><td>55–59 分（差一點及格）或 85–89 分（差一點到 90）的學生。</td></tr>
+                <tr><td>相關係數 r</td><td>兩科同高同低的程度，−1 到 1；不代表因果。</td></tr>
+                <tr><td>信度衰減校正</td><td>扣除測量誤差後估計兩科真正能力的關聯，數字會被放大，只看趨勢。</td></tr>
+                <tr><td>VAM 增值評量</td><td>用前兩次成績預測這次應有的分數，看實際比預期高或低。</td></tr>
+                <tr><td>成長軌跡</td><td>每位學生歷次平均的趨勢線：起點與每次平均進退幾分。</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const btn = document.querySelector('.theme-toggle-btn');
+      if (html.getAttribute('data-theme') === 'dark') { html.setAttribute('data-theme', 'light'); btn.textContent = '🌙 深色模式'; }
+      else { html.setAttribute('data-theme', 'dark'); btn.textContent = '☀️ 淺色模式'; }
+    }
+    const sections = document.querySelectorAll('section');
+    const navItems = document.querySelectorAll('.toc-item');
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(section => { if (window.pageYOffset >= section.offsetTop - 120) current = section.getAttribute('id'); });
+      navItems.forEach(item => item.classList.toggle('active', item.getAttribute('data-target') === current));
+    }, {passive:true});
+  </script>
+</body>
+</html>

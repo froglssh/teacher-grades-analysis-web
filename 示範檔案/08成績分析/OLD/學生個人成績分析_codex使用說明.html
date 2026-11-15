@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智能學生成績統計分析系統 使用說明</title>
+<style>
+body {
+  font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  color: #334155;
+  line-height: 1.8;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 36px 24px 64px;
+  background: #f8fafc;
+}
+h1, h2, h3 {
+  line-height: 1.35;
+  color: #0f172a;
+}
+h1 {
+  font-size: 2rem;
+  border-bottom: 4px solid #2563eb;
+  padding-bottom: 12px;
+}
+h2 {
+  font-size: 1.35rem;
+  margin-top: 36px;
+  border-left: 6px solid #1e3a5f;
+  padding-left: 12px;
+}
+h3 {
+  font-size: 1.08rem;
+  margin-top: 22px;
+  color: #1e293b;
+}
+a { color: #2563eb; text-decoration: none; font-weight: bold; }
+a:hover { text-decoration: underline; color: #1d4ed8; }
+code {
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  background: white;
+}
+th, td {
+  border: 1px solid #e2e8f0;
+  padding: 8px 10px;
+  vertical-align: top;
+}
+th {
+  background: #f1f5f9;
+  text-align: left;
+}
+.note {
+  background: #eff6ff;
+  border-left: 5px solid #2563eb;
+  padding: 12px 16px;
+  margin: 14px 0;
+}
+.warning {
+  background: #fffbeb;
+  border-left: 5px solid #f59e0b;
+  padding: 12px 16px;
+  margin: 14px 0;
+}
+.example {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+}
+@media print {
+  body { background: white; padding: 0; }
+  a { color: #334155; text-decoration: none; }
+}
+</style>
+</head>
+<body>
+<h1>📊 智能學生成績統計分析系統 使用說明</h1>
+
+<p>哈囉！歡迎使用學生成績統計分析系統。本系統專為同學們設計，能幫你將多次段考、模擬考等成績，轉換為直觀的能力雷達圖、成績趨勢折線圖，並針對你的強勢與弱勢學科，提供專屬的個人讀書策略建議。所有的資料都只會儲存在你自己的手機或電腦瀏覽器中，不會外流，請放心操作！</p>
+
+<p><strong>系統線上版網址：</strong><br>
+<a href="https://froglssh.github.io/student-grades-analyzer-online/" target="_blank">https://froglssh.github.io/student-grades-analyzer-online/</a></p>
+
+<h2>🔑 步驟一：查詢與準備你的成績</h2>
+<div class="note">
+  <strong>📱 成績查詢方式：</strong><br>
+  在開始輸入前，請先透過以下方式查出你想要分析的段考或模擬考成績：
+  <ol>
+    <li>使用手機登入<strong>「酷課 APP」</strong>，點選成績查詢。</li>
+    <li>或者使用手機/電腦登入學校的<strong>「校務行政系統」</strong>，查詢各科成績與班級、類組排名。</li>
+    <li>將成績記下來，準備手動輸入到本系統中。</li>
+  </ol>
+</div>
+
+<h2>二、輸入基本資料與成績</h2>
+<ol>
+  <li><strong>填寫基本資料：</strong> 在「學生基本資料」區，輸入你的姓名、班級、座號與學年度。</li>
+  <li><strong>新增考試記錄：</strong> 
+    <ul>
+      <li>系統預設有一筆考試欄位。若要輸入多次考試（例如：第一次段考、第二次段考、模擬考），點選下方綠色的 <code>➕ 新增考試記錄</code> 按鈕。</li>
+      <li>選擇本次考試的類型，並輸入你的「班級排名」與「類組排名」（若有）。</li>
+    </ul>
+  </li>
+  <li><strong>手動輸入各科成績：</strong> 
+    <ul>
+      <li>在各個科目格子中，手動輸入你剛才查到的成績分數。</li>
+      <li>系統預設包含國文、英文、數學、物理、化學、生物、地科、歷史、地理、公民等科目。</li>
+      <li><strong>增減科目：</strong> 若你的考試科目與預設不同，可以點擊科目格子右上角的 <code>×</code> 移除；若有其他科目（如：資訊科技、美術），可點擊 <code>➕ 新增科目</code> 按鈕自行輸入新增。</li>
+    </ul>
+  </li>
+  <li><strong>開始分析：</strong> 輸入完成後，點選藍色的 <code>📈 開始分析</code> 按鈕，系統就會立即為你生成分析報告。</li>
+</ol>
+
+<h2>三、如何看懂分析報告？</h2>
+<p>點選「開始分析」後，下方會出現多個分頁，點擊分頁標籤可切換檢視：</p>
+<ul>
+  <li><strong>📊 總覽：</strong> 
+    <ul>
+      <li><strong>能力雷達圖：</strong> 越往外擴展代表分數越高，方便一眼看出你的強科與弱科。</li>
+      <li><strong>各科平均成績與分布：</strong> 讓你了解自己各學科的整體表現。</li>
+    </ul>
+  </li>
+  <li><strong>🔍 單次考試分析：</strong> 選擇特定一次的段考，檢視該次考試的所有學科詳細統計與表現。</li>
+  <li><strong>📈 多次成績分析：</strong> 
+    <ul>
+      <li>當你輸入兩次以上的考試後，這裡會繪製出<strong>「各科成績變化趨勢折線圖」</strong>以及<strong>「排名變化曲線圖」</strong>。</li>
+      <li>線條向上代表成績進步，向下的話則需要多加注意囉！這能幫你追蹤自己的成長軌跡。</li>
+    </ul>
+  </li>
+  <li><strong>🎯 優劣勢與策略：</strong> 
+    <ul>
+      <li>系統會自動將你的科目分為「強勢學科」與「待提升學科」。</li>
+      <li>針對不同特性的學科，系統會給予你<strong>「具體的讀書策略與時間分配建議」</strong>，例如如何分配複習進度、如何調整學習方法等。</li>
+    </ul>
+  </li>
+</ul>
+
+<h2>四、資料保存與備份</h2>
+<p>為了保護隱私，本系統<strong>不會上傳任何資料到伺服器</strong>，資料只保存在你目前使用的瀏覽器中。如果你換了手機或清除瀏覽器快取，資料可能會消失，因此請善用以下功能：</p>
+<ul>
+  <li><strong>💾 儲存資料：</strong> 點擊後，資料會保存在此瀏覽器的 Local Storage 中，下次用同一個瀏覽器打開會自動載入。</li>
+  <li><strong>📂 載入資料：</strong> 手動載入你之前在該瀏覽器儲存的成績。</li>
+  <li><strong>📤 匯出原始資料：</strong> 點擊後會下載一個 <code>.json</code> 檔案，這是你的成績備份檔，請妥善保存。</li>
+  <li><strong>📥 匯入原始資料：</strong> 當你換了新手機或瀏覽器時，可點選此按鈕並選取你的 JSON 備份檔，成績便會立刻全部還原！</li>
+  <li><strong>📄 匯出完整 PDF 報告：</strong> 點選此按鈕可以將你美美的成績分析圖表與策略建議，列印出來或下載存成 PDF，方便拿給家長、老師或自己收藏！</li>
+</ul>
+
+<h2>五、常見問題 FAQ</h2>
+<h3>1. 為什麼我的雷達圖看起來圓圓的沒有起伏？</h3>
+<p>可能是因為你所有科目輸入的分數都非常接近。通常各科分數有高低起伏時，雷達圖就會呈現明顯的多邊形，指出你的優勢方向。</p>
+
+<h3>2. 怎麼移除已經新增的考試？</h3>
+<p>在每次考試記錄欄位的右下角，點擊紅色的 <code>🗑️ 移除此考試</code> 即可刪除該次記錄。</p>
+
+<h3>3. 輸入成績時，如果缺考該怎麼辦？</h3>
+<p>如果該科缺考，可以直接將該格分數留空，系統在分析時便會自動忽略該科，不會影響其他科目的平均計算。</p>
+
+</body>
+</html>
