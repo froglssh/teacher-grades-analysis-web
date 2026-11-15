@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>學生個人成績分析 v6 使用說明</title>
+<link rel="icon" href="data:,">
+<style>
+  :root {
+    --p: #2563eb; --pl: #dbeafe; --p2: #7c3aed; --p2l: #ede9fe;
+    --d: #dc2626; --dl: #fee2e2; --s: #047857; --sl: #d1fae5; --w: #b45309; --wl: #fef3c7;
+    --bg: #f8fafc; --card: #ffffff; --border: #e2e8f0; --tx: #0f172a; --mu: #475569;
+    --header-bg: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #5b21b6 100%);
+    --r: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --p: #60a5fa; --pl: #172554; --p2: #a78bfa; --p2l: #2e1065; --d: #f87171; --dl: #450a0a;
+      --s: #34d399; --sl: #064e3b; --w: #fbbf24; --wl: #422006;
+      --bg: #090d16; --card: #111827; --border: #1f2937; --tx: #f1f5f9; --mu: #a3b1c6;
+      --header-bg: linear-gradient(135deg, #020617 0%, #0f172a 60%, #1e1b4b 100%);
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: var(--bg); color: var(--tx); line-height: 1.8; overflow-wrap: anywhere; }
+  header { background: var(--header-bg); color: #fff; padding: 36px 20px 30px; text-align: center; }
+  header h1 { font-size: 1.9rem; font-weight: 900; letter-spacing: 1px; }
+  header p { opacity: .9; margin-top: 6px; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 16px 60px; display: grid; grid-template-columns: 230px 1fr; gap: 26px; }
+  nav { position: sticky; top: 16px; align-self: start; background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 14px 16px; font-size: .9rem; }
+  nav b { display: block; margin-bottom: 6px; }
+  nav a { display: block; color: var(--mu); text-decoration: none; padding: 3px 0; }
+  nav a:hover { color: var(--p); }
+  main section { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 22px 24px; margin-bottom: 20px; }
+  h2 { font-size: 1.3rem; margin-bottom: 12px; color: var(--p); }
+  h3 { font-size: 1.05rem; margin: 16px 0 6px; }
+  p, li { font-size: .97rem; }
+  ul, ol { padding-left: 22px; margin: 6px 0; }
+  li + li { margin-top: 4px; }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-top: 8px; }
+  .step { border: 1px solid var(--border); border-radius: 12px; padding: 14px; background: var(--bg); }
+  .step .n { display: inline-flex; width: 30px; height: 30px; border-radius: 50%; background: var(--p); color: #fff; align-items: center; justify-content: center; font-weight: 900; margin-bottom: 6px; }
+  .tip, .warn, .note { border-radius: 10px; padding: 12px 14px; margin: 12px 0; border: 1px solid; }
+  .tip { background: var(--sl); border-color: var(--s); }
+  .warn { background: var(--wl); border-color: var(--w); }
+  .note { background: var(--pl); border-color: var(--p); }
+  .tbl { overflow-x: auto; margin: 10px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--pl); white-space: nowrap; }
+  code, kbd { background: var(--p2l); color: var(--p2); border-radius: 5px; padding: 1px 6px; font-size: .9em; font-family: inherit; }
+  pre { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: .9rem; white-space: pre-wrap; margin: 8px 0; }
+  details { border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin: 8px 0; background: var(--bg); }
+  summary { cursor: pointer; font-weight: 700; }
+  footer { text-align: center; color: var(--mu); font-size: .85rem; padding: 20px; }
+  @media (max-width: 820px) { .wrap { grid-template-columns: 1fr; } nav { position: static; } header h1 { font-size: 1.45rem; } main section { padding: 18px 16px; } }
+  @media print { nav { display: none; } .wrap { display: block; } header { color: #000; background: none; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>📊 學生個人成績分析 v6 使用說明</h1>
+  <p>給高中同學：用自己成績單上的資訊，看懂自己的強弱科、進退步與下一步該怎麼做</p>
+  <p style="font-size:.85rem;">臺北市立麗山高中 生物科 林獻升老師製作</p>
+</header>
+<div class="wrap">
+  <nav aria-label="目錄">
+    <b>目錄</b>
+    <a href="#start">1. 三步驟上手</a>
+    <a href="#fields">2. 成績單欄位填哪裡</a>
+    <a href="#paste">3. 貼上成績單</a>
+    <a href="#tabs">4. 各分頁怎麼讀</a>
+    <a href="#print">5. 列印與晤談</a>
+    <a href="#storage">6. 資料存在哪裡、怎麼備份</a>
+    <a href="#formula">7. 各項指標怎麼算</a>
+    <a href="#privacy">8. 隱私說明</a>
+    <a href="#faq">9. 常見問題</a>
+  </nav>
+  <main>
+    <section id="start">
+      <h2>1. 三步驟上手</h2>
+      <div class="steps">
+        <div class="step"><div class="n">1</div><h3>開啟檔案</h3>用 Chrome、Edge、Safari 都可以直接開啟 <code>學生個人成績分析_v6.html</code>，不用安裝、不用登入，也不用連網路。第一次可以先按「✨ 示範資料」看看效果（示範資料是虛構的）。</div>
+        <div class="step"><div class="n">2</div><h3>輸入成績</h3>按「➕ 新增考試」，選年級、學期、考試類型，再填各科分數。也可以按「📋 貼上成績單」直接貼上從校務系統或酷課雲複製的文字。</div>
+        <div class="step"><div class="n">3</div><h3>開始分析</h3>按「📈 開始分析」，先看「⭐ 重點摘要」：最強科、進步最多、最需要注意的科目，以及三個下一步行動。</div>
+      </div>
+      <div class="tip">💡 輸入時資料會<b>自動儲存</b>，畫面右上角會顯示「💾 已自動儲存 14:02」。點一下它可以打開「🗂️ 資料管理」。</div>
+      <div class="note">在分數欄按 <kbd>Enter</kbd> 會跳到下一格，連續輸入很快。每一筆考試的「↑ 上移」「↓ 下移」可以調整順序；「🔃 依日期／年級排序」可以一鍵排好（全部考試都有填日期時依日期，否則依年級 → 學期）。</div>
+    </section>
+
+    <section id="fields">
+      <h2>2. 成績單上的欄位要填在哪裡</h2>
+      <p>只有「分數」是必填，其他都是選填；沒填的項目，相關分析會自動隱藏，不會出現空白表格。</p>
+      <div class="tbl"><table>
+        <tr><th>成績單上的資訊</th><th>填在程式的哪裡</th><th>有填會多出什麼</th></tr>
+        <tr><td>各科分數</td><td>考試卡片中間的科目格子</td><td>所有分析的基礎</td></tr>
+        <tr><td>年級、學期、考試名稱</td><td>考試卡片上方：年級（高一／高二／高三，或自填學年度）、學期、考試類型；同一學期有多次小考時，用「自訂名稱」區分（例如「第3回」）</td><td>圖表上的短標籤，例如「高二上 段考1」</td></tr>
+        <tr><td>考試日期</td><td>「考試日期（選填）」</td><td>可以依日期自動排序</td></tr>
+        <tr><td>學測級分、分科測驗級分、其他滿分</td><td>「計分制」選「學測級分（滿級 15）」、「分科測驗級分（滿級 60）」或「自訂滿分」</td><td>分數上限跟著滿分走，比較時換算成百分比</td></tr>
+        <tr><td>班排名次、班級人數</td><td>展開「成績單上的其他資訊（選填）」</td><td>班排 PR 與排名變化圖</td></tr>
+        <tr><td>類組排名次、類組人數</td><td>同上</td><td>類組 PR</td></tr>
+        <tr><td>校排（年級排）名次、人數</td><td>同上</td><td>校排 PR</td></tr>
+        <tr><td>各科班平均</td><td>同上，「各科班平均」那一排</td><td>「我 − 班平均」的差距與變化（很重要，見第 4 節）</td></tr>
+        <tr><td>學分數</td><td>每筆考試裡，各科分數正下方的「學分」小格（按 −／＋ 或直接輸入）。每次考試各自設定，新增考試會先沿用上一筆</td><td>加權平均（和算術平均並列）</td></tr>
+        <tr><td>你自己的反省</td><td>每筆考試下方的「我的檢討筆記」</td><td>會出現在單次考試分析與列印報告</td></tr>
+      </table></div>
+      <div class="tip">人數不用每次重填：「我的基本資料 → 人數預設值」會帶入第一筆考試；之後新增的考試會<b>沿用上一筆的人數</b>，必要時再改。</div>
+    </section>
+
+    <section id="paste">
+      <h2>3. 「貼上成績單」怎麼用</h2>
+      <ol>
+        <li>在校務行政系統或酷課雲的成績頁面，把成績那一塊選起來，按「複製」。</li>
+        <li>回到程式，按「📋 貼上成績單」（或某筆考試卡片上的「📋 貼上」），選好要套用到哪一筆考試（也可以選「新增一筆考試」）。</li>
+        <li>把文字貼進框框，按「🔎 解析」。</li>
+        <li>檢查預覽表：可以改科目名稱、分數，或取消勾選不要的列。確認後按「✅ 套用到這筆考試」。</li>
+      </ol>
+      <p>程式看得懂這些寫法：</p>
+<pre>國文 78          ← 空白（半形、全形都可以）
+英文：82         ← 冒號
+數學	65         ← Tab（從表格複製常見）
+國文 英文 數學    ← 上一行科目、
+78   82   65    ← 下一行分數
+英語文 81 74.5   ← 第二個數字會先放進「班平均」欄，不是的話請清空</pre>
+      <ul>
+        <li>「國語文」會對應到「國文」、「英語文」對應「英文」、「物理(必)」對應「物理」；認不得的科目會標示「新增科目」。</li>
+        <li><b>數學A、數學B（學測）與數學甲、數學乙（分科測驗）不會併入校內的「數學」</b>，各自是獨立科目（簡稱「數A」會寫成「數學A」）；「英文作文」「選修物理」這類名稱也會當成新科目，不會自動併到相近的科目。學分也請各科分開填。</li>
+        <li><b>學分是每一次考試各自設定的</b>：每次考試的科目和比重可能不同，所以學分寫在每筆考試各科分數的下方；新增考試時會先帶入上一筆的學分，再依這次的成績單調整即可。</li>
+        <li>「總分」「平均」「排名」等不是科目的字會自動略過。</li>
+        <li>如果找不到任何「科目＋分數」，程式會提示你；這時請直接在格子裡手動輸入。</li>
+      </ul>
+      <div class="warn">⚠️ 套用前一定要看一下預覽表，特別是「班平均」欄。程式只是幫你省打字，正確性還是要靠你確認。</div>
+    </section>
+
+    <section id="tabs">
+      <h2>4. 各分頁怎麼讀</h2>
+      <p>分析區最上面可以選「趨勢與比較要用哪一類考試」：<b>定期考（段考／期末考）</b>（預設）、模擬考／大考、平時考、學期成績、其他或全部。不同類型的考試難度差很多，混在一起比會失真，所以趨勢預設只用同一類。該類不到 2 次時，程式會暫時改用全部考試並提醒你。級分制考試預設不放進趨勢，可勾選「納入級分制考試」。</p>
+      <div class="tbl"><table>
+        <tr><th>分頁</th><th>看什麼</th></tr>
+        <tr><td>⭐ 重點摘要</td><td>最近一次考試的一句話總結、三個重點（最強科、進步最多、最需要注意）、三個下一步行動。<b>先看這頁就好。</b></td></tr>
+        <tr><td>📊 總覽</td><td>個人學習指數（同類考試滿 3 次才出現）、平均、加權平均、各科起伏、圖表，以及各科詳細卡片。</td></tr>
+        <tr><td>🔍 單次考試</td><td>選一次考試看細節：各科分數、和班平均的差距、和上一次同類考試比、班排／類組排／校排的 PR、你的檢討筆記。</td></tr>
+        <tr><td>📈 趨勢</td><td>各科變化、平均走勢（含最近 3 次的移動平均）、排名變化、<b>我 − 班平均</b>、上下學期比較（同一年級內比，例如高二上 vs 高二下）。</td></tr>
+        <tr><td>🎯 目標</td><td>替每科設目標分數，看差距與大約還要幾次考試能達到。</td></tr>
+        <tr><td>💡 策略</td><td>強弱科、讀書建議、整體診斷，以及「下次考試行動計畫」：每科的下次目標與建議的讀書時間比例。</td></tr>
+        <tr><td>🧠 進階分析</td><td>熱力圖、趨勢線與下次參考範圍、科目相關性、偏科分析。用到統計方法，旁邊都有白話說明；看不懂也沒關係。</td></tr>
+      </table></div>
+      <div class="note">👥 <b>為什麼「我 − 班平均」很重要？</b>你看不到別人的成績，但成績單上的「班平均」告訴你這次大家考得如何。如果某次你退步了 5 分、但班平均也降了 8 分，其實你是相對進步的。所以有班平均的話，請盡量填。</div>
+    </section>
+
+    <section id="print">
+      <h2>5. 列印與晤談</h2>
+      <p>分析區右上角有兩個按鈕：</p>
+      <ul>
+        <li><b>🖨️ 一頁摘要（晤談用）</b>：基本資料、最近一次成績表、重點摘要、行動計畫、檢討筆記，以及空白的「導師回饋」「家長回饋」欄和簽名欄。適合帶去和導師、家長晤談。</li>
+        <li><b>📄 完整報告／存成 PDF</b>：所有分頁內容與圖表。在列印視窗的「目的地」選「另存為 PDF」就能存檔。深色模式下也會自動用淺色圖表列印。</li>
+      </ul>
+      <p>如果瀏覽器擋了新視窗，程式會改在本頁直接開啟列印。</p>
+    </section>
+
+    <section id="storage">
+      <h2>6. 資料存在哪裡、怎麼備份</h2>
+      <h3>平常：存在你這台裝置的瀏覽器</h3>
+      <p>資料會自動存在瀏覽器的 IndexedDB（另外在 localStorage 留一份鏡像），關掉再開還在。但是<b>清除瀏覽器資料、用無痕視窗、換電腦或換瀏覽器</b>，資料就看不到了。所以請搭配下面兩種方法之一：</p>
+      <h3>方法一（電腦版 Chrome／Edge）：指定資料夾長期儲存</h3>
+      <ol>
+        <li>點右上角的儲存狀態，打開「🗂️ 資料管理」，按「📁 選擇資料存放資料夾」。</li>
+        <li>建議選<b>雲端硬碟的同步資料夾</b>（例如 Google 雲端硬碟電腦版的資料夾）。瀏覽器會問你是否允許編輯，請按允許。</li>
+        <li>之後程式會自動把資料寫進這個資料夾的 <code>我的成績分析資料.json</code>；每天第一次寫入前，會在 <code>我的成績分析資料_歷史</code> 留一份備份，保留最近 14 份。</li>
+        <li>下次開啟時，瀏覽器可能需要你再按一次頁面上方的「🔓 重新授權」才能讀寫資料夾（這是瀏覽器的安全規定，必須由你點擊）。</li>
+        <li><b>換電腦</b>：在新電腦上也選同一個（已同步的）資料夾，程式會讀入資料。如果兩邊資料不同，程式會問你要用哪一份，不會默默覆蓋；被取代的那份會留成還原點或「衝突檔」。</li>
+        <li>不想用了可以按「中斷連結」，資料夾裡的檔案不會被刪除。</li>
+      </ol>
+      <h3>方法二（手機、平板、Safari、Firefox）：JSON 備份</h3>
+      <p>這些瀏覽器不支援指定資料夾（資料管理裡會說明）。請定期在「資料管理」按「⬇️ 匯出 JSON 備份」，把檔案存到雲端硬碟。換裝置時按「⬆️ 匯入 JSON」，程式會先顯示「目前資料 vs 檔案內容」讓你選擇<b>取代</b>或<b>合併</b>。</p>
+      <div class="tip">⏪ 每次取代資料（載入示範、匯入、清除、從資料夾載入…）之前，程式會自動建立還原點（保留 5 份），在「資料管理 → 自動還原點」可以復原。</div>
+      <h3>舊版資料</h3>
+      <p>如果你用過舊版（v5 以前），第一次開啟 v6 時會自動把舊資料搬過來，舊資料也不會被刪除。舊版可以存很多位學生，v6 只保留一份「我的成績檔」：上次的草稿會變成主檔，其他筆放在「資料管理 → 舊版留下的其他成績資料」，可以選一筆「切換載入」。舊版的 JSON 備份檔也都能匯入。</p>
+      <h3>清除與重置</h3>
+      <ul>
+        <li><b>清除目前成績檔</b>：只清掉目前的成績檔，會問兩次，並先建立還原點。</li>
+        <li><b>重置全部</b>：清掉本程式在這個瀏覽器的所有資料；會先自動下載一份 JSON 備份，並再問一次。資料夾裡的檔案不會被刪除。</li>
+      </ul>
+    </section>
+
+    <section id="formula">
+      <h2>7. 各項指標的白話算法</h2>
+      <div class="tbl"><table>
+        <tr><th>指標</th><th>怎麼算</th><th>白話意思</th></tr>
+        <tr><td>百分比換算</td><td>分數 ÷ 滿分 × 100</td><td>學測 12 級分＝80 分。所有跨考試比較都先換算，才能公平比。</td></tr>
+        <tr><td>算術平均</td><td>這次所有科目百分比的平均</td><td>每科一樣重要。</td></tr>
+        <tr><td>加權平均</td><td>Σ（各科百分比 × 學分）÷ Σ 學分</td><td>學分多的科目影響比較大；用的是「那一次考試」各科自己的學分；沒填學分的科目不算進加權平均。</td></tr>
+        <tr><td>及格線</td><td>預設 60，可在基本資料修改</td><td>所有「及格」「未達及格線」的判斷都用這個值。</td></tr>
+        <tr><td>90 分以上比例</td><td>所有分數中 ≥ 90 的比例</td><td>高分出現的頻率。</td></tr>
+        <tr><td>各科自身起伏（穩定度）</td><td>每一科自己歷次分數的標準差，再把各科平均（每科至少 2 次）</td><td>越小代表每科成績越穩定，不容易大起大落。</td></tr>
+        <tr><td>科目間落差</td><td>各科平均分數之間的標準差（放在偏科分析）</td><td>越大代表越偏科。</td></tr>
+        <tr><td>標準差</td><td>一律使用樣本標準差（除以 n − 1）</td><td>描述分數「散開」的程度。</td></tr>
+        <tr><td>個人學習指數</td><td>學業水準（歷次平均）× 60% ＋ 穩定度（100 − 各科自身起伏 × 5）× 20% ＋ 進步趨勢（50 ＋ 每次平均變化 × 16.7）× 20%</td><td>和<b>自己</b>比的綜合分數。同一類考試少於 3 次時不顯示，會告訴你「再輸入 N 次」。用文字描述，不打等第。</td></tr>
+        <tr><td>每次變化（斜率）</td><td>用最小平方法畫一條最貼近歷次分數的直線，看它每次上升或下降多少</td><td>正的＝在進步。</td></tr>
+        <tr><td>移動平均</td><td>最近 3 次的平均</td><td>把單次好壞抵銷，看出真正走向。</td></tr>
+        <tr><td>PR</td><td>（人數 − 名次 ＋ 0.5）÷ 人數 × 100；班排、類組排、校排各用自己的人數</td><td>大約贏過多少百分比的人。沒填人數就不顯示。</td></tr>
+        <tr><td>我 − 班平均</td><td>這科百分比 − 班平均百分比</td><td>正的＝高於班平均。看差距的變化，比只看分數更準。</td></tr>
+        <tr><td>下次參考範圍</td><td>95% 預測區間（同類考試至少 4 次才計算）</td><td>照過去的起伏推估下次大概的範圍，不是預言。</td></tr>
+        <tr><td>科目相關性</td><td>Pearson 相關係數 r（至少 5 次才計算），* 表示統計上顯著</td><td>兩科是不是常常一起變好、一起變差。</td></tr>
+        <tr><td>讀書時間比例</td><td>依「未達及格 &gt; 及格邊緣 &gt; 低於班平均或自己的平均 &gt; 穩定 &gt; 強項」加權，近期下滑再加重</td><td>建議把時間多放在哪幾科；只是參考。</td></tr>
+      </table></div>
+    </section>
+
+    <section id="privacy">
+      <h2>8. 隱私說明</h2>
+      <ul>
+        <li>這個程式<b>完全在你的瀏覽器裡執行</b>，不會把任何資料上傳到網路；沒有分析追蹤、沒有遠端字型，圖表函式庫也內嵌在檔案裡，斷網也能用。</li>
+        <li>資料只存在：你這台裝置的瀏覽器，以及你自己選的資料夾或你自己下載的 JSON 檔。</li>
+        <li>姓名、班級等基本資料都可以不填。和別人共用電腦時，用完可以在「資料管理」重置，或使用自己的瀏覽器帳號。</li>
+        <li>列印或分享報告前，想一想要給誰看；報告只包含你自己的成績。</li>
+      </ul>
+    </section>
+
+    <section id="faq">
+      <h2>9. 常見問題</h2>
+      <details><summary>為什麼看不到「個人學習指數」？</summary><p>需要同一類別（例如定期考）至少 3 次考試。畫面會告訴你還要再輸入幾次。</p></details>
+      <details><summary>為什麼模擬考沒有出現在趨勢圖？</summary><p>趨勢預設只用「定期考」；模擬考屬於「模擬考／大考」類別，而且級分制預設不納入。可以在分析區上方切換類別，或勾選「納入級分制考試」。單次考試分頁一定看得到每一次考試。</p></details>
+      <details><summary>沒有班排、類組排、班平均可以用嗎？</summary><p>可以。這些都是選填，沒填時相關的表格與圖會自動隱藏。</p></details>
+      <details><summary>分數格子變成紅色虛線？</summary><p>代表分數超過這筆考試的滿分（例如改成級分制後還留著 73 分）。請修正，否則分析時不會納入。</p></details>
+      <details><summary>同一學期有好幾次小考，標籤都一樣怎麼辦？</summary><p>在「自訂名稱」填「第1回」「第2回」等；若還是重複，程式會自動加上 (2)、(3) 區分。</p></details>
+      <details><summary>畫面上出現「需要重新授權資料夾」？</summary><p>瀏覽器重新開啟後，基於安全規定需要你再點一次授權。按頁面上方的「🔓 重新授權」即可；授權並比對完成前，程式不會寫入資料夾。</p></details>
+      <details><summary>出現「資料夾內的資料已被另一台裝置更新」？</summary><p>表示你在另一台電腦也改過資料。請選「用資料夾的」或「用本機的覆蓋資料夾」；被取代的一方會留成還原點或衝突檔，不會不見。</p></details>
+      <details><summary>右上角顯示「備援模式」？</summary><p>你的瀏覽器不能使用 IndexedDB（例如某些無痕模式），資料改存在 localStorage。仍可使用，但請記得常匯出 JSON 備份。</p></details>
+      <details><summary>手機可以用嗎？</summary><p>可以，輸入與分析都支援手機畫面；表格太寬時可以左右滑動。手機不支援「指定資料夾」，請用 JSON 備份。</p></details>
+      <details><summary>同時開兩個分頁會怎樣？</summary><p>為了避免互相覆蓋，後面那個分頁偵測到別的分頁存過資料時會暫停儲存，並請你重新整理。建議只開一個分頁。</p></details>
+    </section>
+  </main>
+</div>
+<footer>學生個人成績分析 v6 ｜ 臺北市立麗山高中 生物科 林獻升老師製作 ─ frog@lssh.tp.edu.tw</footer>
+</body>
+</html>
