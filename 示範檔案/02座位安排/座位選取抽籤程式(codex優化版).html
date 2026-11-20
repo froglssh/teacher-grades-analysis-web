@@ -3,1572 +3,2242 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>教室座位抽籤程式｜Canva Code</title>
+  <title>教室座位抽籤程式 2.0</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
   <style>
-    :root { color-scheme: light; }
-    body { font-family: 'Noto Sans TC', system-ui, -apple-system, Segoe UI, Roboto, 'Microsoft JhengHei', 'PingFang TC', 'Heiti TC', sans-serif; }
-    .glass {
-      backdrop-filter: blur(10px);
-      background: rgba(255,255,255,0.14);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-      border: 1px solid rgba(255,255,255,0.18);
-    }
-    .seat {
-      transition: transform 0.12s ease, box-shadow 0.12s ease;
-      user-select: none;
-    }
-    .seat:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(0,0,0,0.12); }
-    .seat .name {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 100%;
-      display: block;
-    }
-    .scroll-btn {
-      background: rgba(20, 20, 30, 0.75);
-      color: white;
-      border: 1px solid rgba(255,255,255,0.22);
-      backdrop-filter: blur(8px);
-    }
-    .scroll-btn:hover { background: rgba(20,20,30,0.9); }
-    .badge { display:inline-flex; align-items:center; gap:.4rem; padding:.2rem .55rem; border-radius:999px; font-size:.8rem; }
-    .fade-in { animation: fade .25s ease; } @keyframes fade { from{opacity:0; transform: translateY(4px)} to{opacity:1; transform:none} }
-    .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 24px; z-index: 60; }
-    .cut-corner { clip-path: polygon(8px 0, 100% 0, 100% 100%, 0 100%, 0 8px); }
-    .panel-title { display:flex; align-items:center; gap:.55rem; font-weight:700; }
-    .icon-dot { width:.62rem; height:.62rem; border-radius:999px; display:inline-block; }
+    body { font-family: 'Noto Sans TC', system-ui, -apple-system, 'Microsoft JhengHei', 'PingFang TC', sans-serif; }
+    .card { background:#fff; border:1px solid #e2e8f0; border-radius:1rem; box-shadow:0 1px 2px rgba(15,23,42,.04); }
+    .field { width:100%; border:1px solid #cbd5e1; border-radius:.65rem; padding:.5rem .75rem; background:#fff; outline:none; }
+    .field:focus { border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,.18); }
+    .lbl { display:block; font-size:.8rem; font-weight:700; color:#475569; margin-bottom:.25rem; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:.35rem; padding:.5rem .9rem; border-radius:.65rem; font-weight:700; font-size:.9rem; border:1px solid transparent; transition:background .12s, box-shadow .12s; white-space:nowrap; }
+    .btn:disabled { opacity:.45; cursor:not-allowed; }
+    .btn-primary { background:#4f46e5; color:#fff; } .btn-primary:hover:not(:disabled) { background:#4338ca; }
+    .btn-plain { background:#fff; color:#334155; border-color:#cbd5e1; } .btn-plain:hover:not(:disabled) { background:#f1f5f9; }
+    .btn-soft { background:#eef2ff; color:#3730a3; } .btn-soft:hover:not(:disabled) { background:#e0e7ff; }
+    .btn-danger { background:#fff; color:#be123c; border-color:#fecdd3; } .btn-danger:hover:not(:disabled) { background:#fff1f2; }
+    .btn-sm { padding:.3rem .65rem; font-size:.8rem; }
+    .seg { display:inline-flex; background:#e2e8f0; border-radius:.75rem; padding:.2rem; gap:.15rem; }
+    .seg button { padding:.4rem .8rem; border-radius:.6rem; font-weight:700; font-size:.88rem; color:#475569; }
+    .seg button[aria-pressed="true"], .seg button[aria-selected="true"] { background:#fff; color:#3730a3; box-shadow:0 1px 3px rgba(15,23,42,.15); }
+    .tabbar { display:grid; grid-template-columns:repeat(5,1fr); gap:.2rem; background:#e2e8f0; padding:.2rem; border-radius:.8rem; }
+    .tabbar button { padding:.45rem .2rem; border-radius:.6rem; font-weight:700; font-size:.82rem; color:#475569; }
+    .tabbar button[aria-selected="true"] { background:#fff; color:#3730a3; box-shadow:0 1px 3px rgba(15,23,42,.15); }
+    .stat { display:inline-flex; align-items:baseline; gap:.3rem; padding:.25rem .65rem; border-radius:999px; background:#f1f5f9; font-size:.8rem; color:#475569; }
+    .stat b { font-size:1rem; color:#0f172a; }
+    .stat.warn { background:#fef3c7; color:#92400e; } .stat.warn b { color:#92400e; }
+
+    /* 座位 */
+    .seat { position:relative; min-height:84px; border-radius:.8rem; padding:.45rem .55rem; text-align:left; border:2px solid #cbd5e1; background:#fff; user-select:none; transition:transform .1s, box-shadow .1s, border-color .1s; display:flex; flex-direction:column; justify-content:space-between; }
+    .seat:hover { transform:translateY(-1px); box-shadow:0 6px 14px rgba(15,23,42,.1); }
+    .seat:focus-visible { outline:3px solid #6366f1; outline-offset:2px; }
+    .seat.empty { border-style:dashed; background:#f8fafc; }
+    .seat.filled { border-color:#a5b4fc; background:#eef2ff; }
+    .seat.blocked { border-color:#e2e8f0; background:repeating-linear-gradient(135deg,#f1f5f9 0 8px,#e2e8f0 8px 16px); color:#94a3b8; }
+    .seat.locked { border-color:#f59e0b; }
+    .seat.selected { box-shadow:0 0 0 4px rgba(79,70,229,.45); border-color:#4f46e5; }
+    .seat.target { box-shadow:0 0 0 3px rgba(16,185,129,.45); border-color:#10b981; }
+    .seat.flash { animation:flash .7s ease; } @keyframes flash { 0%{background:#bbf7d0} 100%{} }
+    .seat-code { font-size:.72rem; font-weight:700; color:#64748b; }
+    .seat-tag { max-width:70%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.7rem; font-weight:700; color:#92400e; background:#fef3c7; border:1px solid #fde68a; border-radius:.4rem; padding:0 .3rem; }
+    .seat-name { font-size:1.05rem; font-weight:900; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .seat.empty .seat-name, .seat.blocked .seat-name { font-weight:500; color:#94a3b8; font-size:.9rem; }
+    .seat-no { font-size:.75rem; color:#4338ca; font-weight:700; }
+    .layout-mode .seat:not(.blocked) { border-style:solid; }
+    .layout-mode .seat { cursor:cell; }
+    .podium { align-self:center; padding:.3rem 1.5rem; border-radius:.6rem; background:#334155; color:#fff; font-weight:700; font-size:.85rem; letter-spacing:.2em; }
+
+    .chip { display:inline-flex; align-items:center; gap:.3rem; padding:.3rem .65rem; border-radius:999px; border:1px solid #cbd5e1; background:#fff; font-size:.88rem; font-weight:600; cursor:grab; user-select:none; }
+    .chip:hover { border-color:#6366f1; }
+    .chip[aria-pressed="true"] { background:#4f46e5; color:#fff; border-color:#4f46e5; }
+    .chip .tagmini { font-size:.7rem; color:#92400e; background:#fef3c7; border-radius:.3rem; padding:0 .25rem; }
+    .chip[aria-pressed="true"] .tagmini { background:rgba(255,255,255,.25); color:#fff; }
+    #tray.drop-ok { background:#ecfdf5; border-color:#10b981; }
+
+    .toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); z-index:90; }
+    #boardCard:fullscreen { background:#fff; padding:2rem; overflow:auto; }
+    #boardCard:fullscreen .seat { min-height:120px; }
+    #boardCard:fullscreen .seat-name { font-size:1.7rem; }
+    #boardCard:fullscreen .seat-no, #boardCard:fullscreen .seat-code { font-size:1rem; }
+    #boardCard:fullscreen .no-full { display:none !important; }
+    details > summary { cursor:pointer; }
   </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-indigo-900 via-sky-900 to-emerald-900 text-white">
-  <header class="sticky top-0 z-30 bg-gradient-to-r from-indigo-900/80 to-emerald-900/80 border-b border-white/10 backdrop-blur">
-    <div class="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-white/15 grid place-content-center shadow-inner"><span class="text-xl">🎒</span></div>
+<body class="min-h-screen bg-slate-100 text-slate-800">
+  <!-- 載入中 -->
+  <div id="bootOverlay" class="fixed inset-0 z-[100] bg-slate-100 grid place-content-center text-slate-600 font-bold">💾 正在讀取座位資料…</div>
+
+  <!-- 頁首 -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200">
+    <div class="max-w-screen-2xl mx-auto px-4 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-2">
+      <div class="flex items-center gap-2.5 mr-auto">
+        <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white grid place-content-center text-lg">🪑</div>
         <div>
-          <h1 class="text-xl sm:text-2xl font-bold tracking-wide">教室座位抽籤程式</h1>
-          <p class="text-white/80 text-xs sm:text-sm">輸入名單、預覽布局、隨機或手動分配、教師視角、下載與儲存設定</p>
+          <h1 class="text-lg font-black leading-tight">教室座位抽籤程式 <span class="text-xs font-bold text-indigo-600 align-middle">2.0</span></h1>
+          <p class="text-xs text-slate-500">臺北市麗山高中 林獻升老師製作</p>
         </div>
       </div>
-      <a href="#" class="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/15 transition">
-        <span>臺北市麗山高中林獻升老師製作</span>
-      </a>
+      <div class="flex items-center gap-1.5">
+        <label for="classSelect" class="text-sm font-bold text-slate-600">班級方案</label>
+        <select id="classSelect" class="field !w-auto !py-1.5 max-w-[14rem] font-bold"></select>
+        <button id="btnNewClass" class="btn btn-plain btn-sm" title="新增班級方案">＋ 新增</button>
+      </div>
+      <div class="flex items-center gap-1.5 text-xs">
+        <button id="saveTag" type="button" class="px-3 py-1 rounded-full bg-slate-100 border border-slate-200 font-bold" title="查看資料存放位置">💾 載入中…</button>
+        <button id="folderTag" type="button" class="hidden" title="查看資料存放位置"></button>
+        <button id="btnSaveNow" class="btn btn-plain btn-sm">立即儲存</button>
+        <a href="座位選取抽籤程式(codsex優化版)-使用說明.html" target="_blank" class="btn btn-plain btn-sm">說明</a>
+      </div>
     </div>
+    <div id="topBanner" class="hidden bg-amber-100 border-t border-amber-300 text-amber-900 text-sm px-4 py-2 flex flex-wrap items-center gap-2"></div>
   </header>
 
-  <main class="max-w-screen-2xl mx-auto px-5 py-6">
-    <!-- Controls + Preview -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      <!-- Left Controls -->
-      <section class="lg:col-span-4 glass rounded-2xl p-5 fade-in">
-        <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> 基本設定
-        </h2>
+  <main class="max-w-screen-2xl mx-auto px-4 py-4 grid grid-cols-1 lg:grid-cols-[minmax(320px,380px)_1fr] gap-4 items-start">
+    <!-- ================= 左側設定 ================= -->
+    <aside class="order-2 lg:order-1 space-y-3">
+      <div class="tabbar" role="tablist" aria-label="設定分頁">
+        <button role="tab" data-tab="names" aria-selected="true">① 名單</button>
+        <button role="tab" data-tab="layout" aria-selected="false">② 格局</button>
+        <button role="tab" data-tab="tags" aria-selected="false">③ 標籤</button>
+        <button role="tab" data-tab="history" aria-selected="false">④ 紀錄</button>
+        <button role="tab" data-tab="data" aria-selected="false">⑤ 資料</button>
+      </div>
 
-        <!-- Basic Info -->
-        <div class="space-y-4">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="block text-sm text-white/80 mb-1">班級名稱</label>
-              <input id="className" type="text" class="w-full rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-emerald-400/60 px-3 py-2" placeholder="例如：三年二班">
-            </div>
-            <div>
-              <label class="block text-sm text-white/80 mb-1">教室名稱</label>
-              <input id="roomName" type="text" class="w-full rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-emerald-400/60 px-3 py-2" placeholder="例如：A-302">
-            </div>
-          </div>
-
-          <!-- Size -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="block text-sm text-white/80 mb-1">橫行數（列／Row）</label>
-              <input id="rowsInput" type="number" min="1" max="20" value="5" class="w-full rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-emerald-400/60 px-3 py-2">
-            </div>
-            <div>
-              <label class="block text-sm text-white/80 mb-1">直列數（欄／Column）</label>
-              <input id="colsInput" type="number" min="1" max="20" value="6" class="w-full rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-emerald-400/60 px-3 py-2">
-            </div>
-          </div>
-
-          <!-- Names -->
+      <!-- ① 名單 -->
+      <section data-panel="names" class="space-y-3">
+        <div class="card p-4 space-y-3">
           <div>
-            <label class="block text-sm text-white/80 mb-1">學生名單（每行一位）</label>
-            <textarea id="namesInput" rows="8" class="w-full rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-emerald-400/60 px-3 py-2" placeholder="可輸入「座號 姓名」，例如：01 王小明；也可每行只輸入姓名"></textarea>
-            <p class="text-xs text-white/70 mt-2">提示：Excel 匯入會同步保留座號；手動輸入可用「座號 姓名」格式。</p>
-          </div>
-
-          <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
-            <h3 class="panel-title text-base mb-3"><span class="icon-dot bg-sky-300"></span>Excel 匯入名單</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label class="block text-sm text-white/80 mb-1">選擇 Excel 檔案</label>
-                <input id="excelFile" type="file" accept=".xlsx,.xls,.csv" class="w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-sky-500 file:px-3 file:py-2 file:text-white file:font-semibold hover:file:bg-sky-600">
-              </div>
-              <div>
-                <label class="block text-sm text-white/80 mb-1">班級分頁</label>
-                <select id="sheetSelect" class="w-full rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-sky-400/60 px-3 py-2">
-                  <option value="">尚未匯入檔案</option>
-                </select>
-              </div>
-            </div>
-            <div class="mt-3 flex flex-wrap items-center gap-2">
-              <button id="importSheetBtn" class="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-semibold shadow">匯入此班名單</button>
-              <span id="excelHint" class="text-xs text-white/70">支援多分頁，會自動偵測「姓名、座號、學生」等欄位。</span>
-            </div>
-          </div>
-
-          <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
-            <h3 class="panel-title text-base mb-3"><span class="icon-dot bg-amber-300"></span>學生標籤設定</h3>
-            <div class="grid grid-cols-1 gap-3">
-              <select id="tagStudentSelect" class="rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-amber-400/60 px-3 py-2">
-                <option value="">請先匯入或輸入學生名單</option>
-              </select>
-              <select id="tagRoleSelect" class="rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-amber-400/60 px-3 py-2">
-                <option value="">選擇幹部或小老師</option>
-              </select>
-              <input id="studentTagInput" type="text" class="rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-amber-400/60 px-3 py-2" placeholder="或手動輸入學生備註">
-            </div>
-            <div class="mt-3 flex flex-wrap gap-2">
-              <button id="saveStudentTagBtn" class="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 font-semibold">儲存學生標籤</button>
-              <button id="clearStudentTagBtn" class="px-3 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 font-semibold">清除此學生標籤</button>
-              <button id="clearAllStudentTagsBtn" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 font-semibold shadow">清除全班學生標籤</button>
-            </div>
-            <p class="text-xs text-white/70 mt-2">學生標籤會跟著學生移動，隨機或手動安排後仍會顯示在座號右側。</p>
-          </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="mt-5 border-t border-white/10 pt-4 space-y-3">
-          <div class="flex flex-wrap items-center gap-2">
-            <button id="previewBtn" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow">
-              預覽座位設定
-            </button>
-            <button id="randomBtn" class="px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-semibold shadow">
-              生成隨機座位
-            </button>
-            <button id="manualBtn" class="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-semibold shadow">
-              設定學生座位
-            </button>
-            <button id="editBtn" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold shadow">
-              編輯座位
-            </button>
-            <button id="teacherViewBtn" class="px-4 py-2 rounded-xl bg-fuchsia-500 hover:bg-fuchsia-600 text-white font-semibold shadow">
-              教師檢視
-            </button>
-            <button id="clearAssignmentsBtn" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold shadow-lg ring-2 ring-rose-200/40">
-              清除目前座位
-            </button>
-          </div>
-
-          <div class="flex flex-wrap items-center gap-2">
-            <button id="downloadStudentBtn" class="px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 font-semibold">
-              下載學生視角 PNG
-            </button>
-            <button id="downloadTeacherBtn" class="px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 font-semibold">
-              下載教師視角 PNG
-            </button>
-          </div>
-
-          <div class="flex flex-wrap items-center gap-3 text-xs text-white/80">
-            <span class="badge bg-emerald-400/20 border border-emerald-400/40"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> 可用座位</span>
-            <span class="badge bg-rose-400/20 border border-rose-400/40"><span class="w-2 h-2 rounded-full bg-rose-400"></span> 停用</span>
-            <span class="badge bg-indigo-400/20 border border-indigo-400/40"><span class="w-2 h-2 rounded-full bg-indigo-400"></span> 已指派</span>
-            <span class="ml-auto">模式：<strong id="modeLabel" class="text-emerald-300">預覽</strong></span>
-          </div>
-        </div>
-
-        <!-- Save / Load -->
-        <div class="mt-6 border-t border-white/10 pt-4">
-          <h3 class="text-base font-semibold mb-3">儲存 / 讀取 / 刪除 座位設定</h3>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <input id="presetName" type="text" class="rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-emerald-400/60 px-3 py-2" placeholder="方案名稱">
-            <select id="presetList" class="rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-emerald-400/60 px-3 py-2">
-              <option value="">選擇已儲存方案</option>
-            </select>
+            <label class="lbl" for="presetName">方案名稱（下拉選單顯示的名字）</label>
             <div class="flex gap-2">
-              <button id="saveBtn" class="flex-1 px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600">儲存</button>
-              <button id="loadBtn" class="flex-1 px-3 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-600">讀取</button>
-              <button id="deleteBtn" class="flex-1 px-3 py-2 rounded-xl bg-rose-500 hover:bg-rose-600">刪除</button>
+              <input id="presetName" class="field" maxlength="40" placeholder="例如：202 班 上學期">
+              <button id="btnDupClass" class="btn btn-plain btn-sm" title="複製一份，例如下學期沿用">複製</button>
+              <button id="btnDelClass" class="btn btn-danger btn-sm">刪除</button>
             </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="lbl" for="className">班級名稱（印在座位表）</label><input id="className" class="field" maxlength="30" placeholder="例如：二年二班"></div>
+            <div><label class="lbl" for="roomName">教室</label><input id="roomName" class="field" maxlength="30" placeholder="例如：A-302"></div>
           </div>
         </div>
 
-        <div class="mt-6 border-t border-white/10 pt-4">
-          <h3 class="text-base font-semibold mb-3">方案 JSON 備份 / 還原</h3>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button id="exportJsonBtn" class="px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 font-semibold">下載方案 JSON</button>
-            <label class="px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 font-semibold text-center cursor-pointer">
-              匯入方案 JSON
-              <input id="importJsonFile" type="file" accept=".json,application/json" class="hidden">
-            </label>
+        <div class="card p-4 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="lbl !mb-0" for="namesInput">學生名單（每行一位）</label>
+            <span id="namesCount" class="text-xs text-slate-500"></span>
           </div>
-          <p class="text-xs text-white/70 mt-2">JSON 代表一個完整方案；方案內才包含該方案自己的安排紀錄。</p>
+          <textarea id="namesInput" rows="9" class="field font-mono text-sm" placeholder="01 王小明&#10;02 李小華&#10;（也可只寫姓名）"></textarea>
+          <div class="flex items-center gap-2">
+            <button id="btnApplyNames" class="btn btn-primary">套用名單</button>
+            <button id="btnRevertNames" class="btn btn-plain btn-sm hidden">放棄修改</button>
+            <span id="namesDirtyHint" class="text-xs font-bold text-amber-700 hidden">名單已修改，尚未套用</span>
+          </div>
+        </div>
+
+        <div class="card p-4 space-y-2">
+          <h3 class="font-bold text-sm">從 Excel 匯入名單</h3>
+          <input id="excelFile" type="file" accept=".xlsx,.xls,.csv" class="w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3 file:py-1.5 file:font-bold file:text-indigo-700">
+          <div class="flex gap-2">
+            <select id="sheetSelect" class="field"><option value="">先選擇 Excel 檔</option></select>
+            <button id="btnImportSheet" class="btn btn-soft">匯入此分頁</button>
+          </div>
+          <p id="excelHint" class="text-xs text-slate-500">支援多分頁，自動偵測「姓名／座號」欄位。</p>
         </div>
       </section>
 
-      <!-- Right Preview -->
-      <section class="lg:col-span-8 glass rounded-2xl p-5 fade-in">
-        <div class="flex items-center justify-between mb-3">
+      <!-- ② 格局 -->
+      <section data-panel="layout" class="space-y-3 hidden">
+        <div class="card p-4 space-y-3">
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="lbl" for="rowsInput">前後排數（Row）</label><input id="rowsInput" type="number" min="1" max="20" class="field"></div>
+            <div><label class="lbl" for="colsInput">左右行數（Column）</label><input id="colsInput" type="number" min="1" max="20" class="field"></div>
+          </div>
+          <button id="btnApplySize" class="btn btn-primary w-full">套用格局（保留已排學生）</button>
+          <p class="text-xs text-slate-500">縮小時，超出範圍的學生會回到「未安排」，並先詢問。</p>
+        </div>
+        <div class="card p-4 space-y-2 text-sm">
+          <h3 class="font-bold">沒有桌椅的位置</h3>
+          <p class="text-slate-600">在座位表上方切到 <b>「編輯格局」</b>，點座位即可切換「可用 ↔ 空位」。</p>
+          <div class="flex flex-wrap gap-2 pt-1">
+            <button id="btnEditLayoutMode" class="btn btn-soft btn-sm">切到編輯格局</button>
+            <button id="btnUnblockAll" class="btn btn-plain btn-sm">全部設為可用</button>
+            <button id="btnUnlockAll" class="btn btn-plain btn-sm">解除全部固定</button>
+          </div>
+        </div>
+        <div class="card p-4 text-xs text-slate-600 space-y-1.5">
+          <h3 class="font-bold text-sm text-slate-800">圖例</h3>
+          <div class="flex items-center gap-2"><span class="w-5 h-4 rounded border-2 border-dashed border-slate-300 bg-slate-50"></span>可用、尚未安排</div>
+          <div class="flex items-center gap-2"><span class="w-5 h-4 rounded border-2 border-indigo-300 bg-indigo-50"></span>已安排學生</div>
+          <div class="flex items-center gap-2"><span class="w-5 h-4 rounded border-2 border-amber-500 bg-indigo-50"></span>🔒 固定（隨機分配時不動）</div>
+          <div class="flex items-center gap-2"><span class="w-5 h-4 rounded border-2 border-slate-200" style="background:repeating-linear-gradient(135deg,#f1f5f9 0 4px,#e2e8f0 4px 8px)"></span>空位（沒有桌椅）</div>
+        </div>
+      </section>
+
+      <!-- ③ 標籤 -->
+      <section data-panel="tags" class="space-y-3 hidden">
+        <div class="card p-4 space-y-2">
+          <h3 class="font-bold text-sm">從「幹部小老師程式」匯入</h3>
+          <p class="text-xs text-slate-500">選擇該程式「下載 JSON」的檔案，依姓名／座號自動標上職務；沒有名單時會一併建立名單。</p>
+          <label class="btn btn-soft cursor-pointer w-full">📥 選擇幹部小老師 JSON<input id="roleJsonFile" type="file" accept=".json,application/json" class="hidden"></label>
+        </div>
+        <div class="card p-4 space-y-2">
+          <h3 class="font-bold text-sm">個別設定</h3>
+          <select id="tagStudentSelect" class="field"></select>
+          <div class="grid grid-cols-2 gap-2">
+            <select id="tagRoleSelect" class="field"><option value="">選擇職務</option></select>
+            <input id="tagNoteInput" class="field" maxlength="20" placeholder="或自行輸入">
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button id="btnSaveTag" class="btn btn-primary btn-sm">儲存標籤</button>
+            <button id="btnClearTag" class="btn btn-plain btn-sm">清除此學生</button>
+            <button id="btnClearAllTags" class="btn btn-danger btn-sm ml-auto">清除全班標籤</button>
+          </div>
+        </div>
+        <div class="card p-4">
+          <h3 class="font-bold text-sm mb-2">已有標籤 <span id="taggedCount" class="text-slate-500 font-normal"></span></h3>
+          <div id="taggedList" class="flex flex-wrap gap-1.5 text-sm"></div>
+        </div>
+      </section>
+
+      <!-- ④ 紀錄 -->
+      <section data-panel="history" class="space-y-3 hidden">
+        <div class="card p-4 space-y-2">
+          <h3 class="font-bold text-sm">保存目前座位為一筆紀錄</h3>
+          <div class="flex gap-2">
+            <input id="historyName" class="field" maxlength="30" placeholder="例如：第一次座位、段考後">
+            <button id="btnRecord" class="btn btn-primary">保存</button>
+          </div>
+          <p class="text-xs text-slate-500">紀錄跟著班級方案一起自動儲存，可隨時讀回或下載圖檔。</p>
+        </div>
+        <div class="card p-4">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-bold text-sm">安排紀錄 <span id="historyCount" class="text-slate-500 font-normal"></span></h3>
+            <button id="btnClearHistory" class="btn btn-danger btn-sm">全部清除</button>
+          </div>
+          <div id="historyList" class="space-y-2 text-sm"></div>
+        </div>
+      </section>
+
+      <!-- ⑤ 資料 -->
+      <section data-panel="data" class="space-y-3 hidden" id="storageSection">
+        <div class="card p-4 space-y-2 text-sm">
+          <h3 class="font-bold">📁 資料存放位置（長期保存）</h3>
+          <div id="folderBox"></div>
+          <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+            <div><label class="lbl" for="deviceName">這台電腦的名稱</label><input id="deviceName" class="field" maxlength="30"></div>
+            <div><label class="lbl" for="folderNote">位置備註（自己看的）</label><input id="folderNote" class="field" maxlength="200" placeholder="例：雲端硬碟/導師/座位"></div>
+          </div>
+        </div>
+        <div class="card p-4 space-y-2 text-sm">
+          <h3 class="font-bold">JSON 備份 / 還原</h3>
+          <div class="flex flex-wrap gap-2">
+            <button id="btnExportClass" class="btn btn-plain btn-sm">下載目前班級</button>
+            <button id="btnExportAll" class="btn btn-plain btn-sm">下載全部資料</button>
+            <label class="btn btn-soft btn-sm cursor-pointer">匯入 JSON<input id="importJsonFile" type="file" accept=".json,application/json" class="hidden"></label>
+          </div>
+          <p class="text-xs text-slate-500">可讀舊版（1.x）方案 JSON、2.0 備份，以及幹部小老師程式的 JSON。</p>
+        </div>
+        <div class="card p-4 text-sm">
+          <h3 class="font-bold mb-2">自動還原點</h3>
+          <div id="snapshotList"></div>
+        </div>
+        <div class="card p-4 text-xs text-slate-600 space-y-1" id="storageInfo"></div>
+        <details class="card p-4 text-sm text-slate-600">
+          <summary class="font-bold text-slate-800">兩台電腦共用資料怎麼設定？</summary>
+          <ol class="list-decimal ml-5 mt-2 space-y-1">
+            <li>用電腦版 Chrome 或 Edge 開啟本程式。</li>
+            <li>按「選擇資料存放資料夾」，選雲端硬碟（例如 Google 雲端硬碟電腦版）裡的一個資料夾。</li>
+            <li>另一台電腦也安裝雲端硬碟並選<strong>同一個資料夾</strong>，程式會詢問要使用哪一份資料。</li>
+            <li>之後每次修改都會自動寫入 <code>座位安排資料.json</code>；每天第一次寫入前保留前一版於 <code>座位安排資料_歷史</code>。</li>
+            <li>兩台同時修改時會提示，未選用的一份另存成「衝突檔」，不會遺失。</li>
+          </ol>
+        </details>
+      </section>
+    </aside>
+
+    <!-- ================= 右側工作區 ================= -->
+    <section class="order-1 lg:order-2 space-y-3 min-w-0">
+      <div class="card p-3 flex flex-wrap items-center gap-2">
+        <div class="seg" role="group" aria-label="操作模式">
+          <button data-mode="arrange" aria-pressed="true">🪑 排座位</button>
+          <button data-mode="layout" aria-pressed="false">🧱 編輯格局</button>
+        </div>
+        <button id="btnRandom" class="btn btn-primary">🎲 隨機分配</button>
+        <button id="btnUndo" class="btn btn-plain" disabled title="復原上一步（Ctrl+Z）">↶ 復原</button>
+        <button id="btnClearSeats" class="btn btn-danger">清除安排</button>
+        <div class="flex items-center gap-2 ml-auto">
+          <div class="seg" role="group" aria-label="視角">
+            <button data-view="student" aria-pressed="true">學生視角</button>
+            <button data-view="teacher" aria-pressed="false">教師視角</button>
+          </div>
+          <div class="relative">
+            <button id="btnDownloadMenu" class="btn btn-plain" aria-haspopup="true" aria-expanded="false">⬇ 下載</button>
+            <div id="downloadMenu" class="hidden absolute right-0 mt-1 w-44 card p-1 z-30">
+              <button data-png="student" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 text-sm font-semibold">學生視角 PNG</button>
+              <button data-png="teacher" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 text-sm font-semibold">教師視角 PNG</button>
+            </div>
+          </div>
+          <button id="btnFullscreen" class="btn btn-plain" title="全螢幕投影座位表">🖥 投影</button>
+        </div>
+      </div>
+
+      <div id="boardCard" class="card p-4">
+        <div class="flex flex-wrap items-end justify-between gap-2 mb-2">
           <div>
-            <div class="flex items-center gap-2">
-              <span class="text-sm text-white/80">班級：</span>
-              <span id="classNamePreview" class="text-base font-semibold">（尚未設定）</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="text-sm text-white/80">教室：</span>
-              <span id="roomNamePreview" class="text-base font-semibold">（尚未設定）</span>
-            </div>
+            <div class="text-xl font-black" id="boardTitle">座位表</div>
+            <div class="text-sm text-slate-500" id="boardSub"></div>
           </div>
-          <div class="text-right">
-            <p id="seatCountInfo" class="text-sm text-white/80"></p>
-            <p class="text-xs text-white/60">提示：在「預覽」可點擊座位切換可用 / 空位</p>
-          </div>
+          <div id="statsBar" class="flex flex-wrap gap-1.5 no-full"></div>
         </div>
-
-        <div class="relative bg-white/5 rounded-2xl p-4 border border-white/10 cut-corner flex flex-col gap-4">
-          <div id="boardLabel" class="self-center px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs text-white/90">
-            講台 / 黑板
-          </div>
-
-          <div id="gridContainer" class="grid gap-2 min-h-[320px] place-items-stretch"></div>
-
-          <div id="viewSummaryBar" class="flex items-center justify-between text-sm text-white/80">
-            <span id="viewLabel">目前視角：學生視角</span>
-            <span id="summaryLabel">已指派 0 / 0</span>
-          </div>
+        <div id="hintBar" class="no-full mb-3 rounded-lg bg-indigo-50 text-indigo-900 text-sm px-3 py-2" role="status"></div>
+        <div id="boardWrap" class="flex flex-col gap-3">
+          <div id="podium" class="podium">講 台</div>
+          <div id="seatGrid" class="grid gap-2" role="grid" aria-label="座位表"></div>
         </div>
+      </div>
 
-        <!-- Remaining students -->
-        <div id="remainingBox" class="mt-4 hidden">
-          <h4 class="text-sm font-semibold mb-2">待分配學生</h4>
-          <div id="remainingList" class="flex flex-wrap gap-2"></div>
+      <div id="tray" class="card p-4 border-2 border-transparent">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="font-bold">未安排的學生 <span id="trayCount" class="text-slate-500 font-normal"></span></h3>
+          <span class="text-xs text-slate-500">點一下學生再點座位放入；或拖到座位上。把座位拖到這裡＝移出座位。</span>
         </div>
-
-        <div class="mt-4 rounded-2xl bg-white/5 border border-white/10 p-4">
-          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-            <h3 class="panel-title text-base"><span class="icon-dot bg-amber-300"></span>安排紀錄</h3>
-            <span id="historySummary" class="text-xs text-white/70">尚無紀錄</span>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <input id="historyName" type="text" class="sm:col-span-2 rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-amber-400/60 px-3 py-2" placeholder="例如：第一次座位、段考後座位、第二次座位">
-            <button id="recordHistoryBtn" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold shadow">紀錄目前結果</button>
-          </div>
-          <div class="mt-3 flex flex-wrap items-center gap-2">
-            <select id="historyList" class="min-w-[220px] flex-1 rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-amber-400/60 px-3 py-2">
-              <option value="">選擇歷史紀錄</option>
-            </select>
-            <button id="loadHistoryBtn" class="px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-600 font-semibold">讀取紀錄</button>
-            <button id="deleteHistoryBtn" class="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 font-semibold">刪除此筆</button>
-            <button id="clearHistoryBtn" class="px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 font-semibold">清除全部</button>
-          </div>
-          <div id="historyPreview" class="mt-3 text-xs text-white/75 leading-relaxed"></div>
-        </div>
-      </section>
-    </div>
+        <div id="trayList" class="flex flex-wrap gap-1.5"></div>
+      </div>
+    </section>
   </main>
 
-  <!-- Floating Scroll Buttons -->
-  <div class="fixed right-4 bottom-24 flex flex-col gap-2 z-40">
-    <button id="scrollUp" class="scroll-btn w-12 h-12 rounded-full grid place-content-center hover:scale-105 transition" title="往上">
-      ↑
-    </button>
-    <button id="scrollDown" class="scroll-btn w-12 h-12 rounded-full grid place-content-center hover:scale-105 transition" title="往下">
-      ↓
-    </button>
-  </div>
-
-  <!-- Assign Modal -->
-  <div id="assignModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden">
-    <div class="max-w-lg mx-auto mt-24 glass rounded-2xl p-5">
+  <!-- 座位詳細設定 -->
+  <div id="seatModal" class="fixed inset-0 z-[70] bg-black/50 hidden items-center justify-center p-4">
+    <div role="dialog" aria-modal="true" aria-labelledby="seatModalTitle" class="w-full max-w-lg card p-5 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-3">
-        <h3 class="text-lg font-semibold">設定座位</h3>
-        <button id="closeModal" class="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20">關閉</button>
+        <h3 id="seatModalTitle" class="text-lg font-black">座位</h3>
+        <button id="btnCloseModal" class="btn btn-plain btn-sm">關閉（Esc）</button>
       </div>
-      <p id="modalSeatLabel" class="text-sm text-white/80 mb-3">座位：</p>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div class="sm:col-span-2">
-          <input id="studentSearch" type="text" placeholder="搜尋學生…" class="w-full rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-emerald-400/60 px-3 py-2">
-          <div id="studentOptions" class="mt-3 max-h-64 overflow-y-auto p-2 bg-white/5 rounded-xl border border-white/10"></div>
+      <p id="seatModalNow" class="text-sm text-slate-600 mb-3"></p>
+      <div id="seatModalOccupied" class="space-y-3 mb-4">
+        <div class="flex flex-wrap gap-2">
+          <button id="btnModalLock" class="btn btn-soft btn-sm">🔒 固定此座位</button>
+          <button id="btnModalUnassign" class="btn btn-plain btn-sm">移回未安排</button>
         </div>
-        <div class="space-y-2">
-          <button id="clearSeatBtn" class="w-full px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600">清除此座位</button>
-          <button id="toggleBlockBtn" class="w-full px-3 py-2 rounded-xl bg-rose-500 hover:bg-rose-600">切換空位/可用</button>
-          <button id="modalSaveBtn" class="w-full px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600">指派所選學生</button>
+        <div class="rounded-xl bg-amber-50 border border-amber-200 p-3 space-y-2">
+          <div class="text-sm font-bold text-amber-900">學生標籤（會跟著學生移動）</div>
+          <div class="grid grid-cols-2 gap-2">
+            <select id="modalRoleSelect" class="field"><option value="">選擇職務</option></select>
+            <input id="modalNoteInput" class="field" maxlength="20" placeholder="或自行輸入">
+          </div>
+          <div class="flex gap-2"><button id="btnModalSaveTag" class="btn btn-primary btn-sm">儲存標籤</button><button id="btnModalClearTag" class="btn btn-plain btn-sm">清除標籤</button></div>
         </div>
       </div>
-      <div class="mt-4 border-t border-white/10 pt-4">
-        <h4 class="text-sm font-semibold mb-2">學生標籤 / 備註</h4>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <select id="roleSelect" class="rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-amber-400/60 px-3 py-2">
-            <option value="">選擇幹部或小老師</option>
-          </select>
-          <input id="seatNoteInput" type="text" class="sm:col-span-2 rounded-xl bg-white/10 border border-white/15 focus:outline-none focus:ring-2 focus:ring-amber-400/60 px-3 py-2" placeholder="儲存到此學生資料，例如：班長、生物小老師">
-        </div>
-        <div class="mt-3 flex flex-wrap gap-2">
-          <button id="saveNoteBtn" class="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 font-semibold">儲存學生標籤</button>
-          <button id="clearNoteBtn" class="px-3 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 font-semibold">清除學生標籤</button>
-        </div>
+      <div class="space-y-2">
+        <div class="text-sm font-bold" id="seatModalPickLabel">放入未安排的學生</div>
+        <input id="modalSearch" class="field" placeholder="搜尋姓名或座號…">
+        <div id="modalStudentList" class="max-h-56 overflow-y-auto grid grid-cols-2 gap-1.5"></div>
+      </div>
+      <div class="mt-4 pt-3 border-t border-slate-100 flex justify-end">
+        <button id="btnModalBlock" class="btn btn-danger btn-sm">設為空位（沒有桌椅）</button>
       </div>
     </div>
   </div>
 
-  <!-- Toast -->
-  <div id="toast" class="toast hidden">
-    <div class="glass rounded-full px-4 py-2 text-sm"></div>
+  <div id="toast" class="toast hidden" role="status" aria-live="polite">
+    <div class="flex items-center gap-3 rounded-xl bg-slate-900 text-white px-4 py-2.5 shadow-xl text-sm font-semibold"><span id="toastText"></span><button id="toastAction" class="hidden px-2 py-0.5 rounded bg-white/20 hover:bg-white/30"></button></div>
   </div>
 
   <script>
-    // ---------- State ----------
+    // ===================== 狀態與小工具 =====================
+    const $ = s => document.querySelector(s);
+    const $$ = s => Array.from(document.querySelectorAll(s));
+    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+    const cloneData = v => JSON.parse(JSON.stringify(v));
+    const escapeHTML = s => String(s ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+
     const state = {
-      className: '',
-      roomName: '',
-      rows: 5,
-      cols: 6,
-      seats: [], // 2D: [r][c] => { r, c, blocked: false, student: null }
-      students: [], // { number, name }
-      mode: 'preview', // 'preview' | 'manual' | 'edit'
-      view: 'student', // 'student' | 'teacher' (teacher is mirrored)
-      modalTarget: null, // {r,c}
-      selectedStudent: null,
-      draggingFrom: null,
-      history: [],
-      currentRecordName: '',
-      currentPresetName: '',
+      classes: [], activeId: '', folderNote: '',
+      ui: { view: 'student', mode: 'arrange' },
+      sel: null,          // 選取的座位 {r,c}
+      pick: null,         // 從未安排區選取的學生 key
+      modal: null,        // 詳細設定中的座位 {r,c}
+      drag: null,
       excelWorkbook: null,
+      namesDirty: false,
     };
+    const undoStack = [];
+    const UNDO_MAX = 30;
+
     const roleOptions = [
-      '班長', '副班長',
-      '風紀股長', '副風紀股長',
-      '學藝股長', '副學藝股長',
-      '衛生股長', '副衛生股長',
-      '總務股長', '副總務股長',
-      '康樂股長', '副康樂股長',
-      '圖資股長', '副圖資股長',
-      '輔導股長', '保健股長',
-      '國文小老師', '英文小老師', '數學小老師',
-      '物理小老師', '化學小老師', '生物小老師', '地科小老師',
-      '地理小老師', '歷史小老師', '公民小老師',
-      '音樂小老師', '美術小老師', '資訊小老師',
-      '生科小老師', '體育小老師', '藝能小老師'
+      '班長', '副班長', '風紀股長', '副風紀股長', '學藝股長', '副學藝股長', '衛生股長', '副衛生股長',
+      '總務股長', '副總務股長', '康樂股長', '副康樂股長', '圖資股長', '副圖資股長', '輔導股長', '保健股長',
+      '國文小老師', '英文小老師', '數學小老師', '物理小老師', '化學小老師', '生物小老師', '地科小老師',
+      '地理小老師', '歷史小老師', '公民小老師', '音樂小老師', '美術小老師', '資訊小老師', '生科小老師', '體育小老師', '藝能小老師'
     ];
 
-    // ---------- Helpers ----------
-    const $ = (sel) => document.querySelector(sel);
-    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
-    const toast = (msg) => {
+    let toastTimer = null;
+    function toast(msg, opts = {}) {
       const box = $('#toast');
-      box.querySelector('.glass').textContent = msg;
+      $('#toastText').textContent = msg;
+      const act = $('#toastAction');
+      if (opts.action) {
+        act.textContent = opts.action.label;
+        act.onclick = () => { box.classList.add('hidden'); opts.action.fn(); };
+        act.classList.remove('hidden');
+      } else act.classList.add('hidden');
       box.classList.remove('hidden');
-      setTimeout(()=> box.classList.add('hidden'), 1800);
-    };
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => box.classList.add('hidden'), opts.ms || (opts.action ? 5000 : 2200));
+    }
 
-    const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
-    const cloneData = (value) => JSON.parse(JSON.stringify(value));
-    const normalizeStudent = (student) => {
-      if (!student) return null;
-      if (typeof student === 'string') return { number: '', name: student.trim() };
+    // ---------- 學生 ----------
+    function normStudent(s) {
+      if (!s) return null;
+      if (typeof s === 'string') return { number: '', name: s.trim(), note: '' };
       return {
-        number: String(student.number ?? student.no ?? student.seatNo ?? '').trim(),
-        name: String(student.name ?? student.student ?? '').trim(),
-        note: String(student.note ?? '').trim(),
+        number: String(s.number ?? s.no ?? s.seatNo ?? '').trim(),
+        name: String(s.name ?? s.student ?? '').trim(),
+        note: String(s.note ?? '').trim(),
       };
-    };
-    const studentKey = (student) => {
-      const s = normalizeStudent(student);
-      return s ? `${s.number}::${s.name}` : '';
-    };
-    const studentDisplay = (student) => {
-      const s = normalizeStudent(student);
-      if (!s) return '';
-      return s.number ? `${s.number} ${s.name}` : s.name;
-    };
-    const studentsToInputText = (students) => students.map(studentDisplay).join('\n');
-    const normalizeNote = (note) => String(note ?? '').trim();
-    const getStudentRecord = (student) => {
-      const key = studentKey(student);
-      return state.students.find(s => studentKey(s) === key) || null;
-    };
-    const getStudentNote = (student, fallback = '') => {
-      const record = getStudentRecord(student);
-      return normalizeNote(record?.note || normalizeStudent(student)?.note || fallback);
-    };
-    function setStudentNote(student, note) {
-      const normalized = normalizeStudent(student);
-      if (!normalized?.name) return false;
-      const key = studentKey(normalized);
-      const target = state.students.find(s => studentKey(s) === key);
-      if (!target) return false;
-      target.note = normalizeNote(note);
-      getAllSeats().forEach(seat => {
-        if (studentKey(seat.student) === key) {
-          seat.student = { ...normalizeStudent(seat.student), note: target.note };
-          seat.note = '';
-        }
-      });
-      return true;
     }
-    function syncAssignedStudentNotes() {
-      getAllSeats().forEach(seat => {
-        if (!seat.student) return;
-        const note = getStudentNote(seat.student, seat.note);
-        seat.student = { ...normalizeStudent(seat.student), note };
-        seat.note = '';
-      });
-    }
-    const sortByStudentNumber = (a, b) => {
-      const sa = normalizeStudent(a);
-      const sb = normalizeStudent(b);
-      const na = parseInt(sa?.number || '', 10);
-      const nb = parseInt(sb?.number || '', 10);
+    const keyOf = s => s ? `${String(s.number ?? '').trim()}::${String(s.name ?? '').trim()}` : '';
+    const display = s => s ? (s.number ? `${s.number} ${s.name}` : s.name) : '';
+    const byNumber = (a, b) => {
+      const na = parseInt(a.number, 10), nb = parseInt(b.number, 10);
       if (!Number.isNaN(na) && !Number.isNaN(nb) && na !== nb) return na - nb;
-      return studentDisplay(a).localeCompare(studentDisplay(b), 'zh-Hant');
+      if (!Number.isNaN(na) && Number.isNaN(nb)) return -1;
+      if (Number.isNaN(na) && !Number.isNaN(nb)) return 1;
+      return display(a).localeCompare(display(b), 'zh-Hant');
     };
 
-    function applyLayoutData(data, options = {}) {
-      const layout = data.current || data;
-      state.className = layout.className || '';
-      state.roomName = layout.roomName || '';
-      state.rows = clamp(parseInt(layout.rows || 5, 10), 1, 20);
-      state.cols = clamp(parseInt(layout.cols || 6, 10), 1, 20);
-      state.seats = Array.isArray(layout.seats) && layout.seats.length ? layout.seats : [];
-      state.students = Array.isArray(layout.students) ? layout.students.map(normalizeStudent).filter(s => s?.name) : [];
-      state.mode = layout.mode || 'edit';
-      state.view = layout.view || 'student';
-      state.currentRecordName = layout.currentRecordName || '';
-      state.currentPresetName = layout.currentPresetName || state.currentPresetName || '';
-      if (options.includeHistory) {
-        state.history = Array.isArray(layout.history) ? layout.history : (Array.isArray(data.history) ? data.history : []);
-      }
-      if (!state.seats.length) buildSeats(state.rows, state.cols);
-      $('#className').value = state.className;
-      $('#roomName').value = state.roomName;
-      $('#rowsInput').value = state.rows;
-      $('#colsInput').value = state.cols;
-      $('#namesInput').value = studentsToInputText(state.students);
-      syncAssignedStudentNotes();
-      renderAll();
+    // ---------- 班級方案 ----------
+    const cls = () => state.classes.find(c => c.id === state.activeId) || state.classes[0];
+    const emptySeat = () => ({ blocked: false, locked: false, student: null });
+    const makeSeats = (rows, cols) => Array.from({ length: rows }, () => Array.from({ length: cols }, emptySeat));
+    function newClass(name) {
+      return { id: uid(), name: name || '新的班級', className: '', roomName: '', rows: 5, cols: 6, seats: makeSeats(5, 6), students: [], history: [], currentRecordName: '' };
+    }
+    const allSeats = C => C.seats.flat();
+    const recordOf = (C, s) => s ? C.students.find(x => keyOf(x) === keyOf(s)) || null : null;
+    const noteOf = (C, s) => recordOf(C, s)?.note || '';
+    const seatCode = (r, c) => `${String.fromCharCode(65 + r)}${c + 1}`;
+
+    function stats(C) {
+      const seats = allSeats(C);
+      const seatedKeys = new Set(seats.filter(s => s.student).map(s => keyOf(s.student)));
+      return {
+        total: C.rows * C.cols,
+        usable: seats.filter(s => !s.blocked).length,
+        assigned: seatedKeys.size,
+        locked: seats.filter(s => s.locked && s.student).length,
+        students: C.students.length,
+        remaining: C.students.filter(s => !seatedKeys.has(keyOf(s))).sort(byNumber),
+      };
     }
 
-    function parseStudents() {
-      const raw = $('#namesInput').value || '';
-      const list = raw.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-      const previousByKey = new Map(state.students.map(student => [studentKey(student), normalizeStudent(student)]));
-      const previousByName = new Map(state.students.map(student => [normalizeStudent(student)?.name, normalizeStudent(student)]));
-      // 去除重複
+    // 驗證並整理任何來源的班級資料（2.0、1.x 方案、安排紀錄）
+    function normalizeClass(p) {
+      if (!p || typeof p !== 'object') return null;
+      const rows = clamp(parseInt(p.rows, 10) || 5, 1, 20);
+      const cols = clamp(parseInt(p.cols, 10) || 6, 1, 20);
+      const students = [];
       const seen = new Set();
-      const unique = [];
-      for (const line of list) {
-        const match = line.match(/^(\d{1,3})[\s,，、.\-_\t]+(.+)$/);
-        const parsed = match
-          ? { number: match[1].padStart(2, '0'), name: match[2].trim() }
-          : { number: '', name: line };
-        const previous = previousByKey.get(studentKey(parsed)) || previousByName.get(parsed.name);
-        const student = { ...parsed, note: previous?.note || '' };
-        const key = studentKey(student);
-        if (student.name && !seen.has(key)) { unique.push(student); seen.add(key); }
+      const addStu = raw => {
+        const n = normStudent(raw);
+        if (!n || !n.name) return null;
+        const k = keyOf(n);
+        if (seen.has(k)) return students.find(x => keyOf(x) === k);
+        seen.add(k); students.push(n); return n;
+      };
+      (Array.isArray(p.students) ? p.students : []).forEach(addStu);
+      const seatedKeys = new Set();
+      const seats = Array.from({ length: rows }, (_, r) => Array.from({ length: cols }, (_, c) => {
+        const o = (Array.isArray(p.seats) && Array.isArray(p.seats[r]) && p.seats[r][c]) || {};
+        const seat = { blocked: !!o.blocked, locked: false, student: null };
+        if (!seat.blocked && o.student) {
+          const n = normStudent(o.student);
+          if (n?.name && !seatedKeys.has(keyOf(n))) {
+            const rec = students.find(x => keyOf(x) === keyOf(n)) || addStu(n);
+            const legacyNote = String(o.note || '').trim();
+            if (rec && !rec.note && (n.note || legacyNote)) rec.note = n.note || legacyNote;
+            seat.student = { number: n.number, name: n.name };
+            seat.locked = !!o.locked;
+            seatedKeys.add(keyOf(n));
+          }
+        }
+        return seat;
+      }));
+      const history = (Array.isArray(p.history) ? p.history : [])
+        .filter(h => h && Array.isArray(h.seats))
+        .map(h => ({
+          id: String(h.id || uid()), name: String(h.name || '未命名紀錄'), createdAt: h.createdAt || new Date().toISOString(),
+          className: String(h.className || ''), roomName: String(h.roomName || ''),
+          rows: clamp(parseInt(h.rows, 10) || rows, 1, 20), cols: clamp(parseInt(h.cols, 10) || cols, 1, 20),
+          seats: h.seats, students: Array.isArray(h.students) ? h.students : [],
+          assignedCount: Number(h.assignedCount) || 0, assignableCount: Number(h.assignableCount) || 0,
+        }));
+      const name = String(p.name || p.presetName || p.className || '未命名班級').trim().slice(0, 40) || '未命名班級';
+      return {
+        id: String(p.id || uid()), name,
+        className: String(p.className || '').trim(), roomName: String(p.roomName || '').trim(),
+        rows, cols, seats, students, history, currentRecordName: String(p.currentRecordName || ''),
+      };
+    }
+
+    const isLegacyPreset = o => !!o && typeof o === 'object' && (Array.isArray(o.seats) || (o.current && Array.isArray(o.current.seats)));
+    const legacyToClass = o => o.current ? { ...o.current, history: o.history || o.current.history || [] } : o;
+
+    // 任何來源 → 完整資料 {classes, activeId, ...}
+    function normalizeData(obj) {
+      if (!obj || typeof obj !== 'object') return null;
+      let classes = [], activeId = '';
+      if (Array.isArray(obj.classes)) {
+        classes = obj.classes.map(normalizeClass).filter(Boolean);
+        activeId = String(obj.activeId || '');
+      } else if (obj.kind === 'class' && obj.class) {
+        const c = normalizeClass(obj.class); if (c) classes = [c];
+      } else if (isLegacyPreset(obj)) {
+        const c = normalizeClass(legacyToClass(obj)); if (c) classes = [c];
+      } else {
+        // 1.x localStorage：{ 方案名稱: 方案資料 }
+        classes = Object.entries(obj)
+          .filter(([, v]) => isLegacyPreset(v))
+          .map(([k, v]) => normalizeClass({ ...legacyToClass(v), name: k }))
+          .filter(Boolean);
       }
-      state.students = unique;
+      if (!classes.length) return null;
+      const ids = new Set();
+      classes.forEach(c => { if (ids.has(c.id)) c.id = uid(); ids.add(c.id); });
+      if (!classes.some(c => c.id === activeId)) activeId = classes[0].id;
+      return {
+        classes, activeId,
+        folderNote: String(obj.folderNote || ''),
+        ui: { view: obj.ui?.view === 'teacher' ? 'teacher' : 'student' },
+        savedAt: Number(obj.savedAt) || 0, rev: Number(obj.rev) || 0, savedBy: obj.savedBy || '',
+      };
     }
 
-    function buildSeats(rows, cols) {
-      state.rows = rows; state.cols = cols;
-      state.seats = Array.from({ length: rows }, (_, r) =>
-        Array.from({ length: cols }, (_, c) => ({
-          r, c, blocked: false, student: null, note: ''
-        }))
-      );
+    function countsOf(d) {
+      const list = d?.classes || [];
+      let students = 0, assigned = 0;
+      list.forEach(c => { students += (c.students || []).length; assigned += allSeats(c).filter(s => s.student).length; });
+      return { classes: list.length, students, assigned };
+    }
+    const isEmptyData = d => { const c = countsOf(d); return c.students === 0 && c.assigned === 0; };
+    const countsText = d => { const c = countsOf(d); return `班級 ${c.classes} 個、學生 ${c.students} 人、已安排 ${c.assigned} 位`; };
+
+    // ===================== 復原 =====================
+    function pushUndo(label) {
+      const C = cls();
+      undoStack.push({ label, classId: C.id, data: cloneData(C) });
+      if (undoStack.length > UNDO_MAX) undoStack.shift();
+      $('#btnUndo').disabled = false;
+    }
+    function undo() {
+      const item = undoStack.pop();
+      $('#btnUndo').disabled = !undoStack.length;
+      if (!item) return;
+      const idx = state.classes.findIndex(c => c.id === item.classId);
+      if (idx < 0) return toast('無法復原：這個班級已被刪除');
+      state.classes[idx] = item.data;
+      state.activeId = item.classId;
+      state.sel = null; state.pick = null; state.namesDirty = false;
+      commit();
+      toast(`已復原：${item.label}`);
+    }
+    function clearUndo() { undoStack.length = 0; $('#btnUndo').disabled = true; }
+
+    function commit() { saveLocal(); renderAll(); }
+
+    // ===================== 座位操作 =====================
+    function swapSeats(a, b) {
+      const C = cls();
+      const A = C.seats[a.r][a.c], B = C.seats[b.r][b.c];
+      if (A.blocked || B.blocked) return toast('空位（沒有桌椅）不能放學生');
+      if (!A.student && !B.student) return;
+      pushUndo('交換座位');
+      [A.student, B.student] = [B.student, A.student];
+      [A.locked, B.locked] = [B.locked, A.locked];   // 固定跟著學生走
+      commit();
+      flashSeat(b); flashSeat(a);
+      if (A.student && B.student) toast(`已交換 ${seatCode(a.r, a.c)} ↔ ${seatCode(b.r, b.c)}`);
+      else toast(`已把 ${display(B.student || A.student)} 移到 ${seatCode((B.student ? b : a).r, (B.student ? b : a).c)}`);
     }
 
-    function seatLabel(r, c) {
-      // Row A, B, C... + number
-      const letter = String.fromCharCode(65 + r); // A starts at row 0
-      return `${letter}${c + 1}`;
+    function placeStudent(key, r, c) {
+      const C = cls();
+      const stu = C.students.find(s => keyOf(s) === key);
+      const seat = C.seats[r][c];
+      if (!stu) return;
+      if (seat.blocked) return toast('空位（沒有桌椅）不能放學生，請先到「編輯格局」改為可用');
+      pushUndo(`放入 ${stu.name}`);
+      allSeats(C).forEach(s => { if (s.student && keyOf(s.student) === key) { s.student = null; s.locked = false; } });
+      const prev = seat.student;
+      seat.student = { number: stu.number, name: stu.name };
+      seat.locked = false;
+      commit();
+      flashSeat({ r, c });
+      toast(prev ? `${display(stu)} 坐到 ${seatCode(r, c)}，${prev.name} 回到未安排` : `${display(stu)} 坐到 ${seatCode(r, c)}`);
     }
 
-    function getAllSeats() {
-      return state.seats.flat();
+    function unassignSeat(r, c) {
+      const C = cls(); const seat = C.seats[r][c];
+      if (!seat.student) return;
+      pushUndo('移出座位');
+      const name = seat.student.name;
+      seat.student = null; seat.locked = false;
+      commit();
+      toast(`${name} 回到未安排`);
     }
 
-    function getAssignableSeats() {
-      return getAllSeats().filter(s => !s.blocked);
+    function toggleBlocked(r, c) {
+      const C = cls(); const seat = C.seats[r][c];
+      pushUndo('切換空位');
+      const prev = seat.student;
+      seat.blocked = !seat.blocked;
+      if (seat.blocked) { seat.student = null; seat.locked = false; }
+      commit();
+      toast(seat.blocked ? `${seatCode(r, c)} 設為空位${prev ? `，${prev.name} 回到未安排` : ''}` : `${seatCode(r, c)} 改為可用`);
     }
 
-    function getAssignedCount() {
-      return getAllSeats().filter(s => !!s.student).length;
-    }
-
-    function getTotalSeats() {
-      return state.rows * state.cols;
-    }
-
-    function getRemainingStudents() {
-      const assigned = new Set(getAllSeats().map(s => studentKey(s.student)).filter(Boolean));
-      return state.students.filter(n => !assigned.has(studentKey(n))).sort(sortByStudentNumber);
+    function toggleLock(r, c) {
+      const C = cls(); const seat = C.seats[r][c];
+      if (!seat.student) return;
+      pushUndo(seat.locked ? '解除固定' : '固定座位');
+      seat.locked = !seat.locked;
+      commit();
+      toast(seat.locked ? `🔒 ${seat.student.name} 固定在 ${seatCode(r, c)}，隨機分配時不會移動` : `已解除 ${seat.student.name} 的固定`);
     }
 
     function shuffle(arr) {
       const a = arr.slice();
-      for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-      }
+      for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
       return a;
     }
 
-    // ---------- Rendering ----------
-    function renderHeaderInfo() {
-      $('#classNamePreview').textContent = state.className || '（尚未設定）';
-      $('#roomNamePreview').textContent = state.roomName || '（尚未設定）';
-      $('#viewLabel').textContent = `目前視角：${state.view === 'student' ? '學生視角' : '教師視角'}`;
-      $('#modeLabel').textContent = (state.mode === 'preview' ? '預覽' : state.mode === 'manual' ? '手動分配' : '編輯');
-      $('#seatCountInfo').textContent = `座位 ${state.rows} x ${state.cols}（共 ${getTotalSeats()} 位）｜名單 ${state.students.length} 人`;
-      $('#summaryLabel').textContent = `已指派 ${getAssignedCount()} / ${getTotalSeats()}`;
-      const recordHint = state.currentRecordName ? `目前載入：${state.currentRecordName}` : '';
-      $('#historyPreview').textContent = recordHint;
-      const boardLabel = $('#boardLabel');
-      const grid = $('#gridContainer');
-      const summaryBar = $('#viewSummaryBar');
-      if (boardLabel && grid && summaryBar) {
-        boardLabel.style.order = state.view === 'teacher' ? '3' : '1';
-        grid.style.order = state.view === 'teacher' ? '1' : '2';
-        summaryBar.style.order = '4';
+    async function randomAssign() {
+      const C = cls();
+      if (!C.students.length) { switchTab('names'); return toast('請先輸入學生名單並按「套用名單」'); }
+      const st = stats(C);
+      const movable = st.assigned - st.locked;
+      if (movable > 0) {
+        const ok = await askChoice('重新隨機分配？',
+          `<p>目前已安排 ${st.assigned} 位，其中 ${movable} 位會被重新打散${st.locked ? `；🔒 固定的 ${st.locked} 位不會移動` : ''}。</p><p class="mt-2 text-slate-500">之後可按「↶ 復原」回到原本的安排。</p>`,
+          [{ value: 'ok', label: '重新分配', style: 'primary' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+        if (ok !== 'ok') return;
+      }
+      pushUndo('隨機分配');
+      const lockedKeys = new Set();
+      allSeats(C).forEach(s => {
+        if (s.blocked) return;
+        if (s.locked && s.student) lockedKeys.add(keyOf(s.student));
+        else { s.student = null; s.locked = false; }
+      });
+      const free = allSeats(C).filter(s => !s.blocked && !s.student);
+      const pool = shuffle(C.students.filter(s => !lockedKeys.has(keyOf(s))));
+      const order = shuffle(free);
+      const n = Math.min(pool.length, order.length);
+      for (let i = 0; i < n; i++) order[i].student = { number: pool[i].number, name: pool[i].name };
+      state.sel = null; state.pick = null;
+      setMode('arrange', true);
+      commit();
+      if (pool.length > order.length) toast(`⚠ 可用座位不足：還有 ${pool.length - order.length} 位學生未安排，請到「格局」增加座位`, { ms: 5000 });
+      else toast(`🎲 已隨機分配 ${n} 位${lockedKeys.size ? `（固定 ${lockedKeys.size} 位未動）` : ''}`);
+    }
+
+    async function clearSeats() {
+      const C = cls();
+      const st = stats(C);
+      if (!st.assigned) return toast('目前沒有已安排的座位');
+      const choice = await askChoice('清除座位安排？',
+        `<p>名單、格局與安排紀錄都會保留，只清除座位上的學生。</p>${st.locked ? `<p class="mt-2">目前有 🔒 固定 ${st.locked} 位。</p>` : ''}`,
+        [{ value: 'all', label: '全部清除', style: 'danger' }, ...(st.locked ? [{ value: 'keep', label: '保留固定的學生', style: 'primary' }] : []), { value: 'cancel', label: '取消', style: 'plain' }]);
+      if (choice === 'cancel') return;
+      await makeSnapshot(`清除安排前（${C.name}）`);
+      pushUndo('清除安排');
+      allSeats(C).forEach(s => { if (choice === 'all' || !s.locked) { s.student = null; s.locked = false; } });
+      C.currentRecordName = '';
+      state.sel = null;
+      commit();
+      toast('已清除座位安排', { action: { label: '復原', fn: undo } });
+    }
+
+    // ===================== 名單 =====================
+    function parseNamesText(text, prev) {
+      const prevByKey = new Map(prev.map(s => [keyOf(s), s]));
+      const prevByName = new Map(prev.map(s => [s.name, s]));
+      const seen = new Set(), out = [];
+      String(text || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean).forEach(line => {
+        const m = line.match(/^(\d{1,3})[\s,，、.\-_\t]+(.+)$/);
+        const p = m ? { number: m[1].padStart(2, '0'), name: m[2].trim() } : { number: '', name: line };
+        const old = prevByKey.get(keyOf(p)) || prevByName.get(p.name);
+        const s = { ...p, note: old?.note || '' };
+        if (s.name && !seen.has(keyOf(s))) { seen.add(keyOf(s)); out.push(s); }
+      });
+      return out;
+    }
+    const namesText = C => C.students.map(display).join('\n');
+
+    // 以新名單取代：座位上的學生依「座號＋姓名」對應，對不到時依姓名對應（只改座號的情況）
+    async function replaceStudents(next, label) {
+      const C = cls();
+      const nextKeys = new Set(next.map(keyOf));
+      const byName = new Map();
+      next.forEach(s => byName.set(s.name, byName.has(s.name) ? null : s));
+      const plan = [];
+      allSeats(C).forEach(seat => {
+        if (!seat.student || nextKeys.has(keyOf(seat.student))) return;
+        const m = byName.get(seat.student.name);
+        plan.push({ seat, to: m || null });
+      });
+      const removed = plan.filter(p => !p.to);
+      if (removed.length) {
+        const ok = await askChoice('有已安排座位的學生不在新名單中',
+          `<p>${removed.map(p => escapeHTML(display(p.seat.student))).join('、')}</p><p class="mt-2">套用後這些學生會從座位上移除（可按「↶ 復原」）。</p>`,
+          [{ value: 'ok', label: '套用', style: 'primary' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+        if (ok !== 'ok') return false;
+      }
+      pushUndo(label);
+      plan.forEach(p => {
+        if (p.to) p.seat.student = { number: p.to.number, name: p.to.name };
+        else { p.seat.student = null; p.seat.locked = false; }
+      });
+      C.students = next;
+      state.namesDirty = false;
+      state.pick = null;
+      commit();
+      return true;
+    }
+
+    async function applyNames() {
+      const C = cls();
+      const next = parseNamesText($('#namesInput').value, C.students);
+      if (await replaceStudents(next, '套用名單')) {
+        $('#namesInput').value = namesText(C);
+        toast(`已套用名單：${next.length} 人`);
       }
     }
 
-    function renderRemaining() {
-      const box = $('#remainingBox');
-      const list = $('#remainingList');
-      if (state.mode === 'manual' || state.mode === 'edit') {
-        const remaining = getRemainingStudents();
-        box.classList.remove('hidden');
-        list.innerHTML = '';
-        remaining.forEach(name => {
-          const tag = document.createElement('span');
-          tag.className = 'px-3 py-1 rounded-full bg-white/10 border border-white/15 text-sm';
-          tag.textContent = studentDisplay(name);
-          list.appendChild(tag);
-        });
-        if (remaining.length === 0) {
-          const hint = document.createElement('span');
-          hint.className = 'text-white/60 text-sm';
-          hint.textContent = '（無待分配學生）';
-          list.appendChild(hint);
-        }
-      } else {
-        box.classList.add('hidden');
-      }
-    }
-
-    function renderGrid() {
-      const container = $('#gridContainer');
-      container.innerHTML = '';
-      container.style.gridTemplateColumns = `repeat(${state.cols}, minmax(0, 1fr))`;
-
-      // 決定顯示順序：學生視角正常，教師視角上下左右反轉，講台在下方
-      const rowsIndices = [...Array(state.rows).keys()];
-      const colsIndices = [...Array(state.cols).keys()];
-      const displayRows = state.view === 'teacher' ? rowsIndices.slice().reverse() : rowsIndices;
-      const displayCols = state.view === 'teacher' ? colsIndices.slice().reverse() : colsIndices;
-
-      displayRows.forEach(r => {
-        displayCols.forEach(dc => {
-          const c = dc;
-          const s = state.seats[r][c];
-
-          const btn = document.createElement('button');
-          btn.className = [
-            'seat w-full min-h-[74px] rounded-xl p-2 sm:p-3 text-left border',
-            s.blocked
-            ? 'bg-rose-400/15 border-rose-400/30'
-            : s.student
-              ? 'bg-indigo-400/15 border-indigo-400/30'
-              : 'bg-emerald-400/15 border-emerald-400/30'
-          ].join(' ');
-
-          const label = document.createElement('div');
-          label.className = 'text-[11px] text-white/70';
-          label.textContent = seatLabel(r, c);
-
-          const student = normalizeStudent(s.student);
-          const metaRow = document.createElement('div');
-          metaRow.className = 'mt-1 flex items-center justify-between gap-2';
-
-          const number = document.createElement('span');
-          number.className = 'text-xs font-bold text-amber-200';
-          number.textContent = s.blocked ? '' : (student?.number ? `座號 ${student.number}` : '座號 --');
-
-          const note = document.createElement('span');
-          note.className = 'max-w-[52%] truncate rounded-md bg-amber-300/20 border border-amber-200/30 px-1.5 py-0.5 text-[11px] font-semibold text-amber-100';
-          note.textContent = getStudentNote(s.student, s.note);
-          if (!note.textContent || s.blocked || !s.student) note.classList.add('hidden');
-          note.title = note.textContent;
-
-          const name = document.createElement('div');
-          name.className = 'name text-sm sm:text-base font-semibold text-white/95 mt-0.5';
-          name.textContent = s.blocked ? '空位' : (student?.name || '（未指派）');
-
-          btn.appendChild(label);
-          metaRow.appendChild(number);
-          metaRow.appendChild(note);
-          btn.appendChild(metaRow);
-          btn.appendChild(name);
-
-          // 點擊：依模式執行
-          btn.addEventListener('click', () => {
-            if (state.mode === 'preview') {
-              s.blocked = !s.blocked;
-              if (s.blocked) {
-                s.student = null;
-                s.note = '';
-              }
-              renderAll();
-            } else if (state.mode === 'manual' || state.mode === 'edit') {
-              openAssignModal({ r, c });
-            }
-          });
-
-          // 拖曳交換：手動/編輯模式下，任何可用座位皆可拖曳（含未指派）
-          btn.draggable = (state.mode !== 'preview' && !s.blocked);
-          btn.addEventListener('dragstart', (ev) => {
-            if (state.mode === 'preview' || s.blocked) {
-              ev.preventDefault();
-              return;
-            }
-            state.draggingFrom = { r, c };
-            ev.dataTransfer.setData('text/plain', `${r},${c}`);
-            ev.dataTransfer.effectAllowed = 'move';
-            btn.classList.add('ring', 'ring-emerald-400/60');
-          });
-          btn.addEventListener('dragend', () => {
-            state.draggingFrom = null;
-            btn.classList.remove('ring', 'ring-emerald-400/60');
-          });
-          btn.addEventListener('dragover', (ev) => {
-            if (state.mode === 'preview' || s.blocked) {
-              ev.dataTransfer.dropEffect = 'none';
-              return;
-            }
-            ev.preventDefault();
-            ev.dataTransfer.dropEffect = 'move';
-            btn.classList.add('ring', 'ring-indigo-400/60');
-          });
-          btn.addEventListener('dragleave', () => {
-            btn.classList.remove('ring', 'ring-indigo-400/60');
-          });
-          btn.addEventListener('drop', (ev) => {
-            if (state.mode === 'preview') return;
-            ev.preventDefault();
-            btn.classList.remove('ring', 'ring-indigo-400/60');
-            const from = state.draggingFrom;
-            if (!from) return;
-            const a = state.seats[from.r][from.c];
-            const b = state.seats[r][c];
-            if (b.blocked) {
-              toast('此座位為停用，無法放置');
-              return;
-            }
-            // 交換或移動：來源與目標皆可為未指派或有學生，僅「停用」不可用
-            const tmp = a.student;
-            const tmpNote = a.note;
-            a.student = b.student;
-            a.note = b.note || '';
-            b.student = tmp;
-            b.note = tmpNote || '';
-            renderAll();
-            toast('已交換 / 移動座位');
-          });
-
-          container.appendChild(btn);
-        });
-      });
-
-      renderHeaderInfo();
-      renderRemaining();
-    }
-
-    function renderAll() {
-      renderHeaderInfo();
-      renderGrid();
-      renderHistory();
-      renderStudentTagSelect();
-    }
-
-    function renderHistory() {
-      const list = $('#historyList');
-      const summary = $('#historySummary');
-      if (!list || !summary) return;
-      const selected = list.value;
-      list.innerHTML = '<option value="">選擇歷史紀錄</option>';
-      state.history.forEach((item, index) => {
-        const op = document.createElement('option');
-        op.value = String(index);
-        op.textContent = `${item.name}（${item.className || '未命名班級'}）`;
-        list.appendChild(op);
-      });
-      if (selected && Number(selected) < state.history.length) list.value = selected;
-      const presetText = state.currentPresetName ? `方案「${state.currentPresetName}」` : '尚未載入方案';
-      summary.textContent = state.history.length ? `${presetText}已保留 ${state.history.length} 筆安排` : `${presetText}尚無紀錄`;
-    }
-
-    function renderStudentTagSelect() {
-      const select = $('#tagStudentSelect');
-      if (!select) return;
-      const selected = select.value;
-      select.innerHTML = '<option value="">選擇學生設定標籤</option>';
-      state.students.slice().sort(sortByStudentNumber).forEach(student => {
-        const op = document.createElement('option');
-        op.value = studentKey(student);
-        const note = normalizeNote(student.note);
-        op.textContent = `${studentDisplay(student)}${note ? `｜${note}` : ''}`;
-        select.appendChild(op);
-      });
-      if (selected && state.students.some(student => studentKey(student) === selected)) {
-        select.value = selected;
-      }
-    }
-
-    // ---------- Modal ----------
-    function openAssignModal(target) {
-      state.modalTarget = target;
-      const s = state.seats[target.r][target.c];
-      $('#modalSeatLabel').textContent = `座位：${seatLabel(target.r, target.c)}（目前：${s.blocked ? '空位' : (studentDisplay(s.student) || '未指派')}）`;
-      $('#studentSearch').value = '';
-      const currentNote = getStudentNote(s.student, s.note);
-      $('#roleSelect').value = roleOptions.includes(currentNote) ? currentNote : '';
-      $('#seatNoteInput').value = currentNote;
-      state.selectedStudent = null;
-      buildStudentOptions();
-      $('#assignModal').classList.remove('hidden');
-    }
-
-    function closeAssignModal() {
-      $('#assignModal').classList.add('hidden');
-      state.modalTarget = null;
-      state.selectedStudent = null;
-    }
-
-    function buildStudentOptions() {
-      const box = $('#studentOptions');
-      const query = ($('#studentSearch').value || '').trim();
-      const remaining = getRemainingStudents();
-      const filtered = remaining.filter(n => studentDisplay(n).includes(query));
-      box.innerHTML = '';
-      if (filtered.length === 0) {
-        box.innerHTML = `<div class="text-white/60 text-sm px-2 py-1">（沒有可指派學生）</div>`;
-        return;
-      }
-      filtered.forEach(name => {
-        const opt = document.createElement('button');
-        opt.className = 'w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 border border-white/10 my-1';
-        opt.textContent = studentDisplay(name);
-        opt.addEventListener('click', () => {
-          state.selectedStudent = name;
-          // 高亮已選
-          $$('#studentOptions button').forEach(b => b.classList.remove('ring', 'ring-emerald-400/60'));
-          opt.classList.add('ring', 'ring-emerald-400/60');
-        });
-        box.appendChild(opt);
-      });
-    }
-
-    function populateRoleSelect() {
-      ['#roleSelect', '#tagRoleSelect'].forEach(selector => {
-        const select = $(selector);
-        if (!select) return;
-        roleOptions.forEach(role => {
-          const op = document.createElement('option');
-          op.value = role;
-          op.textContent = role;
-          select.appendChild(op);
-        });
-      });
-    }
-
-    function saveSeatNoteFromModal() {
-      if (!state.modalTarget) return;
-      const { r, c } = state.modalTarget;
-      const seat = state.seats[r][c];
-      if (seat.blocked) { toast('停用座位不需備註'); return; }
-      if (!seat.student) { toast('請先指派學生，再加入備註'); return; }
-      const note = normalizeNote($('#seatNoteInput').value || $('#roleSelect').value);
-      setStudentNote(seat.student, note);
-      persistCurrentPreset();
-      renderAll();
-      toast(note ? '已儲存學生標籤' : '已清除學生標籤');
-    }
-
-    function selectedTagStudent() {
-      const key = $('#tagStudentSelect').value;
-      return state.students.find(student => studentKey(student) === key) || null;
-    }
-
-    function loadSelectedStudentTag() {
-      const student = selectedTagStudent();
-      const note = normalizeNote(student?.note);
-      $('#tagRoleSelect').value = roleOptions.includes(note) ? note : '';
-      $('#studentTagInput').value = note;
-    }
-
-    function saveSelectedStudentTag() {
-      updateFromInputs();
-      const student = selectedTagStudent();
-      if (!student) { toast('請先選擇學生'); return; }
-      const note = normalizeNote($('#studentTagInput').value || $('#tagRoleSelect').value);
-      setStudentNote(student, note);
-      persistCurrentPreset();
-      renderAll();
-      $('#tagStudentSelect').value = studentKey(student);
-      toast(note ? `已儲存 ${studentDisplay(student)} 的標籤` : `已清除 ${studentDisplay(student)} 的標籤`);
-    }
-
-    function clearAllStudentTags() {
-      if (!state.students.length) { toast('目前沒有學生資料'); return; }
-      const ok = confirm('確定要清除全班學生的幹部、小老師與備註標籤？學生姓名、座號與座位安排會保留。');
-      if (!ok) return;
-      state.students.forEach(student => { student.note = ''; });
-      getAllSeats().forEach(seat => {
-        if (seat.student) seat.student = { ...normalizeStudent(seat.student), note: '' };
-        seat.note = '';
-      });
-      $('#tagRoleSelect').value = '';
-      $('#studentTagInput').value = '';
-      $('#roleSelect').value = '';
-      $('#seatNoteInput').value = '';
-      persistCurrentPreset();
-      renderAll();
-      toast('已清除全班學生標籤，學生姓名與座號已保留');
-    }
-
-    // ---------- Actions ----------
-    function updateFromInputs() {
-      state.className = ($('#className').value || '').trim();
-      state.roomName = ($('#roomName').value || '').trim();
-      const r = clamp(parseInt($('#rowsInput').value || '5', 10), 1, 20);
-      const c = clamp(parseInt($('#colsInput').value || '6', 10), 1, 20);
-      $('#rowsInput').value = r; $('#colsInput').value = c;
-      parseStudents();
-      return { rows: r, cols: c };
-    }
-
-    function ensureGridInitialized() {
-      if (!state.seats || state.seats.length === 0) {
-        buildSeats(state.rows, state.cols);
-      }
-    }
-
-    function previewLayout() {
-      const { rows, cols } = updateFromInputs();
-      buildSeats(rows, cols);
-      state.mode = 'preview';
-      state.view = 'student';
-      renderAll();
-      toast('已生成預覽座位，可點擊切換空位');
-    }
-
-    function randomAssign() {
-      updateFromInputs();
-      ensureGridInitialized();
-      // 清除原分配
-      getAllSeats().forEach(s => {
-        if (!s.blocked) {
-          s.student = null;
-          s.note = '';
-        }
-      });
-      const assignable = getAssignableSeats();
-      const names = shuffle(state.students);
-      if (names.length > assignable.length) {
-        toast(`名單 ${names.length} 人，超過可用座位 ${assignable.length}！僅前 ${assignable.length} 位將被指派`);
-      }
-      const toAssign = Math.min(names.length, assignable.length);
-      const seatsOrder = shuffle(assignable); // 隨機分布空位
-      for (let i = 0; i < toAssign; i++) {
-        seatsOrder[i].student = names[i];
-      }
-      syncAssignedStudentNotes();
-      state.mode = 'edit';
-      renderAll();
-      toast('已隨機分配座位');
-    }
-
-    function enterManual() {
-      updateFromInputs();
-      ensureGridInitialized();
-      state.mode = 'manual';
-      state.view = 'student';
-      renderAll();
-      toast('進入手動分配：點座位指派學生');
-    }
-
-    function enterEdit() {
-      updateFromInputs();
-      ensureGridInitialized();
-      state.mode = 'edit';
-      renderAll();
-      toast('進入編輯模式：點座位可重新調整');
-    }
-
-    function toggleTeacherView() {
-      state.view = state.view === 'student' ? 'teacher' : 'student';
-      renderAll();
-      toast(state.view === 'teacher' ? '已切換為教師視角（講台在下方）' : '已切換為學生視角（講台在上方）');
-    }
-
-    function clearCurrentAssignments() {
-      ensureGridInitialized();
-      const assigned = getAssignedCount();
-      if (!assigned) { toast('目前沒有已指派座位'); return; }
-      const ok = confirm('確定要清除目前座位安排？座位格局與歷史紀錄會保留。');
-      if (!ok) return;
-      getAllSeats().forEach(seat => {
-        seat.student = null;
-        seat.note = '';
-      });
-      state.currentRecordName = '';
-      state.mode = 'edit';
-      renderAll();
-      toast('已清除目前座位安排');
-    }
-
-    // ---------- Excel Import ----------
-    function normalizeCell(value) {
-      return String(value ?? '').trim();
-    }
-
-    function extractStudentsFromSheet(sheet) {
-      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-      const meaningfulRows = rows
-        .map(row => row.map(normalizeCell))
-        .filter(row => row.some(Boolean));
-      if (!meaningfulRows.length) return [];
-
+    // ---------- Excel ----------
+    const normalizeCell = v => String(v ?? '').trim();
+    function extractStudentsFromSheet(sheet, prev) {
+      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' }).map(r => r.map(normalizeCell)).filter(r => r.some(Boolean));
+      if (!rows.length) return [];
       const headerWords = ['姓名', '學生', '名字', 'name', 'student'];
       const numberWords = ['座號', '號碼', '編號', '學號', 'no', 'number', '座次'];
-      let headerRowIndex = meaningfulRows.findIndex(row =>
-        row.some(cell => headerWords.some(word => cell.toLowerCase().includes(word)))
-      );
-      let nameColIndex = -1;
-      let numberColIndex = -1;
-
-      if (headerRowIndex >= 0) {
-        nameColIndex = meaningfulRows[headerRowIndex].findIndex(cell =>
-          headerWords.some(word => cell.toLowerCase().includes(word))
-        );
-        numberColIndex = meaningfulRows[headerRowIndex].findIndex(cell =>
-          numberWords.some(word => cell.toLowerCase().includes(word))
-        );
+      let h = rows.findIndex(r => r.some(cell => headerWords.some(w => cell.toLowerCase().includes(w))));
+      let nameCol = -1, numCol = -1;
+      if (h >= 0) {
+        nameCol = rows[h].findIndex(cell => headerWords.some(w => cell.toLowerCase().includes(w)));
+        numCol = rows[h].findIndex(cell => numberWords.some(w => cell.toLowerCase().includes(w)));
       }
-
-      if (nameColIndex < 0) {
-        const colScores = [];
-        const maxCols = Math.max(...meaningfulRows.map(row => row.length));
-        for (let c = 0; c < maxCols; c++) {
-          let score = 0;
-          for (const row of meaningfulRows) {
-            const cell = normalizeCell(row[c]);
-            if (cell && !/^\d+$/.test(cell) && cell.length <= 12) score++;
-          }
-          colScores.push({ c, score });
-        }
-        nameColIndex = colScores.sort((a, b) => b.score - a.score)[0]?.c ?? 0;
-        headerRowIndex = -1;
+      const maxCols = Math.max(...rows.map(r => r.length));
+      if (nameCol < 0) {
+        const scores = [];
+        for (let c = 0; c < maxCols; c++) scores.push({ c, score: rows.filter(r => r[c] && !/^\d+$/.test(r[c]) && r[c].length <= 12).length });
+        nameCol = scores.sort((a, b) => b.score - a.score)[0]?.c ?? 0;
+        h = -1;
       }
-
-      if (numberColIndex < 0) {
-        const maxCols = Math.max(...meaningfulRows.map(row => row.length));
+      if (numCol < 0) {
         let best = { c: -1, score: 0 };
         for (let c = 0; c < maxCols; c++) {
-          if (c === nameColIndex) continue;
-          let score = 0;
-          for (const row of meaningfulRows.slice(headerRowIndex >= 0 ? headerRowIndex + 1 : 0)) {
-            const cell = normalizeCell(row[c]);
-            if (/^\d{1,3}$/.test(cell)) score++;
-          }
+          if (c === nameCol) continue;
+          const score = rows.slice(h + 1).filter(r => /^\d{1,3}$/.test(r[c] || '')).length;
           if (score > best.score) best = { c, score };
         }
-        numberColIndex = best.score > 0 ? best.c : -1;
+        numCol = best.c;
       }
-
-      const start = headerRowIndex >= 0 ? headerRowIndex + 1 : 0;
-      const students = [];
-      const seen = new Set();
-      const previousByKey = new Map(state.students.map(student => [studentKey(student), normalizeStudent(student)]));
-      const previousByName = new Map(state.students.map(student => [normalizeStudent(student)?.name, normalizeStudent(student)]));
-      for (let i = start; i < meaningfulRows.length; i++) {
-        let name = normalizeCell(meaningfulRows[i][nameColIndex]);
-        if (!name && meaningfulRows[i].length === 1) name = normalizeCell(meaningfulRows[i][0]);
-        if (!name || /^\d+$/.test(name)) continue;
-        if (['姓名', '學生', '名字', '座號'].some(word => name.includes(word))) continue;
-        const rawNumber = numberColIndex >= 0 ? normalizeCell(meaningfulRows[i][numberColIndex]) : '';
-        const number = /^\d{1,3}$/.test(rawNumber) ? rawNumber.padStart(2, '0') : rawNumber;
-        const parsed = { number, name };
-        const previous = previousByKey.get(studentKey(parsed)) || previousByName.get(name);
-        const student = { ...parsed, note: previous?.note || '' };
-        const key = studentKey(student);
-        if (!seen.has(key)) {
-          seen.add(key);
-          students.push(student);
-        }
+      const prevByKey = new Map(prev.map(s => [keyOf(s), s]));
+      const prevByName = new Map(prev.map(s => [s.name, s]));
+      const out = [], seen = new Set();
+      for (let i = h + 1; i < rows.length; i++) {
+        let name = rows[i][nameCol] || '';
+        if (!name && rows[i].length === 1) name = rows[i][0];
+        if (!name || /^\d+$/.test(name) || ['姓名', '學生', '名字', '座號'].some(w => name.includes(w))) continue;
+        const raw = numCol >= 0 ? rows[i][numCol] || '' : '';
+        const number = /^\d{1,3}$/.test(raw) ? raw.padStart(2, '0') : raw;
+        const p = { number, name };
+        const old = prevByKey.get(keyOf(p)) || prevByName.get(name);
+        const s = { ...p, note: old?.note || '' };
+        if (!seen.has(keyOf(s))) { seen.add(keyOf(s)); out.push(s); }
       }
-      return students.sort(sortByStudentNumber);
+      return out.sort(byNumber);
     }
 
     function handleExcelFile(file) {
       if (!file) return;
-      if (!window.XLSX) {
-        toast('Excel 解析套件尚未載入，請確認網路後重試');
-        return;
-      }
+      if (!window.XLSX) return toast('Excel 解析套件尚未載入，請確認網路後重試');
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = e => {
         try {
-          const data = new Uint8Array(event.target.result);
-          state.excelWorkbook = XLSX.read(data, { type: 'array' });
-          const select = $('#sheetSelect');
-          select.innerHTML = '';
-          state.excelWorkbook.SheetNames.forEach(name => {
-            const op = document.createElement('option');
-            op.value = name;
-            op.textContent = name;
-            select.appendChild(op);
-          });
-          $('#excelHint').textContent = `已讀取 ${state.excelWorkbook.SheetNames.length} 個分頁，請選擇班級後匯入。`;
-          toast('Excel 檔案已讀取');
-        } catch (err) {
-          toast('Excel 讀取失敗，請確認檔案格式');
-        }
+          state.excelWorkbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+          const sel = $('#sheetSelect');
+          sel.innerHTML = '';
+          state.excelWorkbook.SheetNames.forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n; sel.appendChild(o); });
+          $('#excelHint').textContent = `已讀取 ${state.excelWorkbook.SheetNames.length} 個分頁，請選擇班級後按「匯入此分頁」。`;
+        } catch { toast('Excel 讀取失敗，請確認檔案格式'); }
       };
       reader.readAsArrayBuffer(file);
     }
 
-    function importSelectedSheet() {
-      if (!state.excelWorkbook) { toast('請先選擇 Excel 檔案'); return; }
-      const sheetName = $('#sheetSelect').value;
-      if (!sheetName) { toast('請先選擇班級分頁'); return; }
-      const sheet = state.excelWorkbook.Sheets[sheetName];
-      const students = extractStudentsFromSheet(sheet);
-      if (!students.length) { toast('此分頁找不到可匯入的姓名欄位'); return; }
-      state.students = students;
-      state.className = sheetName;
-      $('#namesInput').value = studentsToInputText(students);
-      $('#className').value = sheetName;
-      updateFromInputs();
-      renderAll();
-      toast(`已匯入 ${sheetName}：${students.length} 位學生，座號已同步載入`);
-    }
-
-    // ---------- Download (Canvas Rendering) ----------
-    function drawToCanvas(view = 'student') {
-      const scale = 3;
-      const pad = 40;
-      const cellW = 150;
-      const cellH = 82;
-      const gap = 14;
-
-      const cols = state.cols;
-      const rows = state.rows;
-      const width = pad*2 + cols*cellW + (cols-1)*gap;
-      const headerH = 150;
-      const boardH = 30;
-      const boardGap = 20;
-      const contentY = headerH + 8;
-      const seatBlockH = rows*cellH + (rows-1)*gap;
-      const boardY = view === 'teacher' ? contentY + seatBlockH + boardGap : contentY;
-      const startY = view === 'teacher' ? contentY : boardY + boardH + boardGap;
-      const height = Math.max(boardY + boardH, startY + seatBlockH) + pad;
-
-      const canvas = document.createElement('canvas');
-      canvas.width = width * scale;
-      canvas.height = height * scale;
-      canvas.style.width = `${width}px`;
-      canvas.style.height = `${height}px`;
-      const ctx = canvas.getContext('2d');
-      ctx.scale(scale, scale);
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-
-      // Print-friendly background
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0,0,width,height);
-
-      // Title
-      ctx.fillStyle = '#111827';
-      ctx.font = 'bold 22px "Noto Sans TC", sans-serif';
-      ctx.fillText('教室座位表', pad, pad + 22);
-      ctx.font = '16px "Noto Sans TC", sans-serif';
-      const cls = state.className || '（未設定）';
-      const room = state.roomName || '（未設定）';
-      const dateStr = new Date().toLocaleString('zh-TW');
-      ctx.fillText(`班級：${cls}`, pad, pad + 50);
-      ctx.fillText(`教室：${room}`, pad, pad + 76);
-      ctx.fillText(`視角：${view === 'teacher' ? '教師視角' : '學生視角'}　日期：${dateStr}`, pad, pad + 104);
-
-      const drawBoard = () => {
-        ctx.fillStyle = '#f3f4f6';
-        ctx.fillRect(pad, boardY, width - pad*2, boardH);
-        ctx.strokeStyle = '#111827';
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(pad, boardY, width - pad*2, boardH);
-        ctx.fillStyle = '#111827';
-        ctx.font = '14px "Noto Sans TC", sans-serif';
-        const boardText = '講台 / 黑板';
-        ctx.fillText(boardText, (width - ctx.measureText(boardText).width)/2, boardY + 20);
-      };
-      if (view !== 'teacher') drawBoard();
-
-      // Seats
-      const rowIndexList = [...Array(rows).keys()];
-      const colIndexList = [...Array(cols).keys()];
-      const displayRows = view === 'teacher' ? rowIndexList.slice().reverse() : rowIndexList;
-      const displayCols = view === 'teacher' ? colIndexList.slice().reverse() : colIndexList;
-
-      for (let rowIdx = 0; rowIdx < displayRows.length; rowIdx++) {
-        const r = displayRows[rowIdx];
-        for (let idx = 0; idx < displayCols.length; idx++) {
-          const c = displayCols[idx];
-          const s = state.seats[r][c];
-
-          const x = pad + idx*(cellW + gap);
-          const y = startY + rowIdx*(cellH + gap);
-
-          // seat box
-          const isBlocked = s.blocked;
-          const hasStudent = !!s.student;
-          const color = isBlocked ? '#f3f4f6' : hasStudent ? '#ffffff' : '#fafafa';
-          const border = isBlocked ? '#6b7280' : hasStudent ? '#111827' : '#9ca3af';
-
-          // rounded rect
-          roundRect(ctx, x, y, cellW, cellH, 12, color, border);
-
-          // label
-          ctx.fillStyle = '#4b5563';
-          ctx.font = '12px "Noto Sans TC", sans-serif';
-          ctx.fillText(seatLabel(r,c), x + 10, y + 18);
-
-          const student = normalizeStudent(s.student);
-          ctx.font = 'bold 13px "Noto Sans TC", sans-serif';
-          ctx.fillStyle = '#111827';
-          const numberText = isBlocked ? '' : (student?.number ? `座號 ${student.number}` : '座號 --');
-          drawClampedText(ctx, numberText, x + 10, y + 42, cellW - 78);
-          const noteText = !isBlocked && hasStudent ? getStudentNote(s.student, s.note) : '';
-          if (noteText) {
-            ctx.font = 'bold 11px "Noto Sans TC", sans-serif';
-            ctx.fillStyle = '#374151';
-            drawClampedText(ctx, noteText, x + cellW - 68, y + 42, 58);
-          }
-
-          ctx.font = 'bold 17px "Noto Sans TC", sans-serif';
-          ctx.fillStyle = '#000000';
-          const text = isBlocked ? '空位' : (student?.name || '（未指派）');
-          drawClampedText(ctx, text, x + 10, y + 64, cellW - 20);
-        }
+    async function importSelectedSheet() {
+      if (!state.excelWorkbook) return toast('請先選擇 Excel 檔案');
+      const name = $('#sheetSelect').value;
+      if (!name) return toast('請先選擇分頁');
+      const C = cls();
+      const next = extractStudentsFromSheet(state.excelWorkbook.Sheets[name], C.students);
+      if (!next.length) return toast('此分頁找不到可匯入的姓名');
+      if (C.students.length) {
+        const ok = await askChoice('以 Excel 名單取代目前名單？', `<p>目前 ${C.students.length} 人 → 分頁「${escapeHTML(name)}」${next.length} 人。</p><p class="mt-2 text-slate-500">相同姓名的學生會保留座位與標籤。</p>`,
+          [{ value: 'ok', label: '取代', style: 'primary' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+        if (ok !== 'ok') return;
       }
-      if (view === 'teacher') drawBoard();
-
-      return canvas;
-    }
-
-    function roundRect(ctx, x, y, w, h, r, fill, stroke) {
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.arcTo(x + w, y, x + w, y + h, r);
-      ctx.arcTo(x + w, y + h, x, y + h, r);
-      ctx.arcTo(x, y + h, x, y, r);
-      ctx.arcTo(x, y, x + w, y, r);
-      ctx.closePath();
-      ctx.fillStyle = fill;
-      ctx.fill();
-      ctx.strokeStyle = stroke;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-
-    function drawClampedText(ctx, text, x, y, maxWidth) {
-      // clamp by ellipsis
-      let t = text;
-      while (ctx.measureText(t).width > maxWidth && t.length > 0) {
-        t = t.slice(0, -1);
-      }
-      if (t !== text) {
-        t = t.slice(0, -1) + '…';
-      }
-      ctx.fillText(t, x, y);
-    }
-
-    function downloadPNG(view) {
-      const canvas = drawToCanvas(view);
-      const a = document.createElement('a');
-      const cls = state.className || '未設定班級';
-      const room = state.roomName || '未設定教室';
-      a.download = `${cls}-${room}-${view === 'teacher' ? '教師視角' : '學生視角'}.png`;
-      a.href = canvas.toDataURL('image/png');
-      a.click();
-    }
-
-    // ---------- Save / Load ----------
-    const STORAGE_KEY = 'seat_layout_presets_v1';
-
-    function readAllPresets() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return {};
-        return JSON.parse(raw);
-      } catch {
-        return {};
+      if (await replaceStudents(next, `匯入 Excel「${name}」`)) {
+        if (!C.className) { C.className = name; commit(); }
+        toast(`已匯入「${name}」：${next.length} 位學生`);
       }
     }
 
-    function writeAllPresets(obj) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+    // ===================== 標籤 =====================
+    async function setNote(stu, note, label) {
+      const C = cls();
+      const rec = recordOf(C, stu);
+      if (!rec) return;
+      pushUndo(label || '修改標籤');
+      rec.note = String(note || '').trim();
+      commit();
     }
 
-    function refreshPresetList() {
-      const list = $('#presetList');
-      const all = readAllPresets();
-      const names = Object.keys(all);
-      list.innerHTML = '<option value="">選擇已儲存方案</option>';
-      names.forEach(n => {
-        const op = document.createElement('option');
-        op.value = n; op.textContent = n;
-        list.appendChild(op);
+    function selectedTagStudent() {
+      const C = cls();
+      return C.students.find(s => keyOf(s) === $('#tagStudentSelect').value) || null;
+    }
+
+    async function clearAllTags() {
+      const C = cls();
+      if (!C.students.some(s => s.note)) return toast('目前沒有任何標籤');
+      const ok = await askChoice('清除全班學生標籤？', '<p>姓名、座號與座位安排都會保留。</p>',
+        [{ value: 'ok', label: '清除', style: 'danger' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+      if (ok !== 'ok') return;
+      pushUndo('清除全班標籤');
+      C.students.forEach(s => { s.note = ''; });
+      commit();
+      toast('已清除全班標籤', { action: { label: '復原', fn: undo } });
+    }
+
+    const cleanRoleName = raw => {
+      const s = String(raw || '').trim();
+      return /^[一-龥\s\d]+$/.test(s) ? s.replace(/\s+/g, '') : s.replace(/\s+/g, ' ');
+    };
+    function addRoleOptions(list) {
+      list.forEach(r => { if (r && !roleOptions.includes(r)) roleOptions.push(r); });
+      fillRoleSelects();
+    }
+    function fillRoleSelects() {
+      ['#tagRoleSelect', '#modalRoleSelect'].forEach(sel => {
+        const el = $(sel); const v = el.value;
+        el.innerHTML = '<option value="">選擇職務</option>' + roleOptions.map(r => `<option>${escapeHTML(r)}</option>`).join('');
+        el.value = v;
       });
     }
 
-    function buildPresetData() {
-      return {
-        version: 3,
-        presetName: state.currentPresetName || ($('#presetName').value || '').trim() || state.className || '未命名方案',
-        savedAt: new Date().toISOString(),
-        className: state.className,
-        roomName: state.roomName,
-        rows: state.rows,
-        cols: state.cols,
-        seats: cloneData(state.seats),
-        students: cloneData(state.students),
-        history: cloneData(state.history),
-        currentRecordName: state.currentRecordName,
-      };
+    // 幹部小老師程式匯出的 JSON（students＋tasks.officer/tutor）
+    async function importRoleData(data) {
+      const jsonStudents = Array.isArray(data.students) ? data.students : [];
+      const map = new Map();
+      jsonStudents.forEach(s => { if (s && s.id) map.set(s.id, { name: String(s.name ?? '').trim(), no: String(s.no ?? s.number ?? '').trim(), roles: [] }); });
+      const tasks = [];
+      if (Array.isArray(data.tasks)) tasks.push(...data.tasks);
+      else if (data.tasks && typeof data.tasks === 'object') Object.values(data.tasks).forEach(l => Array.isArray(l) && tasks.push(...l));
+      else if (Array.isArray(data.officers)) tasks.push(...data.officers);
+      else if (Array.isArray(data.roles)) tasks.push(...data.roles);
+      const found = [];
+      tasks.forEach(t => {
+        const role = cleanRoleName(t?.name ?? t?.title ?? t?.role);
+        if (!role) return;
+        found.push(role);
+        const sid = t.studentId ?? t.student_id;
+        if (sid && map.has(sid)) map.get(sid).roles.push(role);
+      });
+      addRoleOptions(found);
+      const C = cls();
+      if (!C.students.length) {
+        if (!jsonStudents.length) return toast('目前沒有名單，JSON 檔中也找不到學生資料');
+        const next = jsonStudents.map(s => {
+          const info = map.get(s.id);
+          const no = String(s.no ?? s.number ?? '').trim();
+          return { number: /^\d{1,3}$/.test(no) ? no.padStart(2, '0') : no, name: String(s.name ?? '').trim(), note: info ? [...new Set(info.roles)].join('、') : '' };
+        }).filter(s => s.name);
+        pushUndo('匯入幹部 JSON');
+        C.students = next;
+        commit();
+        return toast(`已建立 ${next.length} 位學生名單，並標上 ${next.filter(s => s.note).length} 位的職務`);
+      }
+      const infos = [...map.values()].filter(i => i.roles.length);
+      const matches = [];
+      C.students.forEach(s => {
+        const no = parseInt(s.number, 10);
+        const hit = infos.find(i => i.name === s.name && (!i.no || parseInt(i.no, 10) === no))
+          || infos.find(i => i.name === s.name)
+          || (!Number.isNaN(no) ? infos.find(i => parseInt(i.no, 10) === no && !C.students.some(x => x.name === i.name)) : null);
+        if (hit) matches.push([s, [...new Set(hit.roles)].join('、')]);
+      });
+      if (!matches.length) return toast('已讀取 JSON，但沒有對應到名單中的學生');
+      pushUndo('匯入幹部 JSON');
+      matches.forEach(([s, note]) => { s.note = note; });
+      commit();
+      toast(`已標上 ${matches.length} 位學生的幹部／小老師職務`, { action: { label: '復原', fn: undo } });
     }
 
-    function persistCurrentPreset() {
-      if (!state.currentPresetName) return false;
-      const all = readAllPresets();
-      all[state.currentPresetName] = buildPresetData();
-      writeAllPresets(all);
-      refreshPresetList();
-      $('#presetList').value = state.currentPresetName;
+    function readJsonFile(file, fn) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => { let d = null; try { d = JSON.parse(reader.result); } catch {} if (!d) return toast('JSON 檔案無法解析'); fn(d, file); };
+      reader.readAsText(file, 'utf-8');
+    }
+
+    // ===================== 格局 =====================
+    async function applySize() {
+      const C = cls();
+      const rows = clamp(parseInt($('#rowsInput').value, 10) || C.rows, 1, 20);
+      const cols = clamp(parseInt($('#colsInput').value, 10) || C.cols, 1, 20);
+      $('#rowsInput').value = rows; $('#colsInput').value = cols;
+      if (rows === C.rows && cols === C.cols) return toast('格局沒有改變');
+      const displaced = [];
+      C.seats.forEach((row, r) => row.forEach((s, c) => { if ((r >= rows || c >= cols) && s.student) displaced.push(s.student); }));
+      if (displaced.length) {
+        const ok = await askChoice('縮小格局', `<p>超出範圍的 ${displaced.length} 位學生會回到「未安排」：</p><p class="mt-1">${displaced.map(s => escapeHTML(display(s))).join('、')}</p>`,
+          [{ value: 'ok', label: '套用', style: 'primary' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+        if (ok !== 'ok') return;
+      }
+      pushUndo('變更格局');
+      C.seats = Array.from({ length: rows }, (_, r) => Array.from({ length: cols }, (_, c) => C.seats[r]?.[c] || emptySeat()));
+      C.rows = rows; C.cols = cols;
+      state.sel = null;
+      commit();
+      toast(`已改為 ${rows} 排 × ${cols} 行（${rows * cols} 個座位）${displaced.length ? `，${displaced.length} 位回到未安排` : ''}`);
+    }
+
+    // ===================== 安排紀錄 =====================
+    function recordHistory() {
+      const C = cls();
+      const st = stats(C);
+      if (!st.assigned) return toast('目前沒有已安排的座位可保存');
+      const name = $('#historyName').value.trim() || `第 ${C.history.length + 1} 次座位`;
+      C.history.unshift({
+        id: uid(), name, createdAt: new Date().toISOString(), className: C.className, roomName: C.roomName,
+        rows: C.rows, cols: C.cols, seats: cloneData(C.seats), students: cloneData(C.students),
+        assignedCount: st.assigned, assignableCount: st.usable,
+      });
+      C.currentRecordName = name;
+      $('#historyName').value = '';
+      commit();
+      toast(`已保存紀錄：${name}`);
+    }
+
+    async function loadHistory(id) {
+      const C = cls();
+      const rec = C.history.find(h => h.id === id);
+      if (!rec) return;
+      const ok = await askChoice(`讀取「${rec.name}」？`, `<p>座位表會換成這筆紀錄的安排（${rec.rows} 排 × ${rec.cols} 行）。目前名單與標籤保留；紀錄中有、目前名單沒有的學生會加回名單。</p><p class="mt-2 text-slate-500">可按「↶ 復原」回到目前的安排。</p>`,
+        [{ value: 'ok', label: '讀取', style: 'primary' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+      if (ok !== 'ok') return;
+      const R = normalizeClass({ ...rec, history: [] });
+      pushUndo(`讀取紀錄「${rec.name}」`);
+      R.students.forEach(s => { if (!recordOf(C, s)) C.students.push({ ...s }); });
+      C.rows = R.rows; C.cols = R.cols; C.seats = R.seats;
+      C.currentRecordName = rec.name;
+      state.sel = null;
+      commit();
+      toast(`已讀取紀錄：${rec.name}`);
+    }
+
+    async function deleteHistory(id) {
+      const C = cls();
+      const rec = C.history.find(h => h.id === id);
+      if (!rec) return;
+      pushUndo(`刪除紀錄「${rec.name}」`);
+      C.history = C.history.filter(h => h.id !== id);
+      if (C.currentRecordName === rec.name) C.currentRecordName = '';
+      commit();
+      toast(`已刪除紀錄：${rec.name}`, { action: { label: '復原', fn: undo } });
+    }
+
+    async function clearHistory() {
+      const C = cls();
+      if (!C.history.length) return toast('目前沒有安排紀錄');
+      const ok = await askChoice('清除全部安排紀錄？', `<p>共 ${C.history.length} 筆，目前座位表不受影響。</p>`,
+        [{ value: 'ok', label: '全部清除', style: 'danger' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+      if (ok !== 'ok') return;
+      pushUndo('清除全部紀錄');
+      C.history = []; C.currentRecordName = '';
+      commit();
+      toast('已清除全部紀錄', { action: { label: '復原', fn: undo } });
+    }
+
+    // ===================== 班級方案管理 =====================
+    function switchClass(id) {
+      if (id === state.activeId) return;
+      if (state.namesDirty) toast('上一個班級的名單修改未套用，已放棄');
+      state.activeId = id;
+      state.sel = null; state.pick = null; state.namesDirty = false;
+      clearUndo();
+      commit();
+      $('#namesInput').value = namesText(cls());
+    }
+
+    async function addClass() {
+      const name = await askText('新增班級方案', '方案名稱', `新班級 ${state.classes.length + 1}`);
+      if (!name) return;
+      const c = newClass(name);
+      state.classes.push(c);
+      switchClass(c.id);
+      switchTab('names');
+      toast(`已新增「${name}」，請輸入名單`);
+    }
+
+    function dupClass() {
+      const C = cls();
+      const c = cloneData(C);
+      c.id = uid();
+      c.name = `${C.name}（複製）`.slice(0, 40);
+      state.classes.splice(state.classes.indexOf(C) + 1, 0, c);
+      switchClass(c.id);
+      toast(`已複製為「${c.name}」`);
+    }
+
+    async function delClass() {
+      const C = cls();
+      const st = stats(C);
+      const last = state.classes.length === 1;
+      const ok = await askChoice(`刪除「${C.name}」？`,
+        `<p>名單 ${st.students} 人、已安排 ${st.assigned} 位、紀錄 ${C.history.length} 筆。</p><p class="mt-2">刪除前會先存成還原點，可在「⑤ 資料 → 自動還原點」還原。</p>${last ? '<p class="mt-2 text-slate-500">這是最後一個方案，刪除後會建立一個空白方案。</p>' : ''}`,
+        [{ value: 'ok', label: '刪除', style: 'danger' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+      if (ok !== 'ok') return;
+      await makeSnapshot(`刪除方案「${C.name}」前`);
+      state.classes = state.classes.filter(c => c.id !== C.id);
+      if (!state.classes.length) state.classes.push(newClass('我的班級'));
+      state.activeId = '';
+      switchClass(state.classes[0].id);
+      toast(`已刪除「${C.name}」`);
+    }
+
+    // ===================== 繪製 =====================
+    function renderAll() {
+      const C = cls();
+      renderClassSelect();
+      renderHeaderInfo(C);
+      renderBoard(C);
+      renderTray(C);
+      renderNamesPanel(C);
+      renderLayoutPanel(C);
+      renderTags(C);
+      renderHistory(C);
+      renderHint();
+      const fn = $('#folderNote');
+      if (document.activeElement !== fn) fn.value = state.folderNote || '';
+    }
+
+    function renderClassSelect() {
+      const sel = $('#classSelect');
+      sel.innerHTML = state.classes.map(c => `<option value="${escapeHTML(c.id)}">${escapeHTML(c.name)}</option>`).join('');
+      sel.value = state.activeId;
+    }
+
+    function renderHeaderInfo(C) {
+      const st = stats(C);
+      $('#boardTitle').textContent = `${C.className || C.name}　座位表`;
+      $('#boardSub').textContent = [C.roomName && `教室 ${C.roomName}`, C.currentRecordName && `目前：${C.currentRecordName}`, state.ui.view === 'teacher' ? '教師視角（講台在下）' : '學生視角（講台在上）'].filter(Boolean).join('｜');
+      const chip = (label, v, warn) => `<span class="stat${warn ? ' warn' : ''}">${label}<b>${v}</b></span>`;
+      $('#statsBar').innerHTML = [
+        chip('座位', `${C.rows}×${C.cols}`),
+        chip('可用', st.usable),
+        chip('名單', st.students),
+        chip('已安排', st.assigned),
+        chip('未安排', st.remaining.length, st.remaining.length > 0 && st.students > 0),
+        st.locked ? chip('🔒固定', st.locked) : '',
+        st.students > st.usable ? chip('座位不足', st.students - st.usable, true) : '',
+      ].join('');
+      $$('[data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === state.ui.mode)));
+      $$('[data-view]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === state.ui.view)));
+      $('#btnUndo').disabled = !undoStack.length;
+      $('#btnUndo').title = undoStack.length ? `復原：${undoStack[undoStack.length - 1].label}（Ctrl+Z）` : '沒有可復原的動作';
+    }
+
+    function renderBoard(C) {
+      const grid = $('#seatGrid');
+      const teacher = state.ui.view === 'teacher';
+      grid.style.gridTemplateColumns = `repeat(${C.cols}, minmax(72px, 1fr))`;
+      $('#boardWrap').classList.toggle('layout-mode', state.ui.mode === 'layout');
+      $('#podium').style.order = teacher ? '2' : '0';
+      grid.style.order = '1';
+      const rows = [...Array(C.rows).keys()], cols = [...Array(C.cols).keys()];
+      if (teacher) { rows.reverse(); cols.reverse(); }
+      const html = [];
+      rows.forEach(r => cols.forEach(c => {
+        const s = C.seats[r][c];
+        const cl = ['seat', s.blocked ? 'blocked' : s.student ? 'filled' : 'empty'];
+        if (s.locked && s.student) cl.push('locked');
+        if (state.sel && state.sel.r === r && state.sel.c === c) cl.push('selected');
+        if ((state.pick || state.sel) && !s.blocked && !(state.sel && state.sel.r === r && state.sel.c === c) && state.ui.mode === 'arrange') cl.push('target');
+        const note = s.student ? noteOf(C, s.student) : '';
+        const name = s.blocked ? '空位' : s.student ? s.student.name : '（空座位）';
+        const label = `${seatCode(r, c)} ${s.blocked ? '空位' : s.student ? display(s.student) + (note ? '，' + note : '') + (s.locked ? '，已固定' : '') : '可用、未安排'}`;
+        html.push(`<button class="${cl.join(' ')}" data-r="${r}" data-c="${c}" draggable="${state.ui.mode === 'arrange' && !!s.student}" aria-label="${escapeHTML(label)}">
+          <div class="flex items-start justify-between gap-1"><span class="seat-code">${seatCode(r, c)}${s.locked && s.student ? ' 🔒' : ''}</span>${note ? `<span class="seat-tag" title="${escapeHTML(note)}">${escapeHTML(note)}</span>` : ''}</div>
+          <div class="seat-name">${escapeHTML(name)}</div>
+          <div class="seat-no">${s.student?.number ? `座號 ${escapeHTML(s.student.number)}` : '&nbsp;'}</div>
+        </button>`);
+      }));
+      grid.innerHTML = html.join('');
+    }
+
+    function renderTray(C) {
+      const st = stats(C);
+      $('#trayCount').textContent = st.students ? `${st.remaining.length} / ${st.students} 人` : '';
+      const list = $('#trayList');
+      if (!st.students) { list.innerHTML = '<span class="text-sm text-slate-500">尚未輸入名單：請到左側「① 名單」輸入或匯入。</span>'; return; }
+      if (!st.remaining.length) { list.innerHTML = '<span class="text-sm text-emerald-700 font-bold">✓ 全部學生都已安排座位</span>'; return; }
+      list.innerHTML = st.remaining.map(s => {
+        const k = keyOf(s);
+        return `<button class="chip" draggable="true" data-key="${escapeHTML(k)}" aria-pressed="${state.pick === k}">${escapeHTML(display(s))}${s.note ? `<span class="tagmini">${escapeHTML(s.note)}</span>` : ''}</button>`;
+      }).join('');
+    }
+
+    function renderNamesPanel(C) {
+      const set = (id, v) => { const el = $(id); if (document.activeElement !== el) el.value = v; };
+      set('#presetName', C.name);
+      set('#className', C.className);
+      set('#roomName', C.roomName);
+      if (!state.namesDirty && document.activeElement !== $('#namesInput')) $('#namesInput').value = namesText(C);
+      $('#namesCount').textContent = `已套用 ${C.students.length} 人`;
+      $('#namesDirtyHint').classList.toggle('hidden', !state.namesDirty);
+      $('#btnRevertNames').classList.toggle('hidden', !state.namesDirty);
+    }
+
+    function renderLayoutPanel(C) {
+      if (document.activeElement !== $('#rowsInput')) $('#rowsInput').value = C.rows;
+      if (document.activeElement !== $('#colsInput')) $('#colsInput').value = C.cols;
+    }
+
+    function renderTags(C) {
+      const sel = $('#tagStudentSelect');
+      const v = sel.value;
+      const list = C.students.slice().sort(byNumber);
+      sel.innerHTML = '<option value="">選擇學生</option>' + list.map(s => `<option value="${escapeHTML(keyOf(s))}">${escapeHTML(display(s))}${s.note ? '｜' + escapeHTML(s.note) : ''}</option>`).join('');
+      if (list.some(s => keyOf(s) === v)) sel.value = v;
+      const tagged = list.filter(s => s.note);
+      $('#taggedCount').textContent = `（${tagged.length} 人）`;
+      $('#taggedList').innerHTML = tagged.length
+        ? tagged.map(s => `<button class="chip !cursor-pointer" data-tagkey="${escapeHTML(keyOf(s))}" title="點選編輯">${escapeHTML(display(s))}<span class="tagmini">${escapeHTML(s.note)}</span></button>`).join('')
+        : '<span class="text-slate-500">尚無標籤</span>';
+    }
+
+    function renderHistory(C) {
+      $('#historyCount').textContent = C.history.length ? `（${C.history.length} 筆）` : '';
+      const box = $('#historyList');
+      if (!C.history.length) { box.innerHTML = '<p class="text-slate-500">尚無紀錄。排好座位後輸入名稱按「保存」。</p>'; return; }
+      box.innerHTML = C.history.map(h => `<div class="rounded-xl border ${h.name === C.currentRecordName ? 'border-indigo-300 bg-indigo-50' : 'border-slate-200'} p-2.5">
+          <div class="flex items-center justify-between gap-2"><b class="truncate">${escapeHTML(h.name)}</b><span class="text-xs text-slate-500 whitespace-nowrap">${escapeHTML(new Date(h.createdAt).toLocaleDateString('zh-TW'))}</span></div>
+          <div class="text-xs text-slate-500">${h.rows}×${h.cols}｜已安排 ${h.assignedCount} / ${h.assignableCount}</div>
+          <div class="flex gap-1.5 mt-1.5"><button class="btn btn-soft btn-sm" data-hload="${escapeHTML(h.id)}">讀取</button><button class="btn btn-plain btn-sm" data-hpng="${escapeHTML(h.id)}">下載圖檔</button><button class="btn btn-danger btn-sm ml-auto" data-hdel="${escapeHTML(h.id)}">刪除</button></div>
+        </div>`).join('');
+    }
+
+    function renderHint() {
+      const C = cls();
+      let t;
+      if (state.ui.mode === 'layout') t = '🧱 編輯格局：點座位切換「可用 ↔ 空位（沒有桌椅）」。改排數、行數請到左側「② 格局」。完成後切回「🪑 排座位」。';
+      else if (state.pick) { const s = C.students.find(x => keyOf(x) === state.pick); t = `已選 ${s ? display(s) : ''}：點一個座位放入（有人的座位會互換回未安排）。按 Esc 取消。`; }
+      else if (state.sel) { const s = C.seats[state.sel.r]?.[state.sel.c]; t = `已選 ${seatCode(state.sel.r, state.sel.c)}${s?.student ? `（${s.student.name}）` : ''}：點另一個座位＝交換／移動；再點一次＝詳細設定（固定、標籤）。按 Esc 取消。`; }
+      else t = '🪑 點座位選取，再點另一個座位即可交換；點下方學生再點座位即可放入；也可直接拖曳。雙擊座位開啟詳細設定。';
+      $('#hintBar').textContent = t;
+    }
+
+    function flashSeat(p) {
+      const el = $(`#seatGrid .seat[data-r="${p.r}"][data-c="${p.c}"]`);
+      if (el) { el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
+    }
+
+    // ===================== 模式、視角、分頁 =====================
+    function setMode(m, silent) {
+      state.ui.mode = m;
+      state.sel = null; state.pick = null;
+      renderAll();
+      if (!silent) toast(m === 'layout' ? '編輯格局：點座位切換可用／空位' : '排座位模式');
+    }
+    function setView(v) {
+      state.ui.view = v;
+      saveLocal();
+      renderAll();
+    }
+    const TAB_KEY = 'seat-arrange-tab';
+    function switchTab(tab) {
+      $$('[data-tab]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+      $$('[data-panel]').forEach(p => p.classList.toggle('hidden', p.dataset.panel !== tab));
+      try { localStorage.setItem(TAB_KEY, tab); } catch {}
+      if (tab === 'data') { renderSnapshots(); renderStorageInfo(); }
+    }
+
+    // ===================== 座位事件 =====================
+    const grid = $('#seatGrid');
+    const seatPos = el => el ? { r: +el.dataset.r, c: +el.dataset.c } : null;
+    let clickTimer = null;
+
+    grid.addEventListener('click', e => {
+      const p = seatPos(e.target.closest('.seat'));
+      if (!p) return;
+      const C = cls(); const s = C.seats[p.r][p.c];
+      if (state.ui.mode === 'layout') return toggleBlocked(p.r, p.c);
+      if (state.pick) {
+        const k = state.pick; state.pick = null;
+        if (s.blocked) { renderAll(); return toast('空位（沒有桌椅）不能放學生，請先到「編輯格局」改為可用'); }
+        return placeStudent(k, p.r, p.c);
+      }
+      if (!state.sel) {
+        if (s.blocked) return toast('這是空位（沒有桌椅）。要改為可用請切到「🧱 編輯格局」');
+        state.sel = p; renderBoard(C); renderHint(); return;
+      }
+      if (state.sel.r === p.r && state.sel.c === p.c) { state.sel = null; return openSeatModal(p.r, p.c); }
+      const from = state.sel; state.sel = null;
+      if (s.blocked) { renderAll(); return toast('空位（沒有桌椅）不能放學生'); }
+      if (!C.seats[from.r][from.c].student && !s.student) { state.sel = p; renderBoard(C); renderHint(); return; }
+      swapSeats(from, p);
+    });
+    grid.addEventListener('dblclick', e => {
+      const p = seatPos(e.target.closest('.seat'));
+      if (!p || state.ui.mode !== 'arrange') return;
+      state.sel = null;
+      openSeatModal(p.r, p.c);
+    });
+
+    // 拖曳：座位→座位（交換）、學生→座位（放入）、座位→未安排區（移出）
+    grid.addEventListener('dragstart', e => {
+      const p = seatPos(e.target.closest('.seat'));
+      if (!p || state.ui.mode !== 'arrange') return e.preventDefault();
+      state.drag = { type: 'seat', ...p };
+      e.dataTransfer.setData('text/plain', `seat:${p.r},${p.c}`);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    grid.addEventListener('dragover', e => {
+      const el = e.target.closest('.seat');
+      if (!el || !state.drag || el.classList.contains('blocked')) return;
+      e.preventDefault();
+      $$('#seatGrid .seat.target').forEach(x => x.classList.remove('target'));
+      el.classList.add('target');
+    });
+    grid.addEventListener('drop', e => {
+      const p = seatPos(e.target.closest('.seat'));
+      const d = state.drag; state.drag = null;
+      if (!p || !d) return;
+      e.preventDefault();
+      if (d.type === 'seat') { if (d.r !== p.r || d.c !== p.c) swapSeats(d, p); else renderAll(); }
+      else if (d.type === 'student') placeStudent(d.key, p.r, p.c);
+    });
+    document.addEventListener('dragend', () => { state.drag = null; $('#tray').classList.remove('drop-ok'); $$('#seatGrid .seat.target').forEach(x => x.classList.remove('target')); });
+
+    const tray = $('#tray');
+    tray.addEventListener('click', e => {
+      const chip = e.target.closest('.chip[data-key]');
+      if (!chip) return;
+      state.sel = null;
+      state.pick = state.pick === chip.dataset.key ? null : chip.dataset.key;
+      if (state.ui.mode !== 'arrange') state.ui.mode = 'arrange';
+      renderAll();
+    });
+    tray.addEventListener('dragstart', e => {
+      const chip = e.target.closest('.chip[data-key]');
+      if (!chip) return;
+      state.drag = { type: 'student', key: chip.dataset.key };
+      e.dataTransfer.setData('text/plain', `stu:${chip.dataset.key}`);
+    });
+    tray.addEventListener('dragover', e => { if (state.drag?.type === 'seat') { e.preventDefault(); tray.classList.add('drop-ok'); } });
+    tray.addEventListener('dragleave', () => tray.classList.remove('drop-ok'));
+    tray.addEventListener('drop', e => {
+      tray.classList.remove('drop-ok');
+      const d = state.drag; state.drag = null;
+      if (d?.type === 'seat') { e.preventDefault(); unassignSeat(d.r, d.c); }
+    });
+
+    // ===================== 座位詳細設定 =====================
+    function openSeatModal(r, c) {
+      state.modal = { r, c };
+      $('#modalSearch').value = '';
+      fillSeatModal();
+      const m = $('#seatModal');
+      m.classList.remove('hidden'); m.classList.add('flex');
+      renderAll();
+      setTimeout(() => $('#modalSearch').focus(), 30);
+    }
+    function closeSeatModal() {
+      $('#seatModal').classList.add('hidden'); $('#seatModal').classList.remove('flex');
+      state.modal = null;
+    }
+    function fillSeatModal() {
+      if (!state.modal) return;
+      const C = cls(); const { r, c } = state.modal; const s = C.seats[r][c];
+      $('#seatModalTitle').textContent = `座位 ${seatCode(r, c)}`;
+      $('#seatModalNow').textContent = s.blocked ? '目前是空位（沒有桌椅）。' : s.student ? `目前：${display(s.student)}${s.locked ? '（🔒 已固定）' : ''}` : '目前：可用、尚未安排。';
+      $('#seatModalOccupied').classList.toggle('hidden', !s.student);
+      $('#btnModalLock').textContent = s.locked ? '🔓 解除固定' : '🔒 固定此座位';
+      const note = s.student ? noteOf(C, s.student) : '';
+      $('#modalRoleSelect').value = roleOptions.includes(note) ? note : '';
+      $('#modalNoteInput').value = note;
+      $('#btnModalBlock').textContent = s.blocked ? '改為可用座位' : '設為空位（沒有桌椅）';
+      $('#seatModalPickLabel').textContent = s.student ? '改放其他未安排的學生（原學生回到未安排）' : '放入未安排的學生';
+      const q = $('#modalSearch').value.trim();
+      const list = stats(C).remaining.filter(x => !q || display(x).includes(q));
+      $('#modalStudentList').innerHTML = s.blocked
+        ? '<p class="col-span-2 text-sm text-slate-500">空位不能放學生，請先改為可用座位。</p>'
+        : list.length ? list.map(x => `<button class="chip !cursor-pointer justify-start" data-mkey="${escapeHTML(keyOf(x))}">${escapeHTML(display(x))}${x.note ? `<span class="tagmini">${escapeHTML(x.note)}</span>` : ''}</button>`).join('')
+        : '<p class="col-span-2 text-sm text-slate-500">沒有符合的未安排學生。</p>';
+    }
+    $('#modalSearch').addEventListener('input', fillSeatModal);
+    $('#modalStudentList').addEventListener('click', e => {
+      const b = e.target.closest('[data-mkey]'); if (!b || !state.modal) return;
+      const { r, c } = state.modal; closeSeatModal(); placeStudent(b.dataset.mkey, r, c);
+    });
+    $('#btnCloseModal').addEventListener('click', () => { closeSeatModal(); renderAll(); });
+    $('#seatModal').addEventListener('click', e => { if (e.target.id === 'seatModal') { closeSeatModal(); renderAll(); } });
+    $('#btnModalLock').addEventListener('click', () => { const { r, c } = state.modal; toggleLock(r, c); fillSeatModal(); });
+    $('#btnModalUnassign').addEventListener('click', () => { const { r, c } = state.modal; closeSeatModal(); unassignSeat(r, c); });
+    $('#btnModalBlock').addEventListener('click', () => { const { r, c } = state.modal; closeSeatModal(); toggleBlocked(r, c); });
+    $('#modalRoleSelect').addEventListener('change', e => { $('#modalNoteInput').value = e.target.value; });
+    $('#btnModalSaveTag').addEventListener('click', () => {
+      const s = cls().seats[state.modal.r][state.modal.c];
+      if (!s.student) return;
+      const note = $('#modalNoteInput').value.trim();
+      setNote(s.student, note, '修改標籤'); fillSeatModal();
+      toast(note ? `已儲存 ${s.student.name} 的標籤` : `已清除 ${s.student.name} 的標籤`);
+    });
+    $('#btnModalClearTag').addEventListener('click', () => {
+      const s = cls().seats[state.modal.r][state.modal.c];
+      if (!s.student) return;
+      setNote(s.student, '', '清除標籤'); fillSeatModal();
+      toast(`已清除 ${s.student.name} 的標籤`);
+    });
+
+    // ===================== 下載 PNG =====================
+    function drawToCanvas(C, view, title) {
+      const scale = 3, pad = 40, cellW = 150, cellH = 82, gap = 14;
+      const { rows, cols } = C;
+      const width = pad * 2 + cols * cellW + (cols - 1) * gap;
+      const headerH = 150, boardH = 30, boardGap = 20, contentY = headerH + 8;
+      const seatBlockH = rows * cellH + (rows - 1) * gap;
+      const teacher = view === 'teacher';
+      const boardY = teacher ? contentY + seatBlockH + boardGap : contentY;
+      const startY = teacher ? contentY : boardY + boardH + boardGap;
+      const height = Math.max(boardY + boardH, startY + seatBlockH) + pad;
+      const canvas = document.createElement('canvas');
+      canvas.width = width * scale; canvas.height = height * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(scale, scale);
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, width, height);
+      ctx.fillStyle = '#111827';
+      ctx.font = 'bold 22px "Noto Sans TC", sans-serif';
+      ctx.fillText(title || '教室座位表', pad, pad + 22);
+      ctx.font = '16px "Noto Sans TC", sans-serif';
+      ctx.fillText(`班級：${C.className || C.name}`, pad, pad + 50);
+      ctx.fillText(`教室：${C.roomName || '（未設定）'}`, pad, pad + 76);
+      ctx.fillText(`視角：${teacher ? '教師視角' : '學生視角'}　日期：${new Date().toLocaleDateString('zh-TW')}`, pad, pad + 104);
+      const drawBoard = () => {
+        ctx.fillStyle = '#f3f4f6'; ctx.fillRect(pad, boardY, width - pad * 2, boardH);
+        ctx.strokeStyle = '#111827'; ctx.lineWidth = 1.5; ctx.strokeRect(pad, boardY, width - pad * 2, boardH);
+        ctx.fillStyle = '#111827'; ctx.font = '14px "Noto Sans TC", sans-serif';
+        const t = '講台 / 黑板'; ctx.fillText(t, (width - ctx.measureText(t).width) / 2, boardY + 20);
+      };
+      drawBoard();
+      const rIdx = [...Array(rows).keys()], cIdx = [...Array(cols).keys()];
+      if (teacher) { rIdx.reverse(); cIdx.reverse(); }
+      rIdx.forEach((r, ri) => cIdx.forEach((c, ci) => {
+        const s = C.seats[r][c];
+        const x = pad + ci * (cellW + gap), y = startY + ri * (cellH + gap);
+        roundRect(ctx, x, y, cellW, cellH, 12, s.blocked ? '#f3f4f6' : '#fff', s.blocked ? '#9ca3af' : s.student ? '#111827' : '#9ca3af');
+        ctx.fillStyle = '#4b5563'; ctx.font = '12px "Noto Sans TC", sans-serif';
+        ctx.fillText(seatCode(r, c), x + 10, y + 18);
+        if (s.student) {
+          ctx.font = 'bold 13px "Noto Sans TC", sans-serif'; ctx.fillStyle = '#111827';
+          clampText(ctx, s.student.number ? `座號 ${s.student.number}` : '', x + 10, y + 42, cellW - 78);
+          const note = noteOf(C, s.student);
+          if (note) { ctx.font = 'bold 11px "Noto Sans TC", sans-serif'; ctx.fillStyle = '#374151'; clampText(ctx, note, x + cellW - 68, y + 42, 58); }
+        }
+        ctx.font = 'bold 17px "Noto Sans TC", sans-serif'; ctx.fillStyle = s.blocked || !s.student ? '#9ca3af' : '#000';
+        clampText(ctx, s.blocked ? '空位' : s.student ? s.student.name : '', x + 10, y + 66, cellW - 20);
+      }));
+      return canvas;
+    }
+    function roundRect(ctx, x, y, w, h, r, fill, stroke) {
+      ctx.beginPath(); ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+      ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = stroke; ctx.lineWidth = 2; ctx.stroke();
+    }
+    function clampText(ctx, text, x, y, max) {
+      let t = String(text || '');
+      if (ctx.measureText(t).width > max) { while (t && ctx.measureText(t + '…').width > max) t = t.slice(0, -1); t += '…'; }
+      ctx.fillText(t, x, y);
+    }
+    function download(name, content, type) {
+      const url = typeof content === 'string' && content.startsWith('data:') ? content : URL.createObjectURL(new Blob([content], { type }));
+      const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      if (!url.startsWith('data:')) setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+    function downloadPNG(view, C = cls(), title) {
+      const canvas = drawToCanvas(C, view, title);
+      download(`${safeName(C.className || C.name)}-${title ? safeName(title) + '-' : ''}${view === 'teacher' ? '教師視角' : '學生視角'}.png`, canvas.toDataURL('image/png'));
+    }
+
+    // ===================== 儲存層（IndexedDB＋localStorage 鏡像＋資料夾正本） =====================
+    const APP_VERSION = '2.0';
+    const APP_ID = 'lssh-seat-arrange';
+    const LS_KEY = 'seat-arrange-v2';
+    const LEGACY_KEY = 'seat_layout_presets_v1';   // 1.x 方案，只讀不刪
+    const DEVICE_KEY = 'cc-class-assign-device';    // 與幹部程式共用這台電腦的名稱
+    const IDB_NAME = 'lssh-seat-arrange';
+    const IDB_VERSION = 1;
+    const FOLDER_FILE = '座位安排資料.json';
+    const FOLDER_HIST = '座位安排資料_歷史';
+    const HIST_RE = /^座位安排資料_\d{8}\.json$/;
+    const HIST_KEEP = 14, DAILY_SNAP_KEEP = 7, EVENT_SNAP_KEEP = 10;
+
+    let booted = false;
+    const meta = { rev: 0, savedAt: 0 };
+    const store = { mode: 'idb', mirrorOk: true, persisted: null, error: '', lastSavedAt: 0, saving: false };
+    let dirty = false, saveTimer = null, savingPromise = null, conflictOpen = false;
+    const bc = ('BroadcastChannel' in window) ? new BroadcastChannel(APP_ID) : null;
+    const tabId = uid();
+
+    const pad2 = n => String(n).padStart(2, '0');
+    const dayStamp = (d = new Date()) => `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}`;
+    const minuteStamp = (d = new Date()) => `${dayStamp(d)}-${pad2(d.getHours())}${pad2(d.getMinutes())}`;
+    const fmtTime = ts => ts ? new Date(ts).toLocaleString('zh-TW', { hour12: false }) : '—';
+    const safeName = s => String(s || '').replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 30) || '未命名';
+
+    function deviceName() {
+      try {
+        let n = localStorage.getItem(DEVICE_KEY);
+        if (!n) { n = '電腦-' + Math.random().toString(36).slice(2, 6).toUpperCase(); localStorage.setItem(DEVICE_KEY, n); }
+        return n;
+      } catch { return '電腦'; }
+    }
+
+    function currentData() {
+      return cloneData({ classes: state.classes, activeId: state.activeId, folderNote: state.folderNote || '', ui: { view: state.ui.view } });
+    }
+    function applyData(d) {
+      state.classes = d.classes;
+      state.activeId = d.activeId;
+      state.folderNote = d.folderNote || '';
+      state.ui.view = d.ui?.view || 'student';
+      state.sel = null; state.pick = null; state.namesDirty = false;
+      clearUndo();
+      closeSeatModal();
+      renderAll();
+      $('#namesInput').value = namesText(cls());
+    }
+
+    // ---------- IndexedDB ----------
+    let dbPromise = null;
+    function idbOpen() {
+      if (dbPromise) return dbPromise;
+      dbPromise = new Promise((resolve, reject) => {
+        if (typeof indexedDB === 'undefined' || !indexedDB) return reject(new Error('瀏覽器不支援或停用了 IndexedDB'));
+        const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+        req.onupgradeneeded = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains('kv')) db.createObjectStore('kv');
+          if (!db.objectStoreNames.contains('snapshots')) db.createObjectStore('snapshots');
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error || new Error('IndexedDB 開啟失敗'));
+        req.onblocked = () => reject(new Error('IndexedDB 被其他分頁鎖住'));
+      });
+      dbPromise.catch(() => { dbPromise = null; });
+      return dbPromise;
+    }
+    async function idbTx(storeName, mode, fn) {
+      const db = await idbOpen();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, mode);
+        const req = fn(tx.objectStore(storeName));
+        let out;
+        if (req) req.onsuccess = () => { out = req.result; };
+        tx.oncomplete = () => resolve(out);
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error || new Error('交易中止'));
+      });
+    }
+    const idbGet = (s, k) => idbTx(s, 'readonly', st => st.get(k));
+    const idbPut = (s, k, v) => idbTx(s, 'readwrite', st => st.put(v, k));
+    const idbDel = (s, k) => idbTx(s, 'readwrite', st => st.delete(k));
+    const idbAll = s => idbTx(s, 'readonly', st => st.getAll());
+
+    // ---------- 寫入本機 ----------
+    async function commitLocal(data, savedAt) {
+      const payload = { ...data, savedAt, rev: meta.rev + 1, appVersion: APP_VERSION, app: APP_ID };
+      let ok = false;
+      if (store.mode === 'idb') {
+        try { await idbPut('kv', 'state', payload); ok = true; dailySnapshot(payload).catch(() => {}); }
+        catch (e) { store.mode = 'ls'; console.warn('IndexedDB 寫入失敗，改用 localStorage 後援', e); }
+      }
+      try { localStorage.setItem(LS_KEY, JSON.stringify(payload)); store.mirrorOk = true; if (store.mode === 'ls') ok = true; }
+      catch { store.mirrorOk = false; }
+      if (!ok) throw new Error('IndexedDB 與 localStorage 都無法寫入');
+      meta.rev = payload.rev; meta.savedAt = savedAt;
+      store.lastSavedAt = Date.now(); store.error = '';
+      if (bc) bc.postMessage({ type: 'saved', rev: meta.rev, from: tabId });
+      return payload;
+    }
+
+    function saveLocal() {
+      if (!booted) return;
+      dirty = true; folder.dirty = true;
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(flushSave, 300);
+      renderSaveTag();
+    }
+    async function flushSave() {
+      clearTimeout(saveTimer);
+      if (!booted || !dirty) return;
+      if (savingPromise) { await savingPromise; return flushSave(); }
+      savingPromise = doSave().finally(() => { savingPromise = null; renderSaveTag(); });
+      return savingPromise;
+    }
+    async function doSave() {
+      store.saving = true; renderSaveTag();
+      try {
+        if (store.mode === 'idb') {
+          let cur = null;
+          try { cur = await idbGet('kv', 'state'); } catch {}
+          if (cur && (cur.rev || 0) > meta.rev) { await handleTabConflict(cur); return; }
+        }
+        dirty = false;
+        await commitLocal(currentData(), Date.now());
+        scheduleFolderWrite();
+      } catch (e) {
+        dirty = true; store.error = '儲存失敗';
+        toast('⚠ 儲存失敗：' + (e.message || e));
+      } finally { store.saving = false; }
+    }
+
+    async function handleTabConflict(cur) {
+      if (conflictOpen) return;
+      conflictOpen = true;
+      const choice = await askChoice('另一個分頁已修改資料',
+        `<p>這台電腦上另一個分頁在 ${escapeHTML(fmtTime(cur.savedAt))} 儲存過資料，與本頁內容不同。</p>
+         <p class="mt-2">另一分頁：${escapeHTML(countsText(cur))}<br>本頁：${escapeHTML(countsText(currentData()))}</p>`,
+        [{ value: 'reload', label: '重新載入最新資料', style: 'primary' }, { value: 'overwrite', label: '以本頁內容覆蓋', style: 'danger' }, { value: 'download', label: '先下載本頁 JSON 備份', style: 'plain' }]);
+      conflictOpen = false;
+      if (choice === 'reload') {
+        const d = normalizeData(cur);
+        meta.rev = cur.rev || 0; meta.savedAt = cur.savedAt || 0; dirty = false;
+        if (d) applyData(d);
+        toast('已載入另一分頁的最新資料');
+      } else if (choice === 'overwrite') {
+        await makeSnapshot('被本頁覆蓋前（另一分頁）', cur);
+        meta.rev = cur.rev || 0; dirty = true;
+        setTimeout(flushSave, 0);
+      } else {
+        exportAll('座位資料_本頁備份');
+        dirty = true;
+      }
+    }
+
+    // ---------- 自動還原點 ----------
+    async function dailySnapshot(payload) {
+      const id = 'day-' + dayStamp();
+      if (!(await idbGet('snapshots', id))) await idbPut('snapshots', id, { id, at: Date.now(), reason: '每日自動', data: payload });
+      await pruneSnapshots();
+    }
+    async function makeSnapshot(reason, data) {
+      if (store.mode !== 'idb') return false;
+      try {
+        const id = `evt-${minuteStamp()}-${Date.now() % 100000}`;
+        await idbPut('snapshots', id, { id, at: Date.now(), reason, data: data || currentData() });
+        await pruneSnapshots();
+        return true;
+      } catch { return false; }
+    }
+    async function pruneSnapshots() {
+      const all = await idbAll('snapshots');
+      const days = all.filter(s => s.id.startsWith('day-')).sort((a, b) => b.id.localeCompare(a.id));
+      const evts = all.filter(s => s.id.startsWith('evt-')).sort((a, b) => b.at - a.at);
+      for (const s of [...days.slice(DAILY_SNAP_KEEP), ...evts.slice(EVENT_SNAP_KEEP)]) await idbDel('snapshots', s.id);
+    }
+    async function renderSnapshots() {
+      const box = $('#snapshotList');
+      if (store.mode !== 'idb') { box.innerHTML = '<p class="text-amber-700">此瀏覽器無法使用 IndexedDB，沒有自動還原點。請定期下載 JSON 備份。</p>'; return; }
+      let list = [];
+      try { list = (await idbAll('snapshots')).sort((a, b) => b.at - a.at); } catch {}
+      if (!list.length) { box.innerHTML = '<p class="text-slate-500">目前還沒有還原點。</p>'; return; }
+      box.innerHTML = `<div class="space-y-1.5">${list.map(s => `<div class="flex items-center gap-2 rounded-lg border border-slate-200 px-2.5 py-1.5">
+          <div class="min-w-0 flex-1"><div class="font-semibold truncate">${escapeHTML(s.reason)}</div><div class="text-xs text-slate-500">${escapeHTML(fmtTime(s.at))}｜${escapeHTML(countsText(s.data))}</div></div>
+          <button data-snap="${escapeHTML(s.id)}" data-act="restore" class="snap-btn btn btn-soft btn-sm">還原</button>
+          <button data-snap="${escapeHTML(s.id)}" data-act="download" class="snap-btn btn btn-plain btn-sm">下載</button></div>`).join('')}</div>`;
+      box.querySelectorAll('.snap-btn').forEach(btn => btn.addEventListener('click', async () => {
+        const snap = list.find(s => s.id === btn.dataset.snap);
+        if (!snap) return;
+        if (btn.dataset.act === 'download') return download(`座位資料_還原點_${snap.id}.json`, JSON.stringify(snap.data, null, 2), 'application/json');
+        const choice = await askChoice('還原這個還原點？',
+          `<p>${escapeHTML(fmtTime(snap.at))}（${escapeHTML(snap.reason)}）</p><p class="mt-1">還原點：${escapeHTML(countsText(snap.data))}<br>目前：${escapeHTML(countsText(currentData()))}</p><p class="mt-2">還原前會先把目前資料存成一份還原點。</p>`,
+          [{ value: 'ok', label: '還原', style: 'primary' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+        if (choice !== 'ok') return;
+        const d = normalizeData(snap.data);
+        if (!d) return toast('還原點內容無法讀取');
+        await makeSnapshot('還原前');
+        applyData(d); saveLocal(); renderSnapshots();
+        toast('已還原');
+      }));
+    }
+
+    // ---------- 資料夾正本（File System Access API，Chrome／Edge） ----------
+    const fsSupported = typeof window.showDirectoryPicker === 'function';
+    const folder = { handle: null, name: '', status: fsSupported ? 'none' : 'unsupported', known: null, dirty: false, timer: null, writing: null, lastWriteAt: 0, histCount: 0, errMsg: '', warned: false };
+
+    async function readMaster(dir) {
+      try {
+        const fh = await dir.getFileHandle(FOLDER_FILE);
+        const file = await fh.getFile();
+        const text = await file.text();
+        let obj = null; try { obj = JSON.parse(text); } catch {}
+        return { exists: true, text, obj, lastModified: file.lastModified };
+      } catch (e) {
+        if (e && e.name === 'NotFoundError') return { exists: false };
+        throw e;
+      }
+    }
+    async function writeFileSafe(dir, name, text) {
+      const fh = await dir.getFileHandle(name, { create: true });
+      const w = await fh.createWritable();
+      try { await w.write(text); await w.close(); } catch (e) { try { await w.abort(); } catch {} throw e; }
+      return (await fh.getFile()).lastModified;
+    }
+    const knownOf = (cur, lm) => ({ lastModified: lm ?? cur.lastModified, rev: cur.obj?.rev ?? 0, savedAt: cur.obj?.savedAt ?? 0, savedBy: cur.obj?.savedBy ?? '' });
+    function masterChanged(cur) {
+      if (!cur.exists) return false;
+      const k = folder.known;
+      if (!k) return true;
+      if (cur.lastModified === k.lastModified) return false;
+      return (cur.obj?.rev ?? 0) !== k.rev || (cur.obj?.savedAt ?? 0) !== k.savedAt || (cur.obj?.savedBy ?? '') !== k.savedBy;
+    }
+    async function rememberKnown(k) { folder.known = k; try { await idbPut('kv', 'folderKnown', k); } catch {} }
+
+    async function ensureDailyHistory(cur) {
+      if (!cur.exists) return;
+      const hist = await folder.handle.getDirectoryHandle(FOLDER_HIST, { create: true });
+      const name = `座位安排資料_${dayStamp()}.json`;
+      let has = true; try { await hist.getFileHandle(name); } catch { has = false; }
+      if (!has) await writeFileSafe(hist, name, cur.text);
+      const names = [];
+      for await (const [n, h] of hist.entries()) if (h.kind === 'file' && HIST_RE.test(n)) names.push(n);
+      names.sort().reverse();
+      for (const n of names.slice(HIST_KEEP)) await hist.removeEntry(n);
+      folder.histCount = Math.min(names.length, HIST_KEEP);
+    }
+    async function countHistory() {
+      try {
+        const hist = await folder.handle.getDirectoryHandle(FOLDER_HIST);
+        let n = 0; for await (const [name, h] of hist.entries()) if (h.kind === 'file' && HIST_RE.test(name)) n++;
+        folder.histCount = n;
+      } catch { folder.histCount = 0; }
+    }
+    const masterPayload = () => ({ ...currentData(), savedAt: meta.savedAt || Date.now(), rev: meta.rev, savedBy: deviceName(), appVersion: APP_VERSION, app: APP_ID });
+    async function writeConflictFile(text, who) {
+      const name = `座位安排資料_衝突_${safeName(who)}_${minuteStamp()}.json`;
+      await writeFileSafe(folder.handle, name, text);
+      return name;
+    }
+
+    async function writeMaster({ force = false } = {}) {
+      if (!folder.handle || !['ok', 'error', 'paused'].includes(folder.status)) return;
+      if (folder.status === 'paused' && !force) return;
+      if (folder.writing) { await folder.writing; return writeMaster({ force }); }
+      folder.writing = (async () => {
+        try {
+          const cur = await readMaster(folder.handle);
+          if (!force && masterChanged(cur)) { await folderConflict(cur); return; }
+          await ensureDailyHistory(cur);
+          const payload = masterPayload();
+          const lm = await writeFileSafe(folder.handle, FOLDER_FILE, JSON.stringify(payload, null, 2));
+          await rememberKnown({ lastModified: lm, rev: payload.rev, savedAt: payload.savedAt, savedBy: payload.savedBy });
+          Object.assign(folder, { dirty: false, lastWriteAt: Date.now(), status: 'ok', errMsg: '', warned: false });
+        } catch (e) {
+          folder.status = 'error'; folder.errMsg = e?.message || String(e);
+          if (!folder.warned) { toast('📁 寫入資料夾失敗，資料仍保存在本機，下次儲存會自動重試'); folder.warned = true; }
+        }
+      })();
+      try { await folder.writing; } finally { folder.writing = null; renderFolder(); }
+    }
+    function scheduleFolderWrite() {
+      if (!folder.handle || !['ok', 'error'].includes(folder.status)) return;
+      clearTimeout(folder.timer);
+      folder.timer = setTimeout(() => writeMaster(), 2000);
+      renderFolder();
+    }
+
+    async function loadFromMaster(cur, reason) {
+      const d = normalizeData(cur.obj);
+      if (!d) { toast('資料夾內的資料檔無法讀取'); return false; }
+      if (!isEmptyData(currentData())) await makeSnapshot(reason || '載入資料夾資料前');
+      applyData(d);
+      dirty = false;
+      await commitLocal(currentData(), d.savedAt || Date.now());
+      await rememberKnown(knownOf(cur));
+      folder.dirty = false;
       return true;
     }
 
-    function savePreset() {
-      updateFromInputs();
-      ensureGridInitialized();
-      const name = ($('#presetName').value || '').trim();
-      if (!name) { toast('請先輸入方案名稱'); return; }
-      const all = readAllPresets();
-      state.currentPresetName = name;
-      all[name] = buildPresetData();
-      writeAllPresets(all);
-      refreshPresetList();
-      $('#presetList').value = name;
-      renderAll();
-      toast(`已儲存方案：${name}`);
+    function compareTable(folderData, localData, localSavedAt) {
+      const row = (label, d, at, by) => `<tr><td class="pr-3 py-1 font-semibold whitespace-nowrap">${label}</td><td class="pr-3 py-1">${escapeHTML(countsText(d))}</td><td class="py-1 whitespace-nowrap">${escapeHTML(fmtTime(at))}${by ? '｜' + escapeHTML(by) : ''}</td></tr>`;
+      return `<table class="mt-3 text-sm">${row('資料夾', folderData, folderData?.savedAt, folderData?.savedBy)}${row('這台電腦', localData, localSavedAt, deviceName())}</table>`;
     }
 
-    function loadPreset() {
-      const sel = $('#presetList').value;
-      if (!sel) { toast('請先選擇方案'); return; }
-      const all = readAllPresets();
-      const data = all[sel];
-      if (!data) { toast('找不到方案'); return; }
-      state.className = data.className || '';
-      state.roomName = data.roomName || '';
-      state.rows = data.rows || 5;
-      state.cols = data.cols || 6;
-      state.seats = data.seats || [];
-      state.students = Array.isArray(data.students) ? data.students.map(normalizeStudent).filter(s => s?.name) : [];
-      state.history = Array.isArray(data.history) ? data.history : [];
-      state.currentRecordName = data.currentRecordName || '';
-      state.currentPresetName = sel;
-      // 反映到輸入框
-      $('#className').value = state.className;
-      $('#roomName').value = state.roomName;
-      $('#rowsInput').value = state.rows;
-      $('#colsInput').value = state.cols;
-      $('#namesInput').value = studentsToInputText(state.students);
-      $('#presetName').value = sel;
-      state.mode = 'edit';
-      state.view = 'student';
-      syncAssignedStudentNotes();
-      renderAll();
-      toast(`已讀取方案：${sel}`);
-    }
-
-    function deletePreset() {
-      const sel = $('#presetList').value;
-      if (!sel) { toast('請先選擇方案'); return; }
-      const all = readAllPresets();
-      if (all[sel]) {
-        delete all[sel];
-        writeAllPresets(all);
-        if (state.currentPresetName === sel) {
-          state.currentPresetName = '';
-          state.history = [];
-          state.currentRecordName = '';
+    async function folderConflict(cur) {
+      if (conflictOpen) return;
+      conflictOpen = true;
+      const other = cur.obj || {};
+      const choice = await askChoice('資料夾內的資料已被另一台電腦更新',
+        `<p>「${escapeHTML(other.savedBy || '另一台電腦')}」在 ${escapeHTML(fmtTime(other.savedAt))} 更新了資料夾內的資料，本頁也有尚未寫入的修改。</p>${compareTable(other, currentData(), meta.savedAt)}`,
+        [{ value: 'load', label: '載入資料夾內較新的資料', style: 'primary' }, { value: 'overwrite', label: '以本頁內容覆蓋', style: 'danger' }, { value: 'later', label: '本頁另存衝突檔，之後再處理', style: 'plain' }]);
+      conflictOpen = false;
+      hideBanner();
+      try {
+        if (choice === 'load') {
+          await loadFromMaster(cur, '載入資料夾資料前（本頁未寫入的內容）');
+          folder.status = 'ok';
+          toast('已載入資料夾內的最新資料；本頁原內容已存成還原點');
+        } else if (choice === 'overwrite') {
+          const name = await writeConflictFile(cur.text, other.savedBy || '另一台電腦');
+          folder.status = 'ok';
+          await rememberKnown(knownOf(cur));
+          setTimeout(() => writeMaster({ force: true }), 0);
+          toast(`資料夾原檔已另存為 ${name}`);
+        } else {
+          const name = await writeConflictFile(JSON.stringify(masterPayload(), null, 2), deviceName());
+          folder.status = 'paused';
+          toast(`本頁內容已另存為 ${name}，資料夾同步暫停`);
         }
-        refreshPresetList();
-        renderAll();
-        toast('已刪除座位設定');
+      } catch (e) { folder.status = 'error'; folder.errMsg = e?.message || String(e); }
+      renderFolder();
+    }
+
+    async function reconcile(dir, firstLink) {
+      const cur = await readMaster(dir);
+      const prevHandle = folder.handle, prevKnown = folder.known;
+      folder.handle = dir; folder.name = dir.name;
+      if (firstLink) folder.known = null;
+      const commitLink = async () => { folder.status = 'ok'; try { await idbPut('kv', 'folderHandle', dir); } catch {} await countHistory(); };
+
+      if (!cur.exists) {
+        await commitLink();
+        await writeMaster({ force: true });
+        if (folder.status === 'ok') toast('已在資料夾建立 ' + FOLDER_FILE);
+        return true;
       }
+      if (!cur.obj || !normalizeData(cur.obj)) {
+        folder.handle = prevHandle; folder.known = prevKnown;
+        if (!prevHandle) folder.status = 'none';
+        await askChoice('資料夾內的資料檔無法讀取', `<p>${escapeHTML(FOLDER_FILE)} 不是本程式可讀的格式。請檢查檔案，或改選其他資料夾。</p>`, [{ value: 'ok', label: '知道了', style: 'primary' }]);
+        return false;
+      }
+      const localEmpty = isEmptyData(currentData());
+      const mChanged = masterChanged(cur);
+      const lChanged = !folder.known || meta.savedAt > (folder.known.savedAt || 0) || dirty;
+      if (!firstLink && !mChanged) { await commitLink(); await rememberKnown(knownOf(cur)); if (lChanged) await writeMaster(); return true; }
+      if (localEmpty || (!firstLink && !lChanged)) {
+        await commitLink(); await loadFromMaster(cur);
+        toast(`已載入資料夾內的資料（${countsText(cur.obj)}）`);
+        return true;
+      }
+      const choice = await askChoice(firstLink ? '資料夾內已有座位資料' : '這台電腦與資料夾的資料不同',
+        `<p>${firstLink ? '選擇的資料夾中已經有座位資料檔，這台電腦也有資料。' : '上次沒連上資料夾時這台電腦改過資料，資料夾內的資料也被更新過。'}請選擇要使用哪一份：</p>
+         ${compareTable(cur.obj, currentData(), meta.savedAt)}
+         <p class="mt-3 text-slate-500">沒被選用的一份不會遺失：本機資料會存成還原點；資料夾資料會另存成衝突檔。</p>`,
+        [{ value: 'folder', label: '使用資料夾內的資料', style: 'primary' }, { value: 'local', label: '用本機資料覆蓋資料夾', style: 'danger' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+      if (choice === 'folder') { await commitLink(); await loadFromMaster(cur, '改用資料夾資料前'); toast('已改用資料夾內的資料；本機原資料已存成還原點'); return true; }
+      if (choice === 'local') {
+        await commitLink();
+        const name = await writeConflictFile(cur.text, cur.obj.savedBy || '資料夾原檔');
+        await rememberKnown(knownOf(cur));
+        await writeMaster({ force: true });
+        toast(`已用本機資料覆蓋；資料夾原檔另存為 ${name}`);
+        return true;
+      }
+      if (firstLink) { folder.handle = prevHandle; folder.known = prevKnown; if (!prevHandle) folder.status = 'none'; }
+      else folder.status = 'paused';
+      return false;
     }
 
-    // ---------- History + JSON ----------
-    function makeHistoryRecord(name) {
-      return {
-        id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-        name,
-        createdAt: new Date().toISOString(),
-        className: state.className,
-        roomName: state.roomName,
-        rows: state.rows,
-        cols: state.cols,
-        seats: cloneData(state.seats),
-        students: cloneData(state.students),
-        assignedCount: getAssignedCount(),
-        assignableCount: getAssignableSeats().length,
-      };
+    async function pickFolder() {
+      if (!fsSupported) return toast('這個瀏覽器不支援選擇資料夾，請改用電腦版 Chrome 或 Edge');
+      let dir;
+      try { dir = await window.showDirectoryPicker({ id: APP_ID, mode: 'readwrite' }); }
+      catch (e) { if (e?.name !== 'AbortError') toast('無法開啟資料夾：' + (e?.message || e)); return; }
+      try {
+        if (dir.queryPermission && (await dir.queryPermission({ mode: 'readwrite' })) !== 'granted') {
+          if ((await dir.requestPermission({ mode: 'readwrite' })) !== 'granted') return toast('沒有取得資料夾寫入權限');
+        }
+        await flushSave();
+        await reconcile(dir, true);
+      } catch (e) { toast('連結資料夾失敗：' + (e?.message || e)); }
+      hideBanner(); renderFolder();
     }
 
-    function recordHistory() {
-      updateFromInputs();
-      ensureGridInitialized();
-      if (!state.currentPresetName) {
-        toast('請先儲存或讀取方案，再紀錄安排結果');
+    async function disconnectFolder() {
+      const choice = await askChoice('中斷資料夾連結？', '<p>資料夾內的檔案不會被刪除，這台電腦的資料也會保留；之後只存在這台電腦的瀏覽器。</p>',
+        [{ value: 'ok', label: '中斷連結', style: 'danger' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+      if (choice !== 'ok') return;
+      clearTimeout(folder.timer);
+      try { await idbDel('kv', 'folderHandle'); await idbDel('kv', 'folderKnown'); } catch {}
+      Object.assign(folder, { handle: null, name: '', status: 'none', known: null, dirty: false, errMsg: '', histCount: 0 });
+      hideBanner(); renderFolder();
+      toast('已中斷資料夾連結');
+    }
+
+    async function grantFolder() {
+      if (!folder.handle) return;
+      try {
+        const p = await folder.handle.requestPermission({ mode: 'readwrite' });
+        if (p !== 'granted') return toast('沒有取得資料夾權限，目前仍使用本機資料');
+        await flushSave();
+        await reconcile(folder.handle, false);
+        hideBanner();
+      } catch (e) { folder.status = 'error'; folder.errMsg = e?.message || String(e); toast('無法讀取資料夾，目前仍使用本機資料'); }
+      renderFolder();
+    }
+
+    async function reloadFromFolder() {
+      if (!folder.handle) return;
+      try {
+        const cur = await readMaster(folder.handle);
+        if (!cur.exists) return toast('資料夾內還沒有資料檔');
+        await loadFromMaster(cur, '從資料夾重新載入前');
+        folder.status = 'ok'; hideBanner();
+        toast('已從資料夾重新載入');
+      } catch (e) { folder.status = 'error'; folder.errMsg = e?.message || String(e); toast('讀取資料夾失敗'); }
+      renderFolder();
+    }
+
+    async function initFolder() {
+      if (!fsSupported || store.mode !== 'idb') { renderFolder(); return; }
+      let dir = null;
+      try { dir = await idbGet('kv', 'folderHandle'); folder.known = (await idbGet('kv', 'folderKnown')) || null; } catch {}
+      if (!dir) { renderFolder(); return; }
+      folder.handle = dir; folder.name = dir.name;
+      let perm = 'prompt';
+      try { perm = await dir.queryPermission({ mode: 'readwrite' }); } catch {}
+      if (perm === 'granted') {
+        try { await reconcile(dir, false); }
+        catch (e) {
+          folder.status = 'error'; folder.errMsg = e?.message || String(e);
+          showBanner(`⚠ 無法讀取資料夾「${escapeHTML(folder.name)}」（可能已被移動、刪除或雲端硬碟未啟動），目前使用本機資料。`,
+            [{ label: '重試', fn: grantFolder }, { label: '更換資料夾', fn: pickFolder }]);
+        }
+      } else {
+        folder.status = 'needPermission';
+        showBanner(`📁 點此連接座位資料夾「${escapeHTML(folder.name)}」——授權前畫面顯示的是這台電腦的本機資料，可能不是最新。`, [{ label: '連接資料夾', fn: grantFolder }]);
+      }
+      renderFolder();
+    }
+
+    let checkingFolder = false;
+    async function checkFolderUpdate() {
+      if (checkingFolder || folder.status !== 'ok' || !folder.handle || folder.writing || conflictOpen) return;
+      checkingFolder = true;
+      try {
+        const cur = await readMaster(folder.handle);
+        if (!masterChanged(cur)) return;
+        if (dirty || folder.dirty) { await folderConflict(cur); return; }
+        showBanner(`🔄 另一台電腦（${escapeHTML(cur.obj?.savedBy || '另一台電腦')}）已於 ${escapeHTML(fmtTime(cur.obj?.savedAt))} 更新座位資料。`, [{ label: '載入最新資料', fn: reloadFromFolder }]);
+      } catch (e) { folder.status = 'error'; folder.errMsg = e?.message || String(e); renderFolder(); }
+      finally { checkingFolder = false; }
+    }
+    setInterval(checkFolderUpdate, 60000);
+    window.addEventListener('focus', checkFolderUpdate);
+
+    // ---------- 提示列、對話框、狀態 ----------
+    function showBanner(html, actions = []) {
+      const b = $('#topBanner');
+      b.innerHTML = `<span class="flex-1 min-w-[12rem]">${html}</span>`;
+      actions.forEach(a => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-sm bg-amber-800 text-white hover:bg-amber-900';
+        btn.textContent = a.label;
+        btn.addEventListener('click', a.fn);
+        b.appendChild(btn);
+      });
+      b.classList.remove('hidden');
+    }
+    function hideBanner() { $('#topBanner').classList.add('hidden'); }
+
+    function askChoice(title, bodyHtml, choices) {
+      return new Promise(resolve => {
+        const bg = document.createElement('div');
+        bg.className = 'fixed inset-0 z-[80] bg-black/50 flex items-center justify-center p-4';
+        bg.innerHTML = `<div role="dialog" aria-modal="true" class="max-w-lg w-full rounded-2xl bg-white text-slate-800 p-6 shadow-2xl">
+          <h3 class="text-lg font-black mb-3"></h3><div class="text-sm leading-relaxed mb-5"></div><div class="flex flex-wrap gap-2 justify-end"></div></div>`;
+        bg.querySelector('h3').textContent = title;
+        bg.querySelector('h3 + div').innerHTML = bodyHtml;
+        const styles = { primary: 'btn btn-primary', danger: 'btn bg-rose-600 hover:bg-rose-700 text-white', plain: 'btn btn-plain' };
+        const done = v => { bg.remove(); document.removeEventListener('keydown', onKey, true); resolve(v); };
+        const onKey = e => { if (e.key === 'Escape') { e.stopPropagation(); done(choices[choices.length - 1].value); } };
+        choices.forEach(c => {
+          const btn = document.createElement('button');
+          btn.className = styles[c.style] || styles.plain;
+          btn.textContent = c.label;
+          btn.addEventListener('click', () => done(c.value));
+          bg.querySelector('.justify-end').appendChild(btn);
+        });
+        document.addEventListener('keydown', onKey, true);
+        document.body.appendChild(bg);
+        bg.querySelector('button')?.focus();
+      });
+    }
+
+    function askText(title, label, value = '') {
+      return new Promise(resolve => {
+        const bg = document.createElement('div');
+        bg.className = 'fixed inset-0 z-[80] bg-black/50 flex items-center justify-center p-4';
+        bg.innerHTML = `<form role="dialog" aria-modal="true" class="max-w-md w-full rounded-2xl bg-white text-slate-800 p-6 shadow-2xl">
+          <h3 class="text-lg font-black mb-3"></h3><label class="lbl"></label><input class="field" maxlength="40">
+          <div class="flex gap-2 justify-end mt-5"><button type="submit" class="btn btn-primary">確定</button><button type="button" class="btn btn-plain">取消</button></div></form>`;
+        bg.querySelector('h3').textContent = title;
+        bg.querySelector('label').textContent = label;
+        const input = bg.querySelector('input'); input.value = value;
+        const done = v => { bg.remove(); document.removeEventListener('keydown', onKey, true); resolve(v); };
+        const onKey = e => { if (e.key === 'Escape') { e.stopPropagation(); done(null); } };
+        bg.querySelector('form').addEventListener('submit', e => { e.preventDefault(); done(input.value.trim() || null); });
+        bg.querySelector('button[type=button]').addEventListener('click', () => done(null));
+        document.addEventListener('keydown', onKey, true);
+        document.body.appendChild(bg);
+        input.focus(); input.select();
+      });
+    }
+
+    function renderSaveTag() {
+      const tag = $('#saveTag');
+      let text, cls2 = 'bg-slate-100 border-slate-200 text-slate-700';
+      const t = store.lastSavedAt ? ' ' + new Date(store.lastSavedAt).toLocaleTimeString('zh-TW', { hour12: false }) : '';
+      if (!booted) text = '💾 載入中…';
+      else if (store.error) { text = '⚠ 儲存失敗'; cls2 = 'bg-rose-100 border-rose-300 text-rose-800'; }
+      else if (store.saving || dirty) text = '💾 儲存中…';
+      else if (store.mode === 'ls') { text = `💾 已儲存（後援模式）${t}`; cls2 = 'bg-amber-100 border-amber-300 text-amber-900'; }
+      else { text = `💾 已儲存${t}`; cls2 = 'bg-emerald-50 border-emerald-200 text-emerald-800'; }
+      tag.textContent = text;
+      tag.className = `px-3 py-1 rounded-full border font-bold ${cls2}`;
+    }
+
+    function renderFolder() {
+      const tag = $('#folderTag');
+      const map = { ok: ['📁 已同步到資料夾', 'bg-emerald-50 border-emerald-200 text-emerald-800'], needPermission: ['📁 需要重新授權', 'bg-amber-100 border-amber-300 text-amber-900'], error: ['📁 寫入失敗', 'bg-rose-100 border-rose-300 text-rose-800'], paused: ['📁 同步暫停', 'bg-amber-100 border-amber-300 text-amber-900'] };
+      if (map[folder.status]) {
+        const pending = folder.status === 'ok' && (folder.dirty || folder.writing);
+        tag.textContent = pending ? '📁 等待寫入資料夾…' : map[folder.status][0];
+        tag.className = `px-3 py-1 rounded-full border font-bold ${map[folder.status][1]}`;
+      } else tag.className = 'hidden';
+
+      const box = $('#folderBox');
+      const btn = (id, label, c = 'btn btn-plain btn-sm') => `<button id="${id}" class="${c}">${label}</button>`;
+      if (folder.status === 'unsupported') {
+        box.innerHTML = '<p>這個瀏覽器不支援「選擇資料夾」（只有電腦版 Chrome、Edge 支援）。資料目前存在這台電腦的瀏覽器中，請定期「下載全部資料」備份。</p>';
+      } else if (!folder.handle || folder.status === 'none') {
+        box.innerHTML = `<p>目前資料<strong>只存在這台電腦的瀏覽器</strong>（IndexedDB）。清除瀏覽器資料或換電腦就看不到了。</p>
+          <p class="mt-1 text-slate-500">建議選擇雲端硬碟內的資料夾；另一台電腦也選同一個，就能兩台共用。</p>
+          <div class="mt-3">${btn('btnPickFolder', '📁 選擇資料存放資料夾', 'btn btn-primary')}</div>`;
+      } else {
+        const k = folder.known;
+        const statusText = { ok: '✅ 已同步', needPermission: '⏸ 需要授權', error: '⚠ 讀寫失敗：' + escapeHTML(folder.errMsg || ''), paused: '⏸ 同步暫停' }[folder.status] || '';
+        box.innerHTML = `<div class="space-y-0.5">
+            <div>資料夾：<strong>${escapeHTML(folder.name)}</strong> <span class="text-xs text-slate-500">（瀏覽器不提供完整路徑，請記在下方備註）</span></div>
+            <div>狀態：${statusText}</div>
+            <div>正本：<code>${escapeHTML(FOLDER_FILE)}</code></div>
+            <div>最後寫入：${escapeHTML(fmtTime(k?.savedAt))}${k?.savedBy ? '｜' + escapeHTML(k.savedBy) : ''}</div>
+            <div>每日備份：<code>${escapeHTML(FOLDER_HIST)}</code>／${folder.histCount} 份（最多 ${HIST_KEEP}）</div></div>
+          <div class="mt-3 flex flex-wrap gap-1.5">
+            ${folder.status === 'needPermission' ? btn('btnGrantFolder', '連接資料夾', 'btn btn-primary btn-sm') : ''}
+            ${btn('btnWriteFolder', '立即寫入')}${btn('btnReloadFolder', '從資料夾重新載入')}${btn('btnChangeFolder', '更換資料夾')}${btn('btnDisconnectFolder', '中斷連結', 'btn btn-danger btn-sm')}
+          </div>`;
+      }
+      $('#btnPickFolder')?.addEventListener('click', pickFolder);
+      $('#btnChangeFolder')?.addEventListener('click', pickFolder);
+      $('#btnGrantFolder')?.addEventListener('click', grantFolder);
+      $('#btnDisconnectFolder')?.addEventListener('click', disconnectFolder);
+      $('#btnReloadFolder')?.addEventListener('click', async () => {
+        if (folder.status === 'needPermission') return grantFolder();
+        const c = await askChoice('從資料夾重新載入？', '<p>會用資料夾內的資料取代目前畫面；目前資料會先存成還原點。</p>', [{ value: 'ok', label: '重新載入', style: 'primary' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+        if (c === 'ok') reloadFromFolder();
+      });
+      $('#btnWriteFolder')?.addEventListener('click', async () => {
+        if (folder.status === 'needPermission') return grantFolder();
+        await flushSave();
+        const force = folder.status === 'paused';
+        if (force) {
+          const c = await askChoice('以本頁內容覆蓋資料夾？', '<p>資料夾內的原檔會先另存成衝突檔。</p>', [{ value: 'ok', label: '覆蓋', style: 'danger' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+          if (c !== 'ok') return;
+          try { const cur = await readMaster(folder.handle); if (cur.exists) await writeConflictFile(cur.text, cur.obj?.savedBy || '資料夾原檔'); } catch {}
+        }
+        await writeMaster({ force });
+        if (folder.status === 'ok') toast('已寫入資料夾');
+      });
+    }
+
+    async function renderStorageInfo() {
+      const box = $('#storageInfo');
+      let size = 0; try { size = new Blob([JSON.stringify(currentData())]).size; } catch {}
+      let quota = '';
+      try { if (navigator.storage?.estimate) { const e = await navigator.storage.estimate(); quota = `${(e.usage / 1048576).toFixed(1)} MB／${(e.quota / 1048576).toFixed(0)} MB`; } } catch {}
+      box.innerHTML = `<h3 class="font-bold text-sm text-slate-800 mb-1">儲存狀態</h3>
+        <div>本機儲存：${store.mode === 'idb' ? 'IndexedDB（主要）' : '<span class="text-amber-700">localStorage（後援模式）</span>'}</div>
+        <div>localStorage 鏡像：${store.mirrorOk ? '正常' : '<span class="text-amber-700">已停止（容量不足或被停用，不影響 IndexedDB）</span>'}</div>
+        <div>資料大小：${(size / 1024).toFixed(1)} KB｜瀏覽器配額：${quota || '無法取得'}</div>
+        <div>持久儲存：${store.persisted === true ? '已取得（瀏覽器不會自動清除）' : store.persisted === false ? '未取得（空間不足時瀏覽器可能清除）' : '不支援'}</div>
+        <div>最後儲存：${escapeHTML(fmtTime(store.lastSavedAt || meta.savedAt))}</div>`;
+    }
+
+    function gotoStorage() { switchTab('data'); $('#storageSection').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+
+    // ---------- JSON 匯出／匯入 ----------
+    function exportAll(base = '座位資料_全部') {
+      download(`${base}_${minuteStamp()}.json`, JSON.stringify(masterPayload(), null, 2), 'application/json');
+    }
+    function exportClass() {
+      const C = cls();
+      download(`${safeName(C.name)}_座位方案_${minuteStamp()}.json`, JSON.stringify({ app: APP_ID, kind: 'class', appVersion: APP_VERSION, exportedAt: new Date().toISOString(), class: C }, null, 2), 'application/json');
+    }
+
+    async function importJSON(raw, file) {
+      // 幹部小老師程式的 JSON → 標籤匯入
+      if (raw && raw.tasks && Array.isArray(raw.students) && !raw.classes) {
+        const ok = await askChoice('這是幹部小老師程式的資料', `<p>要把其中的職務標到「${escapeHTML(cls().name)}」的學生上嗎？</p>`,
+          [{ value: 'ok', label: '匯入職務標籤', style: 'primary' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+        if (ok === 'ok') importRoleData(raw);
         return;
       }
-      const assigned = getAssignedCount();
-      if (!assigned) { toast('目前沒有已安排座位可紀錄'); return; }
-      const fallback = `第 ${state.history.length + 1} 次座位`;
-      const name = ($('#historyName').value || '').trim() || fallback;
-      const record = makeHistoryRecord(name);
-      state.history.unshift(record);
-      state.currentRecordName = name;
-      persistCurrentPreset();
-      $('#historyName').value = '';
-      renderAll();
-      toast(`已紀錄：${name}`);
-    }
-
-    function loadHistoryRecord() {
-      const index = parseInt($('#historyList').value, 10);
-      if (Number.isNaN(index) || !state.history[index]) { toast('請先選擇歷史紀錄'); return; }
-      const record = state.history[index];
-      applyLayoutData(record);
-      state.mode = 'edit';
-      state.currentRecordName = record.name;
-      renderAll();
-      toast(`已讀取紀錄：${record.name}`);
-    }
-
-    function deleteHistoryRecord() {
-      const index = parseInt($('#historyList').value, 10);
-      if (Number.isNaN(index) || !state.history[index]) { toast('請先選擇歷史紀錄'); return; }
-      const removed = state.history.splice(index, 1)[0];
-      persistCurrentPreset();
-      renderAll();
-      toast(`已刪除紀錄：${removed.name}`);
-    }
-
-    function clearHistory() {
-      if (!state.history.length) { toast('目前沒有歷史紀錄'); return; }
-      const ok = confirm('確定要清除全部安排紀錄？目前座位表不會被清除。');
-      if (!ok) return;
-      state.history = [];
-      state.currentRecordName = '';
-      persistCurrentPreset();
-      renderAll();
-      toast('已清除全部安排紀錄');
-    }
-
-    function exportJSON() {
-      updateFromInputs();
-      ensureGridInitialized();
-      const presetName = state.currentPresetName || ($('#presetName').value || '').trim();
-      if (!presetName) { toast('請先儲存或輸入方案名稱，再下載方案 JSON'); return; }
-      state.currentPresetName = presetName;
-      const presetData = buildPresetData();
-      const blob = new Blob([JSON.stringify(presetData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      const safeName = presetName || state.className || '未命名方案';
-      const date = new Date().toISOString().slice(0, 10);
-      a.download = `${safeName}-方案備份-${date}.json`;
-      a.href = url;
-      a.click();
-      URL.revokeObjectURL(url);
-      toast('已下載方案 JSON');
-    }
-
-    function importJSONFile(file) {
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const data = JSON.parse(event.target.result);
-          const presetData = data.current ? { ...data.current, history: data.history || [] } : data;
-          const fallbackName = file.name.replace(/\.json$/i, '').replace(/-方案備份-\d{4}-\d{2}-\d{2}$/u, '');
-          const presetName = (presetData.presetName || presetData.className || fallbackName || '匯入方案').trim();
-          applyLayoutData(data, { includeHistory: true });
-          state.currentPresetName = presetName;
-          $('#presetName').value = presetName;
-          const all = readAllPresets();
-          all[presetName] = buildPresetData();
-          writeAllPresets(all);
-          refreshPresetList();
-          $('#presetList').value = presetName;
-          renderAll();
-          toast(`已匯入方案 JSON：${presetName}`);
-        } catch (err) {
-          toast('方案 JSON 匯入失敗，請確認檔案內容');
-        }
-      };
-      reader.readAsText(file);
-    }
-
-    // ---------- Scroll Buttons ----------
-    $('#scrollUp').addEventListener('click', () => {
-      window.scrollBy({ top: -window.innerHeight * 0.9, behavior: 'smooth' });
-    });
-    $('#scrollDown').addEventListener('click', () => {
-      window.scrollBy({ top: window.innerHeight * 0.9, behavior: 'smooth' });
-    });
-
-    // ---------- Events ----------
-    $('#previewBtn').addEventListener('click', previewLayout);
-    $('#randomBtn').addEventListener('click', () => {
-      if (!state.seats.length) previewLayout();
-      randomAssign();
-    });
-    $('#manualBtn').addEventListener('click', () => {
-      if (!state.seats.length) previewLayout();
-      enterManual();
-    });
-    $('#editBtn').addEventListener('click', () => {
-      if (!state.seats.length) previewLayout();
-      enterEdit();
-    });
-    $('#teacherViewBtn').addEventListener('click', toggleTeacherView);
-    $('#clearAssignmentsBtn').addEventListener('click', clearCurrentAssignments);
-
-    $('#downloadStudentBtn').addEventListener('click', () => downloadPNG('student'));
-    $('#downloadTeacherBtn').addEventListener('click', () => downloadPNG('teacher'));
-
-    $('#excelFile').addEventListener('change', (ev) => handleExcelFile(ev.target.files[0]));
-    $('#importSheetBtn').addEventListener('click', importSelectedSheet);
-
-    $('#saveBtn').addEventListener('click', savePreset);
-    $('#loadBtn').addEventListener('click', loadPreset);
-    $('#deleteBtn').addEventListener('click', deletePreset);
-
-    $('#exportJsonBtn').addEventListener('click', exportJSON);
-    $('#importJsonFile').addEventListener('change', (ev) => {
-      importJSONFile(ev.target.files[0]);
-      ev.target.value = '';
-    });
-
-    $('#recordHistoryBtn').addEventListener('click', recordHistory);
-    $('#loadHistoryBtn').addEventListener('click', loadHistoryRecord);
-    $('#deleteHistoryBtn').addEventListener('click', deleteHistoryRecord);
-    $('#clearHistoryBtn').addEventListener('click', clearHistory);
-    $('#historyList').addEventListener('change', () => {
-      const index = parseInt($('#historyList').value, 10);
-      const record = state.history[index];
-      $('#historyPreview').textContent = record
-        ? `${record.name}｜${record.className || '未命名班級'}｜已安排 ${record.assignedCount || 0} / ${record.assignableCount || record.rows * record.cols}｜${new Date(record.createdAt).toLocaleString('zh-TW')}`
-        : (state.currentRecordName ? `目前載入：${state.currentRecordName}` : '');
-    });
-
-    $('#studentSearch').addEventListener('input', buildStudentOptions);
-    $('#closeModal').addEventListener('click', closeAssignModal);
-    $('#tagStudentSelect').addEventListener('change', loadSelectedStudentTag);
-    $('#tagRoleSelect').addEventListener('change', () => {
-      $('#studentTagInput').value = $('#tagRoleSelect').value;
-    });
-    $('#saveStudentTagBtn').addEventListener('click', saveSelectedStudentTag);
-    $('#clearAllStudentTagsBtn').addEventListener('click', clearAllStudentTags);
-    $('#clearStudentTagBtn').addEventListener('click', () => {
-      const student = selectedTagStudent();
-      if (!student) { toast('請先選擇學生'); return; }
-      setStudentNote(student, '');
-      $('#tagRoleSelect').value = '';
-      $('#studentTagInput').value = '';
-      persistCurrentPreset();
-      renderAll();
-      $('#tagStudentSelect').value = studentKey(student);
-      toast(`已清除 ${studentDisplay(student)} 的標籤`);
-    });
-    $('#roleSelect').addEventListener('change', () => {
-      $('#seatNoteInput').value = $('#roleSelect').value;
-    });
-    $('#saveNoteBtn').addEventListener('click', saveSeatNoteFromModal);
-    $('#clearNoteBtn').addEventListener('click', () => {
-      if (!state.modalTarget) return;
-      const { r, c } = state.modalTarget;
-      if (state.seats[r][c].student) setStudentNote(state.seats[r][c].student, '');
-      state.seats[r][c].note = '';
-      $('#roleSelect').value = '';
-      $('#seatNoteInput').value = '';
-      persistCurrentPreset();
-      renderAll();
-      toast('已清除座位備註');
-    });
-    $('#modalSaveBtn').addEventListener('click', () => {
-      if (!state.modalTarget) return;
-      const { r, c } = state.modalTarget;
-      if (!state.selectedStudent) { toast('請先選擇學生'); return; }
-      const seat = state.seats[r][c];
-      if (seat.blocked) { toast('此座位為空位，請先切換為可用'); return; }
-      seat.student = state.selectedStudent;
-      setStudentNote(seat.student, normalizeNote($('#seatNoteInput').value || $('#roleSelect').value));
-      seat.note = '';
-      persistCurrentPreset();
-      state.selectedStudent = null;
-      closeAssignModal();
-      renderAll();
-    });
-    $('#toggleBlockBtn').addEventListener('click', () => {
-      if (!state.modalTarget) return;
-      const { r, c } = state.modalTarget;
-      const seat = state.seats[r][c];
-      seat.blocked = !seat.blocked;
-      if (seat.blocked) {
-        seat.student = null;
-        seat.note = '';
+      const d = normalizeData(raw);
+      if (!d) return toast('檔案內容不是座位資料');
+      const full = Array.isArray(raw.classes);
+      if (!full && d.classes.length === 1 && !raw.classes) {
+        const c = d.classes[0];
+        if (!raw.name && !raw.presetName && !raw.class?.name && file) c.name = file.name.replace(/\.json$/i, '').replace(/[-_](方案備份|座位方案).*$/u, '').slice(0, 40) || c.name;
       }
-      closeAssignModal();
-      renderAll();
+      const choices = full
+        ? [{ value: 'add', label: '加入為新的班級方案', style: 'primary' }, { value: 'replace', label: '取代全部資料', style: 'danger' }, { value: 'cancel', label: '取消', style: 'plain' }]
+        : [{ value: 'add', label: '加入為新的班級方案', style: 'primary' }, { value: 'cancel', label: '取消', style: 'plain' }];
+      const choice = await askChoice('匯入座位資料', `<p>檔案：${escapeHTML(countsText(d))}<br>方案：${d.classes.map(c => escapeHTML(c.name)).join('、')}</p><p class="mt-1">目前：${escapeHTML(countsText(currentData()))}</p><p class="mt-2 text-slate-500">匯入前會先把目前資料存成還原點。</p>`, choices);
+      if (choice === 'cancel') return;
+      await makeSnapshot('匯入 JSON 前');
+      if (choice === 'replace') {
+        if (!d.folderNote) d.folderNote = state.folderNote;
+        applyData(d);
+      } else {
+        const names = new Set(state.classes.map(c => c.name));
+        d.classes.forEach(c => {
+          c.id = uid();
+          let n = c.name, i = 2;
+          while (names.has(n)) n = `${c.name}（${i++}）`;
+          c.name = n; names.add(n);
+          state.classes.push(c);
+        });
+        state.activeId = d.classes[0].id;
+        clearUndo();
+        renderAll();
+        $('#namesInput').value = namesText(cls());
+      }
+      saveLocal();
+      toast(`已匯入 ${d.classes.length} 個班級方案`);
+    }
+
+    // ===================== 介面事件 =====================
+    $$('[data-tab]').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+    $$('[data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+    $$('[data-view]').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+    $('#btnRandom').addEventListener('click', randomAssign);
+    $('#btnUndo').addEventListener('click', undo);
+    $('#btnClearSeats').addEventListener('click', clearSeats);
+    $('#btnDownloadMenu').addEventListener('click', e => {
+      e.stopPropagation();
+      const m = $('#downloadMenu'); const open = m.classList.toggle('hidden') === false;
+      e.currentTarget.setAttribute('aria-expanded', String(open));
     });
-    $('#clearSeatBtn').addEventListener('click', () => {
-      if (!state.modalTarget) return;
-      const { r, c } = state.modalTarget;
-      const seat = state.seats[r][c];
-      seat.student = null;
-      seat.note = '';
-      closeAssignModal();
-      renderAll();
+    document.addEventListener('click', () => { $('#downloadMenu').classList.add('hidden'); $('#btnDownloadMenu').setAttribute('aria-expanded', 'false'); });
+    $$('[data-png]').forEach(b => b.addEventListener('click', () => downloadPNG(b.dataset.png)));
+    $('#btnFullscreen').addEventListener('click', () => {
+      const el = $('#boardCard');
+      if (document.fullscreenElement) document.exitFullscreen();
+      else if (el.requestFullscreen) el.requestFullscreen().catch(() => toast('此瀏覽器無法全螢幕'));
+      else toast('此瀏覽器無法全螢幕');
     });
 
-    // ---------- Initial ----------
-    function init() {
-      populateRoleSelect();
-      refreshPresetList();
-      buildSeats(state.rows, state.cols);
-      renderAll();
+    $('#classSelect').addEventListener('change', e => switchClass(e.target.value));
+    $('#btnNewClass').addEventListener('click', addClass);
+    $('#btnDupClass').addEventListener('click', dupClass);
+    $('#btnDelClass').addEventListener('click', delClass);
+    $('#presetName').addEventListener('change', e => {
+      const v = e.target.value.trim().slice(0, 40);
+      if (!v) { e.target.value = cls().name; return; }
+      cls().name = v; commit();
+    });
+    ['className', 'roomName'].forEach(id => $('#' + id).addEventListener('input', e => {
+      cls()[id] = e.target.value.trim(); saveLocal(); renderHeaderInfo(cls());
+    }));
+    $('#namesInput').addEventListener('input', () => {
+      state.namesDirty = $('#namesInput').value.trim() !== namesText(cls()).trim();
+      renderNamesPanel(cls());
+    });
+    $('#btnApplyNames').addEventListener('click', applyNames);
+    $('#btnRevertNames').addEventListener('click', () => { state.namesDirty = false; $('#namesInput').value = namesText(cls()); renderNamesPanel(cls()); });
+    $('#excelFile').addEventListener('change', e => handleExcelFile(e.target.files[0]));
+    $('#btnImportSheet').addEventListener('click', importSelectedSheet);
+
+    $('#btnApplySize').addEventListener('click', applySize);
+    $('#btnEditLayoutMode').addEventListener('click', () => setMode('layout'));
+    $('#btnUnblockAll').addEventListener('click', () => {
+      const C = cls();
+      if (!allSeats(C).some(s => s.blocked)) return toast('目前沒有空位');
+      pushUndo('全部設為可用'); allSeats(C).forEach(s => { s.blocked = false; }); commit(); toast('全部座位已設為可用');
+    });
+    $('#btnUnlockAll').addEventListener('click', () => {
+      const C = cls();
+      if (!allSeats(C).some(s => s.locked)) return toast('目前沒有固定的座位');
+      pushUndo('解除全部固定'); allSeats(C).forEach(s => { s.locked = false; }); commit(); toast('已解除全部固定');
+    });
+
+    $('#roleJsonFile').addEventListener('change', e => { readJsonFile(e.target.files[0], d => importRoleData(d)); e.target.value = ''; });
+    $('#tagStudentSelect').addEventListener('change', () => {
+      const s = selectedTagStudent();
+      $('#tagRoleSelect').value = s && roleOptions.includes(s.note) ? s.note : '';
+      $('#tagNoteInput').value = s?.note || '';
+    });
+    $('#tagRoleSelect').addEventListener('change', e => { $('#tagNoteInput').value = e.target.value; });
+    $('#btnSaveTag').addEventListener('click', () => {
+      const s = selectedTagStudent(); if (!s) return toast('請先選擇學生');
+      const note = $('#tagNoteInput').value.trim();
+      setNote(s, note, '修改標籤');
+      toast(note ? `已儲存 ${display(s)} 的標籤` : `已清除 ${display(s)} 的標籤`);
+    });
+    $('#btnClearTag').addEventListener('click', () => {
+      const s = selectedTagStudent(); if (!s) return toast('請先選擇學生');
+      setNote(s, '', '清除標籤'); $('#tagRoleSelect').value = ''; $('#tagNoteInput').value = '';
+      toast(`已清除 ${display(s)} 的標籤`);
+    });
+    $('#btnClearAllTags').addEventListener('click', clearAllTags);
+    $('#taggedList').addEventListener('click', e => {
+      const b = e.target.closest('[data-tagkey]'); if (!b) return;
+      $('#tagStudentSelect').value = b.dataset.tagkey;
+      $('#tagStudentSelect').dispatchEvent(new Event('change'));
+      $('#tagNoteInput').focus();
+    });
+
+    $('#btnRecord').addEventListener('click', recordHistory);
+    $('#historyName').addEventListener('keydown', e => { if (e.key === 'Enter') recordHistory(); });
+    $('#btnClearHistory').addEventListener('click', clearHistory);
+    $('#historyList').addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.hload) loadHistory(b.dataset.hload);
+      else if (b.dataset.hdel) deleteHistory(b.dataset.hdel);
+      else if (b.dataset.hpng) {
+        const C = cls(); const h = C.history.find(x => x.id === b.dataset.hpng); if (!h) return;
+        const R = normalizeClass({ ...h, name: C.name, students: [...C.students, ...h.students] });
+        downloadPNG(state.ui.view, R, h.name);
+      }
+    });
+
+    $('#btnExportClass').addEventListener('click', exportClass);
+    $('#btnExportAll').addEventListener('click', () => exportAll());
+    $('#importJsonFile').addEventListener('change', e => { readJsonFile(e.target.files[0], (d, f) => importJSON(d, f)); e.target.value = ''; });
+    $('#saveTag').addEventListener('click', gotoStorage);
+    $('#folderTag').addEventListener('click', gotoStorage);
+    $('#btnSaveNow').addEventListener('click', async () => {
+      dirty = true; folder.dirty = true;
+      await flushSave();
+      if (folder.handle && ['ok', 'error'].includes(folder.status)) { clearTimeout(folder.timer); await writeMaster(); }
+      if (!store.error) toast(folder.status === 'ok' ? '已儲存（本機＋資料夾）' : '已儲存到本機');
+    });
+    $('#deviceName').addEventListener('change', e => {
+      const v = e.target.value.trim() || deviceName();
+      try { localStorage.setItem(DEVICE_KEY, v); } catch {}
+      e.target.value = v; renderFolder();
+    });
+    $('#folderNote').addEventListener('change', e => { state.folderNote = e.target.value.trim(); saveLocal(); });
+
+    // 鍵盤：Esc 取消選取／關閉視窗；Ctrl+Z 復原
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        if (state.modal) { closeSeatModal(); renderAll(); return; }
+        if (state.sel || state.pick) { state.sel = null; state.pick = null; renderAll(); }
+      }
+      const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '');
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !typing && !state.modal) { e.preventDefault(); undo(); }
+    });
+
+    // 分頁隱藏／關閉時立刻寫出
+    function flushOnHide() {
+      if (!booted) return;
+      if (dirty) {
+        try { localStorage.setItem(LS_KEY, JSON.stringify({ ...currentData(), savedAt: Date.now(), rev: meta.rev, appVersion: APP_VERSION, app: APP_ID })); } catch {}
+        flushSave();
+      }
+      if (folder.dirty && folder.status === 'ok') { clearTimeout(folder.timer); writeMaster(); }
     }
-    init();
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushOnHide(); else checkFolderUpdate(); });
+    window.addEventListener('pagehide', flushOnHide);
+
+    if (bc) bc.onmessage = ev => {
+      const m = ev.data || {};
+      if (m.type === 'saved' && m.from !== tabId && m.rev > meta.rev) {
+        showBanner('🔄 另一個分頁剛儲存了座位資料。', [{ label: '重新載入最新資料', fn: async () => {
+          try {
+            const cur = await idbGet('kv', 'state'); const d = normalizeData(cur);
+            if (d) { meta.rev = cur.rev || 0; meta.savedAt = cur.savedAt || 0; dirty = false; applyData(d); }
+            hideBanner(); toast('已載入最新資料');
+          } catch { toast('讀取失敗'); }
+        } }]);
+      }
+    };
+
+    // ===================== 啟動 =====================
+    async function boot() {
+      fillRoleSelects();
+      $('#deviceName').value = deviceName();
+      let idbData = null, lsData = null, legacy = null;
+      try { await idbOpen(); idbData = await idbGet('kv', 'state'); store.mode = 'idb'; }
+      catch (e) { store.mode = 'ls'; console.warn('IndexedDB 不可用，改用 localStorage', e); }
+      try { const raw = localStorage.getItem(LS_KEY); if (raw) lsData = JSON.parse(raw); } catch {}
+      const nIdb = idbData ? normalizeData(idbData) : null;
+      const nLs = lsData ? normalizeData(lsData) : null;
+      let chosen = null, from = '';
+      if (nIdb && nLs) { if ((nLs.savedAt || 0) > (nIdb.savedAt || 0)) { chosen = nLs; from = 'ls'; } else { chosen = nIdb; from = 'idb'; } }
+      else if (nIdb) { chosen = nIdb; from = 'idb'; }
+      else if (nLs) { chosen = nLs; from = 'ls'; }
+      else {
+        try { const raw = localStorage.getItem(LEGACY_KEY); if (raw) legacy = normalizeData(JSON.parse(raw)); } catch {}
+        if (legacy) { chosen = legacy; from = 'legacy'; }
+      }
+      meta.rev = Math.max(idbData?.rev || 0, lsData?.rev || 0);
+      if (chosen) { applyData(chosen); meta.savedAt = chosen.savedAt || 0; }
+      else { state.classes = [newClass('我的班級')]; state.activeId = state.classes[0].id; renderAll(); }
+      booted = true;
+
+      // 1.x 方案或只寫到 localStorage 的較新內容 → 寫進 IndexedDB 並讀回比對
+      if (from === 'ls' || from === 'legacy') {
+        try {
+          const before = countsOf(currentData());
+          await commitLocal(currentData(), chosen.savedAt || Date.now());
+          if (store.mode === 'idb') {
+            const back = countsOf(await idbGet('kv', 'state'));
+            if (back.classes !== before.classes || back.students !== before.students || back.assigned !== before.assigned) {
+              toast('⚠ 搬移到 IndexedDB 後比對不一致，暫用 localStorage'); store.mode = 'ls';
+            }
+          }
+          if (from === 'legacy') toast(`已把舊版 ${before.classes} 個座位方案搬到新的儲存區（舊資料仍保留）`, { ms: 5000 });
+        } catch { store.mode = 'ls'; }
+      }
+      try { if (navigator.storage?.persist) store.persisted = await navigator.storage.persist(); } catch {}
+      let tab = 'names'; try { tab = localStorage.getItem(TAB_KEY) || 'names'; } catch {}
+      switchTab($(`[data-tab="${tab}"]`) ? tab : 'names');
+      $('#bootOverlay').remove();
+      renderSaveTag();
+      await initFolder();
+    }
+    boot().catch(e => { console.error(e); document.getElementById('bootOverlay')?.remove(); toast('載入資料時發生錯誤：' + (e?.message || e)); });
   </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96bfb79e8030846a',t:'MTc1NDY2MzQ4NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
