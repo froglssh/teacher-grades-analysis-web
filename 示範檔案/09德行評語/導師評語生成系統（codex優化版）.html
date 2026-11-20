@@ -28,6 +28,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:3px solid #7cc4bb;outline-offset:1px}
 .hidden{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
 
 /* ---------- top bar ---------- */
 .topbar{position:sticky;top:0;z-index:50;height:var(--top);background:#1f2933;color:#fff;display:flex;align-items:center;gap:12px;padding:0 16px}
@@ -78,6 +79,8 @@ button{cursor:pointer}
 .btn.primary:hover{background:var(--brand-2)}
 .btn.ghost{border-color:transparent;background:transparent;color:var(--brand)}
 .btn.danger{color:var(--bad);border-color:#efc2bd}
+.btn.danger:hover{background:var(--bad-bg);border-color:var(--bad)}
+.roster-foot .wide{grid-column:1/-1}
 .btn.sm{min-height:30px;padding:4px 9px;font-size:.8rem}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
@@ -271,7 +274,7 @@ table.tbl select{border:1px solid var(--line-2);border-radius:6px;padding:3px 4p
   <select class="wb-select hide-sm" id="wbSelect" aria-label="切換班級學期"></select>
   <div class="progress-pill" title="已標記完成的學生數"><span class="bar"><i id="progBar"></i></span><span id="progText">0/0 完成</span></div>
   <div class="top-actions">
-    <span class="save-state" id="saveState" role="status"></span>
+    <button class="tbtn" id="saveState" data-open="storage" aria-label="資料儲存">💾 <span id="saveText" class="hide-sm">資料儲存</span><span id="saveWarn" class="hidden" style="color:#ffcf70;font-weight:700"> ⚠</span><span id="saveStatus" class="sr-only" role="status"></span></button>
     <button class="tbtn" data-open="overview"><span class="hide-sm">全班</span>總覽</button>
     <button class="tbtn" data-open="import">匯入</button>
     <button class="tbtn primary" data-open="export">匯出</button>
@@ -280,6 +283,7 @@ table.tbl select{border:1px solid var(--line-2);border-radius:6px;padding:3px 4p
   </div>
 </header>
 <div id="conflictBar" class="notice bad hidden" style="margin:0;border-radius:0"><span>另一個分頁修改了評語資料。為避免互相覆蓋，本頁已暫停儲存。</span><button class="btn sm" onclick="location.reload()">重新載入最新資料</button></div>
+<div id="folderBanner" class="notice info hidden" style="margin:0;border-radius:0;align-items:center;flex-wrap:wrap"></div>
 
 <div class="layout">
   <aside class="roster" id="roster" aria-label="班級名單">
@@ -296,7 +300,8 @@ table.tbl select{border:1px solid var(--line-2);border-radius:6px;padding:3px 4p
     <ul class="roster-list" id="rosterList"></ul>
     <div class="roster-foot">
       <button class="btn sm" id="btnAddStudent">＋ 新增學生</button>
-      <button class="btn sm" data-open="paste">貼上名單</button>
+      <button class="btn sm" data-open="roster">匯入名冊</button>
+      <button class="btn sm danger wide" id="btnClearRoster">🗑 清空名單</button>
     </div>
   </aside>
   <div class="scrim hidden" id="scrim"></div>
@@ -1138,7 +1143,7 @@ function defaultMeta() {
 }
 function blankWorkbook(meta) { return {id: uid(), meta: Object.assign(defaultMeta(), meta || {}), students: [], activeId: null, createdAt: new Date().toISOString(), updatedAt: ''}; }
 
-let store = null, saveTimer = null, conflict = false, lastSaved = '';
+let store = null, saveTimer = null, conflict = false, dirty = false;
 const ui = {step: 1, codeCat: 'all', codeQuery: '', roleTab: 'cadre', filter: 'all', search: '', aiBusy: false, batchStop: false};
 
 function normalizeStudent(s) {
@@ -1151,34 +1156,173 @@ function normalizeStudent(s) {
   out.codes = out.codes.filter(c => CODE_INDEX[c]);
   return out;
 }
-function loadStore() {
-  try {
-    const raw = localStorage.getItem(STORE_KEY);
-    if (raw) {
-      const data = JSON.parse(raw);
-      if (data && data.version === 2 && data.workbooks) {
-        Object.values(data.workbooks).forEach(wb => { wb.meta = Object.assign(defaultMeta(), wb.meta); wb.students = (wb.students || []).map(normalizeStudent); });
-        store = data; lastSaved = raw;
-      }
-    }
-  } catch (e) { console.error(e); toast('⚠️ 讀取本機資料失敗，原資料保留未覆蓋。請先到「匯出」備份。'); conflict = true; }
-  if (!store) { const wb = blankWorkbook(); store = {version: 2, activeWb: wb.id, workbooks: {[wb.id]: wb}}; }
-  if (!store.workbooks[store.activeWb]) store.activeWb = Object.keys(store.workbooks)[0];
+// ============================================================
+// 儲存：IndexedDB 主儲存＋localStorage 鏡像＋自動還原點（資料夾正本見下方「資料夾長期儲存」）
+// ============================================================
+const IDB_NAME = 'lssh-homeroom-comment', IDB_VERSION = 1;
+const DEVICE_KEY = 'lssh.comment.device';
+const DAILY_SNAP_KEEP = 14, EVENT_SNAP_KEEP = 15;
+const persist = {mode: 'idb', persisted: null, lastSavedAt: 0, mirrorOk: true, error: ''};
+const bc = ('BroadcastChannel' in window) ? new BroadcastChannel(IDB_NAME) : null;
+const TAB_ID = uid();
+let booted = false;
+
+const pad2 = n => String(n).padStart(2, '0');
+const dayStamp = (d = new Date()) => `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}`;
+const minuteStamp = (d = new Date()) => `${dayStamp(d)}-${pad2(d.getHours())}${pad2(d.getMinutes())}`;
+const fmtTime = t => t ? new Date(t).toLocaleString('zh-TW', {month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'}) : '—';
+function deviceName() {
+  try { let n = localStorage.getItem(DEVICE_KEY); if (!n) { n = '電腦-' + Math.random().toString(36).slice(2, 6).toUpperCase(); localStorage.setItem(DEVICE_KEY, n); } return n; }
+  catch { return '電腦'; }
 }
-function saveNow() {
+function countsText(d) {
+  if (!d || !d.workbooks) return '無資料';
+  const w = Object.values(d.workbooks);
+  const n = w.reduce((a, x) => a + (x.students || []).length, 0);
+  const c = w.reduce((a, x) => a + (x.students || []).filter(s => s.final).length, 0);
+  return `${w.length} 個班級學期、${n} 位學生、${c} 份評語`;
+}
+const isEmptyData = d => !d || !d.workbooks || !Object.values(d.workbooks).some(w => (w.students || []).length);
+
+// 驗證並整理任何來源的資料（IndexedDB、localStorage、資料夾正本、還原點）
+function normalizeData(data) {
+  if (!data || data.version !== 2 || !data.workbooks || typeof data.workbooks !== 'object') return null;
+  const out = clone(data);
+  delete out.savedBy; delete out.app;
+  Object.values(out.workbooks).forEach(wb => { wb.meta = Object.assign(defaultMeta(), wb.meta); wb.students = (wb.students || []).map(normalizeStudent); });
+  if (!Object.keys(out.workbooks).length) { const wb = blankWorkbook(); out.workbooks[wb.id] = wb; }
+  if (!out.workbooks[out.activeWb]) out.activeWb = Object.keys(out.workbooks)[0];
+  out.rev = out.rev || 0; out.savedAt = out.savedAt || 0;
+  return out;
+}
+function blankStore() { const wb = blankWorkbook(); return {version: 2, activeWb: wb.id, workbooks: {[wb.id]: wb}, rev: 0, savedAt: 0}; }
+
+// ---------- IndexedDB ----------
+let dbPromise = null;
+function idbOpen() {
+  if (dbPromise) return dbPromise;
+  dbPromise = new Promise((resolve, reject) => {
+    if (typeof indexedDB === 'undefined' || !indexedDB) return reject(new Error('瀏覽器不支援或停用了 IndexedDB'));
+    const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains('kv')) db.createObjectStore('kv');
+      if (!db.objectStoreNames.contains('snapshots')) db.createObjectStore('snapshots');
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error || new Error('IndexedDB 開啟失敗'));
+    req.onblocked = () => reject(new Error('IndexedDB 被其他分頁鎖住'));
+  });
+  dbPromise.catch(() => { dbPromise = null; });
+  return dbPromise;
+}
+async function idbTx(storeName, mode, fn) {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, mode);
+    const req = fn(tx.objectStore(storeName));
+    let out;
+    if (req) req.onsuccess = () => { out = req.result; };
+    tx.oncomplete = () => resolve(out);
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error || new Error('交易中止'));
+  });
+}
+const idbGet = (s, k) => idbTx(s, 'readonly', st => st.get(k));
+const idbPut = (s, k, v) => idbTx(s, 'readwrite', st => st.put(v, k));
+const idbDel = (s, k) => idbTx(s, 'readwrite', st => st.delete(k));
+const idbAll = s => idbTx(s, 'readonly', st => st.getAll());
+
+// 啟動：讀 IndexedDB 與 localStorage，取較新的一份；舊版只有 localStorage 的資料會自動搬進 IndexedDB
+async function bootStorage() {
+  let fromIdb = null, fromLs = null;
+  try { fromIdb = normalizeData(await idbGet('kv', 'state')); }
+  catch (e) { persist.mode = 'ls'; persist.error = e?.message || String(e); }
+  try { const raw = localStorage.getItem(STORE_KEY); if (raw) fromLs = normalizeData(JSON.parse(raw)); } catch {}
+  let chosen = fromIdb, from = 'idb';
+  if (fromLs && (!fromIdb || (fromLs.savedAt || 0) > (fromIdb.savedAt || 0))) { chosen = fromLs; from = 'ls'; }
+  store = chosen || blankStore();
+  booted = true;
+  if (chosen && from === 'ls' && persist.mode === 'idb') {
+    try {
+      await idbPut('kv', 'state', clone(store));
+      const back = normalizeData(await idbGet('kv', 'state'));
+      if (!back || countsText(back) !== countsText(store)) throw new Error('搬移後比對不一致');
+    } catch (e) { persist.mode = 'ls'; persist.error = e?.message || String(e); }
+  }
+  try { if (navigator.storage?.persist) persist.persisted = await navigator.storage.persist(); } catch {}
+}
+// 寫入本機（不遞增版本）：localStorage 同步寫入，IndexedDB 非同步寫入
+async function commitLocal(data) {
+  const raw = JSON.stringify(data);
+  let lsOk = false;
+  try { localStorage.setItem(STORE_KEY, raw); lsOk = true; } catch {}
+  persist.mirrorOk = lsOk;
+  let idbOk = false;
+  if (persist.mode === 'idb') {
+    try { const obj = JSON.parse(raw); await idbPut('kv', 'state', obj); idbOk = true; dailySnapshot(obj).catch(() => {}); }
+    catch (e) { console.warn('IndexedDB 寫入失敗，改用 localStorage 後援', e); persist.mode = 'ls'; persist.error = e?.message || String(e); }
+  }
+  if (!lsOk && !idbOk) throw new Error('IndexedDB 與 localStorage 都無法寫入');
+  persist.lastSavedAt = Date.now();
+}
+function saveNow(force = false) {
   clearTimeout(saveTimer);
+  if (!booted) return false;
+  if (!dirty && !force) return true;
+  dirty = false;
   if (conflict) { setSaveState('⚠ 已暫停儲存'); return false; }
-  try {
-    const current = localStorage.getItem(STORE_KEY);
-    if (current && lastSaved && current !== lastSaved) { conflict = true; $('conflictBar').classList.remove('hidden'); setSaveState('⚠ 已暫停儲存'); return false; }
-    const raw = JSON.stringify(store);
-    localStorage.setItem(STORE_KEY, raw); lastSaved = raw;
-    setSaveState('✓ 已自動儲存 ' + new Date().toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}));
-    return true;
-  } catch (e) { setSaveState('⚠ 儲存失敗'); toast('⚠️ 瀏覽器儲存空間不足或被封鎖，請立即「匯出 → 備份 JSON」。'); return false; }
+  store.rev = (store.rev || 0) + 1; store.savedAt = Date.now();
+  if (bc) bc.postMessage({type: 'saved', rev: store.rev, from: TAB_ID});
+  commitLocal(store).then(() => {
+    setSaveState(`已儲存 ${new Date().toLocaleTimeString('zh-TW', {hour: '2-digit', minute: '2-digit'})}`);
+    if (modalState.name === 'storage') renderStorageModal();
+  }).catch(e => {
+    setSaveState('⚠ 儲存失敗');
+    toast('⚠️ 瀏覽器無法儲存資料，請立即「匯出 → 備份」，或到「資料儲存」連結資料夾。');
+  });
+  folder.dirty = true; scheduleFolderWrite();
+  return true;
 }
-function queueSave() { setSaveState('儲存中…'); clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 400); }
-function setSaveState(t) { $('saveState').textContent = t; }
+function queueSave() { if (!booted) return; dirty = true; setSaveState('儲存中…'); clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 400); }
+let lastSaveStatus = '';
+function setSaveState(t) {
+  if (!$('saveState')) return;
+  lastSaveStatus = t;
+  const folderWarn = ['needPermission', 'error', 'paused'].includes(folder.status);
+  const f = folder.status === 'ok' ? `｜已同步到資料夾「${folder.name}」` : folderWarn ? `｜⚠ 資料夾「${folder.name}」${(FOLDER_STATUS[folder.status] || [''])[0]}` : '';
+  $('saveWarn').classList.toggle('hidden', !(folderWarn || /⚠/.test(t)));
+  $('saveStatus').textContent = t + f;
+  $('saveState').title = `${t}${f}\n本機：${persist.mode === 'idb' ? 'IndexedDB' : 'localStorage（後援）'}。點此開啟「資料儲存」。`;
+}
+
+// ---------- 自動還原點（IndexedDB） ----------
+async function dailySnapshot(payload) {
+  const id = 'day-' + dayStamp();
+  if (!await idbGet('snapshots', id)) await idbPut('snapshots', id, {id, at: Date.now(), reason: '每日自動', data: payload});
+  await pruneSnapshots();
+}
+function makeSnapshot(reason, data) {
+  const copy = clone(data || store);               // 先同步複製，避免之後的修改混入
+  if (persist.mode !== 'idb' || !booted || isEmptyData(copy)) return Promise.resolve(false);
+  const id = `evt-${minuteStamp()}-${Date.now() % 100000}`;
+  return idbPut('snapshots', id, {id, at: Date.now(), reason, data: copy}).then(pruneSnapshots).then(() => true).catch(() => false);
+}
+async function pruneSnapshots() {
+  const all = await idbAll('snapshots');
+  const days = all.filter(s => s.id.startsWith('day-')).sort((a, b) => b.id.localeCompare(a.id));
+  const evts = all.filter(s => s.id.startsWith('evt-')).sort((a, b) => b.at - a.at);
+  for (const s of [...days.slice(DAILY_SNAP_KEEP), ...evts.slice(EVENT_SNAP_KEEP)]) await idbDel('snapshots', s.id);
+}
+async function applyLoadedData(d, reason) {
+  if (!isEmptyData(store)) await makeSnapshot(reason || '載入其他資料前');
+  const rev = Math.max(store.rev || 0, d.rev || 0);
+  store = d; store.rev = rev;
+  await commitLocal(store);
+  renderAll();
+}
+
+function markConflict() { conflict = true; $('conflictBar').classList.remove('hidden'); setSaveState('⚠ 已暫停儲存'); }
 
 const WB = () => store.workbooks[store.activeWb];
 const CUR = () => WB().students.find(s => s.id === WB().activeId) || null;
@@ -1233,7 +1377,7 @@ function rosterItemHtml(s) {
 function renderRoster() {
   const list = visibleStudents();
   $('rosterList').innerHTML = list.length ? list.map(s => `<li>${rosterItemHtml(s)}</li>`).join('') :
-    `<li class="hint" style="padding:14px">${WB().students.length ? '沒有符合的學生' : '尚無學生，請貼上名單或匯入 Excel。'}</li>`;
+    `<li class="hint" style="padding:14px">${WB().students.length ? '沒有符合的學生' : '尚無學生，請按下方「匯入名冊」建立全班名單。'}</li>`;
 }
 function renderRosterItem(st) {
   const btn = document.querySelector(`#rosterList [data-sid="${st.id}"]`);
@@ -1261,6 +1405,29 @@ function addStudent(seed) {
   setTimeout(() => $('fName')?.focus(), 50);
   return st;
 }
+function deleteStudent(id) {
+  const wb = WB(), i = wb.students.findIndex(s => s.id === id);
+  if (i < 0) return;
+  const st = wb.students[i];
+  const label = `${st.seat ? st.seat + ' ' : ''}${st.name || '未命名學生'}`;
+  if ((st.final || hasContent(st)) && !confirm(`確定刪除「${label}」？這位學生的評語與勾選資料會一併刪除（刪除後可按「復原」）。`)) return;
+  const before = clone(wb.students), beforeActive = wb.activeId;
+  wb.students.splice(i, 1);
+  wb.activeId = (wb.students[i] || wb.students[i - 1] || {}).id || null;
+  queueSave(); renderAll();
+  toast(`已刪除「${label}」`, {label: '復原', run: () => { wb.students = before; wb.activeId = beforeActive; queueSave(); renderAll(); toast('已復原'); }});
+}
+function clearRoster() {
+  const wb = WB(), n = wb.students.length;
+  if (!n) { toast('目前名單是空的'); return; }
+  const done = wb.students.filter(s => s.final).length;
+  if (!confirm(`確定清空「${wbLabel(wb)}」的全部 ${n} 位學生？${done ? `其中 ${done} 位已有評語，會一併刪除。` : ''}\n\n清空後可按「復原」；若要長期保留，請先到「匯出 → 備份」。`)) return;
+  makeSnapshot('清空名單前');
+  const before = clone(wb.students), beforeActive = wb.activeId;
+  wb.students = []; wb.activeId = null;
+  queueSave(); closeRoster(); renderAll();
+  toast(`已清空 ${n} 位學生`, {label: '復原', run: () => { wb.students = before; wb.activeId = beforeActive; queueSave(); renderAll(); toast('已復原名單'); }});
+}
 function openRoster() { $('roster').classList.add('open'); $('scrim').classList.remove('hidden'); }
 function closeRoster() { $('roster').classList.remove('open'); $('scrim').classList.add('hidden'); }
 
@@ -1275,7 +1442,7 @@ function renderEditor() {
       <h2>開始為全班寫評語</h2>
       <p>先建立班級名單，之後每位學生點一點、補一句，系統會依麗山高中評語規範產生草稿並即時檢核。</p>
       <div class="opts">
-        <button class="opt" data-open="paste"><b>① 貼上名單</b><span>從校務系統或 Excel 複製「座號、姓名、性別」貼上。</span></button>
+        <button class="opt" data-open="roster"><b>① 匯入班級名冊</b><span>選擇校務系統匯出的名冊 Excel，一次建立全班名單。</span></button>
         <button class="opt" data-open="import"><b>② 匯入 Excel／自評表</b><span>全班自評表、Google 表單回覆、Word 自評表都可以。</span></button>
         <button class="opt" id="btnDemo"><b>③ 先試用範例</b><span>建立 3 位虛擬學生，體驗完整流程。</span></button>
       </div>
@@ -1289,7 +1456,7 @@ function renderEditor() {
   <div class="stu-head">
     <div class="stu-title">${esc(st.seat ? st.seat + ' ' : '')}${esc(st.name || '未命名學生')}</div>
     <span class="status-badge ${status}">${{done:'已完成', draft:'草稿', issue:'需檢查', empty:'未開始'}[status]}</span>
-    <div class="navs"><button class="btn sm" data-act="prev" title="Alt+↑">← 上一位</button><button class="btn sm" data-act="next" title="Alt+↓">下一位 →</button></div>
+    <div class="navs"><button class="btn sm" data-act="prev" title="Alt+↑">← 上一位</button><button class="btn sm" data-act="next" title="Alt+↓">下一位 →</button><button class="btn sm danger" data-act="delStudent" title="刪除這位學生">刪除此學生</button></div>
   </div>
   <div class="card">
     <div class="stu-fields">
@@ -1521,6 +1688,7 @@ function bindEvents() {
     if (d.sid) { selectStudent(d.sid); return; }
     if (d.filter) { ui.filter = d.filter; document.querySelectorAll('[data-filter]').forEach(b => b.setAttribute('aria-pressed', b.dataset.filter === ui.filter)); renderRoster(); return; }
     if (d.act === 'prev') return moveStudent(-1);
+    if (d.act === 'delStudent') return deleteStudent(WB().activeId);
     if (d.act === 'next') return moveStudent(1);
     if (d.act === 'nextReset') { ui.step = 1; return moveStudent(1); }
     if (!st) return;
@@ -1607,10 +1775,12 @@ function bindEvents() {
   });
   $('btnRoster').onclick = openRoster; $('scrim').onclick = closeRoster;
   $('btnAddStudent').onclick = () => addStudent();
+  $('btnClearRoster').onclick = clearRoster;
   $('mPrev').onclick = () => moveStudent(-1); $('mNext').onclick = () => moveStudent(1);
   $('mGen').onclick = () => { const st = CUR(); if (st) { regenerate(st); $('preview').scrollIntoView({behavior: 'smooth'}); } };
-  window.addEventListener('storage', e => { if (e.key === STORE_KEY && e.newValue !== lastSaved) { conflict = true; $('conflictBar').classList.remove('hidden'); setSaveState('⚠ 已暫停儲存'); } });
-  window.addEventListener('pagehide', saveNow);
+  window.addEventListener('storage', e => { if (e.key === STORE_KEY && e.newValue) markConflict(); });
+  if (bc) bc.onmessage = e => { if (e.data?.type === 'saved' && e.data.from !== TAB_ID) markConflict(); };
+  window.addEventListener('pagehide', () => saveNow());
   document.addEventListener('visibilitychange', () => { if (document.hidden) saveNow(); });
 }
 let pvTimer = null;
@@ -1684,7 +1854,7 @@ let modalState = {};
 function openModal(name, opts = {}) {
   closeRoster();
   modalState = {name, ...opts};
-  const builders = {paste: modalPaste, import: modalImport, export: modalExport, overview: modalOverview, settings: modalSettings, help: modalHelp};
+  const builders = {paste: modalPaste, roster: modalRoster, storage: modalStorage, import: modalImport, export: modalExport, overview: modalOverview, settings: modalSettings, help: modalHelp};
   const b = builders[name]; if (!b) return;
   const {title, body, foot, wide} = b(opts);
   $('modalRoot').innerHTML = `<div class="modal-wrap" id="modalWrap"><div class="modal ${wide ? 'wide' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}">
@@ -1741,6 +1911,31 @@ modalPaste.after = () => {
   };
 };
 
+// ---------- 匯入班級名冊 ----------
+const ROSTER_TARGETS = ['seat', 'name', 'gender', 'no'];
+function modalRoster() {
+  const n = WB().students.length;
+  return {title: '匯入班級名冊', wide: true,
+    body: `<div class="sec"><h3>① 選擇名冊 Excel</h3>
+      <p class="hint">選擇校務系統匯出的班級名冊（.xlsx、.xls、.csv）。系統會列出檔案中的所有分頁並自動選出名冊所在分頁，再辨識座號、姓名、性別、學號等欄位；您可以勾選要匯入哪些欄位。<b>手機、住址、身分證、家長資料等敏感欄位會自動鎖定不匯入。</b></p>
+      <input type="file" id="impFile" accept=".xlsx,.xls,.csv" style="margin-top:8px">
+      <p class="hint" id="impStatus" style="margin-top:6px"></p>
+      <div id="impSheets"></div></div>
+      <div id="impMapping"></div>
+      <details class="self"><summary>沒有 Excel 檔？直接貼上名單</summary>
+        <p class="hint" style="margin-top:8px">從校務系統或 Excel 複製「座號、姓名、性別」貼上，一行一位。</p>
+        <textarea class="in" id="pasteText" rows="6" style="margin-top:6px" placeholder="01	林郁婷	女\n02	陳柏翰	男"></textarea>
+        <p class="hint" id="pastePreview" style="margin-top:6px">尚未貼上</p>
+        <div class="row" style="margin-top:6px"><label><input type="radio" name="pasteMode" value="merge" checked> 合併到目前名單</label><label><input type="radio" name="pasteMode" value="replace"> 取代目前名單</label><button class="btn sm" id="pasteApply" style="margin-left:auto">建立名單</button></div>
+      </details>`,
+    foot: `<span class="hint" style="margin-right:auto">目前名單 ${n} 人</span><button class="btn" onclick="closeModal()">關閉</button>`};
+}
+modalRoster.after = () => {
+  modalState.mode = 'roster';
+  $('impFile').onchange = e => readImportFile(e.target.files[0]);
+  modalPaste.after();
+};
+
 // ---------- 匯入 ----------
 const IMPORT_TARGETS = [
   ['ignore','不匯入'], ['seat','座號'], ['name','姓名'], ['gender','性別'], ['no','學號'],
@@ -1785,7 +1980,8 @@ function modalImport() {
     body: `<div class="sec"><h3>① 選擇檔案</h3>
       <p class="hint">支援全班 Excel／CSV（自評表、Google 表單回覆、社團名單、前學期評語）與單一學生 Word 自評表（.docx）。系統會判斷欄位，您可以在下方調整對應後再套用。<b>手機、住址、身分證、家長資料等敏感欄位會自動鎖定不匯入。</b></p>
       <input type="file" id="impFile" accept=".xlsx,.xls,.csv,.docx" style="margin-top:8px">
-      <p class="hint" id="impStatus" style="margin-top:6px"></p></div>
+      <p class="hint" id="impStatus" style="margin-top:6px"></p>
+      <div id="impSheets"></div></div>
       <div id="impMapping"></div>
       <div class="sec"><h3>從備份或舊版還原</h3>
       <div class="row"><input type="file" id="impJson" accept=".json,application/json" class="hidden"><button class="btn" id="impJsonBtn">還原備份 JSON</button>
@@ -1816,44 +2012,95 @@ async function readImportFile(file) {
     }
     if (!window.XLSX) throw new Error('Excel 解析元件未載入，請確認網路連線後重新整理');
     const wbx = XLSX.read(new Uint8Array(await file.arrayBuffer()), {type: 'array'});
-    const sheet = wbx.SheetNames[0];
-    const matrix = XLSX.utils.sheet_to_json(wbx.Sheets[sheet], {header: 1, defval: ''}).map(r => r.map(c => String(c ?? '').trim()));
-    let hr = -1;
-    for (let r = 0; r < Math.min(8, matrix.length); r++) {
-      const known = matrix[r].filter(c => !['ignore'].includes(guessTarget(c))).length;
-      if (known >= 2 && matrix[r].some(c => ['name', 'seat'].includes(guessTarget(c)))) { hr = r; break; }
-    }
-    if (hr >= 0) {
-      const rows = matrix.slice(hr + 1).filter(r => r.some(Boolean));
-      showTableMapping(`${file.name}（${sheet}）`, matrix[hr], rows);
-    } else {
-      showKeyValueMapping(file.name, matrix, sheet);
-    }
+    const sheets = wbx.SheetNames.map(name => {
+      const ws = wbx.Sheets[name];
+      const matrix = XLSX.utils.sheet_to_json(ws, {header: 1, defval: '', blankrows: true}).map(r => r.map(c => String(c ?? '').trim()));
+      const offset = ws['!ref'] ? XLSX.utils.decode_range(ws['!ref']).s.r : 0;
+      const hr = detectHeaderRow(matrix);
+      const dataRows = hr >= 0 ? countStudentRows(matrix[hr], matrix.slice(hr + 1)) : 0;
+      return {name, matrix, hr, dataRows, offset};
+    }).filter(s => s.matrix.some(r => r.some(Boolean)));
+    if (!sheets.length) throw new Error('檔案中沒有資料');
+    // 自動選擇：有辨識到標題列、且資料列最多的分頁
+    const ranked = sheets.map((s, i) => ({i, score: (s.hr >= 0 ? 100000 : 0) + s.dataRows})).sort((a, b) => b.score - a.score);
+    modalState.book = {fileName: file.name, sheets};
+    renderSheetPicker(ranked[0].i);
+    loadSheet(ranked[0].i, sheets[ranked[0].i].hr);
   } catch (err) { console.error(err); $('impStatus').textContent = '⚠️ ' + err.message; }
+}
+function countStudentRows(headers, rows) {
+  const keys = headers.map(guessTarget), ni = keys.indexOf('name'), si = keys.indexOf('seat');
+  return rows.filter(r => (ni >= 0 && isMeaningful(r[ni]) || si >= 0 && isMeaningful(r[si])) && !/範例|示範|example/i.test(`${si >= 0 ? r[si] : ''}${ni >= 0 ? r[ni] : ''}`)).length;
+}
+function detectHeaderRow(matrix) {
+  for (let r = 0; r < Math.min(15, matrix.length); r++) {
+    const known = matrix[r].filter(c => guessTarget(c) !== 'ignore').length;
+    if (known >= 2 && matrix[r].some(c => ['name', 'seat'].includes(guessTarget(c)))) return r;
+  }
+  return -1;
+}
+function renderSheetPicker(active) {
+  const {sheets} = modalState.book;
+  const box = $('impSheets'); if (!box) return;
+  box.innerHTML = `<div class="row" style="margin-top:10px;gap:10px">
+    <label class="flabel">工作表（分頁）<select class="in" id="impSheet" style="min-width:200px;margin-top:4px">${sheets.map((s, i) => `<option value="${i}" ${i === active ? 'selected' : ''}>${esc(s.name)}（${s.hr >= 0 ? `${s.dataRows} 位學生` : `${s.matrix.filter(r => r.some(Boolean)).length} 列`}${s.hr >= 0 ? '，可辨識' : ''}）</option>`).join('')}</select></label>
+    <label class="flabel">欄位名稱在第幾列<select class="in" id="impHeaderRow" style="margin-top:4px"></select></label>
+  </div>
+  ${sheets.length > 1 ? `<p class="hint" style="margin-top:4px">這個檔案有 ${sheets.length} 個分頁，已自動選擇「${esc(sheets[active].name)}」，可改選其他分頁。</p>` : ''}`;
+  $('impSheet').onchange = e => { const i = +e.target.value; loadSheet(i, sheets[i].hr); };
+  $('impHeaderRow').onchange = e => loadSheet(+$('impSheet').value, +e.target.value);
+}
+function loadSheet(si, hr) {
+  const {fileName, sheets} = modalState.book, sheet = sheets[si];
+  const sel = $('impHeaderRow');
+  if (sel) {
+    const opts = Math.min(15, sheet.matrix.length);
+    const useHr = hr >= 0 ? hr : 0;
+    sel.innerHTML = Array.from({length: opts}, (_, r) => `<option value="${r}" ${r === useHr ? 'selected' : ''}>第 ${r + 1 + (sheet.offset || 0)} 列：${esc(sheet.matrix[r].filter(Boolean).slice(0, 4).join('、').slice(0, 30) || '（空白）')}</option>`).join('');
+  }
+  if (hr < 0 && modalState.mode !== 'roster') { showKeyValueMapping(fileName, sheet.matrix, sheet.name); return; }
+  const h = hr >= 0 ? hr : 0;
+  const rows = sheet.matrix.slice(h + 1).filter(r => r.some(Boolean));
+  showTableMapping(`${fileName}（${sheet.name}）`, sheet.matrix[h], rows);
+  if (hr < 0) $('impStatus').textContent += ' 未自動找到「姓名」或「座號」欄位，請確認「欄位名稱在第幾列」與下方對應。';
 }
 function targetSelect(id, val, locked) {
   if (locked) return `<span class="lock">🔒 敏感欄位，不匯入</span>`;
   return `<select data-map="${id}">${IMPORT_TARGETS.map(([k, l]) => `<option value="${k}" ${k === val ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
 }
 function showTableMapping(label, headers, rows) {
+  const roster = modalState.mode === 'roster';
   const map = headers.map(h => guessTarget(h));
-  modalState.table = {headers, rows, map};
+  const use = map.map(t => t !== 'lock' && t !== 'ignore' && (!roster || ROSTER_TARGETS.includes(t)));
+  modalState.table = {headers, rows, map, use};
   const sample = i => rows.map(r => r[i]).find(isMeaningful) || '';
-  const realRows = rows.filter(r => { const ni = map.indexOf('name'), si = map.indexOf('seat'); return !/範例|示範|example/i.test(`${si >= 0 ? r[si] : ''}${ni >= 0 ? r[ni] : ''}`); });
+  const realRows = rows.filter(r => { const ni = map.indexOf('name'), si = map.indexOf('seat'); return (ni < 0 && si < 0 || ni >= 0 && isMeaningful(r[ni]) || si >= 0 && isMeaningful(r[si])) && !/範例|示範|example/i.test(`${si >= 0 ? r[si] : ''}${ni >= 0 ? r[ni] : ''}`); });
   const wb = WB();
   const matchable = rows.filter(r => { const ni = map.indexOf('name'), si = map.indexOf('seat'); return wb.students.some(s => (ni >= 0 && s.name === r[ni]) || (si >= 0 && s.seat === String(r[si]).padStart(2, '0'))); }).length;
   $('impStatus').textContent = `已讀取 ${label}：${realRows.length} 筆資料、${headers.length} 個欄位${realRows.length < rows.length ? '（範例列不匯入）' : ''}。`;
-  $('impMapping').innerHTML = `<div class="sec"><h3>② 確認欄位對應</h3>
-    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>檔案欄位</th><th>範例內容</th><th>匯入到</th></tr></thead><tbody>
-    ${headers.map((h, i) => `<tr><td>${esc(h || `（第 ${i + 1} 欄）`)}</td><td class="snippet">${esc(String(sample(i)).slice(0, 60))}</td><td>${targetSelect(i, map[i], map[i] === 'lock')}</td></tr>`).join('')}
+  $('impMapping').innerHTML = `<div class="sec"><h3>② 勾選要匯入的欄位</h3>
+    <div class="row" style="margin-bottom:6px"><button class="btn sm" id="impAll">全選可匯入欄位</button><button class="btn sm" id="impBasic">只選名冊欄位</button><button class="btn sm" id="impNone">全部取消</button><span class="hint" id="impCount"></span></div>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th style="width:52px">匯入</th><th>檔案欄位</th><th>範例內容</th><th>匯入到</th></tr></thead><tbody>
+    ${headers.map((h, i) => `<tr><td><input type="checkbox" data-use="${i}" ${use[i] ? 'checked' : ''} ${map[i] === 'lock' ? 'disabled' : ''} aria-label="匯入 ${esc(h)}"></td><td>${esc(h || `（第 ${i + 1} 欄）`)}</td><td class="snippet">${esc(String(sample(i)).slice(0, 60))}</td><td>${targetSelect(i, map[i], map[i] === 'lock')}</td></tr>`).join('')}
     </tbody></table></div>
     <div class="row" style="margin-top:10px">
-      <label><input type="checkbox" id="impCreate" checked> 名單中沒有的學生自動新增</label>
-      <label><input type="checkbox" id="impActs" checked> 自評中的科展、競賽、活動表演自動加入活動清單</label>
+      ${roster ? `<label><input type="radio" name="rosterMode" value="merge" checked> 合併到目前名單（同座號或同姓名會更新）</label><label><input type="radio" name="rosterMode" value="replace"> 取代目前名單</label>` :
+      `<label><input type="checkbox" id="impCreate" checked> 名單中沒有的學生自動新增</label>
+      <label><input type="checkbox" id="impActs" checked> 自評中的科展、競賽、活動表演自動加入活動清單</label>`}
     </div>
     <p class="hint" style="margin-top:6px">依「座號＋姓名」比對目前名單（目前可比對 ${matchable} 筆）。已有內容的文字欄位會合併，不會清空。</p>
     <div class="row" style="margin-top:10px;justify-content:flex-end"><button class="btn primary" id="impApply">③ 套用到 ${realRows.length} 位學生</button></div></div>`;
-  $('impMapping').querySelectorAll('[data-map]').forEach(sel => sel.onchange = () => { modalState.table.map[+sel.dataset.map] = sel.value; });
+  const t = modalState.table;
+  const sync = () => {
+    $('impMapping').querySelectorAll('[data-use]').forEach(cb => { cb.checked = t.use[+cb.dataset.use]; });
+    $('impCount').textContent = `已勾選 ${t.use.filter(Boolean).length} 個欄位`;
+  };
+  $('impMapping').querySelectorAll('[data-map]').forEach(sel => sel.onchange = () => { const i = +sel.dataset.map; t.map[i] = sel.value; t.use[i] = sel.value !== 'ignore'; sync(); });
+  $('impMapping').querySelectorAll('[data-use]').forEach(cb => cb.onchange = () => { const i = +cb.dataset.use; t.use[i] = cb.checked; if (cb.checked && t.map[i] === 'ignore') toast('請在右側選擇「匯入到」哪個欄位'); sync(); });
+  $('impAll').onclick = () => { t.map.forEach((m, i) => { t.use[i] = m !== 'lock' && m !== 'ignore'; }); sync(); };
+  $('impBasic').onclick = () => { t.map.forEach((m, i) => { t.use[i] = ROSTER_TARGETS.includes(m); }); sync(); };
+  $('impNone').onclick = () => { t.use = t.use.map(() => false); sync(); };
+  sync();
   $('impApply').onclick = applyTableImport;
 }
 function appendText(old, add) { const parts = [old, add].map(s => String(s || '').trim()).filter(Boolean); return [...new Set(parts)].join('\n'); }
@@ -1896,12 +2143,19 @@ function applyField(st, target, value, header, extra) {
   else if (target === 'free') st.free = appendText(st.free, v);
 }
 function applyTableImport() {
-  const {headers, rows, map} = modalState.table, wb = WB();
-  const create = $('impCreate').checked, autoActs = $('impActs').checked;
+  const {headers, rows, use} = modalState.table, wb = WB();
+  const map = modalState.table.map.map((m, i) => use[i] ? m : 'ignore');
+  const roster = modalState.mode === 'roster';
+  const create = roster ? true : $('impCreate').checked, autoActs = roster ? false : $('impActs').checked;
   const ni = map.indexOf('name'), si = map.indexOf('seat');
-  if (ni < 0 && si < 0) { toast('請至少指定「姓名」或「座號」欄位'); return; }
+  if (ni < 0 && si < 0) { toast('請至少勾選「姓名」或「座號」欄位'); return; }
   let updated = 0, created = 0, skipped = 0, examples = 0;
+  makeSnapshot(roster ? '匯入名冊前' : '匯入資料前');
   const before = clone(wb.students);
+  if (roster && document.querySelector('input[name="rosterMode"]:checked')?.value === 'replace' && wb.students.length) {
+    if (!confirm(`取代會移除目前 ${wb.students.length} 位學生的資料（匯入後可按「復原」找回）。確定取代？`)) return;
+    wb.students = [];
+  }
   rows.forEach(r => {
     const name = ni >= 0 ? r[ni] : '', seat = si >= 0 && r[si] ? String(r[si]).padStart(2, '0') : '';
     if (/範例|示範|example/i.test(`${seat}${name}`)) { examples++; return; }
@@ -2016,6 +2270,7 @@ function convertOldRecord(rec) {
   return {st, ctx};
 }
 function migrateOldDrafts() {
+  makeSnapshot('匯入舊版草稿前');
   const wb = WB(); let n = 0;
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i); if (!k?.startsWith(OLD_PREFIX)) continue;
@@ -2029,6 +2284,7 @@ async function restoreBackup(file) {
   if (!file) return;
   try {
     const data = JSON.parse(await file.text());
+    makeSnapshot('還原備份前');
     let added = 0;
     if (data?.appName === '導師評語生成系統' && data.version === 2 && data.workbooks) {
       Object.values(data.workbooks).forEach(w => {
@@ -2054,7 +2310,7 @@ function modalExport() {
       <div class="row" style="margin-top:8px"><select class="in" id="exField" style="max-width:200px"><option value="final">德行評語</option><option value="codes">評語代碼</option><option value="codeText">代碼詞語</option><option value="special">特殊優良表現</option></select>
       <button class="btn" id="exCopyCol">只複製內容欄</button><button class="btn" id="exCopyTbl">複製（含座號、姓名）</button></div></div>
       <div class="sec"><h3>列印／存成 PDF</h3><div class="row"><button class="btn" id="exPrintOne" ${CUR() ? '' : 'disabled'}>列印目前學生</button><button class="btn" id="exPrintAll" ${n ? '' : 'disabled'}>列印全班</button></div></div>
-      <div class="sec"><h3>備份</h3><p class="hint">資料只存在這台電腦的瀏覽器。換電腦、清除瀏覽紀錄前請先備份。備份檔不含 API 金鑰，但含學生資料，請妥善保管。</p>
+      <div class="sec"><h3>備份</h3><p class="hint">資料自動存在這台電腦的瀏覽器；要長期保存或跨電腦使用，請按上方 💾「資料儲存」連結資料夾。換電腦、清除瀏覽紀錄前也可下載備份。備份檔不含 API 金鑰，但含學生資料，請妥善保管。</p>
       <div class="row" style="margin-top:8px"><button class="btn" id="exJson">備份目前班級學期</button><button class="btn" id="exJsonAll">備份全部班級學期</button></div></div>`,
     foot: `<button class="btn" onclick="closeModal()">關閉</button>`};
 }
@@ -2221,7 +2477,8 @@ modalSettings.after = opts => {
   $('sDelWb').onclick = () => {
     const wb = WB();
     if (Object.keys(store.workbooks).length === 1 && !wb.students.length) { toast('目前沒有資料可刪除'); return; }
-    if (!confirm(`確定刪除「${wbLabel(wb)}」與其中 ${wb.students.length} 位學生的評語？刪除後無法復原，建議先到「匯出」備份。`)) return;
+    if (!confirm(`確定刪除「${wbLabel(wb)}」與其中 ${wb.students.length} 位學生的評語？刪除前會自動存一份還原點，可在「資料儲存」找回。`)) return;
+    makeSnapshot(`刪除班級學期「${wbLabel(wb)}」前`);
     delete store.workbooks[wb.id];
     if (!Object.keys(store.workbooks).length) { const n = blankWorkbook(); store.workbooks[n.id] = n; }
     store.activeWb = Object.keys(store.workbooks)[0]; queueSave(); closeModal(); renderAll(); toast('已刪除');
@@ -2253,7 +2510,7 @@ function modalHelp() {
         <li>不寫懲處紀錄、家庭經濟、身心疾病與宣判式字眼；不捏造未提供的獎項。</li>
       </ul></div>
     <div class="sec"><h3>快捷鍵</h3><p class="hint"><span class="kbd">Alt</span>＋<span class="kbd">↑</span>／<span class="kbd">↓</span> 切換上一位／下一位；<span class="kbd">Esc</span> 關閉視窗。</p></div>
-    <p class="hint">資料只存在本機瀏覽器，請定期「匯出 → 備份」。詳細操作指引與撰寫規範請見 <a href="https://froglssh.github.io/ai-homeroom-comment-workshop/%E5%B0%8E%E5%B8%AB%E8%A9%95%E8%AA%9E%E7%94%9F%E6%88%90%E7%B3%BB%E7%B5%B1%EF%BC%88codex%E5%84%AA%E5%8C%96%E7%89%88%EF%BC%89%E4%BD%BF%E7%94%A8%E8%AA%AA%E6%98%8E.html" target="_blank" style="color:var(--brand);text-decoration:underline;font-weight:600">〈導師評語生成系統使用說明與操作手冊〉</a>。</p>`,
+    <p class="hint">資料自動存在本機瀏覽器（IndexedDB）；按上方 💾 可選擇資料夾長期儲存，或到「匯出 → 備份」。詳細操作指引與撰寫規範請見 <a href="https://froglssh.github.io/ai-homeroom-comment-workshop/%E5%B0%8E%E5%B8%AB%E8%A9%95%E8%AA%9E%E7%94%9F%E6%88%90%E7%B3%BB%E7%B5%B1%EF%BC%88codex%E5%84%AA%E5%8C%96%E7%89%88%EF%BC%89%E4%BD%BF%E7%94%A8%E8%AA%AA%E6%98%8E.html" target="_blank" style="color:var(--brand);text-decoration:underline;font-weight:600">〈導師評語生成系統使用說明與操作手冊〉</a>。</p>`,
     foot: `<button class="btn primary" onclick="closeModal()">開始使用</button>`};
 }
 
@@ -2391,14 +2648,345 @@ async function batchPolish() {
 }
 
 // ============================================================
+// 資料夾長期儲存（File System Access API；電腦版 Chrome／Edge）
+// 資料夾內放一份「正本」JSON，並在子資料夾保留每日備份；可放在 Google 雲端硬碟資料夾跨電腦使用
+// ============================================================
+const APP_ID = 'lssh-homeroom-comment';
+const FOLDER_FILE = '導師評語資料.json';
+const FOLDER_HIST = '導師評語資料_每日備份';
+const FOLDER_HIST_RE = /^導師評語資料_\d{8}\.json$/;
+const HIST_KEEP = 30;
+const fsSupported = typeof window.showDirectoryPicker === 'function';
+const folder = {handle: null, name: '', status: fsSupported ? 'none' : 'unsupported', known: null, dirty: false, timer: null, writing: null, histCount: 0, errMsg: '', warned: false, lastWriteAt: 0};
+let choiceOpen = false;
+
+// 選擇對話框（疊在其他視窗之上）
+function askChoice(title, html, choices) {
+  return new Promise(resolve => {
+    const wrap = document.createElement('div');
+    wrap.className = 'modal-wrap'; wrap.style.zIndex = 150;
+    wrap.innerHTML = `<div class="modal" role="alertdialog" aria-modal="true" aria-label="${esc(title)}" style="width:min(620px,100%);min-height:0">
+      <div class="modal-h"><h2>${esc(title)}</h2></div><div class="modal-b">${html}</div>
+      <div class="modal-f">${choices.map((c, i) => `<button class="btn ${c.style === 'primary' ? 'primary' : c.style === 'danger' ? 'danger' : ''}" data-i="${i}">${esc(c.label)}</button>`).join('')}</div></div>`;
+    document.body.appendChild(wrap);
+    wrap.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { wrap.remove(); resolve(choices[+b.dataset.i].value); });
+    wrap.querySelector('[data-i]')?.focus();
+  });
+}
+function showBanner(html, actions = []) {
+  const b = $('folderBanner'); if (!b) return;
+  b.innerHTML = `<span style="flex:1;min-width:12rem">${html}</span>`;
+  actions.forEach(a => { const btn = document.createElement('button'); btn.className = 'btn sm'; btn.textContent = a.label; btn.onclick = a.fn; b.appendChild(btn); });
+  b.classList.remove('hidden');
+}
+function hideBanner() { $('folderBanner')?.classList.add('hidden'); }
+
+async function readMaster(dir) {
+  try {
+    const fh = await dir.getFileHandle(FOLDER_FILE);
+    const file = await fh.getFile();
+    const text = await file.text();
+    let obj = null; try { obj = JSON.parse(text); } catch {}
+    return {exists: true, text, obj, lastModified: file.lastModified};
+  } catch (e) { if (e && e.name === 'NotFoundError') return {exists: false}; throw e; }
+}
+async function writeFileSafe(dir, name, text) {
+  const fh = await dir.getFileHandle(name, {create: true});
+  const w = await fh.createWritable();
+  try { await w.write(text); await w.close(); } catch (e) { try { await w.abort(); } catch {} throw e; }
+  return (await fh.getFile()).lastModified;
+}
+const knownOf = (cur, lm) => ({lastModified: lm ?? cur.lastModified, rev: cur.obj?.rev ?? 0, savedAt: cur.obj?.savedAt ?? 0, savedBy: cur.obj?.savedBy ?? ''});
+function masterChanged(cur) {
+  if (!cur.exists) return false;
+  const k = folder.known;
+  if (!k) return true;
+  if (cur.lastModified === k.lastModified) return false;
+  return (cur.obj?.rev ?? 0) !== k.rev || (cur.obj?.savedAt ?? 0) !== k.savedAt || (cur.obj?.savedBy ?? '') !== k.savedBy;
+}
+async function rememberKnown(k) { folder.known = k; try { await idbPut('kv', 'folderKnown', k); } catch {} }
+async function ensureDailyHistory(cur) {
+  if (!cur.exists) return;
+  const hist = await folder.handle.getDirectoryHandle(FOLDER_HIST, {create: true});
+  const name = `導師評語資料_${dayStamp()}.json`;
+  let has = true; try { await hist.getFileHandle(name); } catch { has = false; }
+  if (!has) await writeFileSafe(hist, name, cur.text);
+  const names = [];
+  for await (const [n, h] of hist.entries()) if (h.kind === 'file' && FOLDER_HIST_RE.test(n)) names.push(n);
+  names.sort().reverse();
+  for (const n of names.slice(HIST_KEEP)) await hist.removeEntry(n);
+  folder.histCount = Math.min(names.length, HIST_KEEP);
+}
+async function countHistory() {
+  try {
+    const hist = await folder.handle.getDirectoryHandle(FOLDER_HIST);
+    let n = 0; for await (const [name, h] of hist.entries()) if (h.kind === 'file' && FOLDER_HIST_RE.test(name)) n++;
+    folder.histCount = n;
+  } catch { folder.histCount = 0; }
+}
+const masterPayload = () => ({...clone(store), savedBy: deviceName(), app: APP_ID});
+const safeName = s => String(s || '').replace(/[\\/:*?"<>|\s]/g, '_').slice(0, 30);
+async function writeConflictFile(text, who) {
+  const name = `導師評語資料_衝突_${safeName(who)}_${minuteStamp()}.json`;
+  await writeFileSafe(folder.handle, name, text);
+  return name;
+}
+async function writeMaster({force = false} = {}) {
+  if (!folder.handle || !['ok', 'error', 'paused'].includes(folder.status)) return;
+  if (folder.status === 'paused' && !force) return;
+  if (folder.writing) { await folder.writing; return writeMaster({force}); }
+  folder.writing = (async () => {
+    try {
+      const cur = await readMaster(folder.handle);
+      if (!force && masterChanged(cur)) { await folderConflict(cur); return; }
+      await ensureDailyHistory(cur);
+      const payload = masterPayload();
+      const lm = await writeFileSafe(folder.handle, FOLDER_FILE, JSON.stringify(payload, null, 1));
+      await rememberKnown({lastModified: lm, rev: payload.rev, savedAt: payload.savedAt, savedBy: payload.savedBy});
+      Object.assign(folder, {dirty: false, status: 'ok', errMsg: '', warned: false, lastWriteAt: Date.now()});
+    } catch (e) {
+      folder.status = 'error'; folder.errMsg = e?.message || String(e);
+      if (!folder.warned) { toast('📁 寫入資料夾失敗，資料仍保存在本機，下次儲存會自動重試'); folder.warned = true; }
+    }
+  })();
+  try { await folder.writing; } finally { folder.writing = null; renderFolderState(); }
+}
+function scheduleFolderWrite() {
+  if (!folder.handle || !['ok', 'error'].includes(folder.status)) return;
+  clearTimeout(folder.timer);
+  folder.timer = setTimeout(() => writeMaster(), 2000);
+}
+async function loadFromMaster(cur, reason) {
+  const d = normalizeData(cur.obj);
+  if (!d) { toast('資料夾內的資料檔無法讀取'); return false; }
+  await applyLoadedData(d, reason || '載入資料夾資料前');
+  await rememberKnown(knownOf(cur));
+  folder.dirty = false;
+  return true;
+}
+function compareTable(folderData, localData) {
+  const row = (lb, d, by) => `<tr><td><b>${lb}</b></td><td>${esc(countsText(d))}</td><td>${esc(fmtTime(d?.savedAt))}${by ? '｜' + esc(by) : ''}</td></tr>`;
+  return `<table class="tbl" style="margin-top:8px">${row('資料夾', folderData, folderData?.savedBy)}${row('這台電腦', localData, deviceName())}</table>`;
+}
+async function folderConflict(cur) {
+  if (choiceOpen) return;
+  choiceOpen = true;
+  const other = cur.obj || {};
+  const choice = await askChoice('資料夾內的資料已被另一台電腦更新',
+    `<p>「${esc(other.savedBy || '另一台電腦')}」在 ${esc(fmtTime(other.savedAt))} 更新了資料夾內的評語資料，本頁也有尚未寫入的修改。</p>${compareTable(other, store)}
+     <p class="hint" style="margin-top:8px">沒被選用的一份不會遺失：本頁內容會存成還原點，或資料夾原檔另存成衝突檔。</p>`,
+    [{value: 'load', label: '載入資料夾內較新的資料', style: 'primary'}, {value: 'overwrite', label: '以本頁內容覆蓋', style: 'danger'}, {value: 'later', label: '本頁另存衝突檔', style: 'plain'}]);
+  choiceOpen = false;
+  hideBanner();
+  try {
+    if (choice === 'load') { await loadFromMaster(cur, '載入資料夾資料前（本頁未寫入的內容）'); folder.status = 'ok'; toast('已載入資料夾內的最新資料；本頁原內容已存成還原點'); }
+    else if (choice === 'overwrite') { const n = await writeConflictFile(cur.text, other.savedBy || '另一台電腦'); folder.status = 'ok'; await rememberKnown(knownOf(cur)); setTimeout(() => writeMaster({force: true}), 0); toast(`資料夾原檔已另存為 ${n}`); }
+    else { const n = await writeConflictFile(JSON.stringify(masterPayload(), null, 1), deviceName()); folder.status = 'paused'; toast(`本頁內容已另存為 ${n}，資料夾同步暫停`); }
+  } catch (e) { folder.status = 'error'; folder.errMsg = e?.message || String(e); }
+  renderFolderState();
+}
+async function reconcile(dir, firstLink) {
+  const cur = await readMaster(dir);
+  const prevHandle = folder.handle, prevKnown = folder.known;
+  folder.handle = dir; folder.name = dir.name;
+  if (firstLink) folder.known = null;
+  const commit = async () => { folder.status = 'ok'; try { await idbPut('kv', 'folderHandle', dir); } catch {} await countHistory(); };
+  if (!cur.exists) {
+    await commit();
+    await writeMaster({force: true});
+    if (folder.status === 'ok') toast(`已在資料夾「${dir.name}」建立「${FOLDER_FILE}」`);
+    return true;
+  }
+  if (!cur.obj || !normalizeData(cur.obj)) {
+    folder.handle = prevHandle; folder.known = prevKnown;
+    if (!prevHandle) folder.status = 'none';
+    await askChoice('資料夾內的資料檔無法讀取', `<p>「${esc(FOLDER_FILE)}」不是本程式可讀的格式。請檢查檔案，或改選其他資料夾。</p>`, [{value: 'ok', label: '知道了', style: 'primary'}]);
+    return false;
+  }
+  const localEmpty = isEmptyData(store);
+  const mChanged = masterChanged(cur);
+  const lChanged = !folder.known || (store.savedAt || 0) > (folder.known.savedAt || 0) || folder.dirty;
+  if (!firstLink && !mChanged) { await commit(); await rememberKnown(knownOf(cur)); if (lChanged) await writeMaster(); return true; }
+  if (localEmpty || (!firstLink && !lChanged)) { await commit(); await loadFromMaster(cur); toast(`已載入資料夾內的資料（${countsText(cur.obj)}）`); return true; }
+  choiceOpen = true;
+  const choice = await askChoice(firstLink ? '資料夾內已有評語資料' : '這台電腦與資料夾的資料不同',
+    `<p>${firstLink ? '選擇的資料夾中已經有評語資料，這台電腦也有資料。' : '上次沒連上資料夾時這台電腦改過資料，資料夾內的資料也被更新過。'}請選擇要使用哪一份：</p>
+     ${compareTable(cur.obj, store)}<p class="hint" style="margin-top:8px">沒被選用的一份不會遺失：本機資料會存成還原點；資料夾資料會另存成衝突檔。</p>`,
+    [{value: 'folder', label: '使用資料夾內的資料', style: 'primary'}, {value: 'local', label: '用本機資料覆蓋資料夾', style: 'danger'}, {value: 'cancel', label: '取消', style: 'plain'}]);
+  choiceOpen = false;
+  if (choice === 'folder') { await commit(); await loadFromMaster(cur, '改用資料夾資料前'); toast('已改用資料夾內的資料；本機原資料已存成還原點'); return true; }
+  if (choice === 'local') { await commit(); const n = await writeConflictFile(cur.text, cur.obj.savedBy || '資料夾原檔'); await rememberKnown(knownOf(cur)); await writeMaster({force: true}); toast(`已用本機資料覆蓋；資料夾原檔另存為 ${n}`); return true; }
+  if (firstLink) { folder.handle = prevHandle; folder.known = prevKnown; if (!prevHandle) folder.status = 'none'; }
+  else folder.status = 'paused';
+  return false;
+}
+async function pickFolder() {
+  if (!fsSupported) { toast('這個瀏覽器不支援選擇資料夾，請改用電腦版 Chrome 或 Edge'); return; }
+  let dir;
+  try { dir = await window.showDirectoryPicker({id: APP_ID, mode: 'readwrite'}); }
+  catch (e) { if (e?.name !== 'AbortError') toast('無法開啟資料夾：' + (e?.message || e)); return; }
+  try {
+    if (dir.queryPermission && (await dir.queryPermission({mode: 'readwrite'})) !== 'granted') {
+      if ((await dir.requestPermission({mode: 'readwrite'})) !== 'granted') { toast('沒有取得資料夾寫入權限'); return; }
+    }
+    saveNow();
+    await reconcile(dir, true);
+  } catch (e) { toast('連結資料夾失敗：' + (e?.message || e)); }
+  hideBanner(); renderFolderState();
+}
+async function disconnectFolder() {
+  const ok = await askChoice('中斷資料夾連結？', '<p>資料夾內的檔案不會被刪除，這台電腦的資料也會保留；之後資料只存在這台電腦的瀏覽器。</p>', [{value: 'yes', label: '中斷連結', style: 'danger'}, {value: 'no', label: '取消', style: 'plain'}]);
+  if (ok !== 'yes') return;
+  clearTimeout(folder.timer);
+  try { await idbDel('kv', 'folderHandle'); await idbDel('kv', 'folderKnown'); } catch {}
+  Object.assign(folder, {handle: null, name: '', status: 'none', known: null, dirty: false, errMsg: '', histCount: 0, lastWriteAt: 0});
+  hideBanner(); renderFolderState();
+  toast('已中斷資料夾連結');
+}
+async function grantFolder() {
+  if (!folder.handle) return;
+  try {
+    if ((await folder.handle.requestPermission({mode: 'readwrite'})) !== 'granted') { toast('沒有取得資料夾權限，目前仍使用本機資料'); return; }
+    await reconcile(folder.handle, false);
+    hideBanner();
+  } catch (e) { folder.status = 'error'; folder.errMsg = e?.message || String(e); toast('無法讀取資料夾，目前仍使用本機資料'); }
+  renderFolderState();
+}
+async function reloadFromFolder() {
+  if (!folder.handle) return;
+  try {
+    const cur = await readMaster(folder.handle);
+    if (!cur.exists) { toast('資料夾內還沒有資料檔'); return; }
+    await loadFromMaster(cur, '從資料夾重新載入前');
+    folder.status = 'ok'; hideBanner();
+    toast('已從資料夾重新載入');
+  } catch (e) { folder.status = 'error'; folder.errMsg = e?.message || String(e); toast('讀取資料夾失敗'); }
+  renderFolderState();
+}
+async function initFolder() {
+  if (!fsSupported || persist.mode !== 'idb') { renderFolderState(); return; }
+  let dir = null;
+  try { dir = await idbGet('kv', 'folderHandle'); folder.known = (await idbGet('kv', 'folderKnown')) || null; } catch {}
+  if (!dir) { renderFolderState(); return; }
+  folder.handle = dir; folder.name = dir.name;
+  let perm = 'prompt';
+  try { perm = await dir.queryPermission({mode: 'readwrite'}); } catch {}
+  if (perm === 'granted') {
+    try { await reconcile(dir, false); }
+    catch (e) {
+      folder.status = 'error'; folder.errMsg = e?.message || String(e);
+      showBanner(`⚠ 無法讀取資料夾「${esc(folder.name)}」（可能已被移動、刪除或雲端硬碟未啟動），目前使用本機資料。`, [{label: '重試', fn: grantFolder}, {label: '更換資料夾', fn: pickFolder}]);
+    }
+  } else {
+    folder.status = 'needPermission';
+    showBanner(`📁 請按「連接資料夾」以使用「${esc(folder.name)}」內的評語資料——授權前畫面顯示的是這台電腦的本機資料，可能不是最新。`, [{label: '連接資料夾', fn: grantFolder}]);
+  }
+  renderFolderState();
+}
+let checkingFolder = false;
+async function checkFolderUpdate() {
+  if (checkingFolder || folder.status !== 'ok' || !folder.handle || folder.writing || choiceOpen) return;
+  checkingFolder = true;
+  try {
+    const cur = await readMaster(folder.handle);
+    if (!masterChanged(cur)) return;
+    if (folder.dirty) { await folderConflict(cur); return; }
+    showBanner(`🔄 另一台電腦（${esc(cur.obj?.savedBy || '另一台電腦')}）已於 ${esc(fmtTime(cur.obj?.savedAt))} 更新評語資料。`, [{label: '載入最新資料', fn: reloadFromFolder}]);
+  } catch (e) { folder.status = 'error'; folder.errMsg = e?.message || String(e); renderFolderState(); }
+  finally { checkingFolder = false; }
+}
+setInterval(checkFolderUpdate, 60000);
+window.addEventListener('focus', checkFolderUpdate);
+
+function renderFolderState() {
+  setSaveState(lastSaveStatus || '已載入');
+  if (modalState.name === 'storage') renderStorageModal();
+}
+
+// ---------- 「資料儲存」對話框 ----------
+function modalStorage() {
+  return {title: '資料儲存', wide: true, body: '<div id="stoBody"><p class="hint">讀取中…</p></div>', foot: '<button class="btn" onclick="closeModal()">關閉</button>'};
+}
+modalStorage.after = () => renderStorageModal();
+const FOLDER_STATUS = {
+  none: ['未連結', '目前只存在這台電腦的瀏覽器。'],
+  ok: ['已連結', '每次修改約 2 秒後自動寫入資料夾。'],
+  needPermission: ['需要授權', '請按「連接資料夾」重新授權，才能讀寫資料夾。'],
+  error: ['讀寫失敗', '資料仍保存在本機；修好後按「重試」。'],
+  paused: ['同步暫停', '資料夾與本頁內容有衝突，已暫停寫入。'],
+  unsupported: ['不支援', '這個瀏覽器無法選擇資料夾（Safari、Firefox、手機與平板不支援）。請改用電腦版 Chrome 或 Edge，或定期「匯出 → 備份」。']
+};
+async function renderStorageModal() {
+  const box = $('stoBody'); if (!box) return;
+  const [label, desc] = FOLDER_STATUS[folder.status] || FOLDER_STATUS.none;
+  const btn = (id, text, cls = '') => `<button class="btn ${cls}" id="${id}">${text}</button>`;
+  let actions = '';
+  if (folder.status === 'unsupported') actions = '';
+  else if (!folder.handle) actions = btn('stoPick', '📁 選擇資料夾', 'primary');
+  else if (folder.status === 'needPermission') actions = btn('stoGrant', '連接資料夾', 'primary') + btn('stoPick', '更換資料夾') + btn('stoDisc', '中斷連結', 'danger');
+  else actions = btn('stoWrite', '立即寫入資料夾', 'primary') + btn('stoReload', '從資料夾重新載入') + (folder.status === 'error' ? btn('stoGrant', '重試') : '') + btn('stoPick', '更換資料夾') + btn('stoDisc', '中斷連結', 'danger');
+  box.innerHTML = `
+  <div class="sec"><h3>① 這台電腦（自動）</h3>
+    <table class="tbl"><tbody>
+      <tr><th style="width:150px">主要儲存</th><td>${persist.mode === 'idb' ? 'IndexedDB（瀏覽器資料庫）' : '<b style="color:var(--bad)">localStorage 後援</b>（IndexedDB 無法使用：' + esc(persist.error || '未知原因') + '）'}；另有 localStorage 鏡像${persist.mirrorOk ? '' : '（鏡像空間不足，未寫入）'}</td></tr>
+      <tr><th>長期保存</th><td>${persist.persisted === true ? '已取得瀏覽器長期保存權限，不會被自動清除' : persist.persisted === false ? '瀏覽器未同意長期保存，空間不足時可能被清除，建議連結資料夾' : '無法確認'}</td></tr>
+      <tr><th>目前資料</th><td>${esc(countsText(store))}</td></tr>
+      <tr><th>最後儲存</th><td>${esc(fmtTime(store.savedAt))}｜裝置：${esc(deviceName())}</td></tr>
+    </tbody></table>
+    <p class="hint" style="margin-top:6px">清除瀏覽紀錄、使用無痕視窗或換電腦時，這份資料不會跟著走，請連結資料夾或定期備份。</p></div>
+  <div class="sec"><h3>② 資料夾長期儲存 <span class="status-badge ${folder.status === 'ok' ? 'done' : ['needPermission', 'error', 'paused'].includes(folder.status) ? 'draft' : ''}">${label}</span></h3>
+    <p>${desc}</p>
+    ${folder.handle ? `<table class="tbl" style="margin-top:8px"><tbody>
+      <tr><th style="width:150px">資料夾</th><td>${esc(folder.name)}</td></tr>
+      <tr><th>正本檔案</th><td><code>${FOLDER_FILE}</code>${folder.lastWriteAt ? `｜上次寫入 ${esc(fmtTime(folder.lastWriteAt))}` : ''}</td></tr>
+      <tr><th>每日備份</th><td><code>${FOLDER_HIST}</code>／${folder.histCount} 份（最多保留 ${HIST_KEEP} 天）</td></tr>
+      ${folder.errMsg ? `<tr><th>錯誤訊息</th><td style="color:var(--bad)">${esc(folder.errMsg)}</td></tr>` : ''}
+    </tbody></table>` : ''}
+    <div class="row" style="margin-top:10px">${actions}</div>
+    ${folder.status !== 'unsupported' ? `<div class="notice info" style="margin-top:10px"><span>建議選擇「Google 雲端硬碟」電腦版同步的資料夾：資料會自動上雲，在學校與家裡的電腦選同一個資料夾即可接續編輯。資料夾內的檔案含學生個資，請勿放在共用或公開資料夾。</span></div>` : ''}
+  </div>
+  <div class="sec"><h3>③ 自動還原點</h3>
+    <p class="hint">每天第一次儲存、清空名單、匯入、還原或改用資料夾資料之前，會自動存一份還原點（每日保留 ${DAILY_SNAP_KEEP} 天、事件保留 ${EVENT_SNAP_KEEP} 份）。</p>
+    <div id="stoSnaps" style="margin-top:8px"><p class="hint">讀取中…</p></div></div>`;
+  const on = (id, fn) => { const el = $(id); if (el) el.onclick = fn; };
+  on('stoPick', pickFolder); on('stoGrant', grantFolder); on('stoDisc', disconnectFolder); on('stoReload', reloadFromFolder);
+  on('stoWrite', async () => { saveNow(); await writeMaster({force: folder.status === 'paused'}); if (folder.status === 'ok') toast('已寫入資料夾'); });
+  renderSnapshotList();
+}
+async function renderSnapshotList() {
+  const box = $('stoSnaps'); if (!box) return;
+  if (persist.mode !== 'idb') { box.innerHTML = '<p class="hint">此瀏覽器目前無法使用 IndexedDB，因此沒有自動還原點。請定期「匯出 → 備份」。</p>'; return; }
+  let list = [];
+  try { list = (await idbAll('snapshots')).sort((a, b) => b.at - a.at); } catch {}
+  if (!list.length) { box.innerHTML = '<p class="hint">目前還沒有還原點。</p>'; return; }
+  box.innerHTML = `<div class="tbl-wrap" style="max-height:300px"><table class="tbl"><thead><tr><th>時間</th><th>原因</th><th>內容</th><th></th></tr></thead><tbody>
+    ${list.map(s => `<tr><td style="white-space:nowrap">${esc(fmtTime(s.at))}</td><td>${esc(s.reason)}</td><td>${esc(countsText(s.data))}</td>
+      <td style="white-space:nowrap"><button class="btn sm" data-snap="${esc(s.id)}" data-sact="restore">還原</button> <button class="btn sm" data-snap="${esc(s.id)}" data-sact="download">下載</button></td></tr>`).join('')}
+    </tbody></table></div>`;
+  box.querySelectorAll('[data-snap]').forEach(b => b.onclick = async () => {
+    const snap = list.find(s => s.id === b.dataset.snap); if (!snap) return;
+    if (b.dataset.sact === 'download') { downloadBlob(new Blob([JSON.stringify({appName: '導師評語生成系統', version: 2, exportedAt: new Date(snap.at).toISOString(), workbooks: snap.data.workbooks}, null, 1)], {type: 'application/json'}), `導師評語_還原點_${snap.id}.json`); return; }
+    const ok = await askChoice('還原這個還原點？', `<p>時間：${esc(fmtTime(snap.at))}（${esc(snap.reason)}）</p><p>還原點：${esc(countsText(snap.data))}<br>目前：${esc(countsText(store))}</p><p class="hint">還原前會先把目前資料存成還原點。</p>`, [{value: 'yes', label: '還原', style: 'primary'}, {value: 'no', label: '取消', style: 'plain'}]);
+    if (ok !== 'yes') return;
+    const d = normalizeData(snap.data);
+    if (!d) { toast('還原點內容無法讀取'); return; }
+    await applyLoadedData(d, '還原前');
+    saveNow(true); renderStorageModal();
+    toast('已還原');
+  });
+}
+
+// ============================================================
 // 啟動
 // ============================================================
-document.addEventListener('DOMContentLoaded', () => {
-  loadStore();
+document.addEventListener('DOMContentLoaded', async () => {
+  await bootStorage();
   refreshAutoDrafts();
   bindEvents();
   if (!CUR() && WB().students.length) WB().activeId = WB().students[0].id;
   renderAll();
+  setSaveState(store.savedAt ? `已載入 ${fmtTime(store.savedAt)}` : isEmptyData(store) ? '尚無資料' : '已載入');
+  initFolder();
   if (countOldDrafts() && !lsGet(AI_PREFIX + 'migrateHint') && !Object.values(store.workbooks).some(w => w.students.length)) {
     lsSet(AI_PREFIX + 'migrateHint', '1');
     toast(`偵測到舊版草稿 ${countOldDrafts()} 份`, {label: '匯入', run: () => openModal('import')});
