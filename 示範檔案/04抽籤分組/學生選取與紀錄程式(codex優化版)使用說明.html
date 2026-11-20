@@ -1,1178 +1,271 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>學生選取與紀錄程式 - 教師使用說明手冊</title>
-    <!-- 載入 Google Fonts Noto Sans TC & Outfit -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #2563eb;
-            --primary-light: #eff6ff;
-            --secondary: #059669;
-            --secondary-light: #ecfdf5;
-            --danger: #dc2626;
-            --danger-light: #fef2f2;
-            --warning: #d97706;
-            --warning-light: #fffbeb;
-            --purple: #8b5cf6;
-            --purple-light: #f5f3ff;
-            --slate-50: #f8fafc;
-            --slate-100: #f1f5f9;
-            --slate-200: #e2e8f0;
-            --slate-300: #cbd5e1;
-            --slate-600: #475569;
-            --slate-700: #334155;
-            --slate-900: #0f172a;
-            --radius-sm: 6px;
-            --radius-md: 12px;
-            --radius-lg: 20px;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1);
-            --shadow-md: 0 10px 15px -3px rgba(15,23,42,0.08), 0 4px 6px -4px rgba(15,23,42,0.08);
-            --shadow-lg: 0 20px 25px -5px rgba(15,23,42,0.1), 0 8px 10px -6px rgba(15,23,42,0.1);
-            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: 'Outfit', 'Noto Sans TC', sans-serif;
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            color: var(--slate-700);
-            line-height: 1.7;
-            padding-bottom: 60px;
-        }
-
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }
-
-        /* 導覽列 */
-        .navbar {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--slate-200);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            padding: 16px 0;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .navbar-brand {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--slate-900);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-        }
-
-        .navbar-brand span {
-            background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        /* 頂部橫幅 */
-        .hero {
-            background: linear-gradient(135deg, var(--slate-900) 0%, #1e293b 100%);
-            color: white;
-            padding: 64px 0;
-            border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-            box-shadow: var(--shadow-md);
-            position: relative;
-            overflow: hidden;
-            margin-bottom: 40px;
-        }
-
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at 80% 20%, rgba(37, 99, 235, 0.15) 0%, transparent 50%);
-            pointer-events: none;
-        }
-
-        .hero h1 {
-            font-size: 2.6rem;
-            font-weight: 700;
-            margin-bottom: 16px;
-            letter-spacing: -0.5px;
-            line-height: 1.3;
-        }
-
-        .hero p {
-            font-size: 1.15rem;
-            opacity: 0.85;
-            max-width: 700px;
-            margin-bottom: 28px;
-            font-weight: 300;
-        }
-
-        .hero-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            margin-bottom: 24px;
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
-
-        .hero-meta span {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 4px 12px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .btn-online-link {
-            display: inline-flex;
-            align-items: center;
-            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-            color: white;
-            text-decoration: none;
-            padding: 14px 28px;
-            border-radius: var(--radius-md);
-            font-weight: 600;
-            font-size: 1.05rem;
-            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
-            transition: var(--transition);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            gap: 8px;
-        }
-
-        .btn-online-link:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6);
-        }
-
-        /* 導覽錨點與主版面佈局 */
-        .layout {
-            display: grid;
-            grid-template-columns: 280px 1fr;
-            gap: 40px;
-            margin-top: 20px;
-        }
-
-        .sidebar {
-            position: sticky;
-            top: 100px;
-            height: calc(100vh - 140px);
-            overflow-y: auto;
-            background: white;
-            padding: 24px;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--slate-200);
-            box-shadow: var(--shadow-sm);
-        }
-
-        .sidebar h3 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--slate-900);
-            margin-bottom: 16px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid var(--slate-100);
-        }
-
-        .sidebar-menu {
-            list-style: none;
-        }
-
-        .sidebar-menu li {
-            margin-bottom: 8px;
-        }
-
-        .sidebar-menu a {
-            display: block;
-            padding: 8px 12px;
-            color: var(--slate-600);
-            text-decoration: none;
-            border-radius: var(--radius-sm);
-            font-size: 0.95rem;
-            transition: var(--transition);
-            font-weight: 500;
-        }
-
-        .sidebar-menu a:hover {
-            background: var(--slate-100);
-            color: var(--primary);
-            padding-left: 16px;
-        }
-
-        .sidebar-menu a.active {
-            background: var(--primary-light);
-            color: var(--primary);
-            font-weight: 700;
-        }
-
-        .main-content {
-            min-width: 0; /* 防止網格溢出 */
-        }
-
-        /* 區塊樣式 */
-        .guide-section {
-            background: white;
-            border: 1px solid var(--slate-200);
-            border-radius: var(--radius-md);
-            padding: 36px;
-            margin-bottom: 32px;
-            box-shadow: var(--shadow-sm);
-            transition: var(--transition);
-        }
-
-        .guide-section:hover {
-            box-shadow: var(--shadow-md);
-        }
-
-        .section-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--slate-900);
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-bottom: 2px solid var(--slate-100);
-            padding-bottom: 12px;
-        }
-
-        .section-title span {
-            background: var(--primary-light);
-            color: var(--primary);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            font-weight: 700;
-        }
-
-        /* 步驟式引導 */
-        .steps-wrapper {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 12px;
-            margin-bottom: 32px;
-        }
-
-        .step-card {
-            background: white;
-            border: 1px solid var(--slate-200);
-            border-radius: var(--radius-md);
-            padding: 16px 12px;
-            text-align: center;
-            box-shadow: var(--shadow-sm);
-            position: relative;
-        }
-
-        .step-number {
-            width: 32px;
-            height: 32px;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            margin: 0 auto 12px;
-            font-size: 0.95rem;
-        }
-
-        .step-card:nth-child(1) .step-number { background: #3b82f6; }
-        .step-card:nth-child(2) .step-number { background: #10b981; }
-        .step-card:nth-child(3) .step-number { background: #f59e0b; }
-        .step-card:nth-child(4) .step-number { background: #8b5cf6; }
-        .step-card:nth-child(5) .step-number { background: #ec4899; }
-
-        .step-card h4 {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: var(--slate-900);
-            margin-bottom: 6px;
-        }
-
-        .step-card p {
-            font-size: 0.8rem;
-            color: var(--slate-600);
-            line-height: 1.4;
-        }
-
-        /* 模擬按鈕與表單元素 (與主程式外觀一致) */
-        .mock-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            border: none;
-            cursor: default;
-            color: white;
-            gap: 6px;
-            white-space: nowrap;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .mock-btn-primary { background-color: var(--primary); }
-        .mock-btn-secondary { background-color: var(--secondary); }
-        .mock-btn-danger { background-color: var(--danger); }
-        .mock-btn-warning { background-color: var(--warning); }
-        .mock-btn-outline {
-            background-color: white;
-            color: var(--slate-700);
-            border: 2px solid var(--slate-300);
-        }
-
-        /* 模擬 UI 卡片，用來直接展示介面 */
-        .mock-ui-card {
-            background: var(--slate-50);
-            border: 1px solid var(--slate-200);
-            border-radius: var(--radius-md);
-            padding: 20px;
-            margin: 20px 0;
-        }
-
-        .mock-ui-title {
-            font-size: 0.9rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--slate-600);
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        /* 快速備註標籤樣式 */
-        .quick-tag {
-            display: inline-block;
-            background: var(--slate-200);
-            color: var(--slate-900);
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            margin: 2px;
-            border: 1px solid var(--slate-300);
-        }
-
-        /* 提示框 */
-        .alert-box {
-            padding: 20px;
-            border-radius: var(--radius-md);
-            margin: 20px 0;
-            border-left: 4px solid;
-            font-size: 0.95rem;
-        }
-
-        .alert-info {
-            background-color: var(--primary-light);
-            border-color: var(--primary);
-            color: #1e3a8a;
-        }
-
-        .alert-success {
-            background-color: var(--secondary-light);
-            border-color: var(--secondary);
-            color: #064e3b;
-        }
-
-        .alert-warning {
-            background-color: var(--warning-light);
-            border-color: var(--warning);
-            color: #78350f;
-        }
-
-        .alert-danger {
-            background-color: var(--danger-light);
-            border-color: var(--danger);
-            color: #7f1d1d;
-        }
-
-        .alert-purple {
-            background-color: var(--purple-light);
-            border-color: var(--purple);
-            color: #4c1d95;
-        }
-
-        .alert-box h5 {
-            font-weight: 700;
-            margin-bottom: 6px;
-            font-size: 1rem;
-        }
-
-        /* 表格樣式 */
-        .guide-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-
-        .guide-table th, .guide-table td {
-            border: 1px solid var(--slate-200);
-            padding: 12px 16px;
-            text-align: left;
-            font-size: 0.95rem;
-        }
-
-        .guide-table th {
-            background: var(--slate-100);
-            color: var(--slate-900);
-            font-weight: 700;
-        }
-
-        .guide-table tr:hover {
-            background: var(--slate-50);
-        }
-
-        .text-primary { color: var(--primary); font-weight: 600; }
-        .text-secondary { color: var(--secondary); font-weight: 600; }
-        .text-danger { color: var(--danger); font-weight: 600; }
-        .text-warning { color: var(--warning); font-weight: 600; }
-        .text-purple { color: var(--purple); font-weight: 600; }
-
-        /* 常見問與答樣式 */
-        .faq-item {
-            margin-bottom: 24px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--slate-200);
-        }
-
-        .faq-question {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--slate-900);
-            margin-bottom: 8px;
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-        }
-
-        .faq-answer {
-            color: var(--slate-600);
-            padding-left: 28px;
-            font-size: 0.95rem;
-        }
-
-        /* 頁尾 */
-        .footer {
-            background: var(--slate-900);
-            color: white;
-            padding: 40px 0;
-            text-align: center;
-            font-size: 0.9rem;
-            margin-top: 60px;
-            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-        }
-
-        .footer a {
-            color: #60a5fa;
-            text-decoration: none;
-        }
-
-        .footer a:hover {
-            text-decoration: underline;
-        }
-
-        .footer p {
-            margin-bottom: 10px;
-            opacity: 0.8;
-        }
-
-        /* 模擬分組卡片 */
-        .mock-group-card {
-            background: white;
-            border: 1px solid var(--slate-200);
-            border-radius: var(--radius-sm);
-            padding: 12px;
-            box-shadow: var(--shadow-sm);
-            width: 100%;
-            max-width: 220px;
-        }
-
-        .mock-group-card h5 {
-            font-size: 0.9rem;
-            margin-bottom: 6px;
-            color: var(--slate-900);
-            border-bottom: 1px solid var(--slate-100);
-            padding-bottom: 4px;
-        }
-
-        .mock-group-card ol {
-            font-size: 0.8rem;
-            margin-left: 16px;
-            margin-bottom: 8px;
-        }
-
-        /* 手機板響應式 */
-        @media (max-width: 900px) {
-            .layout {
-                grid-template-columns: 1fr;
-            }
-
-            .sidebar {
-                display: none; /* 在手機上隱藏側邊欄 */
-            }
-
-            .steps-wrapper {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>學生選取、分組與紀錄程式使用說明</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0f172a; --ink-2: #334155; --muted: #64748b; --line: #e2e8f0;
+      --bg: #eef2f6; --card: #fff; --soft: #f8fafc;
+      --brand: #4f46e5; --brand-soft: #eef2ff; --brand-ink: #312e81;
+      --ok: #15803d; --ok-soft: #ecfdf3; --danger: #be123c; --danger-soft: #fff1f3;
+      --warn: #b45309; --warn-soft: #fff8eb;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 16px; }
+    body { margin: 0; color: var(--ink); background: var(--bg); line-height: 1.8;
+      font-family: "Noto Sans TC", system-ui, -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif; }
+    .wrap { max-width: 1080px; margin: 0 auto; }
+    header { background: #0f172a; color: #fff; padding: 40px 22px 34px; }
+    .brand { display: flex; gap: 14px; align-items: center; }
+    .logo { width: 54px; height: 54px; border-radius: 14px; background: var(--brand); display: grid; place-items: center; font-size: 1.7rem; flex: 0 0 auto; }
+    h1 { margin: 0; font-size: clamp(1.6rem, 4vw, 2.5rem); line-height: 1.25; font-weight: 800; }
+    .ver { display: inline-block; margin-left: 8px; font-size: .9rem; background: var(--brand); border-radius: 999px; padding: 2px 10px; vertical-align: middle; }
+    header p { max-width: 820px; margin: 14px 0 0; color: #cbd5e1; font-size: 1.04rem; }
+    .button-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    .button { display: inline-flex; align-items: center; gap: 6px; border-radius: 10px; padding: 10px 16px; text-decoration: none; font-weight: 800; color: #fff; background: var(--brand); }
+    .button.ghost { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.25); }
+    main { padding: 22px 22px 52px; }
+    nav, section { background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 1px 2px rgba(15,23,42,.05), 0 6px 20px rgba(15,23,42,.06); }
+    nav { padding: 14px 18px; margin-bottom: 18px; display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; }
+    nav strong { margin-right: 6px; }
+    nav a { color: var(--brand); text-decoration: none; font-weight: 700; }
+    nav a:hover { text-decoration: underline; }
+    section { padding: 22px 24px; margin: 18px 0; }
+    h2 { margin: 0 0 12px; font-size: 1.4rem; line-height: 1.35; display: flex; gap: 10px; align-items: center; }
+    h2 .num { width: 34px; height: 34px; border-radius: 50%; background: var(--brand); color: #fff; display: grid; place-items: center; font-size: 1rem; flex: 0 0 auto; }
+    h3 { margin: 20px 0 6px; font-size: 1.06rem; }
+    p { margin: 8px 0; }
+    ul, ol { padding-left: 1.35rem; margin: 8px 0; }
+    li { margin: 4px 0; }
+    .callout { border-left: 5px solid var(--brand); background: var(--brand-soft); padding: 10px 14px; margin: 12px 0; border-radius: 0 10px 10px 0; }
+    .callout.warn { border-left-color: var(--warn); background: var(--warn-soft); }
+    .steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 14px 0 4px; padding: 0; list-style: none; counter-reset: s; }
+    .steps li { margin: 0; background: var(--soft); border: 1px solid var(--line); border-radius: 12px; padding: 12px; counter-increment: s; }
+    .steps li::before { content: counter(s); display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--brand); color: #fff; font-weight: 800; font-size: .85rem; margin-bottom: 6px; }
+    .steps b { display: block; }
+    .steps span { color: var(--muted); font-size: .88rem; line-height: 1.55; display: block; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+    th, td { border-bottom: 1px solid var(--line); padding: 9px 12px; text-align: left; vertical-align: top; }
+    th { background: var(--soft); color: var(--ink-2); font-size: .9rem; }
+    tr:last-child td { border-bottom: 0; }
+    td:first-child { white-space: nowrap; font-weight: 700; }
+    .ui { display: inline-block; background: #fff; border: 1px solid #cbd5e1; border-bottom-width: 2px; border-radius: 7px; padding: 0 7px; font-size: .9em; font-weight: 700; white-space: nowrap; }
+    code { background: #f1f5f9; border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9em; }
+    /* 畫面示意 */
+    .stage { border-radius: 14px; background: radial-gradient(circle at 20% 0%, #312e81, #0f172a 70%); color: #fff; padding: 14px 18px; margin: 12px 0; }
+    .stage small { color: #c7d2fe; font-weight: 700; font-size: .82rem; }
+    .stage .names { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; padding: 12px 0 6px; }
+    .stage .names span { background: #fff; color: var(--brand-ink); border-radius: 14px; padding: 6px 18px; font-weight: 800; font-size: 1.5rem; }
+    .stage .names em { font-style: normal; color: var(--muted); font-size: .9rem; margin-right: 6px; }
+    .rrow { display: grid; grid-template-columns: 110px 116px 1fr 120px 30px 30px; gap: 8px; align-items: center; border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; background: #fff; margin: 10px 0; font-size: .9rem; }
+    .rrow b { white-space: nowrap; }
+    .pts { display: grid; grid-template-columns: 30px 1fr 30px; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; text-align: center; font-weight: 800; }
+    .pts i { font-style: normal; } .pts .m { background: var(--danger-soft); color: var(--danger); } .pts .p { background: var(--ok-soft); color: var(--ok); }
+    .box { border: 1px solid #cbd5e1; border-radius: 8px; padding: 3px 9px; color: #94a3b8; white-space: nowrap; overflow: hidden; }
+    .ico { border: 1px solid var(--line); border-radius: 8px; text-align: center; }
+    .groups { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 12px 0; }
+    .g { border: 1px solid var(--line); border-top: 5px solid var(--brand); border-radius: 12px; padding: 10px 12px; background: #fff; }
+    .g:nth-child(2) { border-top-color: #0f766e; } .g:nth-child(3) { border-top-color: #c2410c; }
+    .g b { display: block; margin-bottom: 6px; }
+    .chip { display: inline-block; border: 1px solid #cbd5e1; border-radius: 999px; padding: 1px 10px; margin: 2px; font-weight: 700; font-size: .9rem; }
+    .chip.sel { background: var(--brand); color: #fff; border-color: var(--brand); }
+    .cap { color: var(--muted); font-size: .85rem; margin-top: -4px; }
+    footer { padding: 18px 22px 42px; color: var(--muted); text-align: center; }
+    footer a { color: var(--brand); }
+    @media (max-width: 860px) { .steps { grid-template-columns: 1fr 1fr; } .groups { grid-template-columns: 1fr; } .rrow { grid-template-columns: 1fr 116px; } .rrow .hide-sm { display: none; } }
+    @media (max-width: 600px) {
+      header { padding: 30px 16px; } main { padding: 14px; } section { padding: 16px; }
+      .steps { grid-template-columns: 1fr; }
+      table { display: block; overflow-x: auto; }
+    }
+  </style>
 </head>
 <body>
+  <header>
+    <div class="wrap">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">🎲</div>
+        <h1>學生選取、分組與紀錄程式使用說明<span class="ver">v3.0</span></h1>
+      </div>
+      <p>臺北市立麗山高中林獻升老師製作。上課隨機抽人回答、記錄加減分與表現備註、快速分組，並把每個班級的紀錄長期保存、匯出成 Excel／PDF。</p>
+      <div class="button-row">
+        <a class="button" href="學生選取與紀錄程式(codex優化版).html" target="_blank" rel="noopener">▶ 開啟程式</a>
+        <a class="button ghost" href="#storage">💾 資料怎麼保存？</a>
+      </div>
+    </div>
+  </header>
 
-    <!-- 導覽列 -->
-    <nav class="navbar" id="top">
-        <div class="container">
-            <a class="navbar-brand" href="#">
-                <span>🎯 學生選取、分組與紀錄程式 - 說明手冊</span>
-            </a>
-        </div>
+  <main class="wrap">
+    <nav aria-label="章節導覽">
+      <strong>快速導覽</strong>
+      <a href="#start">快速開始</a>
+      <a href="#s1">1 班級與名單</a>
+      <a href="#s2">2 課堂抽籤</a>
+      <a href="#s3">3 分組安排</a>
+      <a href="#s4">4 統計輸出</a>
+      <a href="#storage">5 資料與備份</a>
+      <a href="#faq">常見問題</a>
     </nav>
 
-    <!-- 橫幅區 -->
-    <div class="hero">
-        <div class="container">
-            <h1>學生選取、分組與紀錄程式<br>教師極簡化操作指南</h1>
-            <p>這是一套專為中小學教師開發的「課堂隨機抽籤、指定與隨機分組、學生表現評分、快速備註與報表輸出」的一站式教學工具。免安裝、無廣告、完美保密學生隱私，開啟網頁即可輕鬆展開高效率課堂。</p>
-            <div class="hero-meta">
-                <span>更新版版本：v2026.07 強化升級版</span>
-                <span>核心功能：Excel 多班多選匯入、不重複抽籤、指定/隨機分組、分組名冊修改、快速備註、分組與個人報表輸出</span>
-            </div>
-            <a href="https://froglssh.github.io/student-selection-record/" target="_blank" class="btn-online-link" id="navToApp">
-                🚀 開啟主程式線上版 (由此開啟)
-            </a>
-        </div>
-    </div>
+    <section id="start">
+      <h2>快速開始（第一次使用約 3 分鐘）</h2>
+      <ol class="steps">
+        <li><b>班級與名單</b><span>新增班級，貼上名單或匯入 Excel（可一次匯入多個班）。</span></li>
+        <li><b>課堂抽籤</b><span>按「🎲 抽籤」或直接點學生，當場加減分、寫備註。</span></li>
+        <li><b>分組安排</b><span>設定每組人數，按「隨機分組」，再拖曳微調。</span></li>
+        <li><b>統計輸出</b><span>看全班被抽次數與分數，下載 Excel／PDF 或列印。</span></li>
+        <li><b>資料與備份</b><span>選一個雲端硬碟資料夾，讓資料長期保存。</span></li>
+      </ol>
+      <p>畫面最上方一直顯示<strong>目前班級</strong>選單，換班上課時直接切換即可；每個班級的名單、紀錄與分組都分開保存。五個步驟標籤會顯示目前狀態，例如「本輪 12/30」。</p>
+      <div class="callout">每天上課只需要：頁首選班級 → 步驟 2 按 <span class="ui">🎲 抽 N 人</span> → 在紀錄上按 <span class="ui">＋</span>／<span class="ui">−</span> 給分。<strong>所有操作都會自動儲存</strong>，不用再按「儲存」。</div>
+    </section>
 
-    <!-- 主區塊 -->
-    <div class="container">
-        <div class="layout">
-            
-            <!-- 側邊欄導覽 -->
-            <aside class="sidebar">
-                <h3>文件導覽</h3>
-                <ul class="sidebar-menu">
-                    <li><a href="#quick-start" class="active">💡 1分鐘快速入門</a></li>
-                    <li><a href="#tab-1-import">📥 第一步：匯入班級</a></li>
-                    <li><a href="#tab-2-class">📊 第二步：選擇與管理</a></li>
-                    <li><a href="#tab-3-select">🎯 第三步：上課選取與評分</a></li>
-                    <li><a href="#tab-4-groups">🧩 第四步：隨機小組分組</a></li>
-                    <li><a href="#tab-5-export">📈 第五步：統計與報表匯出</a></li>
-                    <li><a href="#latest-updates">🆕 最新優化重點</a></li>
-                    <li><a href="#features">✨ 特色功能專題解說</a></li>
-                    <li><a href="#faq">❓ 常見問與答 (FAQ)</a></li>
-                </ul>
-            </aside>
+    <section id="s1">
+      <h2><span class="num">1</span>班級與學生名單</h2>
+      <h3>我的班級</h3>
+      <ul>
+        <li><span class="ui">＋ 新增班級</span>：輸入班級名稱（例如「201」或「高二生物 A」）。頁首「目前班級」選單最下方也可以新增。</li>
+        <li>點班級卡片＝切換到這個班；<span class="ui">✎</span> 改名；<span class="ui">🗑</span> 刪除（會先確認、自動留還原點，6 秒內可按「復原」）。</li>
+        <li><span class="ui">✨ 載入兩個示範班級</span>：研習或第一次試用時使用。</li>
+      </ul>
+      <h3>方法一：貼上名單</h3>
+      <p>每行一位，格式「<code>01 王小明</code>」或只寫姓名；可以直接從 Excel 複製「座號、姓名」兩欄貼上。</p>
+      <table>
+        <tr><th>按鈕</th><th>作用</th></tr>
+        <tr><td>建立為新班級</td><td>用貼上的名單建立一個新班級（會詢問班級名稱）。</td></tr>
+        <tr><td>更新目前班級名單</td><td>換成新名單。<strong>同名學生的紀錄會保留</strong>；新名單沒有的學生從名冊移除，但過去紀錄仍留在統計中。</td></tr>
+      </table>
+      <h3>方法二：匯入 Excel／CSV</h3>
+      <ol>
+        <li>切到 <span class="ui">Excel 匯入</span>，點選或拖曳檔案進來。</li>
+        <li>程式會列出每個分頁、偵測到的人數與前幾位學生。<strong>一個分頁＝一個班級</strong>，分頁名稱就是班級名稱。</li>
+        <li>同一分頁裡若有好幾班（座號又從 1 開始），會自動拆成「分頁名-1」「分頁名-2」。</li>
+        <li>勾選要匯入的分頁，按 <span class="ui">匯入勾選的分頁為班級</span>。遇到同名班級時可選「更新名單（保留紀錄）」或「另建新班級」。</li>
+      </ol>
+      <p class="cap">「欄位判斷方式」通常用「自動判斷」即可；若座號姓名抓錯，改選「前兩欄為座號、姓名」或「只匯入姓名欄位」，列表會立即重新偵測。說明頁、封面等沒有學生的分頁會顯示「找不到學生」，不會被匯入。</p>
+      <h3>班級名冊</h3>
+      <ul>
+        <li>上方可一位一位新增（座號＋姓名，按 Enter），座號會自動往下遞增。</li>
+        <li><span class="ui">🚫</span> 標記今天<strong>缺席</strong>：不會被抽到，分組時也會排除；<span class="ui">全部出席</span> 一次恢復。</li>
+        <li><span class="ui">✕</span> 從名單移除（可復原）。每位學生下方小字顯示「被抽 N 次・累計分數」。</li>
+      </ul>
+    </section>
 
-            <!-- 內容區 -->
-            <main class="main-content">
+    <section id="s2">
+      <h2><span class="num">2</span>課堂抽籤與表現紀錄</h2>
+      <h3>抽籤設定</h3>
+      <table>
+        <tr><th>設定</th><th>說明</th></tr>
+        <tr><td>每次抽 N 人</td><td>用 −／＋ 調整，抽籤按鈕會跟著顯示「🎲 抽 N 人」。</td></tr>
+        <tr><td>本輪不重複</td><td>抽過的人這一輪不會再被抽到；進度條顯示「本輪已抽 12 / 30 人」。全班抽完時會問要不要開新一輪，也可隨時按 <span class="ui">↻ 重新開始一輪</span>。</td></tr>
+        <tr><td>公平模式</td><td>依「歷來被抽次數」調整機率，次數越少越容易被抽到，一學期下來每人次數會比較平均。</td></tr>
+        <tr><td>抽籤動畫</td><td>名字快速輪播約 1 秒後停下，適合投影時營造氣氛；趕時間可關掉。</td></tr>
+      </table>
+      <div class="stage"><small>隨機抽籤・11/24 10:05</small><div class="names"><span><em>07</em>吳庭瑄</span><span><em>15</em>曾郁晴</span></div></div>
+      <p class="cap">↑ 抽中的學生以大字顯示在舞台區；按 <span class="ui">📺 投影</span> 可全螢幕顯示，投影時按空白鍵或 Enter 就能再抽，按 Esc 結束。</p>
+      <h3>手動點名</h3>
+      <p>直接點左側學生名冊上的名字，就會加入一筆「手動點名」紀錄；連續點好幾位會放在<strong>同一筆</strong>，再點一次可移出。名字旁的數字是歷來被抽次數，灰色＝本輪已抽過。</p>
+      <h3>加減分與備註</h3>
+      <div class="rrow"><b>07 吳庭瑄</b><div class="pts"><i class="m">−</i><i>2</i><i class="p">＋</i></div><span class="box">個人備註</span><span class="box hide-sm">快速備註…</span><span class="ico hide-sm">🎤</span><span class="ico hide-sm">✕</span></div>
+      <ul>
+        <li>每次抽籤或點名都會自動成為一筆紀錄，最新的在最上方並展開；較早的紀錄折疊成一行，點一下即可展開修改。</li>
+        <li><span class="ui">−</span>／<span class="ui">＋</span> 加減分，也可以直接輸入數字。</li>
+        <li>「快速備註」選單一選就填入（可疊加，例如「答得好、積極發言」）；<span class="ui">🎤</span> 語音輸入（建議用 Chrome）。</li>
+        <li>紀錄標題列的「本次說明」可寫題號或活動名稱，例如「第 3 題」。</li>
+        <li><span class="ui">✕</span> 從這筆移除某位學生；<span class="ui">🗑 刪除</span> 整筆紀錄。兩者都可在 6 秒內「復原」。</li>
+      </ul>
+      <p>快速備註清單在「資料與備份」頁管理，所有班級共用。</p>
+    </section>
 
-                <!-- 💡 1分鐘快速入門 -->
-                <section class="guide-section" id="quick-start">
-                    <h2 class="section-title"><span>💡</span> 1分鐘快速入門</h2>
-                    <p style="margin-bottom: 24px;">本程式升級後，設計了更完整、功能更強大的五步工作流。請對照程式頂部的標籤切換頁面：</p>
-                    
-                    <div class="steps-wrapper">
-                        <div class="step-card">
-                            <div class="step-number">1</div>
-                            <h4>匯入班級</h4>
-                            <p>讀取 Excel 檔案，建立學生名冊</p>
-                        </div>
-                        <div class="step-card">
-                            <div class="step-number">2</div>
-                            <h4>選擇班級</h4>
-                            <p>切換班級，系統會自動載入該班歷史紀錄</p>
-                        </div>
-                        <div class="step-card">
-                            <div class="step-number">3</div>
-                            <h4>上課選取</h4>
-                            <p>抽籤或手動點選，輸入分數與評語</p>
-                        </div>
-                        <div class="step-card">
-                            <div class="step-number">4</div>
-                            <h4>分組安排</h4>
-                            <p>隨機將全班或指定學生分成小組並評分</p>
-                        </div>
-                        <div class="step-card">
-                            <div class="step-number">5</div>
-                            <h4>統計輸出</h4>
-                            <p>分頁切換查看抽籤與分組報表並匯出</p>
-                        </div>
-                    </div>
+    <section id="s3">
+      <h2><span class="num">3</span>分組安排</h2>
+      <h3>分組設定（左側）</h3>
+      <table>
+        <tr><th>設定</th><th>說明</th></tr>
+        <tr><td>分組名稱</td><td>例如「第 3 課小組討論」；空白時自動以「隨機分組＋時間」命名。</td></tr>
+        <tr><td>分組方式</td><td>「每組人數」或「分成幾組」。下方會即時算出「共 30 人 → 8 組，每組 3～4 人」，人數會平均分配，不會剩一組只有 1～2 人。</td></tr>
+        <tr><td>分組對象</td><td>出席學生（預設，排除缺席）／全班／本輪抽到的學生。</td></tr>
+        <tr><td>盡量避開上次同組</td><td>參考最近一筆分組，盡量讓同學和不同的人同組。</td></tr>
+      </table>
+      <p><span class="ui">🎲 隨機分組</span> 立即產生一筆分組；<span class="ui">✍️ 建立空白分組</span> 則先建好空的組，學生都在「未分組」區，讓老師自己安排。</p>
+      <h3>調整組員</h3>
+      <div class="groups">
+        <div class="g"><b>第 1 組</b><span class="chip">01 王品安</span><span class="chip sel">04 張家睿</span><span class="chip">09 蔡昀珊</span></div>
+        <div class="g"><b>第 2 組</b><span class="chip">02 李承恩</span><span class="chip">05 陳怡臻</span></div>
+        <div class="g"><b>第 3 組</b><span class="chip">03 林佳穎</span><span class="chip">06 黃柏翰</span><span class="chip">10 楊子謙</span></div>
+      </div>
+      <ul>
+        <li><strong>拖曳</strong>學生到另一組；或<strong>先點學生</strong>（變成藍色）<strong>再點目標組</strong>。點「未分組」區＝移出。</li>
+        <li>組名可直接點一下修改；每組有組分數 −／＋ 與備註。</li>
+        <li>上方工具列：選擇過去的分組紀錄、<span class="ui">↻ 重新隨機</span>（保留組名與分數）、<span class="ui">＋ 加一組</span>、<span class="ui">📺 投影</span>、<span class="ui">🖨️ 列印名單</span>、<span class="ui">🗑️ 刪除</span>（可復原）。</li>
+      </ul>
+    </section>
 
-                    <div class="alert-box alert-info">
-                        <h5>💡 網頁綠色免安裝技術</h5>
-                        本程式是一個<strong>「單檔案 HTML 網頁程式」</strong>。您不需要下載安裝軟體，只需在有網路的環境下載或直接打開線上網頁即可運作。所有學生的成績、名冊與分組均儲存在您目前電腦瀏覽器的暫存（LocalStorage）中，<strong>沒有任何伺服器會儲存您的資料</strong>，安全保密、讀取極速！
-                    </div>
-                </section>
+    <section id="s4">
+      <h2><span class="num">4</span>統計與輸出</h2>
+      <p>上方摘要卡顯示學生數、選取筆數、<strong>從未被抽到的人數</strong>與累計最高分。下方表格有三種檢視：</p>
+      <table>
+        <tr><th>檢視</th><th>內容</th></tr>
+        <tr><td>個人統計</td><td>列出<strong>全班</strong>（含 0 次的學生，以灰色顯示）：被抽次數、加分、扣分、總分、最近一次與最近備註。點欄位標題可依座號、次數、總分、時間排序。</td></tr>
+        <tr><td>選取紀錄</td><td>每次抽籤／點名的每位學生一列：時間、方式、加減分、個人備註、本次說明。</td></tr>
+        <tr><td>分組紀錄</td><td>每一組一列：分組名稱、組別、學生名單、人數、組分數、備註。</td></tr>
+      </table>
+      <ul>
+        <li><span class="ui">📊 下載 Excel（全部）</span>：一個檔案 4 個工作表（學生名單、個人統計、選取紀錄、分組紀錄）。</li>
+        <li><span class="ui">📄 下載 PDF</span>、<span class="ui">🖨️ 列印</span>：輸出<strong>目前顯示的那一種表</strong>（含搜尋篩選後的結果）；PDF 自動分頁，不會把一列切成兩半。</li>
+      </ul>
+    </section>
 
-                <!-- 🆕 最新優化重點 -->
-                <section class="guide-section" id="latest-updates">
-                    <h2 class="section-title"><span>🆕</span> 最新優化重點總覽</h2>
-                    <p>以下為最近幾次功能優化後，教師最需要掌握的新操作。若您已使用過舊版，建議先看此區，再依照後續各步驟操作。</p>
-                    <table class="guide-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 24%;">優化項目</th>
-                                <th>新版功能說明</th>
-                                <th style="width: 28%;">實際使用情境</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>多選班級分頁匯入</strong></td>
-                                <td>匯入 Excel 後，除了單一「選擇班級分頁」外，新增「多選班級分頁」。可按住 Command 或 Shift 一次選取多個分頁，再按「匯入選取班級」。</td>
-                                <td>一份 Excel 有 301、302、303 多個班級時，只匯入本週要上課的幾個班，不必匯入全部。</td>
-                            </tr>
-                            <tr>
-                                <td><strong>自訂快速備註</strong></td>
-                                <td>上課選取頁新增「新增快速備註」，老師可以建立自己的常用備註文字。新增後會出現在每位學生紀錄的快速備註選單中，也可刪除。</td>
-                                <td>例如新增「實驗操作熟練」「小組討論積極」「未帶講義」，課堂紀錄可更快完成。</td>
-                            </tr>
-                            <tr>
-                                <td><strong>指定分組</strong></td>
-                                <td>分組安排頁新增「指定分組」。系統會依目前「依每組人數」或「依組數」先產生空白組別，老師再指定學生加入各組。</td>
-                                <td>適合實驗課先安排組長、能力混合分組、特殊學生分組、專題任務分組。</td>
-                            </tr>
-                            <tr>
-                                <td><strong>分組修改 / 完成模式</strong></td>
-                                <td>分組結果平常只顯示乾淨名單、加減分與備註。按「修改」後才顯示新增、移動、置換、移除等名冊編輯工具；按「完成」後工具會收起。</td>
-                                <td>平常檢視名單不被操作按鈕干擾，需要調整座位或組員時再進入修改模式。</td>
-                            </tr>
-                            <tr>
-                                <td><strong>上方名冊直接加入指定組</strong></td>
-                                <td>指定分組或修改模式中，先在某組按「指定加入第 X 組」，再直接點上方學生名冊，即可把學生加入該組。</td>
-                                <td>老師可像點名一樣快速把學生分派到第一組、第二組、第三組。</td>
-                            </tr>
-                            <tr>
-                                <td><strong>分組專用報表輸出</strong></td>
-                                <td>統計輸出頁切到「分組安排資料」後，新增分組統計摘要與「下載 Excel 紀錄」「下載 PDF 報表」「列印報表」三個按鈕。</td>
-                                <td>課後可單獨輸出分組紀錄，不必混在上課選取與個人加減分報表中。</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </section>
+    <section id="storage">
+      <h2><span class="num">5</span>資料與備份</h2>
+      <p>頁首的 <span class="ui">💾 已儲存</span> 標籤表示資料已寫入這台電腦的瀏覽器（IndexedDB）。每次修改 0.3 秒內自動儲存，關閉分頁時也會立即寫出。</p>
+      <div class="callout warn">只存在瀏覽器裡的資料，在<strong>清除瀏覽器資料、換電腦、換瀏覽器</strong>時會看不到。請務必設定下面的「長期存放資料夾」或定期下載 JSON 備份。</div>
+      <h3>建議：選擇長期存放的資料夾（Chrome／Edge 電腦版）</h3>
+      <ol>
+        <li>到「資料與備份」按 <span class="ui">📁 選擇資料存放資料夾</span>，選 Google 雲端硬碟裡的一個資料夾。</li>
+        <li>程式會建立 <code>學生選取分組資料.json</code>，之後每次修改約 2 秒內自動寫入，頁首顯示 <span class="ui">📁 已同步到資料夾</span>。</li>
+        <li>每天第一次寫入前，前一版會備份到 <code>學生選取分組資料_歷史</code> 資料夾（保留 14 份）。</li>
+        <li>下次開啟時會自動連回資料夾；若瀏覽器要求重新授權，頂端會出現黃色提示列，按 <span class="ui">連接資料夾</span> 即可。</li>
+      </ol>
+      <h3>學校、家裡兩台電腦共用</h3>
+      <ol>
+        <li>兩台電腦都安裝 Google 雲端硬碟電腦版，並用 Chrome 或 Edge 開啟本程式。</li>
+        <li>第二台電腦選<strong>同一個</strong>資料夾，程式會自動讀入資料。</li>
+        <li>回到頁面時若另一台電腦已更新，頂端會提示 <span class="ui">載入最新資料</span>。</li>
+        <li>兩邊都改過時會請你選擇要用哪一份；沒被選用的一份會另存成「衝突檔」或還原點，不會遺失。</li>
+      </ol>
+      <h3>自動還原點與 JSON 備份</h3>
+      <ul>
+        <li><strong>自動還原點</strong>：每天 1 份（留 7 天），另外在刪除班級、更新名單、Excel 匯入、匯入 JSON、還原、重設前各存 1 份（留 10 份）。可在本頁還原或下載。</li>
+        <li><span class="ui">下載 JSON 備份（全部班級）</span>／<span class="ui">匯入 JSON 備份…</span>：匯入 v3 備份會取代全部資料；匯入<strong>舊版（v2）</strong>的備份檔則會新增為一個班級，不影響其他班。</li>
+        <li><span class="ui">清除全部資料並重設</span>：清除前會自動留還原點。</li>
+      </ul>
+    </section>
 
-                <!-- 📥 第一步：匯入班級 -->
-                <section class="guide-section" id="tab-1-import">
-                    <h2 class="section-title"><span>1</span> 第一步：匯入班級資料</h2>
-                    <p>當您初次使用此程式時，請先匯入班級學生名冊。本程式支援讀取 Excel 檔案（如 <code>.xlsx</code>、<code>.xls</code> 及 <code>.csv</code>）。</p>
-                    
-                    <div class="mock-ui-card">
-                        <div class="mock-ui-title">📋 匯入按鈕對照</div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
-                            <span class="mock-btn mock-btn-primary">📋 開啟選取分頁</span>
-                            <span class="mock-btn mock-btn-secondary">💾 儲存此分頁為班級</span>
-                            <span class="mock-btn mock-btn-secondary">✅ 匯入選取班級</span>
-                            <span class="mock-btn mock-btn-outline">📚 匯入全部班級</span>
-                        </div>
-                        <p style="font-size: 0.9rem; color: var(--slate-600);">（您會在「1. 匯入班級」分頁中看到這些按鈕）</p>
-                    </div>
+    <section id="faq">
+      <h2>常見問題</h2>
+      <h3>舊版的資料還在嗎？</h3>
+      <p>在。第一次開啟 v3 時，程式會自動把舊版存在瀏覽器裡的所有班級（名單、選取紀錄、加減分、分組、自訂快速備註）轉成新格式，並顯示「已將舊版資料搬到新版」。舊版資料本身不會被刪除。</p>
+      <h3>要按「儲存」嗎？</h3>
+      <p>不用。所有操作都會自動儲存；頁首的 <span class="ui">立即儲存</span> 只是讓你在關機前安心按一下。</p>
+      <h3>按錯了怎麼辦？</h3>
+      <p>刪除紀錄、移除學生、刪除分組或班級後，畫面下方會出現 <span class="ui">復原</span> 按鈕（6 秒內有效）。超過時間可到「資料與備份」用自動還原點回復。</p>
+      <h3>學生改名或座號打錯，紀錄會不見嗎？</h3>
+      <p>不會。v3 每位學生都有自己的內部編號，用「更新目前班級名單」或 Excel「更新名單」時，同名學生會沿用原本的紀錄。</p>
+      <h3>為什麼有些學生一直沒被抽到？</h3>
+      <p>請確認「本輪不重複」與「公平模式」都已勾選；到步驟 4 個人統計可以看到「從未被抽到」的人數，必要時直接點名他們。</p>
+      <h3>學校網路擋外部網站時？</h3>
+      <p>抽籤、分組、統計與儲存都能離線使用；Excel 匯入／匯出與 PDF 需要從網路載入元件，若無法使用請改到可上網的電腦操作。</p>
+    </section>
+  </main>
 
-                    <h4 style="margin: 20px 0 10px; font-size: 1.15rem; font-weight: 700;">詳細按鈕操作與欄位功能：</h4>
-                    <table class="guide-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 240px;">按鈕 / 欄位名稱</th>
-                                <th>功能說明與操作教學</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>選擇 Excel 檔案</strong><br><small>(上傳檔案)</small></td>
-                                <td>點擊以選取您電腦上的 Excel 名單。支援包含多個分頁（工作表）的檔案。</td>
-                            </tr>
-                            <tr>
-                                <td><strong>選擇班級分頁</strong><br><small>(下拉選單)</small></td>
-                                <td>如果上傳的 Excel 擁有多個分頁，此處可下拉切換要解析的分頁。如果只有一頁，系統會自動選取。</td>
-                            </tr>
-                            <tr>
-                                <td><strong>多選班級分頁</strong><br><small>(多選清單)</small></td>
-                                <td>新版新增的批次匯入欄位。按住 <code>Command</code> 或 <code>Shift</code> 可以一次選取多個 Excel 分頁，再搭配「匯入選取班級」只匯入指定班級。</td>
-                            </tr>
-                            <tr>
-                                <td><strong>匯入格式</strong><br><small>(下拉選單)</small></td>
-                                <td>
-                                    告訴系統如何解讀您的表格欄位：
-                                    <ul>
-                                        <li><span class="text-primary">自動判斷座號與姓名</span>（推薦）：會自動偵測「座號/姓名/學號」等標題。</li>
-                                        <li><span class="text-primary">前兩欄為座號、姓名</span>：強迫以表格最左側的第 1 欄當座號、第 2 欄當姓名。</li>
-                                        <li><span class="text-primary">只匯入姓名欄位</span>：僅提取姓名，不匯入座號。</li>
-                                    </ul>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><span class="mock-btn mock-btn-primary">📋 開啟選取分頁</span></td>
-                                <td>臨時預覽所選分頁的學生名單，會直接將名單載入至「3. 上課選取」頁面。<em>（注意：此動作僅供暫時測試，尚未存入網頁記憶體中）</em></td>
-                            </tr>
-                            <tr>
-                                <td><span class="mock-btn mock-btn-secondary">💾 儲存此分頁為班級</span></td>
-                                <td>將目前選擇的工作表解析後的名單正式儲存到瀏覽器的本地儲存空間（LocalStorage）中。以後只要打開網頁，即可在「選擇班級」中一鍵開啟。</td>
-                            </tr>
-                            <tr>
-                                <td><span class="mock-btn mock-btn-secondary">✅ 匯入選取班級</span></td>
-                                <td><strong>【多班級精準匯入】</strong> 先在「多選班級分頁」中勾選需要的分頁，再點此按鈕。適合只匯入本學期任教班級，不必把整份 Excel 全部匯入。</td>
-                            </tr>
-                            <tr>
-                                <td><span class="mock-btn mock-btn-outline">📚 匯入全部班級</span></td>
-                                <td><strong>【整校/多班級匯入神器】</strong> 如果 Excel 當中每個分頁代表一個班級，點選此按鈕，系統會一次性把所有分頁全部儲存成不同的班級，省去手動一頁頁存檔的麻煩。</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <div class="alert-box alert-warning">
-                        <h5>💡 智慧班級拆分技術</h5>
-                        如果您的同一個 Excel 工作表裡面<strong>混合了多個班級的學生名冊</strong>（例如跨班選修），只要座號重新從 1 號開始，程式會自動辨識並分割為「工作表-班級1」、「工作表-班級2」等獨立班級。
-                    </div>
-                </section>
-
-                <!-- 📊 第二步：選擇與管理 -->
-                <section class="guide-section" id="tab-2-class">
-                    <h2 class="section-title"><span>2</span> 第二步：選擇班級與備份管理</h2>
-                    <p>管理與切換您的班級資料庫。不論您要切換到下一堂課的班級、將資料備份匯出，或是刪除舊班級，皆在此處進行。</p>
-
-                    <div class="mock-ui-card">
-                        <div class="mock-ui-title">📂 班級資料管理</div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
-                            <span class="mock-btn mock-btn-secondary">⬇️ 備份 JSON</span>
-                            <span class="mock-btn mock-btn-primary">⬆️ 還原 JSON</span>
-                            <span class="mock-btn mock-btn-outline">✨ 練習示範資料</span>
-                        </div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; border-top: 1px dashed var(--slate-300); padding-top: 12px;">
-                            <span class="mock-btn mock-btn-danger">🗑️ 刪除選取班級</span>
-                            <span class="mock-btn mock-btn-danger">🗑️ 刪除所有匯入班級</span>
-                        </div>
-                    </div>
-
-                    <h4 style="margin: 20px 0 10px; font-size: 1.15rem; font-weight: 700;">管理功能操作指南：</h4>
-                    <table class="guide-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 240px;">區塊與按鈕</th>
-                                <th>操作說明與引導</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>選擇班級</strong><br><small>(下拉選單)</small></td>
-                                <td>點擊後會顯示您在系統中儲存的全部班級與人數。選擇班級會立即載入該班的學生名單、隨機抽籤分數、個人評語以及<strong>所有的歷史分組紀錄</strong>。切換時系統會自動存檔前一個班級。</td>
-                            </tr>
-                            <tr>
-                                <td><strong>目前顯示班級</strong><br><small>(唯讀文字框)</small></td>
-                                <td>顯示當前視窗中正載入的班級與狀態（例如：<code>已儲存｜高一3班</code>），供您隨時確認。</td>
-                            </tr>
-                            <tr>
-                                <td><span class="mock-btn mock-btn-secondary">⬇️ 備份 JSON</span></td>
-                                <td>將目前瀏覽器儲存的所有班級名單、加減分紀錄、備註與分組紀錄，打包成一個 <code>.json</code> 檔案下載儲存。建議定期備份，以防電腦重灌或瀏覽器被清理快取。</td>
-                            </tr>
-                            <tr>
-                                <td><strong>還原 JSON 備份檔</strong><br><small>(上傳檔案與 <span class="mock-btn mock-btn-primary">還原 JSON</span>)</small></td>
-                                <td>當您要在另一台教室電腦上課，或想要將資料還原時，在此處選擇您備份的 <code>.json</code> 檔案，點擊「還原 JSON」即可一鍵復原所有班級的全部資料。</td>
-                            </tr>
-                            <tr>
-                                <td><span class="mock-btn mock-btn-outline">✨ 練習示範資料</span></td>
-                                <td>自動載入兩個虛擬班級（示範一班與示範二班），內建預設名單。方便您在沒有 Excel 檔案前，直接進行抽籤、分組等功能測試。</td>
-                            </tr>
-                            <tr>
-                                <td><span class="mock-btn mock-btn-danger">🗑️ 刪除選取班級</span></td>
-                                <td>在右側下拉選單「選擇要刪除的班級」選定後，點選此按鈕以刪除單一班級的全部名冊、記錄與分組。</td>
-                            </tr>
-                            <tr>
-                                <td><span class="mock-btn mock-btn-danger">🗑️ 刪除所有匯入班級</span></td>
-                                <td><strong>【警告】</strong> 一鍵清除瀏覽器暫存中儲存的所有班級與成績，此操作不可逆，請務必先備份 JSON 檔。</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </section>
-
-                <!-- 🎯 第三步：上課選取與評分 -->
-                <section class="guide-section" id="tab-3-select">
-                    <h2 class="section-title"><span>3</span> 第三步：上課選取與表現紀錄</h2>
-                    <p>課堂提問與點名抽籤的核心操作面板。支援「不重複隨機抽選」與「手動點選」雙模運作，並可針對表現進行即時評分與備註。</p>
-
-                    <div class="mock-ui-card">
-                        <div class="mock-ui-title">🎯 抽籤與評分控制台</div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
-                            <span class="mock-btn mock-btn-primary">🎲 開始隨機選取</span>
-                            <span class="mock-btn mock-btn-warning">🔄 清除選取</span>
-                            <span class="mock-btn mock-btn-secondary">新增快速備註</span>
-                            <span class="mock-btn mock-btn-secondary">💾 儲存目前班級紀錄</span>
-                        </div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; border-top: 1px dashed var(--slate-300); padding-top: 12px;">
-                            <span class="mock-btn mock-btn-primary">👀 更新學生預覽</span>
-                            <span class="mock-btn mock-btn-warning">✂️ 刪除學生模式</span>
-                            <span class="mock-btn mock-btn-danger">🗑️ 清空目前畫面</span>
-                        </div>
-                    </div>
-
-                    <h4 style="margin: 20px 0 10px; font-size: 1.15rem; font-weight: 700;">操作細節與實用技巧：</h4>
-                    <ul style="list-style-position: inside; margin-bottom: 20px;">
-                        <li style="margin-bottom: 10px;"><strong>手動輸入或微調名冊</strong>：在「學生名單」大文字框中，每行輸入一個名字（可加座號，如：<code>01 王大同</code>），修改後按 <span class="mock-btn mock-btn-primary">👀 更新學生預覽</span> 即可反映在下方的名單卡片。</li>
-                        <li style="margin-bottom: 10px;"><strong>刪除個別學生</strong>：點選 <span class="mock-btn mock-btn-warning">✂️ 刪除學生模式</span>，卡片會出現 <code>×</code> 按鈕，點擊可直接將該學生從目前名單中剃除。完成後再次點擊該按鈕即可退出刪除模式。</li>
-                        <li style="margin-bottom: 10px;"><strong>點擊卡片手動點選</strong>：直接點擊學生名單中的卡片，選中後會變為 <span class="text-secondary">綠色</span>，並在結果區最上方自動跳出該學生的評分列。這也是手動加減分最快的方法。</li>
-                        <li style="margin-bottom: 10px;"><strong>新增自訂快速備註</strong>：在「新增快速備註」欄輸入常用紀錄文字，例如 <code>實驗操作熟練</code>、<code>小組討論積極</code>、<code>未帶講義</code>，按「新增」後會儲存在瀏覽器中，並出現在所有學生紀錄的快速備註選單。若日後不需要，可在快速備註標籤旁按 <code>×</code> 刪除。</li>
-                        <li style="margin-bottom: 10px;"><strong>🎲 隨機抽籤（不重複）</strong>：
-                            <ol style="margin-left: 24px; margin-top: 4px;">
-                                <li>在「選取學生人數」設定每次抽幾人（1~5人，或選其他自訂人數）。</li>
-                                <li>在「選取次數」設定要抽幾組（例如設定 3 次，代表會一口氣連續做 3 組抽籤）。</li>
-                                <li>點選 <span class="mock-btn mock-btn-primary">🎲 開始隨機選取</span>，系統抽中的卡片會變綠色。</li>
-                                <li><strong>不重複機制</strong>：系統會自動記錄這輪被抽過的學生，並在下一次抽籤中主動避開他們，保證課堂公平。直到所有人抽過，或手動點選 <span class="mock-btn mock-btn-warning">🔄 清除選取</span>，才會重新開始新一輪抽籤。</li>
-                            </ol>
-                        </li>
-                    </ul>
-
-                    <h4 style="margin: 20px 0 10px; font-size: 1.15rem; font-weight: 700;">選取結果評分卡：</h4>
-                    <p>每次抽籤或點選後，結果區會產生一張張「結果卡片」：</p>
-                    <table class="guide-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 200px;">欄位 / 元素</th>
-                                <th>操作說明與引導</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>加減分控制鍵</strong><br><code>[ − ] [ 0 ] [ + ]</code></td>
-                                <td>按 <code>[ + ]</code> 會使該學生的這項表現總分加 1，按 <code>[ − ]</code> 減 1。您也可以直接點進框內填寫分數（如：<code>5</code> 或 <code>-2</code>）。</td>
-                            </tr>
-                            <tr>
-                                <td><strong>快速備註選單</strong><br><small>(下拉選單)</small></td>
-                                <td>
-                                    點擊下拉選單，可以快速將常見表現語填入備註欄中；新版也支援老師自行新增常用備註：
-                                    <br>
-                                    <span class="quick-tag">表現良好</span>
-                                    <span class="quick-tag">積極發言</span>
-                                    <span class="quick-tag">協助同學</span>
-                                    <span class="quick-tag">上課遲到</span>
-                                    <span class="quick-tag">睡覺吵鬧</span>
-                                    <span class="quick-tag">作業缺失</span>
-                                    <span class="quick-tag">自訂備註</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>🎤 語音輸入按鈕</strong></td>
-                                <td>
-                                    <strong>【免打字錄音技術】</strong> 點擊麥克風按鈕（變為紅色 ⏹️），對著電腦麥克風講述該學生的表現（例：「上台解題條理清晰」），系統會自動將辨識出的文字填寫進備註欄中！
-                                    <br><small class="text-warning">※ 首次使用時瀏覽器若要求存取麥克風，請點選「允許」。</small>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>批次事件備註</strong><br><small>(結果大卡頂部輸入框)</small></td>
-                                <td>在頂部的文字框輸入「例：第1單元小考」、「抽問第3題」，該大卡中被選中的所有學生均會自動標註此共同事件。</td>
-                            </tr>
-                            <tr>
-                                <td><strong>操作（移除 / 刪除）</strong></td>
-                                <td>點擊單人右側的 <strong class="text-danger">移除</strong> 可將該生剔除本次選取卡片。點擊大卡右上角的 <strong class="text-danger">🗑️ 刪除</strong> 會完全將該次抽籤紀錄從系統中清空。</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </section>
-
-                <!-- 🧩 第四步：分組安排 -->
-                <section class="guide-section" id="tab-4-groups">
-                    <h2 class="section-title"><span>4</span> 第四步：指定與隨機小組分組安排</h2>
-                    <p class="text-purple" style="font-weight: 700; margin-bottom: 8px;">★ 新版支援「指定分組」與「隨機分組」雙模式！</p>
-                    <p>課堂中需要分組報告、實驗或討論時，本分頁可將學生拆分成不同組別，並可在分組完成後保留乾淨名單、組別加減分與小組備註。若需要調整名冊，可按「修改」進入編輯模式。</p>
-
-                    <div class="mock-ui-card">
-                        <div class="mock-ui-title">🧩 分組安排設定台</div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
-                            <span class="mock-btn mock-btn-warning">✍️ 指定分組</span>
-                            <span class="mock-btn mock-btn-primary">🎲 產生隨機分組</span>
-                            <span class="mock-btn mock-btn-secondary">💾 儲存分組紀錄</span>
-                            <span class="mock-btn mock-btn-outline">🖨️ 列印分組名單</span>
-                            <span class="mock-btn mock-btn-danger">🗑️ 清除分組結果</span>
-                        </div>
-                    </div>
-
-                    <h4 style="margin: 20px 0 10px; font-size: 1.15rem; font-weight: 700;">分組參數設定詳解：</h4>
-                    <table class="guide-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 220px;">設定欄位</th>
-                                <th>功能說明與使用方法</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>分組名稱</strong><br><small>(文字輸入框)</small></td>
-                                <td>輸入此分組的主題，例如 <code>第一次分組實驗</code> 或 <code>小組討論活動</code>。若不輸入，系統會自動代入「分組 + 目前時間」。</td>
-                            </tr>
-                            <tr>
-                                <td><strong>分組方式</strong><br><small>(下拉選單)</small></td>
-                                <td>
-                                    選擇如何切分組別：
-                                    <ul>
-                                        <li><strong class="text-primary">依每組人數</strong>：指定「每組幾人」（如：4人），系統會依照目前人數除以 4 計算出組數並進行分組。<em>（最後一組若人數不足，會自動分配剩餘的所有人）</em></li>
-                                        <li><strong class="text-primary">依組數</strong>：指定「分成幾組」（如：分成 4 組），系統會自動計算，將學生平均輪流分配到 4 個組別中。</li>
-                                    </ul>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>分組來源</strong><br><small>(下拉選單)</small></td>
-                                <td>
-                                    設定要拿哪些人來分組：
-                                    <ul>
-                                        <li><strong class="text-primary">目前班級全部學生</strong>：最常用，對班級名單內的所有人進行完整分組。</li>
-                                        <li><strong class="text-primary">目前已選取學生</strong>：<strong>【智慧特定分組】</strong> 如果您在上課選取頁面中點選了部分同學（呈綠色卡片），在此選擇此項，將只對那些被選取的學生進行隨機分組，非常適合遲到同學分組或特定發表小組分組。</li>
-                                    </ul>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>名單晶片預覽區</strong><br><small>(分組頁面上方)</small></td>
-                                <td>顯示目前的班級名單。一般狀態下，點擊名單中的名字可以「選取/取消選取」學生（綠色代表已選中），這會同步影響您的「分組來源」。若正在修改指定分組，點擊上方學生名冊會直接把學生加入目前指定的組別。</td>
-                            </tr>
-                            <tr>
-                                <td><span class="mock-btn mock-btn-warning">✍️ 指定分組</span></td>
-                                <td>依照目前「分組方式」先建立空白組別。建立後會自動進入修改模式，老師可先按某組的「指定加入第 X 組」，再從上方學生名冊直接點選學生加入該組。</td>
-                            </tr>
-                            <tr>
-                                <td><span class="mock-btn mock-btn-primary">🎲 產生隨機分組</span></td>
-                                <td>依目前分組來源與分組方式自動打散學生。完成後若不滿意，可按分組紀錄上的「修改」進入名冊調整模式。</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <h4 style="margin: 20px 0 10px; font-size: 1.15rem; font-weight: 700;">分組後的結果卡片與小組評分：</h4>
-                    <p>當您點選 <span class="mock-btn mock-btn-primary">🎲 產生隨機分組</span> 或 <span class="mock-btn mock-btn-warning">✍️ 指定分組</span> 後，下方會產生分組大卡。完成狀態下，卡片只保留名單、加減分與備註，畫面簡潔乾淨：</p>
-
-                    <div style="display: flex; gap: 16px; margin: 16px 0; flex-wrap: wrap;">
-                        <div class="mock-group-card">
-                            <h5>第 1 組 (3人)</h5>
-                            <ol>
-                                <li>01 王大同</li>
-                                <li>05 林小明</li>
-                                <li>12 張美麗</li>
-                            </ol>
-                            <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                                <span style="background: var(--danger); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; cursor: default;">−</span>
-                                <input type="text" value="0" style="width: 40px; text-align: center; font-size: 0.8rem; border: 1px solid var(--slate-300);" readonly>
-                                <span style="background: var(--secondary); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; cursor: default;">+</span>
-                            </div>
-                            <input type="text" placeholder="輸入本組備註..." style="font-size: 0.75rem; width: 100%; padding: 4px; border: 1px solid var(--slate-200);">
-                        </div>
-                        <div class="mock-group-card">
-                            <h5>第 2 組 (3人)</h5>
-                            <ol>
-                                <li>02 李中介</li>
-                                <li>08 許花花</li>
-                                <li>10 陳智慧</li>
-                            </ol>
-                            <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                                <span style="background: var(--danger); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; cursor: default;">−</span>
-                                <input type="text" value="0" style="width: 40px; text-align: center; font-size: 0.8rem; border: 1px solid var(--slate-300);" readonly>
-                                <span style="background: var(--secondary); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; cursor: default;">+</span>
-                            </div>
-                            <input type="text" placeholder="輸入本組備註..." style="font-size: 0.75rem; width: 100%; padding: 4px; border: 1px solid var(--slate-200);">
-                        </div>
-                    </div>
-
-                    <ul style="list-style-position: inside; font-size: 0.95rem; margin-bottom: 20px;">
-                        <li style="margin-bottom: 8px;"><strong>小組整體加減分</strong>：點擊組別卡片內的 <code>[ + ]</code> 或 <code>[ − ]</code>，可以為該小組整體加上或扣除分數。這對小組競賽打分極為方便！</li>
-                        <li style="margin-bottom: 8px;"><strong>小組表現備註</strong>：可以在小組卡片最下方的「輸入本組備註...」框中為該小組寫下評論（例如：「小組分工極佳」、「討論熱烈」）。</li>
-                        <li style="margin-bottom: 8px;"><strong>修改 / 完成模式</strong>：每筆分組紀錄右上角有「修改」按鈕。按下後才會出現新增組員、移動、置換、移除等控制；調整完畢後按「完成」，系統會收起編輯工具，只留下乾淨名單、加減分與備註。</li>
-                        <li style="margin-bottom: 8px;"><strong>置換與移動組員</strong>：修改模式中，組員旁可選擇移動到其他組，也可用尚未分配的學生進行置換。這適合處理臨時缺席、實驗器材分配、學生能力搭配等課堂現場需求。</li>
-                        <li style="margin-bottom: 8px;"><strong>儲存與列印</strong>：
-                            <ul>
-                                <li>點擊 <span class="mock-btn mock-btn-secondary">💾 儲存分組紀錄</span> 可手動將分組資料存入系統中。</li>
-                                <li>點擊 <span class="mock-btn mock-btn-outline">🖨️ 列印分組名單</span>，會開啟全新簡潔視窗，將本次所有組別的名冊表格化以供列印貼在公布欄。</li>
-                            </ul>
-                        </li>
-                    </ul>
-                </section>
-
-                <!-- 📈 第五步：統計與報表匯出 -->
-                <section class="guide-section" id="tab-5-export">
-                    <h2 class="section-title"><span>5</span> 第五步：統計與報表匯出</h2>
-                    <p>統計與輸出頁面在本次更新後進行了升級，現在它支援<strong>「資料顯示切換」</strong>，您可以分開查看或輸出「上課選取表現紀錄」或「分組歷史紀錄」。</p>
-
-                    <div class="mock-ui-card">
-                        <div class="mock-ui-title">📤 輸出模式切換選單</div>
-                        <div style="display: flex; flex-direction: column; gap: 6px; max-width: 300px;">
-                            <label style="font-size: 0.8rem; font-weight: bold; color: var(--slate-600);">資料顯示</label>
-                            <select class="form-select" style="padding: 8px; border: 2px solid var(--slate-300); border-radius: 6px; font-weight: bold; color: var(--slate-900);">
-                                <option value="selection">上課選取資料 (個人表現紀錄)</option>
-                                <option value="groups">分組安排資料 (小組歷史紀錄)</option>
-                            </select>
-                        </div>
-                        <p style="font-size: 0.85rem; color: var(--slate-600); margin-top: 10px;">切換選單後，下方的下載按鈕與報表表格將會自動切換為對應的內容。</p>
-                    </div>
-
-                    <h4 style="margin: 20px 0 10px; font-size: 1.15rem; font-weight: 700;">輸出功能與報表詳解：</h4>
-                    <table class="guide-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 240px;">選單項目與按鈕</th>
-                                <th>報表內容與應用</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>資料顯示：上課選取資料</strong></td>
-                                <td>
-                                    顯示所有抽籤、點名的個人加減分合計、被選取次數及最後一次表現備註。
-                                    <ul>
-                                        <li><span class="mock-btn mock-btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;">📊 下載 Excel 紀錄</span>：匯出含有名單、歷次抽籤詳情、個人分數總計的 3 Sheet 工作表。</li>
-                                        <li><span class="mock-btn mock-btn-primary" style="padding: 4px 8px; font-size: 0.75rem;">📄 下載 PDF 報表</span>：下載精美的個人表現 PDF 紀錄。</li>
-                                    </ul>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>資料顯示：分組安排資料</strong></td>
-                                <td>
-                                    切換到此項後，下方會先顯示分組統計摘要，包含分組紀錄數、組別總數、學生人次與最新分組名稱；再列出所有歷史分組資料。
-                                    <br>表格欄位包含：<code>分組名稱</code>、<code>時間</code>、<code>分組方式</code>、<code>組別</code>、<code>學生名單</code>、<code>人數</code>、<code>組分數</code>、<code>備註</code>。
-                                    <ul>
-                                        <li><span class="mock-btn mock-btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;">📊 下載 Excel 紀錄</span>：只下載分組安排資料，適合課後整理小組名冊與組別表現。</li>
-                                        <li><span class="mock-btn mock-btn-primary" style="padding: 4px 8px; font-size: 0.75rem;">📄 下載 PDF 報表</span>：輸出分組安排 PDF 報表，包含統計摘要與完整分組明細。</li>
-                                        <li><span class="mock-btn mock-btn-outline" style="padding: 4px 8px; font-size: 0.75rem;">🖨️ 列印報表</span>：直接列印分組安排資料，適合留存紙本紀錄。</li>
-                                    </ul>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </section>
-
-                <!-- ✨ 特色功能專題解說 -->
-                <section class="guide-section" id="features">
-                    <h2 class="section-title"><span>✨</span> 特色功能與操作重點提示</h2>
-                    
-                    <div style="margin-bottom: 24px;">
-                        <h4 style="margin-bottom: 8px; font-weight: 700; color: var(--slate-900);">1. 連鎖自動存檔 (Auto-Save) 技術</h4>
-                        <p style="font-size: 0.95rem;">
-                            為了避免教師們在上課中因瀏覽器意外關閉或當機丟失心血，本程式在以下時機均會<strong>自動執行存檔</strong>：
-                        </p>
-                        <ul style="list-style-position: inside; font-size: 0.9rem; margin-top: 6px; padding-left: 10px; color: var(--slate-600);">
-                            <li>在上課選取頁面中點選學生、修改加減分、新增語音或快速備註時。</li>
-                            <li>在分組安排頁面中產生新分組、修改組分數、填寫小組備註時。</li>
-                            <li>切換頂部標籤分頁或點擊下拉選單切換不同班級時。</li>
-                            <li>當您要離開此網頁或關閉瀏覽器分頁時。</li>
-                        </ul>
-                    </div>
-
-                    <div style="margin-bottom: 24px; border-top: 1px solid var(--slate-200); padding-top: 20px;">
-                        <h4 style="margin-bottom: 8px; font-weight: 700; color: var(--slate-900);">2. 如何利用「上課選取」與「指定/隨機分組」進行連貫搭配</h4>
-                        <p style="font-size: 0.95rem; margin-bottom: 8px;">
-                            這是一個非常實用的教學情境搭配：
-                        </p>
-                        <ol style="margin-left: 20px; font-size: 0.9rem; color: var(--slate-600);">
-                            <li>上課時，先在「3. 上課選取」頁面使用隨機抽取 8 位同學回答問題。</li>
-                            <li>隨後，要進行實驗或小組研討。切換到「4. 分組安排」分頁。</li>
-                            <li>將「分組來源」設定為 <strong>「目前已選取學生」</strong>，分組方式設定「依組數」分成 2 組。</li>
-                            <li>若要完全隨機，點選「產生隨機分組」；若要自己安排組員，點選「指定分組」先建立空白組別。</li>
-                            <li>指定分組時，先按某一組的「指定加入第 X 組」，再從上方學生名冊直接點選學生，即可快速把特定學生放入指定組別。</li>
-                        </ol>
-                    </div>
-
-                    <div style="border-top: 1px solid var(--slate-200); padding-top: 20px;">
-                        <h4 style="margin-bottom: 8px; font-weight: 700; color: var(--slate-900);">3. 安全性提醒：定期下載 JSON 備份檔</h4>
-                        <p style="font-size: 0.95rem;">
-                            雖然有自動存檔機制，但 LocalStorage（網頁暫存）是附屬於瀏覽器的。如果您的電腦被學校的硬碟還原系統卡鎖定、或您手動清理了瀏覽器 cookie 與快取，暫存資料會被抹除。
-                            <br><strong class="text-danger">建議防範策略：</strong>每個禮拜五或下課前，去「2. 選擇班級」頁面點選 <span class="mock-btn mock-btn-secondary">⬇️ 備份 JSON</span> 下載備份檔，這是最保險的成績管理習慣。
-                        </p>
-                    </div>
-                </section>
-
-                <!-- ❓ 常見問與答 (FAQ) -->
-                <section class="guide-section" id="faq">
-                    <h2 class="section-title"><span>❓</span> 常見問與答 (FAQ)</h2>
-                    
-                    <div class="faq-item">
-                        <div class="faq-question">
-                            <span>Q:</span> 
-                            <span>在「分組安排」分頁進行隨機分組後，學生得到的「組分數」會加進「統計輸出」中的個人總分嗎？</span>
-                        </div>
-                        <div class="faq-answer">
-                            不會。為了避免成績計算混淆，「上課選取（個人表現）」與「分組紀錄（小組整體分數）」兩者是分開記錄且各自獨立計算的。您可以分別在統計頁面切換兩種模式進行查看或下載各自的 Excel/PDF 文件。
-                        </div>
-                    </div>
-
-                    <div class="faq-item">
-                        <div class="faq-question">
-                            <span>Q:</span> 
-                            <span>為什麼隨機分組時，最後一組的人數跟其他組不一樣？</span>
-                        </div>
-                        <div class="faq-answer">
-                            當您使用「依每組人數」進行隨機分組時，若班級總人數無法被設定的人數整除，就會產生餘數。例如：全班有 29 人，設定每組 4 人，系統會產生 7 組 (各4人)，並把剩下的 1 個人安排在最後的第 8 組。這屬於正常現象。
-                        </div>
-                    </div>
-
-                    <div class="faq-item">
-                        <div class="faq-question">
-                            <span>Q:</span> 
-                            <span>「列印分組名單」與「列印報表」有什麼不同？</span>
-                        </div>
-                        <div class="faq-answer">
-                            <ul>
-                                <li><strong>列印分組名單</strong>：位於「分組安排」分頁中。它是專門為了讓老師們能夠快速印出「乾淨的、不含加減分數與私密備註的純小組組員名單」，方便剪下來貼在教室或實驗室公佈欄。</li>
-                                <li><strong>列印報表</strong>：位於「統計輸出」分頁。它是完整的平時成績與紀錄明細，含有分數、歷史抽籤時間與教師個人備註。</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div class="faq-item">
-                        <div class="faq-question">
-                            <span>Q:</span>
-                            <span>指定分組建立後，為什麼一開始是空白組別？</span>
-                        </div>
-                        <div class="faq-answer">
-                            這是新版設計。指定分組會先依「每組人數」或「組數」建立空白組別，讓老師自行安排學生。操作時先在某一組按「指定加入第 X 組」，再點上方學生名冊，就能把學生加入該組。完成後按「完成」，系統會收起移動、置換、移除等修改工具，只留下乾淨的分組名單、加減分與備註。
-                        </div>
-                    </div>
-
-                    <div class="faq-item">
-                        <div class="faq-question">
-                            <span>Q:</span> 
-                            <span>更換電腦上課時，要如何將班級、抽籤成績與分組資料一起帶走？</span>
-                        </div>
-                        <div class="faq-answer">
-                            請在原本電腦上切換到「選擇班級」分頁，點擊「⬇️ 備份 JSON」下載檔案。上課時，在新的教室電腦打開本網頁，同樣去「選擇班級」分頁，選擇該 JSON 檔案，點選「⬆️ 還原 JSON」，名單、所有成績和分組便會一秒全部回復。
-                        </div>
-                    </div>
-                </section>
-
-            </main>
-        </div>
-    </div>
-
-    <!-- 頁尾 -->
-    <footer class="footer">
-        <div class="container">
-            <p>學生選取、分組與紀錄程式 - 教師操作說明手冊</p>
-            <p>主程式 GitHub Pages 線上版：<a href="https://froglssh.github.io/student-selection-record/" target="_blank">https://froglssh.github.io/student-selection-record/</a></p>
-            <p style="margin-top: 15px; font-size: 0.8rem; opacity: 0.6;">製作者：臺北市立麗山高中 林獻升老師 ｜ 聯絡信箱：frog@lssh.tp.edu.tw</p>
-            <p style="font-size: 0.8rem; opacity: 0.6; margin-top: 5px;"><a href="#top" style="color: #cbd5e1;">▲ 回到頂部</a></p>
-        </div>
-    </footer>
-
-    <!-- 簡單的導覽點擊啟動 active 狀態 -->
-    <script>
-        document.querySelectorAll('.sidebar-menu a').forEach(link => {
-            link.addEventListener('click', function(e) {
-                document.querySelectorAll('.sidebar-menu a').forEach(item => item.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
-    </script>
+  <footer>
+    臺北市立麗山高中 林獻升老師製作｜<a href="mailto:frog@lssh.tp.edu.tw">frog@lssh.tp.edu.tw</a>｜<a href="#">▲ 回到頂部</a>
+  </footer>
 </body>
 </html>
