@@ -70,21 +70,33 @@
             <p class="text-amber-200 font-semibold mt-2">臺北市麗山高中林獻升老師製作</p>
             <p class="text-white/80 mt-2">輸入或批次貼上名單，檢視與管理任務，並可隨機或手動指派。資料可下載保存。</p>
           </div>
-          <div class="flex gap-3">
-            <button id="btnSaveLocal" class="px-4 py-2 rounded-xl bg-emerald-500/90 hover:bg-emerald-500 text-white font-semibold shadow-md transition">儲存到本機</button>
-            <button id="btnLoadLocal" class="px-4 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white font-semibold shadow-md transition">讀取本機</button>
-            <button id="btnReset" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold shadow-md transition">重設全部</button>
+          <div class="flex flex-col items-start sm:items-end gap-2">
+            <div class="flex flex-wrap gap-2 text-sm">
+              <button id="saveTag" type="button" title="查看資料存放位置" class="px-3 py-1 rounded-full bg-white/15 border border-white/25 font-semibold">💾 載入中…</button>
+              <button id="folderTag" type="button" title="查看資料存放位置" class="hidden px-3 py-1 rounded-full bg-white/15 border border-white/25 font-semibold"></button>
+            </div>
+            <div class="flex flex-wrap gap-3">
+              <button id="btnSaveLocal" class="px-4 py-2 rounded-xl bg-emerald-500/90 hover:bg-emerald-500 text-white font-semibold shadow-md transition">立即儲存</button>
+              <button id="btnReset" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold shadow-md transition">重設全部</button>
+            </div>
+            <span class="text-xs text-white/60">版本 2.1｜自動儲存（IndexedDB＋資料夾）</span>
           </div>
         </div>
       </div>
     </header>
 
+    <!-- 頂端提示列（資料夾授權、其他分頁或電腦更新） -->
+    <div id="topBanner" class="hidden mt-4 rounded-xl bg-amber-300 text-brand-900 px-4 py-3 font-semibold shadow-lg flex flex-wrap items-center gap-3"></div>
+
+    <!-- 載入中 -->
+    <div id="bootOverlay" class="fixed inset-0 z-[70] bg-brand-900/80 flex items-center justify-center text-xl font-bold">載入資料中…</div>
+
     <!-- Tabs -->
-    <nav class="mt-6 sm:mt-8 grid grid-cols-2 sm:flex gap-2 sm:gap-3">
-      <button data-tab="students" class="tab-btn px-4 py-2.5 rounded-xl bg-white text-brand-800 font-semibold shadow hover:shadow-lg transition">學生名單</button>
-      <button data-tab="tasks" class="tab-btn px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 font-semibold transition">任務清單</button>
-      <button data-tab="assign" class="tab-btn px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 font-semibold transition">分配與檢視</button>
-      <button data-tab="export" class="tab-btn px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 font-semibold transition">匯出 / 匯入</button>
+    <nav class="mt-6 sm:mt-8 grid grid-cols-2 sm:flex gap-2 sm:gap-3" role="tablist" aria-label="功能分頁">
+      <button data-tab="students" role="tab" aria-selected="false" class="tab-btn px-4 py-2.5 rounded-xl font-semibold transition">學生名單</button>
+      <button data-tab="tasks" role="tab" aria-selected="false" class="tab-btn px-4 py-2.5 rounded-xl font-semibold transition">任務清單</button>
+      <button data-tab="assign" role="tab" aria-selected="false" class="tab-btn px-4 py-2.5 rounded-xl font-semibold transition">分配與檢視</button>
+      <button data-tab="export" role="tab" aria-selected="false" class="tab-btn px-4 py-2.5 rounded-xl font-semibold transition">匯出 / 匯入</button>
     </nav>
 
     <!-- Content Panels -->
@@ -169,8 +181,8 @@
 
         <!-- 類型切換 -->
         <div class="flex flex-wrap gap-3 mb-5">
-          <button data-role="officer" class="role-btn px-4 py-2 rounded-xl bg-white text-brand-800 font-semibold shadow">幹部任務</button>
-          <button data-role="tutor" class="role-btn px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 font-semibold">小老師任務</button>
+          <button data-role="officer" aria-pressed="false" class="role-btn px-4 py-2 rounded-xl font-semibold transition">幹部任務</button>
+          <button data-role="tutor" aria-pressed="false" class="role-btn px-4 py-2 rounded-xl font-semibold transition">小老師任務</button>
         </div>
 
         <div class="mb-6 bg-white/5 rounded-xl p-5 border border-white/10">
@@ -233,15 +245,15 @@
         <!-- 設定區 -->
         <div class="flex flex-col lg:flex-row gap-4 lg:items-end">
           <div>
-            <label class="block text-sm text-white/80 mb-1">分配類型</label>
-            <select id="assignRole" class="rounded-lg bg-white text-brand-800 px-3 py-2 font-semibold">
-              <option value="officer">幹部</option>
-              <option value="tutor">小老師</option>
-            </select>
+            <span class="block text-sm text-white/80 mb-1">分配類型（與「任務清單」同步）</span>
+            <div class="flex gap-2" role="group" aria-label="分配類型">
+              <button data-role="officer" aria-pressed="false" class="role-btn px-4 py-2 rounded-xl font-semibold transition">幹部</button>
+              <button data-role="tutor" aria-pressed="false" class="role-btn px-4 py-2 rounded-xl font-semibold transition">小老師</button>
+            </div>
           </div>
           <div class="flex items-center gap-2">
             <input id="avoidDuplicate" type="checkbox" class="w-4 h-4 rounded" checked>
-            <label for="avoidDuplicate" class="text-sm">同一類型避免重複指派同一人</label>
+            <label for="avoidDuplicate" class="text-sm">隨機時優先分配未有工作學生（避免隨機重複；手動挑選不限）</label>
           </div>
           <div class="flex gap-3">
             <button id="btnRandomAssign" class="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-white font-extrabold shadow">隨機分配未指派</button>
@@ -250,18 +262,23 @@
         </div>
 
         <!-- 概況 -->
-        <div class="mt-5 grid sm:grid-cols-3 gap-4">
+        <div class="mt-5 grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div class="rounded-xl bg-white/10 p-4 border border-white/10">
-            <div class="text-sm text-white/70">學生總數</div>
+            <div class="text-sm text-white/80">學生總數</div>
             <div id="statStudents" class="text-2xl font-extrabold mt-1">0</div>
           </div>
           <div class="rounded-xl bg-white/10 p-4 border border-white/10">
-            <div class="text-sm text-white/70">任務數量</div>
+            <div class="text-sm text-white/80"><span class="stat-role-label">幹部</span>職務數</div>
             <div id="statTasks" class="text-2xl font-extrabold mt-1">0</div>
           </div>
           <div class="rounded-xl bg-white/10 p-4 border border-white/10">
-            <div class="text-sm text-white/70">已指派</div>
+            <div class="text-sm text-white/80"><span class="stat-role-label">幹部</span>已指派</div>
             <div id="statAssigned" class="text-2xl font-extrabold mt-1">0</div>
+          </div>
+          <div class="rounded-xl bg-amber-300/20 p-4 border border-amber-200/40">
+            <div class="text-sm text-white/90">尚未有任何職務的學生</div>
+            <div id="statIdle" class="text-2xl font-extrabold mt-1">0</div>
+            <div id="statIdleNames" class="text-xs text-white/80 mt-1 leading-relaxed"></div>
           </div>
         </div>
 
@@ -305,18 +322,55 @@
             <p class="text-sm text-white/80 mb-3">可載入先前從本工具匯出的 JSON 檔</p>
             <input id="fileImport" type="file" accept="application/json" class="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:font-semibold file:bg-emerald-400 file:text-brand-900 hover:file:bg-emerald-300 file:cursor-pointer cursor-pointer bg-white/90 text-brand-900 rounded-lg">
             <button id="btnImportJSON" class="mt-3 px-4 py-2 rounded-xl bg-accent-500 hover:bg-accent-600 text-white font-semibold shadow">開始匯入</button>
+            <p class="mt-2 text-xs text-white/60">匯入會取代目前的名單與分配；匯入前會自動留一份還原點。</p>
           </div>
+        </div>
+
+        <!-- 資料存放位置 -->
+        <div id="storageSection" class="mt-6 bg-white/5 rounded-xl p-5 border border-white/10">
+          <h3 class="font-semibold mb-3">📁 資料存放位置</h3>
+          <div id="folderBox" class="text-sm"></div>
+          <div class="mt-4 grid sm:grid-cols-2 gap-4">
+            <label class="block">
+              <span class="text-sm text-white/80">這台電腦的名稱（寫入資料夾時記錄，例如「辦公室」「家裡」）</span>
+              <input id="deviceName" type="text" maxlength="20" class="mt-1 w-full rounded-lg bg-white/90 text-brand-900 px-3 py-2 outline-none ring-2 ring-transparent focus:ring-emerald-300">
+            </label>
+            <label class="block">
+              <span class="text-sm text-white/80">位置備註（自行記下資料夾完整路徑，會一起存進資料檔）</span>
+              <input id="folderNote" type="text" maxlength="200" class="mt-1 w-full rounded-lg bg-white/90 text-brand-900 px-3 py-2 outline-none ring-2 ring-transparent focus:ring-emerald-300" placeholder="例：我的雲端硬碟/導師/幹部資料">
+            </label>
+          </div>
+          <div id="storageInfo" class="mt-4 text-sm text-white/80 grid sm:grid-cols-2 gap-x-6 gap-y-1"></div>
+          <details class="mt-4 text-sm text-white/80">
+            <summary class="cursor-pointer font-semibold text-white">兩台電腦共用資料怎麼設定？</summary>
+            <ol class="list-decimal ml-5 mt-2 space-y-1">
+              <li>兩台電腦都用 Chrome 或 Edge 開啟本程式（建議放在同一個 Google 雲端硬碟資料夾）。</li>
+              <li>兩台電腦各按一次「選擇資料存放資料夾」，選<strong>同一個</strong>雲端硬碟資料夾。瀏覽器只會顯示資料夾名稱，請在「位置備註」記下完整路徑。</li>
+              <li>原始資料就是該資料夾內的 <code>幹部小老師資料.json</code>；每天第一次寫入前會把前一版複製到 <code>幹部小老師資料_歷史</code>（保留 14 份）。</li>
+              <li>每次開啟可能要點一下頂端黃色提示列授權；Chrome 若出現「每次造訪都允許」可勾選。</li>
+              <li>換電腦前先確認標籤顯示「📁 已同步到資料夾」，並等雲端硬碟上傳完成；不要兩台同時開著修改。</li>
+              <li>若兩邊都改過，程式會詢問要用哪一份，另一份會存成 <code>幹部小老師資料_衝突_裝置_時間.json</code> 或本機還原點，不會直接遺失。</li>
+              <li>要搬移資料：在 Finder／檔案總管把 JSON 檔與「_歷史」資料夾搬到新位置，再按「更換資料夾」指向新位置。</li>
+            </ol>
+          </details>
+        </div>
+
+        <!-- 自動還原點 -->
+        <div class="mt-6 bg-white/5 rounded-xl p-5 border border-white/10">
+          <h3 class="font-semibold mb-1">🕒 自動還原點（存在這台電腦的瀏覽器）</h3>
+          <p class="text-sm text-white/70 mb-3">每天第一次儲存時自動留一份（保留 7 天）；「重設全部」「匯入 JSON」「載入資料夾資料」前也會各留一份。</p>
+          <div id="snapshotList" class="text-sm"></div>
         </div>
       </div>
     </section>
 
     <!-- 小提示 -->
-    <p class="mt-6 text-center text-white/80">小提醒：資料只在您的裝置上運作；如需分享請下載後自行保存。</p>
+    <p class="mt-6 text-center text-white/80">小提醒：資料只存在這台電腦的瀏覽器（及您選擇的資料夾）中，不會上傳到任何伺服器；仍建議定期下載 JSON 備份。</p>
   </div>
 
   <!-- Toast -->
-  <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 hidden">
-    <div class="px-4 py-2 rounded-xl bg-black/70 text-white text-sm shadow-lg"></div>
+  <div id="toast" role="status" aria-live="polite" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[90] hidden">
+    <div class="px-4 py-2 rounded-xl bg-black/80 text-white text-sm shadow-lg flex items-center gap-3"></div>
   </div>
 
   <script>
@@ -352,34 +406,81 @@
     const $$ = sel => document.querySelectorAll(sel);
     const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
 
-    function toast(msg) {
+    // toast(訊息, { action: { label, fn }, duration })：新訊息會取代舊的，並重新計時
+    let toastTimer = null;
+    function toast(msg, opts = {}) {
       const box = $('#toast');
       const inner = box.firstElementChild;
-      inner.textContent = msg;
+      clearTimeout(toastTimer);
+      inner.innerHTML = '';
+      const span = document.createElement('span');
+      span.textContent = msg;
+      inner.appendChild(span);
+      if (opts.action) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'px-2 py-0.5 rounded-lg bg-amber-300 text-brand-900 font-bold hover:bg-amber-200';
+        btn.textContent = opts.action.label;
+        btn.addEventListener('click', () => {
+          clearTimeout(toastTimer);
+          box.classList.add('hidden');
+          opts.action.fn();
+        });
+        inner.appendChild(btn);
+      }
       box.classList.remove('hidden');
-      inner.classList.add('animate-[fadeIn_.3s_ease]');
-      setTimeout(()=> {
-        inner.classList.remove('animate-[fadeIn_.3s_ease]');
-        box.classList.add('hidden');
-      }, 1600);
+      toastTimer = setTimeout(() => box.classList.add('hidden'), opts.duration || (opts.action ? 5000 : 2200));
     }
 
-    // 進入時載入本機
-    loadLocal();
+    // Fisher–Yates 洗牌（取代 sort(() => Math.random() - 0.5)，每種順序機率相同）
+    function shuffle(list) {
+      const a = [...list];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
 
-    // 切換分頁
-    $$('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        $$('.tab-btn').forEach(b => b.classList.remove('bg-white','text-brand-800','shadow'));
-        btn.classList.add('bg-white','text-brand-800','shadow');
-        const tab = btn.dataset.tab;
-        state.ui.tab = tab;
-        $$('.panel').forEach(p => p.classList.add('hidden'));
-        $('#panel-' + tab).classList.remove('hidden');
-        if (tab === 'tasks') refreshTasksUI();
-        if (tab === 'assign') refreshAssignUI();
-      });
-    });
+    const roleName = role => role === 'officer' ? '幹部' : '小老師';
+
+    // 成對切換「選中／未選中」樣式，避免 bg-white 與 bg-white/10 同時存在
+    const ACTIVE_CLS = ['bg-white', 'text-brand-800', 'shadow'];
+    const IDLE_CLS = ['bg-white/10', 'hover:bg-white/20', 'text-white'];
+    function setActive(btn, on, ariaAttr) {
+      ACTIVE_CLS.forEach(c => btn.classList.toggle(c, on));
+      IDLE_CLS.forEach(c => btn.classList.toggle(c, !on));
+      btn.setAttribute(ariaAttr, on ? 'true' : 'false');
+    }
+
+    // 「刪除／清空」後的復原：記下刪除前的資料，5 秒內可按「復原」
+    function offerUndo(msg, before) {
+      toast(msg, { action: { label: '復原', fn: () => {
+        state.students = before.students;
+        state.tasks = before.tasks;
+        renderAll();
+        saveLocal();
+        toast('已復原');
+      } } });
+    }
+    const cloneLists = () => JSON.parse(JSON.stringify({ students: state.students, tasks: state.tasks }));
+
+    // 進入時的資料載入改由檔案最後的 boot() 非同步執行
+
+    // 切換分頁（上次停留的分頁記在這台電腦，下次開啟自動回到該頁）
+    const TAB_KEY = 'cc-class-assign-tab';
+    function switchTab(tab) {
+      if (!$('#panel-' + tab)) tab = 'students';
+      state.ui.tab = tab;
+      $$('.tab-btn').forEach(b => setActive(b, b.dataset.tab === tab, 'aria-selected'));
+      $$('.panel').forEach(p => p.classList.add('hidden'));
+      $('#panel-' + tab).classList.remove('hidden');
+      if (tab === 'tasks') refreshTasksUI();
+      if (tab === 'assign') refreshAssignUI();
+      try { localStorage.setItem(TAB_KEY, tab); } catch {}
+    }
+    $$('.tab-btn').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+    try { switchTab(localStorage.getItem(TAB_KEY) || 'students'); } catch { switchTab('students'); }
 
     // 學生：單筆
     $('#btnAddStudent').addEventListener('click', () => {
@@ -439,8 +540,14 @@
       download('學生名單匯入範本.csv', csv, 'text/csv;charset=utf-8;');
     });
 
-    $('#btnClearStudents').addEventListener('click', () => {
-      if (!confirm('確定清空所有學生名單？此動作無法復原')) return;
+    $('#btnClearStudents').addEventListener('click', async () => {
+      if (!state.students.length) return toast('名單已經是空的');
+      const choice = await askChoice('清空學生名單？',
+        `<p>會刪除全部 ${state.students.length} 位學生，並清除所有職務的指派（職務本身保留）。</p><p class="mt-2">清空前會先存成還原點；清空後 5 秒內也可按「復原」。</p>`,
+        [{ value: 'ok', label: '清空名單', style: 'danger' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+      if (choice !== 'ok') return;
+      const before = cloneLists();
+      await makeSnapshot('清空學生名單前');
       state.students = [];
       // 同步清空已指派
       state.tasks.officer.forEach(t => t.studentId = null);
@@ -449,7 +556,7 @@
       refreshTasksUI();
       refreshAssignUI();
       saveLocal();
-      toast('已清空學生名單');
+      offerUndo('已清空學生名單', before);
     });
 
     function addStudent(name, no) {
@@ -793,6 +900,8 @@
     }
 
     function deleteStudent(id) {
+      const before = cloneLists();
+      const student = state.students.find(s => s.id === id);
       // 若學生被指派，移除其指派
       ['officer', 'tutor'].forEach(role => {
         state.tasks[role].forEach(t => {
@@ -804,6 +913,7 @@
       refreshTasksUI();
       refreshAssignUI();
       saveLocal();
+      offerUndo(`已刪除 ${student?.name || '學生'}`, before);
     }
 
     function renderStudents() {
@@ -813,31 +923,52 @@
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td class="px-4 py-3">${idx + 1}</td>
-          <td class="px-4 py-3">${s.no || '-'}</td>
-          <td class="px-4 py-3 font-semibold">${s.name}</td>
+          <td class="px-4 py-3">${escapeHTML(s.no || '-')}</td>
+          <td class="px-4 py-3 font-semibold">${escapeHTML(s.name)}</td>
           <td class="px-4 py-3">
-            <button data-id="${s.id}" class="btn-del-stu px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30">刪除</button>
+            <button data-id="${escapeHTML(s.id)}" aria-label="刪除 ${escapeHTML(s.name)}" class="btn-del-stu px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30">刪除</button>
           </td>
         `;
         tbody.appendChild(tr);
       });
       $$('.btn-del-stu').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
           const id = btn.dataset.id;
-          if (confirm('確定刪除此學生？')) deleteStudent(id);
+          const s = state.students.find(x => x.id === id);
+          if (!s) return;
+          const jobs = getStudentAssignedTaskNames(id);
+          const choice = await askChoice(`刪除 ${s.name}？`,
+            jobs.length ? `<p>${escapeHTML(s.name)} 目前擔任：${escapeHTML(jobs.join('、'))}，刪除後這些職務會變成未指派。</p>` : '<p>刪除後 5 秒內可按「復原」。</p>',
+            [{ value: 'ok', label: '刪除', style: 'danger' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+          if (choice === 'ok') deleteStudent(id);
         });
       });
-      // 更新統計
-      $('#statStudents').textContent = state.students.length;
+      renderStats();
     }
 
-    // 任務：切換類型
+    // 統一計算概況（分配頁四格）
+    function renderStats() {
+      const role = state.ui.role;
+      const tasks = state.tasks[role];
+      const busy = new Set([...state.tasks.officer, ...state.tasks.tutor].map(t => t.studentId).filter(Boolean));
+      const idle = state.students.filter(s => !busy.has(s.id));
+      $('#statStudents').textContent = state.students.length;
+      $('#statTasks').textContent = tasks.length;
+      $('#statAssigned').textContent = `${tasks.filter(t => t.studentId).length} / ${tasks.length}`;
+      $('#statIdle').textContent = idle.length;
+      $('#statIdleNames').textContent = idle.length
+        ? idle.slice(0, 12).map(s => `${s.no ? s.no + ' ' : ''}${s.name}`).join('、') + (idle.length > 12 ? `…等 ${idle.length} 人` : '')
+        : (state.students.length ? '每位學生都有職務了 🎉' : '');
+      $$('.stat-role-label').forEach(el => el.textContent = roleName(role));
+    }
+
+    // 類型切換：任務清單與分配頁共用 state.ui.role
     $$('.role-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        $$('.role-btn').forEach(b => b.classList.remove('bg-white','text-brand-800','shadow'));
-        btn.classList.add('bg-white','text-brand-800','shadow');
         state.ui.role = btn.dataset.role;
+        refreshRoleButtons();
         refreshTasksUI();
+        refreshAssignUI();
       });
     });
 
@@ -876,14 +1007,21 @@
       toast(`批次加入 ${count} 個任務`);
     });
 
-    $('#btnClearTasks').addEventListener('click', () => {
+    $('#btnClearTasks').addEventListener('click', async () => {
       const role = state.ui.role;
-      if (!confirm(`確定清空「${role === 'officer' ? '幹部' : '小老師'}」任務？`)) return;
+      const n = state.tasks[role].length;
+      if (!n) return toast(`${roleName(role)}職務已經是空的`);
+      const choice = await askChoice(`清空全部${roleName(role)}職務？`,
+        `<p>會刪除 ${n} 個${roleName(role)}職務與它們的指派（另一類不受影響）。</p><p class="mt-2">清空前會先存成還原點；清空後 5 秒內也可按「復原」。</p>`,
+        [{ value: 'ok', label: '清空職務', style: 'danger' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+      if (choice !== 'ok') return;
+      const before = cloneLists();
+      await makeSnapshot(`清空${roleName(role)}職務前`);
       state.tasks[role] = [];
       renderTasksTable();
       refreshAssignUI();
       saveLocal();
-      toast('已清空任務');
+      offerUndo(`已清空${roleName(role)}職務`, before);
     });
 
     $('#btnGenerateOfficerTasks').addEventListener('click', () => {
@@ -908,6 +1046,7 @@
 
     $('#btnGenerateAllTasks').addEventListener('click', () => {
       const count = addDefaultTasks('officer') + addDefaultTasks('tutor');
+      refreshRoleButtons();
       refreshTasksUI();
       refreshAssignUI();
       saveLocal();
@@ -927,18 +1066,17 @@
     }
 
     function refreshRoleButtons() {
-      $$('.role-btn').forEach(btn => {
-        btn.classList.toggle('bg-white', btn.dataset.role === state.ui.role);
-        btn.classList.toggle('text-brand-800', btn.dataset.role === state.ui.role);
-        btn.classList.toggle('shadow', btn.dataset.role === state.ui.role);
-      });
+      $$('.role-btn').forEach(btn => setActive(btn, btn.dataset.role === state.ui.role, 'aria-pressed'));
     }
 
     function deleteTask(role, id) {
+      const before = cloneLists();
+      const task = state.tasks[role].find(t => t.id === id);
       state.tasks[role] = state.tasks[role].filter(t => t.id !== id);
       renderTasksTable();
       refreshAssignUI();
       saveLocal();
+      offerUndo(`已刪除職務「${task?.name || ''}」`, before);
     }
 
     function renderTasksTable() {
@@ -951,62 +1089,88 @@
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td class="px-4 py-3">${idx + 1}</td>
-          <td class="px-4 py-3 font-semibold">${t.name}</td>
-          <td class="px-4 py-3">${assigned ? `${assigned.no ? assigned.no + ' - ' : ''}${assigned.name}` : '<span class="text-white/60">未指派</span>'}</td>
+          <td class="px-4 py-3 font-semibold">${escapeHTML(t.name)}</td>
+          <td class="px-4 py-3">${assigned ? escapeHTML(`${assigned.no ? assigned.no + ' - ' : ''}${assigned.name}`) : '<span class="text-white/60">未指派</span>'}</td>
           <td class="px-4 py-3">
-            <button data-id="${t.id}" class="btn-del-task px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30">刪除</button>
+            <button data-id="${escapeHTML(t.id)}" aria-label="刪除職務 ${escapeHTML(t.name)}" class="btn-del-task px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30">刪除</button>
           </td>
         `;
         tbody.appendChild(tr);
       });
       $$('.btn-del-task').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
           const id = btn.dataset.id;
-          if (confirm('確定刪除此任務？')) deleteTask(state.ui.role, id);
+          const t = state.tasks[state.ui.role].find(x => x.id === id);
+          if (!t) return;
+          const who = state.students.find(s => s.id === t.studentId);
+          const choice = await askChoice(`刪除職務「${t.name}」？`,
+            who ? `<p>此職務目前由 ${escapeHTML(who.name)} 擔任，刪除後一併移除。</p>` : '<p>刪除後 5 秒內可按「復原」。</p>',
+            [{ value: 'ok', label: '刪除', style: 'danger' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+          if (choice === 'ok') deleteTask(state.ui.role, id);
         });
       });
-      // 更新統計
-      const tasksCount = state.tasks.officer.length + state.tasks.tutor.length;
-      $('#statTasks').textContent = state.ui.tab === 'assign'
-        ? state.tasks[$('#assignRole').value].length
-        : tasksCount;
-      const assignedCount = [...state.tasks.officer, ...state.tasks.tutor].filter(t => t.studentId).length;
-      $('#statAssigned').textContent = assignedCount;
+      renderStats();
     }
 
     // 分配與檢視
-    $('#assignRole').addEventListener('change', refreshAssignUI);
-    $('#btnRandomAssign').addEventListener('click', () => randomAssign($('#assignRole').value));
-    $('#btnClearAssign').addEventListener('click', () => {
-      const role = $('#assignRole').value;
-      if (!confirm(`清除「${role === 'officer' ? '幹部' : '小老師'}」所有指派？`)) return;
+    $('#btnRandomAssign').addEventListener('click', () => randomAssign(state.ui.role));
+    $('#btnClearAssign').addEventListener('click', async () => {
+      const role = state.ui.role;
+      const n = state.tasks[role].filter(t => t.studentId).length;
+      if (!n) return toast(`${roleName(role)}目前沒有任何指派`);
+      const choice = await askChoice(`清除全部${roleName(role)}指派？`,
+        `<p>會清除 ${n} 個${roleName(role)}職務的指派（職務與學生名單保留）。</p><p class="mt-2">清除前會先存成還原點；清除後 5 秒內也可按「復原」。</p>`,
+        [{ value: 'ok', label: '清除指派', style: 'danger' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+      if (choice !== 'ok') return;
+      const before = cloneLists();
+      await makeSnapshot(`清除${roleName(role)}指派前`);
       state.tasks[role].forEach(t => t.studentId = null);
       refreshAssignUI();
       saveLocal();
-      toast('已清除指派');
+      offerUndo(`已清除${roleName(role)}指派`, before);
     });
 
+    // 取得學生在所有任務（幹部 + 小老師）中被指派的職務名稱
+    function getStudentAssignedTaskNames(studentId, excludeTaskId = null) {
+      if (!studentId) return [];
+      const roles = [];
+      ['officer', 'tutor'].forEach(r => {
+        state.tasks[r].forEach(t => {
+          if (t.studentId === studentId && t.id !== excludeTaskId) {
+            roles.push(t.name);
+          }
+        });
+      });
+      return roles;
+    }
+
+    // 計算學生在所有任務（幹部 + 小老師）中的指派次數
+    function getStudentTaskCount(studentId, excludeTaskId = null) {
+      return getStudentAssignedTaskNames(studentId, excludeTaskId).length;
+    }
+
     function refreshAssignUI() {
-      const role = $('#assignRole').value;
+      const role = state.ui.role;
       const tbody = $('#assignTable');
       tbody.innerHTML = '';
       const tasks = state.tasks[role];
-      // 統計
-      $('#statStudents').textContent = state.students.length;
-      $('#statTasks').textContent = tasks.length;
-      $('#statAssigned').textContent = tasks.filter(t => t.studentId).length;
+      renderStats();
 
       tasks.forEach((t, idx) => {
         const tr = document.createElement('tr');
         const assigned = state.students.find(s => s.id === t.studentId);
         const options = [
           `<option value="">未指派</option>`,
-          ...state.students.map(s => `<option value="${s.id}" ${s.id===t.studentId?'selected':''}>${s.no ? s.no + ' - ' : ''}${s.name}</option>`)
+          ...state.students.map(s => {
+            const otherTasks = getStudentAssignedTaskNames(s.id, t.id);
+            const badge = otherTasks.length ? ` (已兼任：${otherTasks.join('、')})` : '';
+            return `<option value="${escapeHTML(s.id)}" ${s.id===t.studentId?'selected':''}>${escapeHTML(`${s.no ? s.no + ' - ' : ''}${s.name}${badge}`)}</option>`;
+          })
         ].join('');
         tr.innerHTML = `
           <td class="px-4 py-3">${idx + 1}</td>
-          <td class="px-4 py-3 font-semibold">${t.name}</td>
-          <td class="px-4 py-3">${assigned ? `${assigned.no ? assigned.no + ' - ' : ''}${assigned.name}` : '<span class="text-white/60">未指派</span>'}</td>
+          <td class="px-4 py-3 font-semibold">${escapeHTML(t.name)}</td>
+          <td class="px-4 py-3">${assigned ? escapeHTML(`${assigned.no ? assigned.no + ' - ' : ''}${assigned.name}`) : '<span class="text-white/60">未指派</span>'}</td>
           <td class="px-4 py-3">
             <div class="flex items-center gap-2">
               <select data-id="${t.id}" class="assign-select rounded-lg bg-white text-brand-800 px-3 py-1.5">${options}</select>
@@ -1020,24 +1184,27 @@
         tbody.appendChild(tr);
       });
 
-      // 快速指定
+      // 快速指定（允許手動挑選相同學生在不同職位）
       $$('.assign-select').forEach(sel => {
         sel.addEventListener('change', () => {
           const id = sel.dataset.id;
           const val = sel.value;
           const task = state.tasks[role].find(x => x.id === id);
           if (!task) return;
-          // 避免同類重複
-          if ($('#avoidDuplicate').checked && val) {
-            const existsTask = state.tasks[role].find(x => x.studentId === val && x.id !== id);
-            if (existsTask) {
-              sel.value = task.studentId || '';
-              return toast('同一類型已被其他任務使用，請先清除或關閉「避免重複」');
-            }
-          }
           task.studentId = val || null;
           refreshAssignUI();
           saveLocal();
+          if (val) {
+            const student = state.students.find(s => s.id === val);
+            const roles = getStudentAssignedTaskNames(val);
+            if (roles.length > 1) {
+              toast(`已手動指派 ${student?.name || ''}（目前兼任：${roles.join('、')}）`);
+            } else {
+              toast(`已指派 ${student?.name || ''}`);
+            }
+          } else {
+            toast('已清除此職務指派');
+          }
         });
       });
 
@@ -1054,7 +1221,7 @@
         });
       });
 
-      // 單筆隨機分配
+      // 單筆隨機分配（優先分配未有工作學生）
       $$('.btn-random-one').forEach(btn => {
         btn.addEventListener('click', () => randomAssignOne(role, btn.dataset.id));
       });
@@ -1071,16 +1238,26 @@
       let pool = state.students.map(s => s.id);
 
       if (avoidDup) {
+        // 同一類型內，若人數充足，優先排除本類型其他任務已使用的學生
         const usedByOtherTasks = new Set(
           tasks
             .filter(t => t.id !== taskId && t.studentId)
             .map(t => t.studentId)
         );
-        pool = pool.filter(id => !usedByOtherTasks.has(id));
+        const unusedInRole = pool.filter(id => !usedByOtherTasks.has(id));
+        if (unusedInRole.length > 0) {
+          pool = unusedInRole;
+        }
+
+        // 核心演算法：優先選取還未有工作的學生（所有任務中已指派次數最少者）
+        const minJobs = Math.min(...pool.map(id => getStudentTaskCount(id, taskId)));
+        pool = pool.filter(id => getStudentTaskCount(id, taskId) === minJobs);
       }
 
+      // 若候選人充足，避免隨機再次抽到原指派者
       if (task.studentId && pool.length > 1) {
-        pool = pool.filter(id => id !== task.studentId);
+        const withoutCurrent = pool.filter(id => id !== task.studentId);
+        if (withoutCurrent.length > 0) pool = withoutCurrent;
       }
 
       if (pool.length === 0) return toast('目前沒有可隨機分配的學生');
@@ -1089,7 +1266,9 @@
       task.studentId = pick;
       refreshAssignUI();
       saveLocal();
-      toast('已重新隨機分配此項任務');
+      const student = state.students.find(s => s.id === pick);
+      const jobsCount = getStudentTaskCount(pick, taskId);
+      toast(`已隨機分配「${task.name}」給 ${student?.name || '學生'}${jobsCount > 0 ? `（兼任 ${jobsCount + 1} 項職務）` : ''}`);
     }
 
     function randomAssign(role) {
@@ -1100,28 +1279,49 @@
 
       const avoidDup = $('#avoidDuplicate').checked;
 
-      // 目前已使用的人（同類型）
-      const used = new Set(tasks.filter(t => t.studentId).map(t => t.studentId));
-      const poolBase = [...state.students];
+      // 全域動態追蹤每位學生目前的總工作數（幹部 + 小老師）
+      const jobCounts = new Map();
+      state.students.forEach(s => {
+        jobCounts.set(s.id, getStudentTaskCount(s.id));
+      });
 
-      // 隨機分配每個未指派任務
-      for (let t of need) {
-        let pool = poolBase.map(s => s.id);
+      // 目前此類型已使用的學生集合
+      const usedInRole = new Set(tasks.filter(t => t.studentId).map(t => t.studentId));
+
+      let assignedCount = 0;
+
+      // 隨機打散待分配任務順序，避免固定順序產生的偏誤
+      const shuffledNeed = shuffle(need);
+
+      for (let t of shuffledNeed) {
+        let candidates = state.students.map(s => s.id);
+
         if (avoidDup) {
-          pool = pool.filter(id => !used.has(id));
+          // 優先挑選本類型尚未指派的學生
+          const notUsedInThisRole = candidates.filter(id => !usedInRole.has(id));
+          if (notUsedInThisRole.length > 0) {
+            candidates = notUsedInThisRole;
+          }
+          // 在候選人中，挑選目前全域工作數最少（尚未有工作者優先）的學生群組
+          const minJobs = Math.min(...candidates.map(id => jobCounts.get(id) || 0));
+          candidates = candidates.filter(id => (jobCounts.get(id) || 0) === minJobs);
         }
-        if (pool.length === 0) {
-          // 若不夠分，跳過或提示
+
+        if (candidates.length === 0) {
           toast('可用人數不足，部分任務未分配');
           break;
         }
-        const pick = pool[Math.floor(Math.random() * pool.length)];
+
+        const pick = candidates[Math.floor(Math.random() * candidates.length)];
         t.studentId = pick;
-        used.add(pick);
+        usedInRole.add(pick);
+        jobCounts.set(pick, (jobCounts.get(pick) || 0) + 1);
+        assignedCount++;
       }
+
       refreshAssignUI();
       saveLocal();
-      toast('已完成隨機分配');
+      toast(`已完成隨機分配（共指派 ${assignedCount} 個任務）`);
     }
 
     // 匯出
@@ -1225,12 +1425,819 @@
       downloadPDF();
     });
 
-    $('#btnDownloadJSON').addEventListener('click', () => {
-      const data = JSON.stringify(state, null, 2);
-      download('分配資料.json', data, 'application/json');
-    });
+    // ===================== 儲存層（v2.0：IndexedDB＋localStorage 鏡像＋資料夾正本） =====================
+    const APP_VERSION = '2.0';
+    const LS_KEY = 'cc-class-assign';              // 舊版鍵名，不可改（舊資料要能讀）
+    const DEVICE_KEY = 'cc-class-assign-device';   // 這台電腦的名稱，不隨資料同步
+    const IDB_NAME = 'lssh-class-assign';
+    const IDB_VERSION = 1;
+    const FOLDER_FILE = '幹部小老師資料.json';
+    const FOLDER_HIST = '幹部小老師資料_歷史';
+    const HIST_KEEP = 14;
+    const DAILY_SNAP_KEEP = 7;
+    const EVENT_SNAP_KEEP = 10;
 
-    // 匯入
+    let booted = false;                 // 載入完成前禁止任何儲存
+    const meta = { rev: 0, savedAt: 0, folderNote: '' };
+    const store = { mode: 'idb', mirrorOk: true, persisted: null, error: '', lastSavedAt: 0, saving: false, migrated: false };
+    let dirty = false, saveTimer = null, savingPromise = null, conflictOpen = false;
+    const bc = ('BroadcastChannel' in window) ? new BroadcastChannel('lssh-class-assign') : null;
+    const tabId = uid();
+
+    // ---------- 小工具 ----------
+    const pad2 = n => String(n).padStart(2, '0');
+    const dayStamp = (d = new Date()) => `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}`;
+    const minuteStamp = (d = new Date()) => `${dayStamp(d)}-${pad2(d.getHours())}${pad2(d.getMinutes())}`;
+    const fmtTime = ts => ts ? new Date(ts).toLocaleString('zh-TW', { hour12: false }) : '—';
+    const safeName = s => String(s || '').replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 30) || '裝置';
+
+    function deviceName() {
+      try {
+        let n = localStorage.getItem(DEVICE_KEY);
+        if (!n) { n = '電腦-' + Math.random().toString(36).slice(2, 6).toUpperCase(); localStorage.setItem(DEVICE_KEY, n); }
+        return n;
+      } catch { return '電腦'; }
+    }
+
+    function currentData() {
+      return JSON.parse(JSON.stringify({
+        students: state.students,
+        tasks: state.tasks,
+        ui: { role: state.ui.role },
+        folderNote: meta.folderNote || ''
+      }));
+    }
+
+    // 驗證並整理任何來源的資料（舊版 localStorage、JSON 備份、資料夾正本）
+    function normalizeData(obj) {
+      if (!obj || typeof obj !== 'object' || !Array.isArray(obj.students) || !obj.tasks) return null;
+      const students = obj.students
+        .filter(s => s && String(s.name ?? '').trim())
+        .map(s => ({ id: String(s.id || uid()), name: String(s.name).trim(), no: String(s.no ?? '').trim() }));
+      const ids = new Set(students.map(s => s.id));
+      const fixTasks = list => (Array.isArray(list) ? list : [])
+        .filter(t => t && String(t.name ?? '').trim())
+        .map(t => ({ id: String(t.id || uid()), name: String(t.name).trim(), studentId: ids.has(t.studentId) ? t.studentId : null }));
+      return {
+        students,
+        tasks: { officer: fixTasks(obj.tasks.officer), tutor: fixTasks(obj.tasks.tutor) },
+        ui: { role: obj.ui?.role === 'tutor' ? 'tutor' : 'officer' },
+        folderNote: String(obj.folderNote || ''),
+        savedAt: Number(obj.savedAt) || 0,
+        rev: Number(obj.rev) || 0,
+        savedBy: obj.savedBy || ''
+      };
+    }
+
+    function countsOf(d) {
+      if (!d) return { students: 0, tasks: 0, assigned: 0 };
+      const all = [...(d.tasks?.officer || []), ...(d.tasks?.tutor || [])];
+      return { students: (d.students || []).length, tasks: all.length, assigned: all.filter(t => t.studentId).length };
+    }
+    const isEmptyData = d => !d || countsOf(d).students === 0;
+    const countsText = d => { const c = countsOf(d); return `學生 ${c.students} 人、職務 ${c.tasks} 項、已指派 ${c.assigned} 項`; };
+
+    function applyData(d) {
+      state.students = d.students;
+      state.tasks = d.tasks;
+      state.ui.role = d.ui?.role || 'officer';
+      meta.folderNote = d.folderNote || '';
+      renderAll();
+    }
+
+    function renderAll() {
+      refreshRoleButtons();
+      renderStudents();
+      refreshTasksUI();
+      refreshAssignUI();
+      const note = $('#folderNote');
+      if (note && document.activeElement !== note) note.value = meta.folderNote || '';
+    }
+
+    // ---------- IndexedDB ----------
+    let dbPromise = null;
+    function idbOpen() {
+      if (dbPromise) return dbPromise;
+      dbPromise = new Promise((resolve, reject) => {
+        if (typeof indexedDB === 'undefined' || !indexedDB) return reject(new Error('瀏覽器不支援或停用了 IndexedDB'));
+        const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+        req.onupgradeneeded = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains('kv')) db.createObjectStore('kv');
+          if (!db.objectStoreNames.contains('snapshots')) db.createObjectStore('snapshots');
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error || new Error('IndexedDB 開啟失敗'));
+        req.onblocked = () => reject(new Error('IndexedDB 被其他分頁鎖住'));
+      });
+      dbPromise.catch(() => { dbPromise = null; });
+      return dbPromise;
+    }
+    async function idbTx(storeName, mode, fn) {
+      const db = await idbOpen();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, mode);
+        const req = fn(tx.objectStore(storeName));
+        let out;
+        if (req) req.onsuccess = () => { out = req.result; };
+        tx.oncomplete = () => resolve(out);
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error || new Error('交易中止'));
+      });
+    }
+    const idbGet = (s, k) => idbTx(s, 'readonly', st => st.get(k));
+    const idbPut = (s, k, v) => idbTx(s, 'readwrite', st => st.put(v, k));
+    const idbDel = (s, k) => idbTx(s, 'readwrite', st => st.delete(k));
+    const idbAll = s => idbTx(s, 'readonly', st => st.getAll());
+
+    // ---------- 寫入本機（IndexedDB 主、localStorage 鏡像／後援） ----------
+    async function commitLocal(data, savedAt) {
+      const payload = { ...data, savedAt, rev: meta.rev + 1, appVersion: APP_VERSION };
+      let ok = false;
+      if (store.mode === 'idb') {
+        try {
+          await idbPut('kv', 'state', payload);
+          ok = true;
+          dailySnapshot(payload).catch(() => {});
+        } catch (e) {
+          store.mode = 'ls';
+          console.warn('IndexedDB 寫入失敗，改用 localStorage 後援', e);
+        }
+      }
+      try {
+        localStorage.setItem(LS_KEY, JSON.stringify(payload));
+        store.mirrorOk = true;
+        if (store.mode === 'ls') ok = true;
+      } catch {
+        store.mirrorOk = false;
+      }
+      if (!ok) throw new Error('IndexedDB 與 localStorage 都無法寫入');
+      meta.rev = payload.rev;
+      meta.savedAt = savedAt;
+      store.lastSavedAt = Date.now();
+      store.error = '';
+      if (bc) bc.postMessage({ type: 'saved', rev: meta.rev, from: tabId });
+      return payload;
+    }
+
+    // 所有編輯動作都呼叫 saveLocal()：合併 0.3 秒內的變更，序列化寫入
+    function saveLocal() {
+      if (!booted) return;
+      dirty = true;
+      folder.dirty = true;
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(flushSave, 300);
+      renderSaveTag();
+    }
+
+    async function flushSave() {
+      clearTimeout(saveTimer);
+      if (!booted || !dirty) return;
+      if (savingPromise) { await savingPromise; return flushSave(); }
+      savingPromise = doSave().finally(() => { savingPromise = null; renderSaveTag(); renderStorageInfo(); });
+      return savingPromise;
+    }
+
+    async function doSave() {
+      store.saving = true;
+      renderSaveTag();
+      try {
+        // 多分頁保護：資料庫內的 rev 比本頁知道的新 → 另一個分頁改過
+        if (store.mode === 'idb') {
+          let cur = null;
+          try { cur = await idbGet('kv', 'state'); } catch {}
+          if (cur && (cur.rev || 0) > meta.rev) {
+            await handleTabConflict(cur);
+            return;
+          }
+        }
+        dirty = false;
+        await commitLocal(currentData(), Date.now());
+        scheduleFolderWrite();
+      } catch (e) {
+        dirty = true;
+        store.error = '儲存失敗';
+        toast('⚠ 儲存失敗：' + (e.message || e));
+      } finally {
+        store.saving = false;
+      }
+    }
+
+    async function handleTabConflict(cur) {
+      if (conflictOpen) return;
+      conflictOpen = true;
+      const choice = await askChoice('另一個分頁已修改資料',
+        `<p>這台電腦上另一個分頁（或視窗）在 ${escapeHTML(fmtTime(cur.savedAt))} 儲存過資料，與本頁內容不同。</p>
+         <p class="mt-2">另一分頁：${escapeHTML(countsText(cur))}<br>本頁：${escapeHTML(countsText(currentData()))}</p>`,
+        [
+          { value: 'reload', label: '重新載入最新資料', style: 'primary' },
+          { value: 'overwrite', label: '以本頁內容覆蓋', style: 'danger' },
+          { value: 'download', label: '先下載本頁 JSON 備份', style: 'plain' }
+        ]);
+      conflictOpen = false;
+      if (choice === 'reload') {
+        const d = normalizeData(cur);
+        meta.rev = cur.rev || 0;
+        meta.savedAt = cur.savedAt || 0;
+        dirty = false;
+        if (d) applyData(d);
+        toast('已載入另一分頁的最新資料');
+      } else if (choice === 'overwrite') {
+        await makeSnapshot('被本頁覆蓋前（另一分頁）', cur);
+        meta.rev = cur.rev || 0;
+        dirty = true;
+        setTimeout(flushSave, 0);
+      } else {
+        downloadJSON('分配資料_本頁備份');
+        dirty = true; // 保持未儲存，下次儲存會再詢問
+      }
+    }
+
+    // ---------- 自動還原點 ----------
+    async function dailySnapshot(payload) {
+      const id = 'day-' + dayStamp();
+      const exists = await idbGet('snapshots', id);
+      if (!exists) await idbPut('snapshots', id, { id, at: Date.now(), reason: '每日自動', data: payload });
+      await pruneSnapshots();
+    }
+    async function makeSnapshot(reason, data) {
+      if (store.mode !== 'idb') return false;
+      try {
+        const id = `evt-${minuteStamp()}-${Date.now() % 100000}`;
+        await idbPut('snapshots', id, { id, at: Date.now(), reason, data: data || currentData() });
+        await pruneSnapshots();
+        renderSnapshots();
+        return true;
+      } catch { return false; }
+    }
+    async function pruneSnapshots() {
+      const all = await idbAll('snapshots');
+      const days = all.filter(s => s.id.startsWith('day-')).sort((a, b) => b.id.localeCompare(a.id));
+      const evts = all.filter(s => s.id.startsWith('evt-')).sort((a, b) => b.at - a.at);
+      for (const s of [...days.slice(DAILY_SNAP_KEEP), ...evts.slice(EVENT_SNAP_KEEP)]) await idbDel('snapshots', s.id);
+    }
+    async function renderSnapshots() {
+      const box = $('#snapshotList');
+      if (!box) return;
+      if (store.mode !== 'idb') {
+        box.innerHTML = '<p class="text-amber-200">此瀏覽器目前無法使用 IndexedDB，因此沒有自動還原點。請定期按「下載 JSON」備份。</p>';
+        return;
+      }
+      let list = [];
+      try { list = (await idbAll('snapshots')).sort((a, b) => b.at - a.at); } catch {}
+      if (!list.length) { box.innerHTML = '<p class="text-white/60">目前還沒有還原點。</p>'; return; }
+      box.innerHTML = `<div class="overflow-x-auto rounded-lg border border-white/10"><table class="min-w-full">
+        <thead class="bg-white/10"><tr class="text-left"><th class="px-3 py-2">時間</th><th class="px-3 py-2">原因</th><th class="px-3 py-2">內容</th><th class="px-3 py-2">動作</th></tr></thead>
+        <tbody class="divide-y divide-white/10">${list.map(s => `<tr>
+          <td class="px-3 py-2 whitespace-nowrap">${escapeHTML(fmtTime(s.at))}</td>
+          <td class="px-3 py-2">${escapeHTML(s.reason)}</td>
+          <td class="px-3 py-2">${escapeHTML(countsText(s.data))}</td>
+          <td class="px-3 py-2 whitespace-nowrap">
+            <button data-snap="${escapeHTML(s.id)}" data-act="restore" class="snap-btn px-3 py-1 rounded-lg bg-amber-400 hover:bg-amber-500 font-bold">還原</button>
+            <button data-snap="${escapeHTML(s.id)}" data-act="download" class="snap-btn px-3 py-1 rounded-lg bg-white/20 hover:bg-white/30">下載</button>
+          </td></tr>`).join('')}</tbody></table></div>`;
+      box.querySelectorAll('.snap-btn').forEach(btn => btn.addEventListener('click', async () => {
+        const snap = list.find(s => s.id === btn.dataset.snap);
+        if (!snap) return;
+        if (btn.dataset.act === 'download') {
+          download(`分配資料_還原點_${snap.id}.json`, JSON.stringify(snap.data, null, 2), 'application/json');
+          return;
+        }
+        const choice = await askChoice('還原這個還原點？',
+          `<p>時間：${escapeHTML(fmtTime(snap.at))}（${escapeHTML(snap.reason)}）</p>
+           <p class="mt-1">還原點：${escapeHTML(countsText(snap.data))}<br>目前：${escapeHTML(countsText(currentData()))}</p>
+           <p class="mt-2">還原前會先把目前資料存成一份還原點。</p>`,
+          [{ value: 'ok', label: '還原', style: 'primary' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+        if (choice !== 'ok') return;
+        const d = normalizeData(snap.data);
+        if (!d) return toast('還原點內容無法讀取');
+        await makeSnapshot('還原前');
+        applyData(d);
+        saveLocal();
+        toast('已還原');
+      }));
+    }
+
+    // ---------- 資料夾正本（File System Access API，Chrome／Edge） ----------
+    const fsSupported = typeof window.showDirectoryPicker === 'function';
+    const folder = {
+      handle: null, name: '', status: fsSupported ? 'none' : 'unsupported', // none | ok | needPermission | error | paused | unsupported
+      known: null,       // 本頁最後一次讀／寫正本時記下的 {lastModified, rev, savedAt, savedBy}
+      dirty: false, timer: null, writing: null, lastWriteAt: 0, histCount: 0, errMsg: '', warned: false
+    };
+
+    async function readMaster(dir) {
+      try {
+        const fh = await dir.getFileHandle(FOLDER_FILE);
+        const file = await fh.getFile();
+        const text = await file.text();
+        let obj = null;
+        try { obj = JSON.parse(text); } catch {}
+        return { exists: true, text, obj, lastModified: file.lastModified };
+      } catch (e) {
+        if (e && e.name === 'NotFoundError') return { exists: false };
+        throw e;
+      }
+    }
+    // createWritable 先寫到暫存檔，close() 成功才取代原檔；失敗時 abort，原檔不受影響
+    async function writeFileSafe(dir, name, text) {
+      const fh = await dir.getFileHandle(name, { create: true });
+      const w = await fh.createWritable();
+      try { await w.write(text); await w.close(); }
+      catch (e) { try { await w.abort(); } catch {} throw e; }
+      return (await fh.getFile()).lastModified;
+    }
+    const knownOf = (cur, lastModified) => ({
+      lastModified: lastModified ?? cur.lastModified,
+      rev: cur.obj?.rev ?? 0, savedAt: cur.obj?.savedAt ?? 0, savedBy: cur.obj?.savedBy ?? ''
+    });
+    function masterChanged(cur) {
+      if (!cur.exists) return false;
+      const k = folder.known;
+      if (!k) return true;
+      if (cur.lastModified === k.lastModified) return false;
+      // 雲端硬碟同步可能只改時間戳，內容相同就不算改過
+      return (cur.obj?.rev ?? 0) !== k.rev || (cur.obj?.savedAt ?? 0) !== k.savedAt || (cur.obj?.savedBy ?? '') !== k.savedBy;
+    }
+    async function rememberKnown(k) {
+      folder.known = k;
+      try { await idbPut('kv', 'folderKnown', k); } catch {}
+    }
+
+    async function ensureDailyHistory(cur) {
+      if (!cur.exists) return;
+      const hist = await folder.handle.getDirectoryHandle(FOLDER_HIST, { create: true });
+      const name = `幹部小老師資料_${dayStamp()}.json`;
+      let has = true;
+      try { await hist.getFileHandle(name); } catch { has = false; }
+      if (!has) await writeFileSafe(hist, name, cur.text);
+      const names = [];
+      for await (const [n, h] of hist.entries()) if (h.kind === 'file' && /^幹部小老師資料_\d{8}\.json$/.test(n)) names.push(n);
+      names.sort().reverse();
+      for (const n of names.slice(HIST_KEEP)) await hist.removeEntry(n);
+      folder.histCount = Math.min(names.length, HIST_KEEP);
+    }
+    async function countHistory() {
+      try {
+        const hist = await folder.handle.getDirectoryHandle(FOLDER_HIST);
+        let n = 0;
+        for await (const [name, h] of hist.entries()) if (h.kind === 'file' && /^幹部小老師資料_\d{8}\.json$/.test(name)) n++;
+        folder.histCount = n;
+      } catch { folder.histCount = 0; }
+    }
+
+    function masterPayload() {
+      return { ...currentData(), savedAt: meta.savedAt || Date.now(), rev: meta.rev, savedBy: deviceName(), appVersion: APP_VERSION, app: 'lssh-class-assign' };
+    }
+
+    async function writeConflictFile(text, who) {
+      const name = `幹部小老師資料_衝突_${safeName(who)}_${minuteStamp()}.json`;
+      await writeFileSafe(folder.handle, name, text);
+      return name;
+    }
+
+    // 寫入正本（force：略過「被別台改過」的檢查）
+    async function writeMaster({ force = false } = {}) {
+      if (!folder.handle || !['ok', 'error', 'paused'].includes(folder.status)) return;
+      if (folder.status === 'paused' && !force) return;
+      if (folder.writing) { await folder.writing; return writeMaster({ force }); }
+      folder.writing = (async () => {
+        try {
+          const cur = await readMaster(folder.handle);
+          if (!force && masterChanged(cur)) { await folderConflict(cur); return; }
+          await ensureDailyHistory(cur);
+          const payload = masterPayload();
+          const lm = await writeFileSafe(folder.handle, FOLDER_FILE, JSON.stringify(payload, null, 2));
+          await rememberKnown({ lastModified: lm, rev: payload.rev, savedAt: payload.savedAt, savedBy: payload.savedBy });
+          folder.dirty = false;
+          folder.lastWriteAt = Date.now();
+          folder.status = 'ok';
+          folder.errMsg = '';
+          folder.warned = false;
+        } catch (e) {
+          folder.status = 'error';
+          folder.errMsg = e?.message || String(e);
+          if (!folder.warned) { toast('📁 寫入資料夾失敗，資料仍保存在本機，下次儲存會自動重試'); folder.warned = true; }
+        }
+      })();
+      try { await folder.writing; } finally { folder.writing = null; renderFolder(); }
+    }
+
+    function scheduleFolderWrite() {
+      if (!folder.handle || !['ok', 'error'].includes(folder.status)) return;
+      clearTimeout(folder.timer);
+      folder.timer = setTimeout(() => writeMaster(), 2000);
+    }
+
+    async function loadFromMaster(cur, reason) {
+      const d = normalizeData(cur.obj);
+      if (!d) { toast('資料夾內的資料檔無法讀取'); return false; }
+      if (!isEmptyData(currentData())) await makeSnapshot(reason || '載入資料夾資料前');
+      applyData(d);
+      dirty = false;
+      await commitLocal(currentData(), d.savedAt || Date.now());
+      await rememberKnown(knownOf(cur));
+      folder.dirty = false;
+      return true;
+    }
+
+    // 別台電腦改過正本，而本頁也有要寫的內容
+    async function folderConflict(cur) {
+      if (conflictOpen) return;
+      conflictOpen = true;
+      const other = cur.obj || {};
+      const choice = await askChoice('資料夾內的資料已被另一台電腦更新',
+        `<p>「${escapeHTML(other.savedBy || '另一台電腦')}」在 ${escapeHTML(fmtTime(other.savedAt))} 更新了資料夾內的資料，本頁也有尚未寫入的修改。</p>
+         ${compareTable(other, currentData(), meta.savedAt)}`,
+        [
+          { value: 'load', label: '載入資料夾內較新的資料', style: 'primary' },
+          { value: 'overwrite', label: '以本頁內容覆蓋', style: 'danger' },
+          { value: 'later', label: '本頁另存衝突檔，之後再處理', style: 'plain' }
+        ]);
+      conflictOpen = false;
+      hideBanner();
+      try {
+        if (choice === 'load') {
+          await loadFromMaster(cur, '載入資料夾資料前（本頁未寫入的內容）');
+          folder.status = 'ok';
+          toast('已載入資料夾內的最新資料；本頁原內容已存成還原點');
+        } else if (choice === 'overwrite') {
+          const name = await writeConflictFile(cur.text, other.savedBy || '另一台電腦');
+          folder.status = 'ok';
+          await rememberKnown(knownOf(cur));
+          setTimeout(() => writeMaster({ force: true }), 0);
+          toast(`資料夾原檔已另存為 ${name}`);
+        } else {
+          const name = await writeConflictFile(JSON.stringify(masterPayload(), null, 2), deviceName());
+          folder.status = 'paused';
+          toast(`本頁內容已另存為 ${name}，資料夾同步暫停`);
+        }
+      } catch (e) {
+        folder.status = 'error';
+        folder.errMsg = e?.message || String(e);
+      }
+      renderFolder();
+    }
+
+    function compareTable(folderData, localData, localSavedAt) {
+      const row = (label, d, at, by) => `<tr><td class="pr-3 py-1 font-semibold whitespace-nowrap">${label}</td>
+        <td class="pr-3 py-1">${escapeHTML(countsText(d))}</td><td class="py-1 whitespace-nowrap">${escapeHTML(fmtTime(at))}${by ? '｜' + escapeHTML(by) : ''}</td></tr>`;
+      return `<table class="mt-3 text-sm">${row('資料夾', folderData, folderData?.savedAt, folderData?.savedBy)}${row('這台電腦', localData, localSavedAt, deviceName())}</table>`;
+    }
+
+    // 連結資料夾後的比對（首次連結 firstLink=true；開啟時 false）
+    async function reconcile(dir, firstLink) {
+      const cur = await readMaster(dir);
+      const prevHandle = folder.handle;
+      const prevKnown = folder.known;
+      folder.handle = dir;
+      folder.name = dir.name;
+      if (firstLink) folder.known = null;
+
+      const commit = async () => {
+        folder.status = 'ok';
+        try { await idbPut('kv', 'folderHandle', dir); } catch {}
+        await countHistory();
+      };
+
+      if (!cur.exists) {
+        await commit();
+        await writeMaster({ force: true });
+        if (folder.status === 'ok') toast('已在資料夾建立資料檔');
+        return true;
+      }
+      if (!cur.obj || !normalizeData(cur.obj)) {
+        folder.handle = prevHandle; folder.known = prevKnown;
+        await askChoice('資料夾內的資料檔無法讀取', `<p>${escapeHTML(FOLDER_FILE)} 不是本程式可讀的格式。請檢查檔案，或改選其他資料夾。</p>`, [{ value: 'ok', label: '知道了', style: 'primary' }]);
+        return false;
+      }
+      const localEmpty = isEmptyData(currentData());
+      const mChanged = masterChanged(cur);
+      const lChanged = !folder.known || meta.savedAt > (folder.known.savedAt || 0) || dirty;
+
+      if (!firstLink && !mChanged) {           // 正本沒被別台改過
+        await commit();
+        await rememberKnown(knownOf(cur));
+        if (lChanged) await writeMaster();
+        return true;
+      }
+      if (localEmpty || (!firstLink && !lChanged)) { // 本機沒資料，或本機沒改過 → 直接用正本
+        await commit();
+        await loadFromMaster(cur);
+        toast(`已載入資料夾內的資料（${countsText(cur.obj)}）`);
+        return true;
+      }
+      // 兩邊都有資料（或都改過）→ 詢問
+      const choice = await askChoice(firstLink ? '資料夾內已有資料' : '這台電腦與資料夾的資料不同',
+        `<p>${firstLink ? '選擇的資料夾中已經有幹部資料檔，這台電腦也有資料。' : '上次沒連上資料夾時這台電腦改過資料，資料夾內的資料也被更新過。'}請選擇要使用哪一份：</p>
+         ${compareTable(cur.obj, currentData(), meta.savedAt)}
+         <p class="mt-3 text-slate-500">沒被選用的一份不會遺失：本機資料會存成還原點；資料夾資料會另存成衝突檔。</p>`,
+        [
+          { value: 'folder', label: '使用資料夾內的資料', style: 'primary' },
+          { value: 'local', label: '用本機資料覆蓋資料夾', style: 'danger' },
+          { value: 'cancel', label: '取消', style: 'plain' }
+        ]);
+      if (choice === 'folder') {
+        await commit();
+        await loadFromMaster(cur, '改用資料夾資料前');
+        toast('已改用資料夾內的資料；本機原資料已存成還原點');
+        return true;
+      }
+      if (choice === 'local') {
+        await commit();
+        const name = await writeConflictFile(cur.text, cur.obj.savedBy || '資料夾原檔');
+        await rememberKnown(knownOf(cur));
+        await writeMaster({ force: true });
+        toast(`已用本機資料覆蓋；資料夾原檔另存為 ${name}`);
+        return true;
+      }
+      // 取消
+      if (firstLink) {
+        folder.handle = prevHandle; folder.known = prevKnown;
+        if (!prevHandle) folder.status = 'none';
+      } else {
+        folder.status = 'paused';
+      }
+      return false;
+    }
+
+    async function pickFolder() {
+      if (!fsSupported) return toast('這個瀏覽器不支援選擇資料夾，請改用 Chrome 或 Edge');
+      let dir;
+      try {
+        dir = await window.showDirectoryPicker({ id: 'lssh-class-assign', mode: 'readwrite' });
+      } catch (e) {
+        if (e?.name !== 'AbortError') toast('無法開啟資料夾：' + (e?.message || e));
+        return;
+      }
+      try {
+        if (dir.queryPermission && (await dir.queryPermission({ mode: 'readwrite' })) !== 'granted') {
+          if ((await dir.requestPermission({ mode: 'readwrite' })) !== 'granted') return toast('沒有取得資料夾寫入權限');
+        }
+        await flushSave();
+        await reconcile(dir, true);
+      } catch (e) {
+        toast('連結資料夾失敗：' + (e?.message || e));
+      }
+      hideBanner();
+      renderFolder();
+    }
+
+    async function disconnectFolder() {
+      const choice = await askChoice('中斷資料夾連結？', '<p>資料夾內的檔案不會被刪除，這台電腦的資料也會保留；之後只存在這台電腦的瀏覽器。</p>',
+        [{ value: 'ok', label: '中斷連結', style: 'danger' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+      if (choice !== 'ok') return;
+      clearTimeout(folder.timer);
+      try { await idbDel('kv', 'folderHandle'); await idbDel('kv', 'folderKnown'); } catch {}
+      Object.assign(folder, { handle: null, name: '', status: 'none', known: null, dirty: false, errMsg: '', histCount: 0 });
+      hideBanner();
+      renderFolder();
+      toast('已中斷資料夾連結');
+    }
+
+    // 需要使用者點擊才能授權
+    async function grantFolder() {
+      if (!folder.handle) return;
+      try {
+        const p = await folder.handle.requestPermission({ mode: 'readwrite' });
+        if (p !== 'granted') return toast('沒有取得資料夾權限，目前仍使用本機資料');
+        await flushSave();
+        await reconcile(folder.handle, false);
+        hideBanner();
+      } catch (e) {
+        folder.status = 'error';
+        folder.errMsg = e?.message || String(e);
+        toast('無法讀取資料夾，目前仍使用本機資料');
+      }
+      renderFolder();
+    }
+
+    async function reloadFromFolder() {
+      if (!folder.handle) return;
+      try {
+        const cur = await readMaster(folder.handle);
+        if (!cur.exists) return toast('資料夾內還沒有資料檔');
+        await loadFromMaster(cur, '從資料夾重新載入前');
+        folder.status = 'ok';
+        hideBanner();
+        toast('已從資料夾重新載入');
+      } catch (e) {
+        folder.status = 'error';
+        folder.errMsg = e?.message || String(e);
+        toast('讀取資料夾失敗');
+      }
+      renderFolder();
+    }
+
+    // 開啟時：取回已記住的資料夾
+    async function initFolder() {
+      if (!fsSupported || store.mode !== 'idb') { renderFolder(); return; }
+      let dir = null;
+      try { dir = await idbGet('kv', 'folderHandle'); folder.known = (await idbGet('kv', 'folderKnown')) || null; } catch {}
+      if (!dir) { renderFolder(); return; }
+      folder.handle = dir;
+      folder.name = dir.name;
+      let perm = 'prompt';
+      try { perm = await dir.queryPermission({ mode: 'readwrite' }); } catch {}
+      if (perm === 'granted') {
+        try { await reconcile(dir, false); }
+        catch (e) {
+          folder.status = 'error';
+          folder.errMsg = e?.message || String(e);
+          showBanner(`⚠ 無法讀取資料夾「${escapeHTML(folder.name)}」（可能已被移動、刪除或雲端硬碟未啟動），目前使用本機資料。`,
+            [{ label: '重試', fn: () => grantFolder() }, { label: '更換資料夾', fn: pickFolder }]);
+        }
+      } else {
+        folder.status = 'needPermission';
+        showBanner(`📁 點此連接幹部資料夾「${escapeHTML(folder.name)}」——授權前畫面顯示的是這台電腦的本機資料，可能不是最新。`,
+          [{ label: '連接資料夾', fn: grantFolder }]);
+      }
+      renderFolder();
+    }
+
+    // 回到頁面與每 60 秒：檢查別台電腦是否更新了正本
+    let checkingFolder = false;
+    async function checkFolderUpdate() {
+      if (checkingFolder || folder.status !== 'ok' || !folder.handle || folder.writing || conflictOpen) return;
+      checkingFolder = true;
+      try {
+        const cur = await readMaster(folder.handle);
+        if (!masterChanged(cur)) return;
+        if (dirty || folder.dirty) { await folderConflict(cur); return; }
+        const by = cur.obj?.savedBy || '另一台電腦';
+        showBanner(`🔄 另一台電腦（${escapeHTML(by)}）已於 ${escapeHTML(fmtTime(cur.obj?.savedAt))} 更新資料。`,
+          [{ label: '載入最新資料', fn: reloadFromFolder }]);
+      } catch (e) {
+        folder.status = 'error';
+        folder.errMsg = e?.message || String(e);
+        renderFolder();
+      } finally { checkingFolder = false; }
+    }
+    setInterval(checkFolderUpdate, 60000);
+    window.addEventListener('focus', checkFolderUpdate);
+
+    // ---------- 介面：提示列、對話框、狀態 ----------
+    function showBanner(html, actions = []) {
+      const b = $('#topBanner');
+      b.innerHTML = `<span class="flex-1 min-w-[12rem]">${html}</span>`;
+      actions.forEach(a => {
+        const btn = document.createElement('button');
+        btn.className = 'px-3 py-1.5 rounded-lg bg-brand-800 text-white font-bold hover:bg-brand-900';
+        btn.textContent = a.label;
+        btn.addEventListener('click', a.fn);
+        b.appendChild(btn);
+      });
+      b.classList.remove('hidden');
+    }
+    function hideBanner() { $('#topBanner').classList.add('hidden'); }
+
+    function askChoice(title, bodyHtml, choices) {
+      return new Promise(resolve => {
+        const bg = document.createElement('div');
+        bg.className = 'fixed inset-0 z-[80] bg-black/60 flex items-center justify-center p-4';
+        bg.innerHTML = `<div role="dialog" aria-modal="true" class="max-w-lg w-full rounded-2xl bg-white text-slate-800 p-6 shadow-2xl">
+          <h3 class="text-lg font-extrabold mb-3"></h3><div class="text-sm leading-relaxed mb-5"></div>
+          <div class="flex flex-wrap gap-2 justify-end"></div></div>`;
+        bg.querySelector('h3').textContent = title;
+        bg.querySelector('h3 + div').innerHTML = bodyHtml;
+        const styles = {
+          primary: 'bg-brand-700 hover:bg-brand-800 text-white',
+          danger: 'bg-rose-600 hover:bg-rose-700 text-white',
+          plain: 'bg-slate-200 hover:bg-slate-300 text-slate-800'
+        };
+        const done = v => { bg.remove(); document.removeEventListener('keydown', onKey); resolve(v); };
+        const onKey = e => { if (e.key === 'Escape') done(choices[choices.length - 1].value); };
+        choices.forEach(c => {
+          const btn = document.createElement('button');
+          btn.className = `px-4 py-2 rounded-xl font-semibold ${styles[c.style] || styles.plain}`;
+          btn.textContent = c.label;
+          btn.dataset.value = c.value;
+          btn.addEventListener('click', () => done(c.value));
+          bg.querySelector('.justify-end').appendChild(btn);
+        });
+        document.addEventListener('keydown', onKey);
+        document.body.appendChild(bg);
+        bg.querySelector('button')?.focus();
+      });
+    }
+
+    function renderSaveTag() {
+      const tag = $('#saveTag');
+      if (!tag) return;
+      let text, cls;
+      if (!booted) { text = '💾 載入中…'; cls = ''; }
+      else if (store.error) { text = '⚠ 儲存失敗'; cls = 'bg-rose-600 border-rose-300'; }
+      else if (store.saving || dirty) { text = '💾 儲存中…'; cls = ''; }
+      else if (store.mode === 'ls') { text = `💾 已儲存（後援模式）${store.lastSavedAt ? new Date(store.lastSavedAt).toLocaleTimeString('zh-TW', { hour12: false }) : ''}`; cls = 'bg-amber-500/80'; }
+      else { text = `💾 已儲存${store.lastSavedAt ? ' ' + new Date(store.lastSavedAt).toLocaleTimeString('zh-TW', { hour12: false }) : ''}`; cls = ''; }
+      tag.textContent = text;
+      tag.className = `px-3 py-1 rounded-full bg-white/15 border border-white/25 font-semibold ${cls}`;
+    }
+
+    function renderFolder() {
+      const tag = $('#folderTag');
+      const map = {
+        ok: ['📁 已同步到資料夾', 'bg-emerald-500/80'],
+        needPermission: ['📁 需要重新授權', 'bg-amber-500/90'],
+        error: ['📁 寫入失敗', 'bg-rose-600'],
+        paused: ['📁 同步暫停', 'bg-amber-500/90']
+      };
+      if (map[folder.status]) {
+        const pending = folder.status === 'ok' && (folder.dirty || folder.writing);
+        tag.textContent = pending ? '📁 等待寫入資料夾…' : map[folder.status][0];
+        tag.className = `px-3 py-1 rounded-full border border-white/25 font-semibold ${map[folder.status][1]}`;
+      } else {
+        tag.className = 'hidden';
+      }
+
+      const box = $('#folderBox');
+      if (!box) return;
+      const btn = (id, label, cls = 'bg-white/20 hover:bg-white/30') => `<button id="${id}" class="px-4 py-2 rounded-xl ${cls} font-semibold">${label}</button>`;
+      if (folder.status === 'unsupported') {
+        box.innerHTML = `<p>這個瀏覽器不支援「選擇資料夾」功能（只有電腦版 Chrome、Edge 支援）。資料目前存在這台電腦的瀏覽器中，其他功能照常；請定期按「下載 JSON」備份。</p>`;
+      } else if (!folder.handle || folder.status === 'none') {
+        box.innerHTML = `<p>目前資料<strong>只存在這台電腦的瀏覽器</strong>（IndexedDB）。若清除瀏覽器資料或換電腦，就看不到了。</p>
+          <p class="mt-1 text-white/70">建議：選擇與本程式相同的雲端硬碟資料夾；另一台電腦也選同一個，就能兩台共用。</p>
+          <div class="mt-3">${btn('btnPickFolder', '📁 選擇資料存放資料夾', 'bg-amber-400 hover:bg-amber-500 text-white font-extrabold')}</div>`;
+      } else {
+        const k = folder.known;
+        const statusText = { ok: '✅ 已同步', needPermission: '⏸ 需要授權（請點頂端提示列）', error: '⚠ 讀寫失敗：' + escapeHTML(folder.errMsg || ''), paused: '⏸ 同步暫停（請選擇重新載入或立即寫入）' }[folder.status] || '';
+        box.innerHTML = `<div class="grid sm:grid-cols-2 gap-x-6 gap-y-1">
+            <div>資料夾：<strong>${escapeHTML(folder.name)}</strong>（瀏覽器不提供完整路徑，請記下您選的位置）</div>
+            <div>狀態：${statusText}</div>
+            <div>正本檔名：<code>${escapeHTML(FOLDER_FILE)}</code></div>
+            <div>最後寫入：${escapeHTML(fmtTime(k?.savedAt))}${k?.savedBy ? '｜' + escapeHTML(k.savedBy) : ''}</div>
+            <div>歷史備份：<code>${escapeHTML(FOLDER_HIST)}</code>／${folder.histCount} 份（最多 ${HIST_KEEP}）</div>
+          </div>
+          <div class="mt-3 flex flex-wrap gap-2">
+            ${folder.status === 'needPermission' ? btn('btnGrantFolder', '連接資料夾', 'bg-amber-400 hover:bg-amber-500 text-white font-extrabold') : ''}
+            ${btn('btnWriteFolder', '立即寫入')}
+            ${btn('btnReloadFolder', '從資料夾重新載入')}
+            ${btn('btnChangeFolder', '更換資料夾')}
+            ${btn('btnDisconnectFolder', '中斷連結')}
+          </div>`;
+      }
+      $('#btnPickFolder')?.addEventListener('click', pickFolder);
+      $('#btnChangeFolder')?.addEventListener('click', pickFolder);
+      $('#btnGrantFolder')?.addEventListener('click', grantFolder);
+      $('#btnDisconnectFolder')?.addEventListener('click', disconnectFolder);
+      $('#btnReloadFolder')?.addEventListener('click', async () => {
+        if (folder.status === 'needPermission') return grantFolder();
+        const c = await askChoice('從資料夾重新載入？', '<p>會用資料夾內的資料取代目前畫面；目前資料會先存成還原點。</p>',
+          [{ value: 'ok', label: '重新載入', style: 'primary' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+        if (c === 'ok') reloadFromFolder();
+      });
+      $('#btnWriteFolder')?.addEventListener('click', async () => {
+        if (folder.status === 'needPermission') return grantFolder();
+        await flushSave();
+        const force = folder.status === 'paused';
+        if (force) {
+          const c = await askChoice('以本頁內容覆蓋資料夾？', '<p>資料夾內的原檔會先另存成衝突檔。</p>',
+            [{ value: 'ok', label: '覆蓋', style: 'danger' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+          if (c !== 'ok') return;
+          try { const cur = await readMaster(folder.handle); if (cur.exists) await writeConflictFile(cur.text, cur.obj?.savedBy || '資料夾原檔'); } catch {}
+        }
+        await writeMaster({ force });
+        if (folder.status === 'ok') toast('已寫入資料夾');
+      });
+      renderStorageInfo();
+    }
+
+    async function renderStorageInfo() {
+      const box = $('#storageInfo');
+      if (!box) return;
+      let size = 0;
+      try { size = new Blob([JSON.stringify(currentData())]).size; } catch {}
+      let quota = '';
+      try {
+        if (navigator.storage?.estimate) {
+          const e = await navigator.storage.estimate();
+          quota = `${(e.usage / 1024 / 1024).toFixed(1)} MB／${(e.quota / 1024 / 1024).toFixed(0)} MB`;
+        }
+      } catch {}
+      box.innerHTML = `
+        <div>本機儲存：${store.mode === 'idb' ? 'IndexedDB（主要）' : '<span class="text-amber-200">localStorage（後援模式）</span>'}</div>
+        <div>localStorage 鏡像：${store.mirrorOk ? '正常' : '<span class="text-amber-200">已停止（容量不足或被停用，不影響 IndexedDB）</span>'}</div>
+        <div>資料大小：${(size / 1024).toFixed(1)} KB</div>
+        <div>瀏覽器配額：${quota || '無法取得'}</div>
+        <div>持久儲存：${store.persisted === true ? '已取得（瀏覽器不會自動清除）' : store.persisted === false ? '未取得（空間不足時瀏覽器可能清除）' : '不支援'}</div>
+        <div>最後儲存：${escapeHTML(fmtTime(store.lastSavedAt || meta.savedAt))}</div>`;
+    }
+
+    function gotoStorage() {
+      $('[data-tab="export"]').click();
+      $('#storageSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    $('#saveTag').addEventListener('click', gotoStorage);
+    $('#folderTag').addEventListener('click', gotoStorage);
+
+    // ---------- 匯出／匯入 JSON ----------
+    function downloadJSON(base = '分配資料') {
+      const data = { ...currentData(), savedAt: meta.savedAt, rev: meta.rev, savedBy: deviceName(), appVersion: APP_VERSION, app: 'lssh-class-assign' };
+      download(`${base}_${minuteStamp()}.json`, JSON.stringify(data, null, 2), 'application/json');
+    }
+    $('#btnDownloadJSON').addEventListener('click', () => downloadJSON());
+
     let importFile = null;
     $('#fileImport').addEventListener('change', (e) => {
       importFile = e.target.files[0] || null;
@@ -1239,71 +2246,144 @@
     $('#btnImportJSON').addEventListener('click', () => {
       if (!importFile) return toast('請先選擇 JSON 檔');
       const reader = new FileReader();
-      reader.onload = () => {
-        try {
-          const obj = JSON.parse(reader.result);
-          if (!obj || !obj.students || !obj.tasks) throw new Error();
-          state.students = Array.isArray(obj.students) ? obj.students : [];
-          state.tasks = obj.tasks && obj.tasks.officer && obj.tasks.tutor ? obj.tasks : {officer:[], tutor:[]};
-          // UI保持
-          renderStudents();
-          refreshTasksUI();
-          refreshAssignUI();
-          saveLocal();
-          toast('匯入成功');
-        } catch (e) {
-          toast('檔案內容格式不正確');
-        }
+      reader.onload = async () => {
+        let d = null;
+        try { d = normalizeData(JSON.parse(reader.result)); } catch {}
+        if (!d) return toast('檔案內容格式不正確');
+        const choice = await askChoice('匯入 JSON 會取代目前資料',
+          `<p>檔案：${escapeHTML(countsText(d))}<br>目前：${escapeHTML(countsText(currentData()))}</p><p class="mt-2">匯入前會先把目前資料存成還原點。</p>`,
+          [{ value: 'ok', label: '匯入並取代', style: 'primary' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+        if (choice !== 'ok') return;
+        await makeSnapshot('匯入 JSON 前');
+        if (!d.folderNote) d.folderNote = meta.folderNote;
+        applyData(d);
+        saveLocal();
+        toast('匯入成功');
       };
       reader.readAsText(importFile, 'utf-8');
     });
 
-    // 本機儲存/讀取
-    function saveLocal() {
-      try {
-        localStorage.setItem('cc-class-assign', JSON.stringify(state));
-      } catch {}
-    }
-    function loadLocal() {
-      try {
-        const raw = localStorage.getItem('cc-class-assign');
-        if (!raw) {
-          addDefaultTasks('officer');
-          addDefaultTasks('tutor');
-          return;
-        }
-        const obj = JSON.parse(raw);
-        if (obj?.students) state.students = obj.students;
-        if (obj?.tasks?.officer && obj?.tasks?.tutor) state.tasks = obj.tasks;
-        if (obj?.ui?.role) state.ui.role = obj.ui.role;
-      } catch {}
-      // 初次渲染
-      renderStudents();
-      refreshTasksUI();
-      refreshAssignUI();
-    }
+    // ---------- 頁首按鈕 ----------
+    $('#btnSaveLocal').addEventListener('click', async () => {
+      dirty = true;
+      folder.dirty = true;
+      await flushSave();
+      if (folder.handle && ['ok', 'error'].includes(folder.status)) { clearTimeout(folder.timer); await writeMaster(); }
+      if (!store.error) toast(folder.status === 'ok' ? '已儲存（本機＋資料夾）' : '已儲存到本機');
+    });
 
-    $('#btnSaveLocal').addEventListener('click', () => { saveLocal(); toast('已儲存到本機'); });
-    $('#btnLoadLocal').addEventListener('click', () => { loadLocal(); toast('已自本機讀取'); });
-    $('#btnReset').addEventListener('click', () => {
-      if (!confirm('確定重設全部資料？（包含學生/任務/指派/本機儲存）')) return;
-      localStorage.removeItem('cc-class-assign');
+    $('#btnReset').addEventListener('click', async () => {
+      const choice = await askChoice('重設全部資料？',
+        `<p>會清空學生名單與所有指派，職務恢復為預設清單。</p><p class="mt-2">目前資料（${escapeHTML(countsText(currentData()))}）會先存成還原點，必要時可在「匯出 / 匯入」分頁還原。${folder.status === 'ok' ? '<br>已連結資料夾時，重設後的內容也會寫入資料夾（前一版保留在歷史備份）。' : ''}</p>`,
+        [{ value: 'ok', label: '重設', style: 'danger' }, { value: 'cancel', label: '取消', style: 'plain' }]);
+      if (choice !== 'ok') return;
+      await makeSnapshot('重設前');
       state.students = [];
       state.tasks = { officer: [], tutor: [] };
       addDefaultTasks('officer');
       addDefaultTasks('tutor');
       state.ui.role = 'officer';
-      refreshRoleButtons();
-      renderStudents();
-      refreshTasksUI();
-      refreshAssignUI();
+      renderAll();
+      saveLocal();
       toast('已重設');
     });
 
-    // 初始顯示
-    renderStudents();
-    refreshTasksUI();
-    refreshAssignUI();
+    // 裝置名稱與位置備註
+    $('#deviceName').value = deviceName();
+    $('#deviceName').addEventListener('change', e => {
+      const v = e.target.value.trim() || deviceName();
+      try { localStorage.setItem(DEVICE_KEY, v); } catch {}
+      e.target.value = v;
+      renderFolder();
+    });
+    $('#folderNote').addEventListener('change', e => {
+      meta.folderNote = e.target.value.trim();
+      saveLocal();
+    });
+
+    // ---------- 分頁隱藏／關閉時立刻寫出 ----------
+    function flushOnHide() {
+      if (!booted) return;
+      if (dirty) {
+        // localStorage 是同步寫入，關閉分頁時最可靠
+        try { localStorage.setItem(LS_KEY, JSON.stringify({ ...currentData(), savedAt: Date.now(), rev: meta.rev, appVersion: APP_VERSION })); } catch {}
+        flushSave();
+      }
+      if (folder.dirty && folder.status === 'ok') { clearTimeout(folder.timer); writeMaster(); }
+    }
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') flushOnHide();
+      else checkFolderUpdate();
+    });
+    window.addEventListener('pagehide', flushOnHide);
+
+    if (bc) bc.onmessage = ev => {
+      const m = ev.data || {};
+      if (m.type === 'saved' && m.from !== tabId && m.rev > meta.rev) {
+        showBanner('🔄 另一個分頁剛儲存了資料。', [{ label: '重新載入最新資料', fn: async () => {
+          try {
+            const cur = await idbGet('kv', 'state');
+            const d = normalizeData(cur);
+            if (d) { meta.rev = cur.rev || 0; meta.savedAt = cur.savedAt || 0; dirty = false; applyData(d); }
+            hideBanner();
+            toast('已載入最新資料');
+          } catch { toast('讀取失敗'); }
+        } }]);
+      }
+    };
+
+    // ---------- 啟動 ----------
+    async function boot() {
+      let idbData = null, lsData = null;
+      try { await idbOpen(); idbData = await idbGet('kv', 'state'); store.mode = 'idb'; }
+      catch (e) { store.mode = 'ls'; console.warn('IndexedDB 不可用，改用 localStorage', e); }
+      try { const raw = localStorage.getItem(LS_KEY); if (raw) lsData = JSON.parse(raw); } catch {}
+
+      const nIdb = idbData ? normalizeData(idbData) : null;
+      const nLs = lsData ? normalizeData(lsData) : null;
+      let chosen = null, from = '';
+      if (nIdb && nLs) { if ((nLs.savedAt || 0) > (nIdb.savedAt || 0)) { chosen = nLs; from = 'ls'; } else { chosen = nIdb; from = 'idb'; } }
+      else if (nIdb) { chosen = nIdb; from = 'idb'; }
+      else if (nLs) { chosen = nLs; from = 'ls'; }
+
+      meta.rev = Math.max(idbData?.rev || 0, lsData?.rev || 0);
+      if (chosen) {
+        applyData(chosen);
+        meta.savedAt = chosen.savedAt || 0;
+      } else {
+        addDefaultTasks('officer');
+        addDefaultTasks('tutor');
+        renderAll();
+      }
+      booted = true;
+
+      // 第一次由舊版 localStorage 搬到 IndexedDB（或關閉分頁時只寫到 localStorage 的較新內容）
+      if (store.mode === 'idb' && from === 'ls') {
+        try {
+          const before = countsOf(chosen);
+          await commitLocal(currentData(), chosen.savedAt || Date.now());
+          const back = countsOf(await idbGet('kv', 'state'));
+          if (back.students === before.students && back.tasks === before.tasks && back.assigned === before.assigned) {
+            if (!idbData) { store.migrated = true; toast('已將舊資料搬移到 IndexedDB（原資料仍保留）'); }
+          } else {
+            toast('⚠ 搬移到 IndexedDB 後比對不一致，暫用 localStorage');
+            store.mode = 'ls';
+          }
+        } catch { store.mode = 'ls'; }
+      }
+
+      try { if (navigator.storage?.persist) store.persisted = await navigator.storage.persist(); } catch {}
+      $('#bootOverlay').remove();
+      renderSaveTag();
+      renderSnapshots();
+      await initFolder();
+      renderStorageInfo();
+    }
+
+    // 切到「匯出 / 匯入」分頁時更新還原點與儲存資訊
+    $('[data-tab="export"]').addEventListener('click', () => { renderSnapshots(); renderStorageInfo(); });
+
+    boot().catch(e => { console.error(e); document.getElementById('bootOverlay')?.remove(); toast('載入資料時發生錯誤：' + (e?.message || e)); });
   </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96bfcc7a02764a48',t:'MTc1NDY2NDM0MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
