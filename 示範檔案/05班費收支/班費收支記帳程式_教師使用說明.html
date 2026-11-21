@@ -1,275 +1,295 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>班費收支記帳程式教師使用說明</title>
-<style>
-body {
-  font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
-  color: #1f2937;
-  line-height: 1.85;
-  max-width: 980px;
-  margin: 0 auto;
-  padding: 36px 24px 72px;
-  background: #f7fbff;
-}
-h1, h2, h3 {
-  line-height: 1.35;
-  color: #102033;
-}
-h1 {
-  font-size: 2rem;
-  border-bottom: 4px solid #2196f3;
-  padding-bottom: 12px;
-}
-h2 {
-  font-size: 1.35rem;
-  margin-top: 36px;
-  border-left: 6px solid #4caf50;
-  padding-left: 12px;
-}
-h3 {
-  font-size: 1.08rem;
-  margin-top: 22px;
-}
-a {
-  color: #1769aa;
-}
-code {
-  background: #edf3f8;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-pre {
-  background: #ffffff;
-  border: 1px solid #d8e3ee;
-  border-radius: 8px;
-  padding: 12px 16px;
-  overflow-x: auto;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 12px 0;
-  background: white;
-}
-th, td {
-  border: 1px solid #d7e2ec;
-  padding: 8px 10px;
-  vertical-align: top;
-}
-th {
-  background: #eaf5ff;
-  text-align: left;
-}
-.hero {
-  background: white;
-  border: 1px solid #dbe8f5;
-  border-radius: 12px;
-  padding: 20px;
-  margin: 18px 0 28px;
-}
-.button {
-  display: inline-block;
-  background: #2196f3;
-  color: white;
-  text-decoration: none;
-  font-weight: 700;
-  padding: 10px 18px;
-  border-radius: 8px;
-  margin-top: 8px;
-}
-.note {
-  background: #eef9f1;
-  border-left: 5px solid #4caf50;
-  padding: 12px 16px;
-  margin: 14px 0;
-}
-.warning {
-  background: #fff7ed;
-  border-left: 5px solid #f59e0b;
-  padding: 12px 16px;
-  margin: 14px 0;
-}
-.example {
-  background: white;
-  border: 1px solid #dbe8f5;
-  border-radius: 8px;
-  padding: 12px 16px;
-}
-@media print {
-  body { background: white; padding: 0; }
-  a { color: #1f2937; text-decoration: none; }
-  .button { border: 1px solid #1f2937; color: #1f2937; background: white; }
-}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>班費收支記帳程式使用說明</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0f172a; --ink-2: #334155; --muted: #64748b; --line: #e2e8f0;
+      --bg: #eef2f6; --card: #fff; --soft: #f8fafc;
+      --brand: #0f766e; --brand-soft: #e6f6f4; --brand-ink: #134e4a;
+      --inc: #15803d; --inc-soft: #ecfdf3; --exp: #be123c; --exp-soft: #fff1f3;
+      --warn: #b45309; --warn-soft: #fff8eb;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 16px; }
+    body { margin: 0; color: var(--ink); background: var(--bg); line-height: 1.8;
+      font-family: "Noto Sans TC", system-ui, -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif; }
+    .wrap { max-width: 1080px; margin: 0 auto; }
+    header { background: #0f172a; color: #fff; padding: 40px 22px 34px; }
+    .brand { display: flex; gap: 14px; align-items: center; }
+    .logo { width: 54px; height: 54px; border-radius: 14px; background: var(--brand); display: grid; place-items: center; font-size: 1.7rem; flex: 0 0 auto; }
+    h1 { margin: 0; font-size: clamp(1.7rem, 4vw, 2.6rem); line-height: 1.25; font-weight: 800; }
+    .ver { display: inline-block; margin-left: 8px; font-size: .9rem; background: var(--brand); border-radius: 999px; padding: 2px 10px; vertical-align: middle; }
+    header p { max-width: 820px; margin: 14px 0 0; color: #cbd5e1; font-size: 1.04rem; }
+    .button-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    .button { display: inline-flex; align-items: center; gap: 6px; border-radius: 10px; padding: 10px 16px; text-decoration: none; font-weight: 800; color: #fff; background: var(--brand); }
+    .button.ghost { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.25); }
+    main { padding: 22px 22px 52px; }
+    nav, section { background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 1px 2px rgba(15,23,42,.05), 0 6px 20px rgba(15,23,42,.06); }
+    nav { padding: 14px 18px; margin-bottom: 18px; display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; }
+    nav strong { margin-right: 6px; }
+    nav a { color: var(--brand); text-decoration: none; font-weight: 700; }
+    nav a:hover { text-decoration: underline; }
+    section { padding: 22px 24px; margin: 18px 0; }
+    h2 { margin: 0 0 12px; font-size: 1.4rem; line-height: 1.35; display: flex; gap: 10px; align-items: center; }
+    h2 .num { width: 34px; height: 34px; border-radius: 50%; background: var(--brand); color: #fff; display: grid; place-items: center; font-size: 1rem; flex: 0 0 auto; }
+    h3 { margin: 20px 0 6px; font-size: 1.06rem; }
+    p { margin: 8px 0; }
+    ul, ol { padding-left: 1.35rem; margin: 8px 0; }
+    li { margin: 4px 0; }
+    .callout { border-left: 5px solid var(--brand); background: var(--brand-soft); padding: 10px 14px; margin: 12px 0; border-radius: 0 10px 10px 0; }
+    .callout.warn { border-left-color: var(--warn); background: var(--warn-soft); }
+    .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0 4px; padding: 0; list-style: none; counter-reset: s; }
+    .steps li { margin: 0; background: var(--soft); border: 1px solid var(--line); border-radius: 12px; padding: 12px; counter-increment: s; }
+    .steps li::before { content: counter(s); display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--brand); color: #fff; font-weight: 800; font-size: .85rem; margin-bottom: 6px; }
+    .steps b { display: block; }
+    .steps span { color: var(--muted); font-size: .88rem; line-height: 1.55; display: block; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+    th, td { border-bottom: 1px solid var(--line); padding: 9px 12px; text-align: left; vertical-align: top; }
+    th { background: var(--soft); color: var(--ink-2); font-size: .9rem; }
+    tr:last-child td { border-bottom: 0; }
+    td:first-child { white-space: nowrap; font-weight: 700; }
+    kbd, .ui { display: inline-block; background: #fff; border: 1px solid #cbd5e1; border-bottom-width: 2px; border-radius: 7px; padding: 0 7px; font-size: .9em; font-weight: 700; white-space: nowrap; font-family: inherit; }
+    code { background: #f1f5f9; border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9em; }
+    /* 示意圖 */
+    .kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin: 12px 0; }
+    .kpi { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: #fff; }
+    .kpi span { display: block; font-size: .76rem; color: var(--muted); font-weight: 700; }
+    .kpi b { font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+    .kpi.inc b { color: var(--inc); } .kpi.exp b { color: var(--exp); }
+    .kpi.bal { background: var(--brand); border-color: var(--brand); color: #fff; } .kpi.bal span { color: #ccfbf1; }
+    .types { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-width: 420px; margin: 10px 0; }
+    .types span { text-align: center; border: 2px solid #cbd5e1; border-radius: 10px; padding: 6px; font-weight: 800; color: var(--muted); }
+    .types .on { border-color: var(--inc); background: var(--inc-soft); color: var(--inc); }
+    .chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+    .chips span { border: 1px solid #cbd5e1; border-radius: 999px; padding: 2px 10px; font-size: .85rem; font-weight: 700; color: var(--ink-2); background: #fff; }
+    .chips .on { background: var(--exp); border-color: var(--exp); color: #fff; }
+    .cap { color: var(--muted); font-size: .85rem; margin-top: -4px; }
+    footer { padding: 18px 22px 42px; color: var(--muted); text-align: center; }
+    @media (max-width: 860px) { .steps { grid-template-columns: 1fr 1fr; } .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .kpis .bal { grid-column: 1 / -1; } }
+    @media (max-width: 600px) {
+      header { padding: 30px 16px; } main { padding: 14px; } section { padding: 16px; }
+      .steps { grid-template-columns: 1fr; }
+      table { display: block; overflow-x: auto; }
+    }
+  </style>
 </head>
 <body>
-<h1>班費收支記帳程式教師使用說明</h1>
+  <header>
+    <div class="wrap">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">💰</div>
+        <h1>班費收支記帳程式使用說明<span class="ver">v3.0</span></h1>
+      </div>
+      <p>臺北市立麗山高中林獻升老師製作。每一筆班費收入、支出隨手記下，附上收據照片，隨時看到結餘；學期末一鍵產生收支報告表（列印、PDF、Excel），資料可長期存在雲端硬碟資料夾。</p>
+      <div class="button-row">
+        <a class="button" href="班費收支記帳程式(codex優化版).html" target="_blank" rel="noopener">▶ 開啟程式</a>
+        <a class="button ghost" href="#storage">💾 資料怎麼保存？</a>
+      </div>
+    </div>
+  </header>
 
-<div class="hero">
-  <p><strong>適用程式：</strong>班費收支記帳程式</p>
-  <p><strong>線上版網址：</strong><br>
-  <a href="https://froglssh.github.io/class-fee-accounting-online/">https://froglssh.github.io/class-fee-accounting-online/</a></p>
-  <p><strong>製作者：</strong>臺北市立麗山高中 林獻升老師</p>
-  <a class="button" href="https://froglssh.github.io/class-fee-accounting-online/">開啟班費收支記帳程式</a>
-</div>
+  <main class="wrap">
+    <nav aria-label="章節導覽">
+      <strong>快速導覽</strong>
+      <a href="#start">快速開始</a>
+      <a href="#kpi">摘要列</a>
+      <a href="#s1">1 記一筆</a>
+      <a href="#s2">2 收支明細</a>
+      <a href="#s3">3 報表輸出</a>
+      <a href="#s4">4 資料與設定</a>
+      <a href="#storage">資料保存</a>
+      <a href="#faq">常見問題</a>
+    </nav>
 
-<h2>一、程式用途</h2>
-<p>本程式用於班級班費管理，協助導師或班級幹部記錄學生班費繳交情形、班費收入、班費支出與目前結餘。程式可在瀏覽器中直接使用，不需要安裝軟體，適合用於班會、幹部交接、期末結算與家長或學生查核。</p>
+    <section id="start">
+      <h2>快速開始（第一次使用約 3 分鐘）</h2>
+      <ol class="steps">
+        <li><b>資料與設定</b><span>填學年、學期、班級、導師；若手上已有班費，填「期初結餘」。</span></li>
+        <li><b>選存放資料夾</b><span>同一頁選一個 Google 雲端硬碟資料夾，資料就能長期保存。</span></li>
+        <li><b>記一筆</b><span>每次收錢或花錢：選收入／支出、填項目與金額，按 <kbd>Enter</kbd>。</span></li>
+        <li><b>報表輸出</b><span>期中或學期末印出報告表，或下載 PDF、Excel 公布與核銷。</span></li>
+      </ol>
+      <div class="callout">v3.0 只記「班費的收入與支出」，不再逐一登記每位學生的繳費。收班費時，收齊後記一筆「11 月班費收繳」即可（備註可寫「38 人 × 200 元」）。</div>
+    </section>
 
-<p>主要功能包含：</p>
-<ul>
-  <li>匯入班級學生名單。</li>
-  <li>記錄每位學生班費繳交日期與金額。</li>
-  <li>查看全班繳費狀況。</li>
-  <li>新增班費收入與支出。</li>
-  <li>附加收入或支出的照片憑證。</li>
-  <li>自動計算班費結餘。</li>
-  <li>儲存在瀏覽器本機。</li>
-  <li>匯出 PDF 報表。</li>
-  <li>匯出與還原 JSON 備份檔。</li>
-</ul>
+    <section id="kpi">
+      <h2>🧾 每一頁上方的收支摘要</h2>
+      <div class="kpis" aria-hidden="true">
+        <div class="kpi"><span>期初結餘</span><b>$1,500</b></div>
+        <div class="kpi inc"><span>累計收入</span><b>$7,600</b></div>
+        <div class="kpi exp"><span>累計支出</span><b>$2,380</b></div>
+        <div class="kpi"><span>本月（11 月）</span><b style="font-size:.9rem">+$7,600 −$480</b></div>
+        <div class="kpi bal"><span>目前結餘（班費現金）</span><b>$6,720</b></div>
+      </div>
+      <p class="cap">示意圖。目前結餘＝期初結餘＋累計收入－累計支出，應該等於手上的班費現金。</p>
+      <ul>
+        <li>點「累計收入」或「累計支出」，會直接跳到明細並只列出收入或支出。</li>
+        <li>結餘變成負數時，摘要卡會變紅並提醒：通常是有收入還沒記。</li>
+        <li>手機上只顯示結餘、收入、支出三張卡，畫面比較精簡。</li>
+      </ul>
+    </section>
 
-<h2>二、第一次使用</h2>
-<ol>
-  <li>使用 Chrome、Edge、Safari 等瀏覽器開啟線上版網址。</li>
-  <li>進入後預設會停在「班費繳交」頁面。</li>
-  <li>先建立學生名單，再開始記錄繳費、收入與支出。</li>
-</ol>
+    <section id="s1">
+      <h2><span class="num">1</span>記一筆</h2>
+      <div class="types" aria-hidden="true"><span class="on">＋ 收入</span><span>－ 支出</span></div>
+      <ol>
+        <li>先選 <span class="ui">＋ 收入</span> 或 <span class="ui">－ 支出</span>（送出按鈕的顏色會跟著變綠或紅，避免記反）。</li>
+        <li><strong>日期</strong>預設今天，可按 <span class="ui">昨天</span> 或自行選擇。</li>
+        <li><strong>金額</strong>可直接打 <code>1200</code>、<code>1,200</code>、<code>$350</code>、<code>350元</code>，全形數字也可以。</li>
+        <li><strong>項目</strong>寫清楚用途，例如「購買垃圾袋、抹布」「11 月班費收繳」。輸入時會出現以前用過的項目可直接選。</li>
+        <li><strong>類別</strong>會依項目自動選好（例如「垃圾袋」→清潔用品），也可以自己點選；按 <span class="ui">＋ 新類別</span> 可新增。</li>
+        <li><strong>經手人</strong>、<strong>備註</strong>（發票號碼、店家）為選填；經手人預設帶入設定中的總務股長。</li>
+        <li>按 <span class="ui">💾 記下這筆收入／支出</span> 或直接按 <kbd>Enter</kbd>。</li>
+      </ol>
+      <div class="chips" aria-hidden="true"><span>文具用品</span><span class="on">清潔用品</span><span>影印印刷</span><span>活動費用</span><span>餐飲點心</span><span>班級布置</span><span>禮品獎品</span><span>其他支出</span></div>
+      <p class="cap">預設支出類別（可在「資料與設定」修改）。</p>
 
-<div class="warning">資料預設儲存在目前使用的瀏覽器中。例如在學校電腦 Chrome 記錄的資料，不會自動出現在家中電腦或另一台電腦。若需要換電腦使用，請務必先使用「匯出 JSON」備份，再到另一台電腦使用「還原 JSON」載入。</div>
+      <h3>附上收據／單據照片</h3>
+      <ul>
+        <li>點虛線框選照片、把照片拖進框內，或複製截圖後直接按 <kbd>Ctrl</kbd>／<kbd>⌘</kbd>＋<kbd>V</kbd> 貼上。</li>
+        <li>照片會自動縮小壓縮（每張約 100–200 KB），不必擔心空間。iPhone 的 HEIC 照片若無法讀取，請先轉成 JPG。</li>
+        <li>明細表中點縮圖可放大查看、下載。</li>
+      </ul>
 
-<h2>三、匯入學生名單</h2>
-<h3>方法一：手動輸入</h3>
-<ol>
-  <li>在「班費繳交」頁面找到「學生名單管理」。</li>
-  <li>在輸入框中每行輸入一位學生。</li>
-  <li>若有座號，建議輸入成「座號 姓名」格式。</li>
-  <li>按下「處理學生名單」。</li>
-  <li>下方會出現每位學生的繳費輸入列。</li>
-</ol>
+      <h3>省時小技巧</h3>
+      <ul>
+        <li>右側<strong>常用項目</strong>：點一下就帶入項目、類別和上次的金額，只要確認金額再按 Enter。</li>
+        <li>勾選 <span class="ui">下一筆沿用同一天</span>：一次補記同一天的多張收據時很方便。</li>
+        <li>右側<strong>最近記錄</strong>可直接修改或刪除剛記的帳。</li>
+      </ul>
 
-<pre><code>01 王小明
-02 李小華
-03 陳美玲</code></pre>
+      <h3>防呆提醒</h3>
+      <ul>
+        <li>沒填項目或金額格式不對，欄位下方會直接說明哪裡要補。</li>
+        <li>同一天已有相同項目、相同金額時，會詢問是否重複記帳。</li>
+        <li>金額 5 萬元以上會請您再確認（避免多打一個 0）。</li>
+      </ul>
+    </section>
 
-<h3>方法二：從 Excel 或 CSV 匯入</h3>
-<ol>
-  <li>在「學生名單管理」區選擇 Excel 或 CSV 檔案。</li>
-  <li>若檔案中有多個班級分頁，請在「選擇班級分頁」中選擇要匯入的班級。</li>
-  <li>系統會預覽可辨識的學生數與前幾位學生姓名。</li>
-  <li>確認無誤後按「匯入名單」。</li>
-</ol>
+    <section id="s2">
+      <h2><span class="num">2</span>收支明細</h2>
+      <p>所有收入與支出合在一張表，依日期排列。「<strong>結餘</strong>」欄是記完該筆之後的班費餘額，方便和實際現金對帳。</p>
+      <table>
+        <thead><tr><th>功能</th><th>說明</th></tr></thead>
+        <tbody>
+          <tr><td>🔍 搜尋</td><td>可搜尋項目、備註、經手人、類別、日期或金額。</td></tr>
+          <tr><td>篩選</td><td>全部／收入／支出、月份、類別；表格下方即時顯示篩選結果的收入、支出與淨額小計。</td></tr>
+          <tr><td>↓ 新到舊</td><td>切換排序方向。</td></tr>
+          <tr><td>✏️ 修改</td><td>資料帶回「記一筆」，上方出現黃色「正在修改」提示；按 <span class="ui">儲存修改</span> 才會更新，按 <span class="ui">取消修改</span> 或 <kbd>Esc</kbd> 不會變動原紀錄。</td></tr>
+          <tr><td>⧉ 複製</td><td>以這筆為範本新增一筆（日期改成今天），適合每月固定的支出。</td></tr>
+          <tr><td>🗑 刪除</td><td>刪除後 7 秒內可按畫面下方的 <span class="ui">復原</span>。</td></tr>
+        </tbody>
+      </table>
+    </section>
 
-<p>建議 Excel 表格中包含「座號」與「姓名」欄位：</p>
-<table>
-  <thead><tr><th>座號</th><th>姓名</th></tr></thead>
-  <tbody>
-    <tr><td>1</td><td>王小明</td></tr>
-    <tr><td>2</td><td>李小華</td></tr>
-    <tr><td>3</td><td>陳美玲</td></tr>
-  </tbody>
-</table>
+    <section id="s3">
+      <h2><span class="num">3</span>報表輸出</h2>
+      <ol>
+        <li><strong>報表期間</strong>：全部（整本帳）、指定月份，或自訂起訖日期。指定期間時，「期初結餘」會自動算到該期間開始前。</li>
+        <li><strong>報表內容</strong>：可選擇是否顯示經手人、備註、類別小計、簽名欄。</li>
+        <li>右側就是實際輸出的「班費收支報告表」：期初結餘、本期收入、本期支出、期末結餘，逐筆明細與每筆後的結餘。</li>
+      </ol>
+      <table>
+        <thead><tr><th>輸出</th><th>用途</th></tr></thead>
+        <tbody>
+          <tr><td>🖨️ 列印報告表</td><td>只印報告表本身（不會印到按鈕與選單），可在列印視窗選「另存為 PDF」。</td></tr>
+          <tr><td>📄 下載 PDF</td><td>A4 直式，依表格列自動分頁、不會把一列切成兩半。勾選「PDF 附上單據相片」時，後面會附上每筆的收據照片（每頁 2 張，含日期、項目、金額說明），方便交給學校核銷。</td></tr>
+          <tr><td>📊 下載 Excel</td><td>四個工作表：收支明細、月份統計（含月底結餘）、類別統計、基本資料。</td></tr>
+        </tbody>
+      </table>
+      <div class="callout">要在班上公布或貼在聯絡簿時，可取消「備註」「經手人」，只留下日期、項目與金額。報表上方的「收支概況」會顯示每月收支長條與支出類別比例，班會報告時很好用。</div>
+    </section>
 
-<div class="note">匯入後會自動整理成「01 王小明」、「02 李小華」這類格式。若 Excel 匯入失敗，可能是瀏覽器無法載入 Excel 解析套件，或檔案格式較特殊；此時可將 Excel 另存成 CSV 檔再重新匯入。</div>
+    <section id="s4">
+      <h2><span class="num">4</span>資料與設定</h2>
+      <h3>班級資訊</h3>
+      <p>學年度、學期、班級、導師、總務股長會出現在頁首與報表上。<strong>期初結餘</strong>是開始記帳時手上已有的班費（例如上學期轉入），可搭配期初日期。</p>
 
-<h2>四、記錄學生班費繳交</h2>
-<ol>
-  <li>完成學生名單後，每位學生會出現一列繳費輸入欄位。</li>
-  <li>選擇「繳費日期」。</li>
-  <li>輸入「繳費金額」。</li>
-  <li>按下該學生右側的「記錄繳費」。</li>
-  <li>該筆繳費會出現在「繳費紀錄」表格中。</li>
-</ol>
+      <h3>類別設定</h3>
+      <p>收入、支出類別每行一個。修改類別不會更動已記的帳；已用過但被移除的類別仍會出現在篩選中。按 <span class="ui">恢復預設類別</span> 可還原。</p>
 
-<p>金額顯示一律以整數呈現，不顯示小數點以下數字。若同一位學生分次繳費，可以重複新增多筆紀錄，系統會在「全班繳費狀況」中自動加總該學生的總繳費金額，並顯示最後繳費日期。</p>
+      <h3>學期結算・開新帳本</h3>
+      <ol>
+        <li>學期末先到「報表輸出」印出或下載本學期的報告表留存。</li>
+        <li>按 <span class="ui">📅 結算並開新帳本…</span>，建議選 <span class="ui">下載備份並開新帳本</span>。</li>
+        <li>明細會清空，<strong>目前結餘自動成為新帳本的期初結餘</strong>，期初日期設為今天；班級資訊與類別保留，記得把「學期」改成下學期。</li>
+        <li>舊帳本會存成還原點，必要時可在「自動還原點」還原或下載。</li>
+      </ol>
 
-<h2>五、查看全班繳費狀況</h2>
-<p>「全班繳費狀況」表格會顯示學生姓名、總繳費金額、最後繳費日期與繳費狀態。若學生已有任一筆繳費紀錄，狀態會顯示為「已繳費」；若尚未繳費，狀態會顯示為「未繳費」。</p>
+      <h3>清除全部資料</h3>
+      <p>清空所有收支、班級資訊與類別設定，清除前會自動留一份還原點。</p>
+    </section>
 
-<h2>六、記錄班費收入</h2>
-<p>班費收入指的是非個別學生繳費以外的收入，例如園遊會盈餘、校內補助、利息、退費等。</p>
-<ol>
-  <li>點選上方「班費收入」。</li>
-  <li>輸入日期、項目與金額。</li>
-  <li>可在備註欄補充說明。</li>
-  <li>若有收據、轉帳截圖或相關照片，可上傳相片附件。</li>
-  <li>按下「新增收入」。</li>
-</ol>
+    <section id="storage">
+      <h2>💾 資料保存與備份</h2>
+      <p>資料不會上傳到網路，全部保存在您自己的電腦或您選擇的資料夾。頁首的狀態標籤可點擊前往設定：</p>
+      <ul>
+        <li><span class="ui">💾 已儲存 21:05</span>：每次修改都會自動存到這台電腦的瀏覽器（IndexedDB）。</li>
+        <li><span class="ui">📁 已同步到資料夾</span>：已連結資料夾，修改會自動寫入資料夾。</li>
+        <li><span class="ui">立即儲存</span>（或 <kbd>Ctrl</kbd>／<kbd>⌘</kbd>＋<kbd>S</kbd>）：馬上寫入，離開前想確保存檔時使用。</li>
+      </ul>
 
-<h2>七、記錄班費支出</h2>
-<p>班費支出指的是班級公共支出，例如班級用品、活動材料、獎品、影印、餐費等。</p>
-<ol>
-  <li>點選上方「班費支出」。</li>
-  <li>輸入日期、項目與金額。</li>
-  <li>可在備註欄補充說明。</li>
-  <li>若有發票、收據或購買照片，可上傳相片附件。</li>
-  <li>按下「新增支出」。</li>
-</ol>
+      <h3>建議：選擇長期存放的資料夾（Chrome／Edge 電腦版）</h3>
+      <ol>
+        <li>到「資料與設定」→「資料存放位置」，按 <span class="ui">📁 選擇資料存放資料夾</span>。</li>
+        <li>建議選 Google 雲端硬碟中的一個資料夾（例如「班級經營／班費」）。程式會建立：
+          <ul>
+            <li><code>班費收支資料.json</code>：帳本本身。</li>
+            <li><code>班費收支_單據相片</code>：每張收據一個 .jpg 檔。</li>
+            <li><code>班費收支資料_歷史</code>：每天第一次寫入前備份前一版（保留 14 份）。</li>
+          </ul>
+        </li>
+        <li>之後每次開啟會自動連回；若瀏覽器要求重新授權，頁面上方會出現黃色提示列，按 <span class="ui">連接資料夾</span> 即可。</li>
+      </ol>
 
-<h2>八、查看班費結餘</h2>
-<p>點選上方「班費結餘」，即可查看總收入、總支出、當前結餘與詳細結餘紀錄。詳細結餘紀錄會依日期整理收入與支出，協助老師快速檢查每一筆班費流向。</p>
+      <h3>學校、家裡兩台電腦共用</h3>
+      <ol>
+        <li>兩台電腦都安裝 Google 雲端硬碟電腦版，並用 Chrome 或 Edge 開啟程式。</li>
+        <li>兩台都選<strong>同一個</strong>資料夾。第二台選擇時若兩邊都有資料，程式會讓您選擇要用哪一份，沒選的那份會另存，不會遺失。</li>
+        <li>另一台電腦更新後，回到頁面時會出現「載入最新資料」提示；收據照片也會從資料夾自動讀取。</li>
+      </ol>
+      <p>可在「這台電腦的名稱」填入「學校電腦」「家裡電腦」，方便辨識是哪台存的資料。</p>
 
-<h2>九、儲存與載入資料</h2>
-<p>在「文件操作」區可輸入檔案名稱，按下「儲存」。資料會保存於目前瀏覽器的 localStorage 中。</p>
-<p>此方式適合在同一台電腦、同一個瀏覽器持續記帳。限制是換電腦不會自動同步，清除瀏覽器資料可能會刪除紀錄，不同瀏覽器之間也不會互通。因此建議搭配 JSON 備份使用。</p>
+      <h3>自動還原點與 JSON 備份</h3>
+      <ul>
+        <li><strong>自動還原點</strong>：每天 1 份（保留 7 天），以及匯入、還原、學期結算、清除前各 1 份（保留 10 份），可「還原」或「下載」。</li>
+        <li><span class="ui">⬇ 下載完整備份</span>：一個 JSON 檔包含班級資訊、所有收支與收據照片，可存到隨身碟或寄給自己。</li>
+        <li><span class="ui">⬆ 從備份檔還原</span>：還原前會顯示兩邊的筆數與結餘讓您確認，並先留還原點。</li>
+      </ul>
+      <div class="callout warn">若只存在瀏覽器、沒有連結資料夾，清除瀏覽器資料或換電腦就看不到資料。Safari、Firefox 不支援選擇資料夾，請定期下載 JSON 備份。</div>
+    </section>
 
-<h2>十、JSON 備份與還原</h2>
-<h3>匯出 JSON 備份</h3>
-<ol>
-  <li>在「文件操作」區按下「匯出 JSON」。</li>
-  <li>系統會下載一個 <code>.json</code> 檔案。</li>
-  <li>建議將檔案存到 Google Drive、隨身碟或班級資料夾。</li>
-</ol>
+    <section id="faq">
+      <h2>常見問題</h2>
+      <h3>舊版（v2）的資料還在嗎？</h3>
+      <p>在。第一次開啟 v3 時，會自動把舊版的自動存檔轉過來，並跳出說明；舊版資料仍留在瀏覽器中沒有刪除。舊版用「檔案名稱」另存的檔案、舊版匯出的 JSON，可在「資料與設定」→「備份與還原」匯入。</p>
 
-<p>JSON 備份會包含學生名單、學生繳費紀錄、收入資料、支出資料與照片附件資料。</p>
+      <h3>舊版「每位學生的繳費紀錄」到哪裡去了？</h3>
+      <p>新版不再逐人登記。轉換時，舊版的繳費紀錄會<strong>依日期合併</strong>成「班費收繳（N 筆）」收入；舊版已經和收入「對帳」過的繳費不會重複計算，所以<strong>結餘和舊版完全相同</strong>。若需要每位學生的繳費明細，請保留舊版匯出的檔案。</p>
 
-<h3>還原 JSON 備份</h3>
-<ol>
-  <li>在「從 JSON 還原資料」選擇先前下載的 <code>.json</code> 檔。</li>
-  <li>按下「還原 JSON」。</li>
-  <li>系統會詢問是否確定用這份資料取代目前畫面資料。</li>
-  <li>確認後，即可恢復先前的紀錄。</li>
-</ol>
+      <h3>那要怎麼知道誰還沒繳班費？</h3>
+      <p>建議由總務股長用紙本或試算表打勾，收齊後在本程式記一筆收入即可；本程式專注在「錢從哪來、花到哪去、還剩多少」。</p>
 
-<div class="note">建議老師每次完成重要登錄後，都匯出一次 JSON 備份。若由班級幹部協助記帳，也可以要求幹部定期繳交 JSON 備份檔。</div>
+      <h3>結餘和手上的現金對不起來？</h3>
+      <p>到「收支明細」看每一列的結餘，從最近一次確定正確的日期往後檢查；常見原因是漏記收入、同一筆記了兩次，或收入／支出選反。也請確認「期初結餘」是否正確。</p>
 
-<h2>十一、匯出 PDF</h2>
-<p>若需要列印或存檔，可按下「匯出 PDF」。適合用於期末班費結算、班會公布收支、幹部交接或導師留存紀錄。</p>
-<div class="warning">PDF 會依目前畫面內容產生。若需要完整呈現某一頁資料，請先切換到對應頁面再匯出。</div>
+      <h3>按錯了怎麼辦？</h3>
+      <p>新增、修改、刪除後 7 秒內可按畫面下方的「復原」；較大的變動（匯入、還原、學期結算、清除）前會自動留還原點，可在「資料與設定」→「自動還原點」還原。</p>
 
-<h2>十二、資料安全與交接建議</h2>
-<ol>
-  <li>不要只依賴瀏覽器自動保存。</li>
-  <li>每次完成重要更新後，請匯出 JSON。</li>
-  <li>班級幹部交接時，請同時交接 PDF 報表與 JSON 備份。</li>
-  <li>若使用公用電腦，結束後請確認是否需要清除資料。</li>
-  <li>若資料涉及學生姓名與繳費狀況，請避免將 JSON 檔公開分享。</li>
-</ol>
+      <h3>PDF、Excel 按了沒反應？</h3>
+      <p>這兩個功能需要網路載入函式庫。請確認網路連線後重新整理頁面；暫時離線時可先用「列印報告表」再選「另存為 PDF」。</p>
 
-<h2>十三、常見問題</h2>
-<h3>匯入 Excel 後抓不到姓名怎麼辦？</h3>
-<p>請確認 Excel 中有清楚的「座號」與「姓名」欄位。若仍無法匯入，可將 Excel 另存成 CSV 檔，再使用 CSV 匯入。</p>
+      <h3>快速鍵</h3>
+      <p><kbd>Enter</kbd> 送出這筆；<kbd>Esc</kbd> 取消修改；<kbd>Alt</kbd>＋<kbd>1</kbd>～<kbd>4</kbd> 切換分頁；<kbd>Ctrl</kbd>／<kbd>⌘</kbd>＋<kbd>S</kbd> 立即儲存。</p>
+    </section>
+  </main>
 
-<h3>換電腦後資料不見了怎麼辦？</h3>
-<p>資料預設存在原本使用的瀏覽器中。請回到原本電腦匯出 JSON，再到新電腦還原 JSON。</p>
-
-<h3>為什麼金額沒有小數點？</h3>
-<p>班費通常以整數記帳，為了讓表格更清楚，本程式所有金額都以整數顯示。</p>
-
-<h3>可以同一位學生分次繳費嗎？</h3>
-<p>可以。同一位學生可新增多筆繳費紀錄，系統會自動加總。</p>
-
-<h3>誤刪資料怎麼辦？</h3>
-<p>若已匯出 JSON 備份，可使用「還原 JSON」回復。若沒有備份，瀏覽器本機資料刪除後通常無法復原。</p>
-
-<h3>照片附件會一起備份嗎？</h3>
-<p>會。照片會以資料形式保存在記錄中，因此 JSON 檔可能變大。若照片很多，建議定期另存 PDF 或保留原始收據照片。</p>
-
-<h2>十四、建議使用流程</h2>
-<p>第一次使用時，先匯入或輸入學生名單，確認座號與姓名正確。每次收到班費時，在「班費繳交」中登錄該學生的繳費日期與金額。若有其他收入或支出，分別到「班費收入」與「班費支出」頁面新增紀錄，必要時附上照片憑證。每週或每次重大更新後，按「匯出 JSON」備份資料；期末或幹部交接時，按「匯出 PDF」留存正式紀錄，並一併交接 JSON 備份檔，確保日後仍可繼續修改與查核。</p>
-
+  <footer>班費收支記帳程式使用說明 v3.0｜臺北市立麗山高中林獻升老師製作</footer>
 </body>
 </html>
