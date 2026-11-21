@@ -1,182 +1,190 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>校慶園遊會攤位規劃程式（codex優化版）使用說明</title>
-<style>
-body {
-  font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
-  color: #22302c;
-  line-height: 1.8;
-  max-width: 920px;
-  margin: 0 auto;
-  padding: 36px 24px 64px;
-  background: #faf6ee;
-}
-h1, h2, h3 {
-  line-height: 1.35;
-}
-h1 {
-  font-size: 2rem;
-  border-bottom: 4px solid #0f6b5c;
-  padding-bottom: 12px;
-}
-h2 {
-  font-size: 1.35rem;
-  margin-top: 36px;
-  border-left: 6px solid #d9482f;
-  padding-left: 12px;
-}
-h3 {
-  font-size: 1.08rem;
-  margin-top: 22px;
-  color: #3f4d48;
-}
-a { color: #0f6b5c; text-decoration: none; font-weight: bold; }
-a:hover { text-decoration: underline; }
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 12px 0;
-  background: white;
-}
-th, td {
-  border: 1px solid #e6dfd1;
-  padding: 8px 10px;
-  vertical-align: top;
-}
-th {
-  background: #e3f1ed;
-  text-align: left;
-}
-.note {
-  background: #e3f1ed;
-  border-left: 5px solid #0f6b5c;
-  padding: 12px 16px;
-  margin: 14px 0;
-}
-.warning {
-  background: #fdf3dc;
-  border-left: 5px solid #b97a00;
-  padding: 12px 16px;
-  margin: 14px 0;
-}
-@media print {
-  body { background: white; padding: 0; }
-  a { color: #22302c; text-decoration: none; }
-}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>校慶園遊會攤位規劃程式使用說明</title>
+  <style>
+    :root {
+      --ink: #22302c; --ink-2: #3c4a46; --muted: #5f6d68; --line: #e6dfd1;
+      --bg: #faf6ee; --card: #fff; --soft: #f6f1e6;
+      --brand: #0f6b5c; --brand-soft: #e3f1ed; --accent: #d9482f;
+      --warn: #9a6400; --warn-soft: #fdf3dc;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 16px; }
+    body { margin: 0; color: var(--ink); background: var(--bg); line-height: 1.8;
+      font-family: "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif; }
+    .wrap { max-width: 1040px; margin: 0 auto; }
+    header { background: var(--brand); color: #fff; padding: 38px 22px 30px; }
+    .awning { height: 18px; background: repeating-linear-gradient(90deg, var(--accent) 0 28px, #fff8ec 28px 56px);
+      -webkit-mask: radial-gradient(14px at 14px 3px, #000 98%, transparent) 0 0 / 28px 18px repeat-x;
+      mask: radial-gradient(14px at 14px 3px, #000 98%, transparent) 0 0 / 28px 18px repeat-x; }
+    h1 { margin: 0; font-size: clamp(1.6rem, 4vw, 2.4rem); line-height: 1.3; }
+    .ver { display: inline-block; margin-left: 8px; font-size: .9rem; background: rgba(255,255,255,.18); border-radius: 999px; padding: 2px 10px; vertical-align: middle; }
+    header p { max-width: 820px; margin: 12px 0 0; color: #e3f1ed; }
+    .button-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    .button { display: inline-flex; align-items: center; gap: 6px; border-radius: 10px; padding: 10px 16px; text-decoration: none; font-weight: 700; color: var(--brand); background: #fff; }
+    main { padding: 22px 22px 50px; }
+    nav, section { background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 1px 2px rgba(50,40,20,.05), 0 6px 18px rgba(50,40,20,.05); }
+    nav { padding: 14px 18px; margin-bottom: 18px; display: flex; flex-wrap: wrap; gap: 4px 16px; }
+    nav a { color: var(--brand); text-decoration: none; font-weight: 700; }
+    nav a:hover { text-decoration: underline; }
+    section { padding: 22px 24px; margin: 18px 0; }
+    h2 { margin: 0 0 12px; font-size: 1.35rem; display: flex; gap: 10px; align-items: center; }
+    h2 .num { width: 32px; height: 32px; border-radius: 50%; background: var(--brand); color: #fff; display: grid; place-items: center; font-size: 1rem; flex: 0 0 auto; }
+    h3 { margin: 18px 0 6px; font-size: 1.05rem; }
+    p { margin: 8px 0; }
+    ul, ol { padding-left: 1.35rem; margin: 8px 0; }
+    li { margin: 4px 0; }
+    .callout { border-left: 5px solid var(--brand); background: var(--brand-soft); padding: 10px 14px; margin: 12px 0; border-radius: 0 10px 10px 0; }
+    .callout.warn { border-left-color: var(--warn); background: var(--warn-soft); }
+    .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0 4px; padding: 0; list-style: none; counter-reset: s; }
+    .steps li { margin: 0; background: var(--soft); border: 1px solid var(--line); border-radius: 12px; padding: 12px; counter-increment: s; }
+    .steps li::before { content: counter(s); display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--brand); color: #fff; font-weight: 800; font-size: .85rem; margin-bottom: 6px; }
+    .steps b { display: block; }
+    .steps span { color: var(--muted); font-size: .88rem; line-height: 1.55; display: block; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { border-bottom: 1px solid var(--line); padding: 9px 12px; text-align: left; vertical-align: top; }
+    th { background: var(--soft); color: var(--ink-2); font-size: .9rem; }
+    td:first-child { white-space: nowrap; font-weight: 700; }
+    .ui { display: inline-block; background: #fff; border: 1px solid #cfc6b3; border-bottom-width: 2px; border-radius: 7px; padding: 0 7px; font-size: .9em; font-weight: 700; white-space: nowrap; }
+    code { background: var(--soft); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; font-size: .9em; }
+    footer { padding: 18px 22px 40px; color: var(--muted); text-align: center; }
+    @media (max-width: 860px) { .steps { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 600px) {
+      header { padding: 28px 16px; } main { padding: 14px; } section { padding: 16px; }
+      .steps { grid-template-columns: 1fr; }
+      table { display: block; overflow-x: auto; }
+    }
+  </style>
 </head>
 <body>
-<h1>校慶園遊會攤位規劃程式（codex優化版）使用說明</h1>
+  <header>
+    <div class="wrap">
+      <h1>🎪 校慶園遊會攤位規劃程式 <span class="ver">v3.0</span></h1>
+      <p>從選菜單、試算售價、分組工作到當天輪班，四個步驟完成攤位規劃，最後一鍵輸出菜單指南、工作分配表、輪值表、個人總表與每人任務小卡。資料自動保存，也可以存到雲端硬碟資料夾長期使用。</p>
+      <div class="button-row">
+        <a class="button" href="校慶園遊會攤位規劃程式（codex優化版).html">▶ 開啟程式</a>
+      </div>
+    </div>
+  </header>
+  <div class="awning"></div>
 
-<p>本程式協助導師與班級幹部完成園遊會攤位的菜單、分工與當天輪班。依畫面上方四個步驟往下走即可，所有內容都會<strong>自動儲存</strong>，不需要另外按儲存鍵。</p>
+  <main class="wrap">
+    <nav>
+      <a href="#start">快速開始</a><a href="#menu">1 攤位與菜單</a><a href="#tasks">2 分組工作</a><a href="#shifts">3 當天輪班</a><a href="#output">4 完成輸出</a><a href="#data">資料保存</a><a href="#ws">工作站版</a><a href="#faq">常見問題</a>
+    </nav>
 
-<p><strong>程式線上版網址：</strong><br>
-<a href="https://froglssh.github.io/school-fair-booth-planner-online/" target="_blank">https://froglssh.github.io/school-fair-booth-planner-online/</a></p>
+    <section id="start">
+      <h2>🚀 快速開始</h2>
+      <ol class="steps">
+        <li><b>攤位與菜單</b><span>取攤位名稱、點選食物；想試算營收就填售價與成本。</span></li>
+        <li><b>分組工作</b><span>建立名單，指定人選後按「隨機補滿全部」。</span></li>
+        <li><b>當天輪班</b><span>設定營業時間與每班人數，班表自動均分。</span></li>
+        <li><b>完成輸出</b><span>列印、PDF、圖片、Excel，或複製成 LINE 文字。</span></li>
+      </ol>
+      <div class="callout">建議第一次使用時先到 <span class="ui">⚙️ 資料與設定</span> 選一個 Google 雲端硬碟資料夾，之後資料會自動多存一份到那裡，換電腦也能接著用。</div>
+      <p>頁首的 <span class="ui">💾 已儲存</span>、<span class="ui">📁 已同步到資料夾</span> 隨時顯示儲存狀態；點一下可以看詳細資訊。</p>
+    </section>
 
-<div class="note">
-  <strong>2026-10-30 介面改版重點</strong>
-  <ul>
-    <li>四個分頁改為「攤位與菜單 → 分組工作 → 當天輪班 → 完成輸出」四步驟，每步會顯示完成進度。</li>
-    <li>取消各區的「儲存資料」按鈕，改為全程自動儲存；舊版已儲存的資料會自動帶入。</li>
-    <li>名單只要輸入一次，輪班自動沿用，也可另外調整。</li>
-    <li>隨機補滿、清空等動作，都可按提示訊息上的「復原」還原。</li>
-    <li>隨機補滿會保留已指定的同學，且不會把已有安排的同學重複排入；願意多做的同學可加入「可重複名單」。</li>
-  </ul>
-</div>
+    <section id="menu">
+      <h2><span class="num">1</span>攤位與菜單</h2>
+      <ul>
+        <li>輸入<b>攤位名稱</b>，點選左邊的食物加入右側「我的菜單」；點菜單裡的品項可展開準備重點（材料、流程、衛生、販售建議）。</li>
+        <li>用上方的分類（熱食、甜點、飲料、已選）與搜尋找食物；找不到時按 <span class="ui">＋ 自訂食物</span>。</li>
+        <li>食物右邊的 <span class="ui">×</span> 是「從清單隱藏」，不會刪除內建資料，可按「還原已隱藏的食物」找回。</li>
+        <li><span class="ui">📚 菜單方案</span>：把目前菜單（含售價）存成方案，下次一鍵套用；套用前會先留還原點，也可按「復原」。</li>
+      </ul>
+      <h3>💰 進階：售價與成本試算（選填）</h3>
+      <p>打開摺疊區，為每個品項填「售價、每份成本、預估份數」，下方立即算出<b>預估營收、預估成本、預估毛利</b>。可以輸入 <code>60</code>、<code>$60</code>、<code>60元</code>、全形數字或 <code>1,200</code>。只填部分品項也沒關係，毛利只計算有填成本的品項。</p>
+      <h3>💬 AI 規劃</h3>
+      <p><span class="ui">請 ChatGPT 規劃</span> 會自動複製提示詞（含菜單、班級人數與已填的售價）並開啟 ChatGPT，貼上即可。AI 的回覆可貼回「貼上 AI 規劃結果」，勾選後會附在「菜單與準備指南」輸出中。提示詞不含學生姓名。</p>
+    </section>
 
-<h2>一、開啟程式</h2>
-<ol>
-  <li>使用 Chrome、Edge、Safari 等現代瀏覽器開啟線上版網址或本 HTML 檔。</li>
-  <li>電腦、平板、手機都可操作；輸出與大量調整建議使用電腦或平板。</li>
-  <li>Excel 匯入、下載圖片與 PDF 需要網路連線以載入相關套件。</li>
-</ol>
+    <section id="tasks">
+      <h2><span class="num">2</span>分組工作</h2>
+      <h3>建立名單</h3>
+      <p>按 <span class="ui">編輯名單</span>，三種方式擇一：</p>
+      <table>
+        <tr><th>方式</th><th>說明</th></tr>
+        <tr><td>貼上名單</td><td>一行一人，例如「01 小明」。</td></tr>
+        <tr><td>班級學生資料</td><td>從「00 班級學生資料管理系統」帶入座號與姓名（不讀取其他個人資料）。可讀這台電腦的資料、已連結資料夾中的 <code>班級學生資料.json</code>，或自己選擇該檔案。</td></tr>
+        <tr><td>Excel 檔</td><td>選擇 .xlsx／.xls／.csv，程式自動找「座號」「姓名」欄，選分頁後預覽。</td></tr>
+      </table>
+      <p>更新名單時，原本的分組與輪班會<b>跟著同一位同學</b>（依座號＋姓名對應；只改姓名或只改座號也認得）。已不在名單的人會以刪除線顯示、不再計入名額，可按「全部移除」清掉。</p>
+      <h3>安排人選</h3>
+      <ul>
+        <li><b>指定</b>：在組別按 <span class="ui">👤 選人</span> 勾選；或把「尚未分配」的名字<b>拖進</b>組別（平板、手機可直接點名字選組別）。組內的名字也能拖到另一組，或拖回「尚未分配」移出。</li>
+        <li><b>隨機</b>：<span class="ui">🎲 隨機補滿全部</span> 只會從還沒分組的同學中抽，已指定的人保留不動；勾選「多出來的人也平均分到各組」會把剩下的同學平均分配。</li>
+        <li><b>可重複名單</b>：願意兼組的同學加入後，人手不足時才會被排到第二組。</li>
+        <li>每組可用 −／＋ 調人數，✏️ 編輯工作內容，🗑 刪除；也可 <span class="ui">＋ 新增工作</span>。</li>
+      </ul>
+      <div class="callout">所有隨機、拖曳、清空、刪除都可以在提示訊息上按 <span class="ui">復原</span>（8 秒內）。</div>
+    </section>
 
-<h2>二、步驟一：攤位與菜單</h2>
-<ol>
-  <li><strong>攤位名稱：</strong>輸入主題，例如「盛夏芒果冰沙店」。</li>
-  <li><strong>挑選食物：</strong>點選食物卡片加入「我的菜單」，可用搜尋框或熱食、甜點、飲料分類篩選。點菜單中的品項可展開特色、材料、流程、衛生與販售建議。</li>
-  <li><strong>自訂食物：</strong>按「自訂食物」輸入名稱、類別與介紹。搜尋不到時也可直接按「新增」。自訂食物會保留，下次開啟仍在。</li>
-  <li><strong>移除食物：</strong>滑到卡片右上角按 ×，可從清單移除；按「還原已移除的食物」可恢復內建品項。</li>
-  <li><strong>菜單方案：</strong>想比較不同菜單時，按「存成方案」保存，之後從下拉選單選取即可套用。</li>
-  <li><strong>AI 輔助：</strong>
-    <ul>
-      <li><strong>請 ChatGPT 規劃：</strong>自動複製完整提示詞並開啟 ChatGPT，貼上（Ctrl+V 或 Cmd+V）即可。</li>
-      <li><strong>複製提示詞：</strong>可貼到其他 AI 工具使用。</li>
-      <li><strong>查資料：</strong>以已選食物開啟 Google 搜尋，查找食材、設備與成本。</li>
-      <li><strong>貼上 AI 規劃結果：</strong>把 AI 回覆貼入後會自動保存。</li>
-    </ul>
-  </li>
-</ol>
+    <section id="shifts">
+      <h2><span class="num">3</span>當天輪班</h2>
+      <ul>
+        <li>設定開始、結束時間、每班長度與每班人數，班表自動<b>均分</b>。已排過人時改設定，會出現「重新產生班表」按鈕（可復原）。</li>
+        <li>輪值名單預設與分組名單相同；按 <span class="ui">另外調整</span> 後可 <span class="ui">選擇輪值人員</span>，或 <span class="ui">＋ 支援人員</span> 加入家長、校友（只參加輪班）。</li>
+        <li>隨機排班會讓每人班數盡量平均，並避開連續兩班；班次比人多時，把願意多輪班的同學加入「可重複名單」。</li>
+      </ul>
+    </section>
 
-<h2>三、步驟二：分組工作</h2>
-<ol>
-  <li><strong>建立名單：</strong>按「匯入 Excel 名單」選擇檔案，再選班級分頁並確認預覽；或直接貼上，一行一人。系統會辨識「座號」「姓名」欄位，名單只要建立一次，輪班會自動沿用。</li>
-  <li><strong>先指定、再隨機：</strong>有特定人選時，先按該組「選人」勾選。按「隨機補滿全部」會保留已指定的同學，只補其餘名額，也只會選尚未分組的同學，不會重複。勾選「多出來的人也平均分到各組」，全班都會有工作；取消勾選則只補滿所需人數，其餘同學列在「尚未分配」。要全部重排時，先按「清空指派」。</li>
-  <li><strong>可重複名單：</strong>願意兼組或能力較強的同學，按「可重複名單」勾選。未分組的同學用完後，隨機分配才會讓名單內的同學擔任第二組以上，姓名前會有循環圖示。</li>
-  <li><strong>微調：</strong>每組可用 − / + 調整人數，按「補滿」只補該組缺額，按姓名旁的 × 移除。用「選人」手動勾選時可直接選任何同學，視窗會標示該生已在哪一組。</li>
-  <li><strong>工作項目：</strong>可新增工作，也可用鉛筆圖示編輯、垃圾桶圖示刪除。</li>
-</ol>
-<p>姓名以刪除線顯示，代表此人已不在名單中，可按 × 移除。</p>
+    <section id="output">
+      <h2><span class="num">4</span>完成輸出</h2>
+      <table>
+        <tr><th>文件</th><th>內容</th><th>輸出方式</th></tr>
+        <tr><td>菜單與準備指南</td><td>品項準備重點；有填售價時附價目與營收試算；可附 AI 規劃建議</td><td>圖片、PDF、列印、複製文字</td></tr>
+        <tr><td>工作分配表</td><td>各組人數與負責同學</td><td>圖片、PDF、列印、複製文字</td></tr>
+        <tr><td>輪值表</td><td>每班時間與值班同學</td><td>圖片、PDF、列印、複製文字</td></tr>
+        <tr><td>個人工作總表</td><td>每人的組別與值班時段</td><td>圖片、PDF、列印、複製文字</td></tr>
+        <tr><td>每人任務小卡</td><td>一人一張（A4 兩欄），剪下發給同學</td><td>圖片、PDF、列印</td></tr>
+      </table>
+      <p><span class="ui">📊 下載 Excel（全部）</span> 會產生四個工作表：菜單價目、工作分配、輪值表、個人總表。<span class="ui">💬 複製文字</span> 可直接貼到班級 LINE 群組。PDF 會在表格列、品項或小卡之間換頁，不會切到半行。</p>
+    </section>
 
-<h2>四、步驟三：當天輪班</h2>
-<ol>
-  <li><strong>設定時間：</strong>選擇開始時間、結束時間、每班長度與每班人數，班表會自動產生。若已有排班，改設定後需按「重新產生班表」才會套用。</li>
-  <li><strong>輪值名單：</strong>預設與分組名單相同。若要加入家長或支援人員，按「另外調整」。</li>
-  <li><strong>先指定、再隨機：</strong>先用各班的「選人」指定同學，再按「隨機補滿全部」。系統保留已指定的同學，其餘名額只選尚未排班的同學，並盡量避開連續兩班。要全部重排時，先按「清空排班」。</li>
-  <li><strong>可重複名單：</strong>願意多輪班的同學請加入此名單，名單內同學的班數會盡量平均。班次總名額多於人數時，可在名單視窗按「全選」讓全班輪值多班，否則會顯示還缺幾個名額。</li>
-  <li><strong>微調：</strong>每班同樣可調整人數、選人、補滿或移除。一個人是否已有工作，與他能否排班互不影響，兩頁各自計算。</li>
-</ol>
+    <section id="data">
+      <h2>💾 資料保存</h2>
+      <table>
+        <tr><th>位置</th><th>說明</th></tr>
+        <tr><td>這台電腦（自動）</td><td>每次修改 0.3 秒內存入瀏覽器 IndexedDB，另有 localStorage 備份。</td></tr>
+        <tr><td>資料夾（建議）</td><td>到「資料與設定」選資料夾後，修改 2 秒內寫入 <code>園遊會攤位規劃資料.json</code>；<code>園遊會攤位規劃資料_歷史/</code> 每天留一份（最多 14 份）。需用電腦版 Chrome 或 Edge。</td></tr>
+        <tr><td>自動還原點</td><td>每天一份（留 7 天），套用方案、匯入、還原、開新規劃、清除前各一份（留 10 份），可在「資料與設定」還原或下載。</td></tr>
+        <tr><td>JSON 備份</td><td>「下載 JSON 備份」單一檔案即可完整還原；內含學生名單，請妥善保存。</td></tr>
+      </table>
+      <ul>
+        <li><b>兩台電腦共用</b>：兩台都選同一個雲端硬碟資料夾。程式每 60 秒與回到頁面時檢查；另一台更新過會出現提示列「載入最新資料」。兩邊都改過時會問要用哪一份，沒選用的一份另存成 <code>_衝突_</code> 檔，不會遺失。</li>
+        <li><b>重新開啟</b>：瀏覽器重開後若頂端出現黃色提示列，按 <span class="ui">連接資料夾</span> 授權一次即可。</li>
+        <li><b>明年校慶</b>：「開新規劃」會保留自訂食物、菜單方案、工作組別與時間設定，清空菜單與人員安排（可選是否保留名單）。</li>
+        <li><b>快速鍵</b>：<span class="ui">Ctrl／⌘＋S</span> 立即儲存；<span class="ui">Alt＋1～5</span> 切換頁面。</li>
+      </ul>
+      <div class="callout warn">建議把資料夾設在「班級學生資料管理系統」用的同一個資料夾，名單就能在「編輯名單 → 班級學生資料 → 從已連結資料夾讀取」直接帶入。</div>
+    </section>
 
-<div class="note">
-  <strong>實用排班建議：</strong><br>
-  每班人數可多留 1～2 人作為預備人力。若班級人數較多，可縮短每班長度（例如 45 分鐘），讓每位同學都有參與感又不過於勞累。
-</div>
+    <section id="ws">
+      <h2>🏫 在「班級經營整合工作站」中使用</h2>
+      <p>從工作站首頁開啟「校慶與園遊會」時，程式自動進入共享整合版：</p>
+      <ul>
+        <li>名單直接使用工作站的<b>共用名冊</b>（在籍學生），不需要另外輸入；改名、換座號會自動更新，轉出的學生標示刪除線、不再計入名額。</li>
+        <li>資料存在工作站共用資料庫（本班本學期），長期保存請在工作站首頁設定資料夾。</li>
+        <li>舊版整合版的園遊會資料，第一次開啟時會自動轉入。</li>
+      </ul>
+    </section>
 
-<h2>五、步驟四：完成輸出</h2>
-<p>可預覽四份文件，每份都能下載圖片、PDF 或列印，也可按「列印全部」一次印出。</p>
-<table>
-  <thead>
-    <tr><th>文件</th><th>內容</th><th>適合用途</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>菜單與準備指南</td><td>品項、材料、流程、衛生與販售建議</td><td>各組備料參考</td></tr>
-    <tr><td>工作分配表</td><td>各組負責人員</td><td>貼在教室公告</td></tr>
-    <tr><td>輪值表</td><td>各班次時間與人員</td><td>當天攤位張貼</td></tr>
-    <tr><td>個人工作總表</td><td>每人的組別與值班時段</td><td>學生查詢自己的任務</td></tr>
-  </tbody>
-</table>
-
-<h2>六、資料保存與備份</h2>
-<ul>
-  <li>內容會自動存在目前瀏覽器，畫面右上方會顯示最後儲存時間。</li>
-  <li>換電腦或換瀏覽器前，請按右上角「更多 → 下載完整備份」，到新環境再按「從備份還原」。圖片與 PDF 是報表，無法用來還原資料。</li>
-  <li>「更多 → 清除全部攤位資料」只會清除本工具的資料，不影響幹部、座位、班費、評語等其他工具。</li>
-</ul>
-<div class="warning">
-  備份檔內含學生名單，請存放在個人裝置或校內雲端，不要公開分享。
-</div>
-
-<h2>七、常見問題</h2>
-<h3>為什麼按「請 ChatGPT 規劃」或「查資料」沒有反應？</h3>
-<p>請檢查瀏覽器是否阻擋了彈出式視窗，通常在網址列右側會出現圖示，設定為允許後重試。使用 ChatGPT 需先登入帳號。</p>
-
-<h3>匯入 Excel 時沒有偵測到名單？</h3>
-<p>請確認工作表有「座號」「姓名」欄位，並在匯入視窗選對班級分頁。支援 .xlsx、.xls、.csv 格式。</p>
-
-<h3>按錯隨機補滿怎麼辦？</h3>
-<p>提示訊息出現時按「復原」即可，訊息約顯示 8 秒。</p>
-
-<h3>舊版的資料還在嗎？</h3>
-<p>在同一個瀏覽器開啟時，名單、工作分配、輪值表與菜單方案都會自動帶入。舊版尚未存成主題的食物選取不會保留，請從「已存的菜單方案」套用。</p>
-
-<h2>八、資料與隱私提醒</h2>
-<ul>
-  <li>本程式為純前端網頁，攤位資料與學生名單只儲存在您的瀏覽器，不會上傳到任何伺服器。</li>
-  <li>使用 ChatGPT 或查資料時，只會帶出攤位名稱與已選食物，不包含學生名單。提示詞貼到 ChatGPT 後，資料處理依該平台規範。</li>
-</ul>
-
+    <section id="faq">
+      <h2>❓ 常見問題</h2>
+      <h3>舊版（v2）的資料還在嗎？</h3>
+      <p>在。第一次開啟 v3.0 時會自動把舊版的菜單、名單、分組、輪班、菜單方案與 AI 結果轉入，並跳出說明；舊資料原樣留在瀏覽器中不動。</p>
+      <h3>沒有網路可以用嗎？</h3>
+      <p>可以。Excel、PDF、圖片所需的套件已內嵌在程式檔中，只有「請 ChatGPT 規劃」與「查資料」需要網路。</p>
+      <h3>直接雙擊 HTML 開啟，資料會在哪？</h3>
+      <p>存在這台電腦、這個瀏覽器中。用不同方式開啟（例如雙擊檔案與工作站啟動器的網址）會是不同的儲存空間；選擇同一個資料夾就能互通。</p>
+      <h3>隨機分組不想讓某人被分到兩組？</h3>
+      <p>預設每人只會被抽到一組；只有「可重複名單」中的同學在人手不足時才會兼組。</p>
+    </section>
+  </main>
+  <footer>製作者：臺北市立麗山高中林獻升老師｜v3.0（2026-11-21）</footer>
 </body>
 </html>
