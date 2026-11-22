@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>出國行李打包清單使用說明</title>
+  <style>
+    :root {
+      --ink: #272a37; --ink-2: #454a5c; --muted: #636a7d; --line: #e3e5ef;
+      --bg: #f4f5fb; --card: #fff; --soft: #f1f0fb;
+      --brand: #5645c9; --brand-soft: #eee9ff; --accent: #d6455f;
+      --warn: #8a5a00; --warn-soft: #fdf3dc;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --ink: #eceef7; --ink-2: #c4c8d9; --muted: #9ba1b5; --line: #30334a;
+        --bg: #12131a; --card: #1d1f2d; --soft: #262941;
+        --brand: #9a8cff; --brand-soft: #2b2754; --accent: #ff7f93;
+        --warn: #f2b552; --warn-soft: #3a2f14;
+      }
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 16px; }
+    body { margin: 0; color: var(--ink); background: var(--bg); line-height: 1.8; overflow-x: hidden;
+      font-family: -apple-system, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif; }
+    .wrap { max-width: 920px; margin: 0 auto; }
+    header { background: linear-gradient(135deg, #5a47d6, #7c5fe8); color: #fff; padding: 36px 20px 28px; }
+    h1 { margin: 0; font-size: clamp(1.5rem, 4.5vw, 2.3rem); line-height: 1.3; }
+    .ver { display: inline-block; margin-left: 8px; font-size: .9rem; background: rgba(255,255,255,.2); border-radius: 999px; padding: 2px 10px; vertical-align: middle; }
+    header p { max-width: 760px; margin: 12px 0 0; color: #ece8ff; }
+    .button-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+    .button { display: inline-flex; align-items: center; gap: 6px; border-radius: 10px; padding: 10px 16px; text-decoration: none; font-weight: 700; color: #4a3bb8; background: #fff; min-height: 44px; }
+    main { padding: 18px 16px 50px; }
+    nav, section { background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 6px 18px rgba(40,40,90,.06); }
+    nav { padding: 12px 16px; margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 2px 16px; }
+    nav a { color: var(--brand); text-decoration: none; font-weight: 700; padding: 4px 0; }
+    nav a:hover { text-decoration: underline; }
+    section { padding: 20px 20px; margin: 16px 0; }
+    h2 { margin: 0 0 10px; font-size: 1.3rem; display: flex; gap: 10px; align-items: center; }
+    h2 .num { width: 32px; height: 32px; border-radius: 50%; background: var(--brand); color: var(--card); display: grid; place-items: center; font-size: 1rem; flex: 0 0 auto; }
+    h3 { margin: 16px 0 4px; font-size: 1.05rem; }
+    p { margin: 8px 0; }
+    ul, ol { padding-left: 1.35rem; margin: 8px 0; }
+    li { margin: 4px 0; }
+    .callout { border-left: 5px solid var(--brand); background: var(--brand-soft); padding: 10px 14px; margin: 12px 0; border-radius: 0 10px 10px 0; }
+    .callout.warn { border-left-color: var(--warn); background: var(--warn-soft); }
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0 4px; padding: 0; list-style: none; counter-reset: s; }
+    .steps li { margin: 0; background: var(--soft); border: 1px solid var(--line); border-radius: 12px; padding: 12px; counter-increment: s; }
+    .steps li::before { content: counter(s); display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--brand); color: var(--card); font-weight: 800; font-size: .85rem; margin-bottom: 6px; }
+    .steps b { display: block; }
+    .steps span { color: var(--muted); font-size: .9rem; line-height: 1.55; display: block; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { border-bottom: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+    th { background: var(--soft); color: var(--ink-2); font-size: .9rem; }
+    td:first-child { font-weight: 700; }
+    .tbl { overflow-x: auto; }
+    .ui { display: inline-block; background: var(--card); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 7px; padding: 0 7px; font-size: .9em; font-weight: 700; white-space: nowrap; }
+    code { background: var(--soft); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; font-size: .9em; overflow-wrap: anywhere; }
+    footer { padding: 18px 20px 40px; color: var(--muted); text-align: center; }
+    @media (max-width: 760px) { .steps { grid-template-columns: 1fr; } header { padding: 26px 16px 22px; } section { padding: 16px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>🧳 出國行李打包清單 <span class="ver">v3.0</span></h1>
+      <p>先選這趟要帶什麼，再一件件裝箱打勾。支援國內旅遊、國外旅遊、競賽交流團，可管理多份旅程，查天氣、查航空行李規定，資料自動保存。</p>
+      <div class="button-row"><a class="button" href="出國行李打包清單（claude優化）.html">▶ 開啟行李清單</a></div>
+    </div>
+  </header>
+  <main class="wrap">
+    <nav aria-label="目錄">
+      <a href="#quick">快速開始</a><a href="#tabs">四個分頁</a><a href="#two">兩段式勾選</a><a href="#tags">情境標籤</a><a href="#trips">旅程與天氣</a><a href="#save">資料保存</a><a href="#output">列印與分享</a><a href="#tips">小技巧</a><a href="#faq">常見問題</a>
+    </nav>
+
+    <section id="quick">
+      <h2><span class="num">1</span>快速開始</h2>
+      <p>第一次開啟會出現三步驟精靈，不到一分鐘就能產生專屬清單。</p>
+      <ol class="steps">
+        <li><b>選類型</b><span>國內旅遊、國外旅遊或競賽交流團。</span></li>
+        <li><b>填目的地與日期</b><span>可以略過，之後到「行程」分頁補；有日期才會倒數與自動算數量。</span></li>
+        <li><b>勾情境標籤</b><span>有長輩、幼兒、自駕、海邊…就勾，清單只留相關項目。</span></li>
+      </ol>
+      <div class="callout">要再建立另一趟旅程：到「🗺️ 行程與天氣」分頁，按右上角 <span class="ui">＋ 新旅程</span>。</div>
+    </section>
+
+    <section id="tabs">
+      <h2><span class="num">2</span>四個分頁</h2>
+      <p>手機在畫面底部、電腦在最上方，會記住你上次停在哪一頁。</p>
+      <div class="tbl"><table>
+        <tr><th>分頁</th><th>做什麼</th></tr>
+        <tr><td>🗺️ 行程與天氣</td><td>旅程清單庫（切換、複製、改名、封存、刪除）、多段行程、備忘、查天氣與穿搭建議。<b>先在這裡設定行程</b>，再按「下一步：前往打包清單」。</td></tr>
+        <tr><td>🧳 打包清單</td><td>切換類型與階段、調整情境標籤、搜尋、篩選、勾選項目、編輯項目。</td></tr>
+        <tr><td>🛄 航空與放置建議</td><td>查各航空公司手提與託運規定；行李該放哪裡的建議。</td></tr>
+        <tr><td>⚙️ 資料與設定</td><td>儲存狀態、資料夾長期儲存、匯出匯入、還原點、範本、大字與深色模式、清除。</td></tr>
+      </table></div>
+      <p>往下捲動時，最上面會縮成一行（標題、進度條、百分比）。右上角的小標籤顯示儲存狀態，點一下可直接到設定頁。</p>
+    </section>
+
+    <section id="two">
+      <h2><span class="num">3</span>兩段式勾選：準備 → 打包</h2>
+      <p>在打包清單上方切換兩個階段：</p>
+      <ul>
+        <li><b>① 準備（選要帶的）</b>：勾選這趟要帶的項目，預設都沒選。每個分類有 <span class="ui">全選此分類</span> 與 <span class="ui">⚡ 重點全選</span>。進度條顯示「已選 N 項」。</li>
+        <li><b>② 打包（裝箱打勾）</b>：只列出你選要帶的項目，裝進行李就打勾。進度條顯示「已裝箱 x / N」。</li>
+      </ul>
+      <p>某個分類全部裝箱後會自動收合並顯示 ✅；全部裝箱完成會出現小小的慶祝畫面。「未完成」篩選在準備階段是「還沒選」，在打包階段是「還沒裝箱」。</p>
+      <div class="callout warn">舊版（v2）的勾選搬進來時，會視為「要帶」，還沒有「已裝箱」，開啟時會跳出說明。</div>
+      <h3>自動數量</h3>
+      <p>有填出發與回程日時，衣物會自動顯示 <b>×N</b>：內褲與襪子＝天數＋1、上衣＝天數、長褲／短褲＝天數 ÷ 2（進位）。多段行程以全部天數合計。</p>
+      <h3>出發前 24 小時提醒</h3>
+      <p>距離出發 1 天內（含旅程中）時，「出發前 24 小時最終確認」會移到最上面並加紅框。打包階段只列出要帶的項目，所以若最終確認項目還沒設為要帶，提醒橫幅會有一顆按鈕可以一次設好。</p>
+    </section>
+
+    <section id="tags">
+      <h2><span class="num">4</span>情境標籤與編輯清單</h2>
+      <div class="tbl"><table>
+        <tr><th>標籤</th><th>會多出哪些項目（舉例）</th></tr>
+        <tr><td>👴 長輩同行</td><td>「高齡長者」分類、長輩用藥提醒</td></tr>
+        <tr><td>👶 幼兒同行</td><td>「親子 &amp; 家庭」分類、兒童著色本</td></tr>
+        <tr><td>🚗 自駕</td><td>駕照、國際駕照、駕照日文譯本、租車確認單</td></tr>
+        <tr><td>✈️ 搭機</td><td>國內旅遊的國內線機票（國外與競賽預設已勾）</td></tr>
+        <tr><td>🏖️ 海邊／水上</td><td>泳衣、防水袋、防風防曬外套</td></tr>
+        <tr><td>💼 正式場合</td><td>正式服裝、皮鞋</td></tr>
+        <tr><td>🏝️ 外島</td><td>外島船票、船班時刻表、海巡 118、防水袋等</td></tr>
+        <tr><td>🏃 運動健身</td><td>運動服／瑜珈褲</td></tr>
+        <tr><td>📷 攝影</td><td>「影像紀錄」分類</td></tr>
+      </table></div>
+      <p>沒有對應標籤的項目一律顯示。標籤可隨時在打包清單上方「🏷️ 情境標籤」展開調整，每份旅程各自記住。</p>
+      <h3>編輯項目</h3>
+      <p>按 <span class="ui">✏️ 編輯</span> 進入編輯模式：可以改名稱、改備註、標記或取消 ⚡ 重點、移到其他分類、按 <span class="ui">✕</span> 移除、在每個分類新增自訂項目。改名不會讓勾選消失；移除的內建項目會列在分類底部，可點一下還原。</p>
+    </section>
+
+    <section id="trips">
+      <h2><span class="num">5</span>旅程、行程與天氣</h2>
+      <ul>
+        <li><b>旅程清單庫</b>：切換、複製（可選擇是否清空勾選）、改名、封存（收起來但不刪）、刪除。這些動作多半有「復原」按鈕；只有「刪除整份旅程」會先確認。</li>
+        <li><b>多段行程</b>：一趟旅程可以有好幾段目的地與日期，每段有自己的備忘錄。</li>
+        <li><b>天氣與穿搭</b>：填目的地與出發日後按「查詢天氣與穿搭建議」（需要網路）。16 天內是預報，更遠則顯示「去年同期」參考。建議的衣物標籤點一下就能 <span class="ui">＋加入清單</span>，已在清單的會顯示 ✓。</li>
+        <li>天氣查過超過 6 小時、日期改變，會提示「資料可能過期・重新查詢」。查不到時可改用 Google 查天氣。</li>
+      </ul>
+    </section>
+
+    <section id="save">
+      <h2><span class="num">6</span>資料保存與備份</h2>
+      <p>你的資料會自動存在這台裝置的瀏覽器裡（IndexedDB），不需要按儲存。想要更安心，有三層保護：</p>
+      <div class="tbl"><table>
+        <tr><th>方式</th><th>說明</th></tr>
+        <tr><td>📁 資料夾長期儲存</td><td>在「⚙️ 資料與設定」按 <span class="ui">選擇資料夾</span>（建議選雲端硬碟裡的資料夾）。限電腦版 Chrome 或 Edge。兩台電腦都改了會跳出選擇：載入資料夾版本、以這台覆蓋，或另存衝突檔並暫停同步。重新整理後會自動連回，需要時按「重新授權」。</td></tr>
+        <tr><td>🕘 還原點</td><td>每天自動留一份；匯入、還原、清除、載入資料夾、刪除旅程前也會留。設定頁可還原或下載。</td></tr>
+        <tr><td>⬇️ 匯出／匯入</td><td>把全部旅程存成 JSON 檔，換手機或換電腦時匯入。匯入時可選「加入旅程庫」（保留現有旅程）或「取代全部」。可讀 v3 與舊版 v2 的匯出檔。</td></tr>
+      </table></div>
+      <div class="callout warn">手機 Safari、Android App 與 Firefox 不支援資料夾儲存，請定期用「匯出」備份。</div>
+      <h3>我的常用設定（範本）</h3>
+      <p>把某份旅程裡固定會移除的項目、固定會加的自訂項目、改過的名稱與備註存成範本。之後建立新旅程時，精靈最後一步可選「套用我的範本」。</p>
+    </section>
+
+    <section id="output">
+      <h2><span class="num">7</span>列印與分享</h2>
+      <ul>
+        <li><b>🖨️ 列印</b>（打包清單 <span class="ui">⋯ 更多</span>）：可選「要帶清單（附空白打勾方格）」、「未裝箱」、「全部項目」。也能存成 PDF。</li>
+        <li><b>📋 複製成 LINE 文字</b>：依分類列出要帶的項目，有 ☐／☑，直接貼到 LINE 給家人。</li>
+      </ul>
+    </section>
+
+    <section id="tips">
+      <h2><span class="num">8</span>小技巧</h2>
+      <ul>
+        <li><b>大字模式</b>：設定頁開啟，字級放大。<b>深色模式</b>：預設跟隨裝置，也可手動選淺色或深色。</li>
+        <li>用鍵盤操作：Tab 移動、空白鍵勾選。</li>
+        <li>「⋯ 更多」可 <span class="ui">重點全選</span>、取消全部已裝箱、清空要帶選擇、全部展開／收合；這些都能按「復原」。</li>
+        <li>行動電源與鋰電池只能隨身、不可托運；手提液體每瓶 ≤100ml——到「🛄 航空與放置建議」看完整說明。</li>
+      </ul>
+    </section>
+
+    <section id="faq">
+      <h2><span class="num">9</span>常見問題</h2>
+      <h3>換電腦或換手機後資料不見了？</h3>
+      <p>瀏覽器資料只在同一台裝置同一個瀏覽器內。請用「資料夾長期儲存」或「匯出／匯入」。</p>
+      <h3>打包階段看不到某個項目？</h3>
+      <p>打包階段只列出「要帶」的項目。回到「① 準備」勾選它，或檢查「情境標籤」是否需要勾。</p>
+            <h3>航空公司行李規定正確嗎？</h3>
+      <p>僅供參考（經濟艙一般規定），請以航空公司官網最新公告為準；每筆資料都附官網與 Google 連結。</p>
+      <h3>舊版的存檔去哪了？</h3>
+      <p>第一次開啟 v3.0 時，舊版的「目前清單」會變成「目前旅程」，每個存檔槽各變成一份旅程。舊資料仍留在瀏覽器裡沒有被刪。</p>
+    </section>
+  </main>
+  <footer>製作者：臺北麗山高中　林獻升老師　·　出國行李打包清單 v3.0（2026-11-22）</footer>
+</body>
+</html>
